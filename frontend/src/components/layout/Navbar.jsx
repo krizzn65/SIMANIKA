@@ -2,13 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { AnimatedNavIcon } from "@/components/ui/AnimatedNavIcon";
 
 const links = [
-  { href: "/", label: "Home" },
-  { href: "/events", label: "Event" },
-  { href: "/oprec", label: "OPREC" },
-  { href: "/partnership", label: "Partnership" },
+  { href: "/", icon: "home", label: "Home" },
+  { href: "/events", icon: "event", label: "Event" },
+  { href: "/oprec", icon: "oprec", label: "OPREC" },
+  { href: "/partnership", icon: "partnership", label: "Partnership" },
 ];
 
 function MenuIcon({ open }) {
@@ -40,6 +42,10 @@ function AnimatedUserIcon() {
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const menuButtonRef = useRef(null);
+  const pathname = usePathname();
+
+  const isActiveLink = (href) =>
+    href === "/" ? pathname === href : pathname.startsWith(href);
 
   useEffect(() => {
     const closeWithEscape = (event) => {
@@ -70,13 +76,15 @@ export function Navbar() {
           </Link>
 
           <nav className="desktop-nav" aria-label="Navigasi utama">
-            {links.map((link, index) => (
+            {links.map((link) => (
               <Link
-                className={index === 0 ? "nav-link nav-link--active" : "nav-link"}
+                aria-current={isActiveLink(link.href) ? "page" : undefined}
+                className={isActiveLink(link.href) ? "nav-link nav-link--active" : "nav-link"}
                 href={link.href}
                 key={link.href}
               >
-                {link.label}
+                <AnimatedNavIcon name={link.icon} />
+                <span>{link.label}</span>
               </Link>
             ))}
           </nav>
@@ -107,14 +115,15 @@ export function Navbar() {
             id="mobile-navigation"
             aria-label="Navigasi mobile"
           >
-            {links.map((link, index) => (
+            {links.map((link) => (
               <Link
-                className={index === 0 ? "mobile-nav__link mobile-nav__link--active" : "mobile-nav__link"}
+                aria-current={isActiveLink(link.href) ? "page" : undefined}
+                className={isActiveLink(link.href) ? "mobile-nav__link mobile-nav__link--active" : "mobile-nav__link"}
                 href={link.href}
                 key={link.href}
                 onClick={() => setOpen(false)}
               >
-                <span className="mobile-nav__index">0{index + 1}</span>
+                <AnimatedNavIcon name={link.icon} />
                 <span>{link.label}</span>
                 <span aria-hidden="true">↗</span>
               </Link>

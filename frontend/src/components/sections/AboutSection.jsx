@@ -27,22 +27,24 @@ export function AboutSection() {
           <span>SIMANIKA</span>
         </div>
 
-        <header className="about-header">
-          <p className="about-kicker">
-            <span aria-hidden="true" />
-            01 / TENTANG HIMANIKA
-          </p>
-          <ScrollRevealText
-            id="about-title"
-            lines={[
-              "Bukan sekadar organisasi.",
-              "Ruang untuk tumbuh bersama.",
-            ]}
-          />
-        </header>
+        <div className="about-intro">
+          <header className="about-header">
+            <p className="about-kicker">
+              <span aria-hidden="true" />
+              01 / TENTANG HIMANIKA
+            </p>
+            <ScrollRevealText
+              id="about-title"
+              lines={[
+                "Bukan sekadar organisasi.",
+                "Tapi ruang untuk tumbuh bersama.",
+              ]}
+            />
+          </header>
 
-        <div className="about-interactive">
-          <InteractiveSignalGrid />
+          <div className="about-interactive">
+            <InteractiveSignalGrid />
+          </div>
         </div>
 
         <div className="about-details">
@@ -72,16 +74,6 @@ export function AboutSection() {
           </div>
         </div>
 
-        <footer className="about-status">
-          <span>ORGANIZATION INFORMATION SYSTEM</span>
-          <span className="about-status__line" aria-hidden="true">
-            <span />
-          </span>
-          <span className="about-status__state">
-            <span aria-hidden="true" />
-            CONNECTED
-          </span>
-        </footer>
       </div>
     </section>
   );

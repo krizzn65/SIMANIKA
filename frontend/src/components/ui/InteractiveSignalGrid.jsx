@@ -73,11 +73,6 @@ export function InteractiveSignalGrid() {
       onPointerMove={handlePointerMove}
       ref={rootRef}
     >
-      <div className="signal-grid__meta">
-        <span>INTERACTIVE NODE MAP</span>
-        <span>13 × 10</span>
-      </div>
-
       <div className="signal-grid__matrix">
         {CELLS.map((_, index) => (
           <span
@@ -105,10 +100,6 @@ export function InteractiveSignalGrid() {
         </span>
       </div>
 
-      <div className="signal-grid__footer">
-        <span>NETWORK / ACTIVE</span>
-        <span>130 NODES</span>
-      </div>
     </div>
   );
 }
