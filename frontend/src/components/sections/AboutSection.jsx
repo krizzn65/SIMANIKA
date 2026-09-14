@@ -1,4 +1,5 @@
 import { ScrollRevealText } from "@/components/ui/ScrollRevealText";
+import { InteractiveSignalGrid } from "@/components/ui/InteractiveSignalGrid";
 
 const pillars = [
   {
@@ -39,6 +40,10 @@ export function AboutSection() {
             ]}
           />
         </header>
+
+        <div className="about-interactive">
+          <InteractiveSignalGrid />
+        </div>
 
         <div className="about-details">
           <div className="about-copy">
