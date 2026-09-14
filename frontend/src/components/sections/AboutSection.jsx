@@ -1,5 +1,41 @@
 import { ScrollRevealText } from "@/components/ui/ScrollRevealText";
-import { InteractiveSignalGrid } from "@/components/ui/InteractiveSignalGrid";
+import { HaloReel } from "@/components/ui/HaloReel";
+
+const haloItems = [
+  {
+    src: "/images/simanika-hero-crt.png",
+    alt: "Komputer retro di lanskap biru SIMANIKA",
+    variant: "photo",
+  },
+  {
+    eyebrow: "01 / HIMANIKA",
+    title: "TERHUBUNG",
+    subtitle: "Satu ruang, banyak gagasan",
+    variant: "blue",
+  },
+  {
+    src: "/images/logos/Logo MIF 2020.png",
+    alt: "Logo Manajemen Informatika",
+    variant: "logo",
+  },
+  {
+    eyebrow: "02 / KOLABORASI",
+    title: "BERKARYA",
+    subtitle: "Tumbuh melalui pengalaman",
+    variant: "night",
+  },
+  {
+    eyebrow: "03 / MAHASISWA",
+    title: "BERDAMPAK",
+    subtitle: "Ide bergerak menjadi aksi",
+    variant: "paper",
+  },
+  {
+    src: "/images/simanika-hero-crt.png",
+    alt: "Visual teknologi retro HIMANIKA",
+    variant: "photo-alt",
+  },
+];
 
 const pillars = [
   {
@@ -37,13 +73,20 @@ export function AboutSection() {
               id="about-title"
               lines={[
                 "Bukan sekadar organisasi.",
-                "Tapi ruang untuk tumbuh bersama.",
+                "Ruang untuk tumbuh bersama.",
               ]}
             />
           </header>
 
-          <div className="about-interactive">
-            <InteractiveSignalGrid />
+          <div className="about-halo">
+            <HaloReel
+              ariaLabel="Galeri identitas HIMANIKA. Gunakan tombol panah kiri dan kanan untuk memutar kartu."
+              centerXRatio={1.02}
+              frontSide="left"
+              items={haloItems}
+              radiusXRatio={0.52}
+              radiusYRatio={0.32}
+            />
           </div>
         </div>
 
@@ -73,7 +116,6 @@ export function AboutSection() {
             ))}
           </div>
         </div>
-
       </div>
     </section>
   );

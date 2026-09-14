@@ -37,6 +37,13 @@ export function VisiMisiSection() {
   return (
     <section className="vision-section" id="visi-misi" aria-labelledby="vision-title">
       <div className="vision-shell">
+        <div className="vision-pixel-field" aria-hidden="true">
+          <i className="vision-pixel-field__node vision-pixel-field__node--one" />
+          <i className="vision-pixel-field__node vision-pixel-field__node--two" />
+          <i className="vision-pixel-field__node vision-pixel-field__node--three" />
+          <i className="vision-pixel-field__node vision-pixel-field__node--four" />
+        </div>
+
         <p className="vision-eyebrow">
           <span aria-hidden="true" />
           02 / VISI &amp; MISI
@@ -51,14 +58,11 @@ export function VisiMisiSection() {
 
         <div className="vision-content">
           <div className="vision-logo-panel" aria-hidden="true">
-            <span className="vision-logo-panel__line vision-logo-panel__line--one" />
-            <span className="vision-logo-panel__line vision-logo-panel__line--two" />
-            <span className="vision-logo-panel__orbit" />
             <div className="vision-logo-panel__logo">
               <Image
                 alt=""
                 fill
-                sizes="(max-width: 820px) 180px, 260px"
+                sizes="(max-width: 820px) 160px, 220px"
                 src="/images/logos/Logo MIF 2020.png"
               />
             </div>
