@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { MissionAccordion } from "@/components/ui/MissionAccordion";
 import { ScrollRevealAccent } from "@/components/ui/ScrollRevealAccent";
 
@@ -57,15 +56,15 @@ export function VisiMisiSection() {
         </h2>
 
         <div className="vision-content">
-          <div className="vision-logo-panel" aria-hidden="true">
-            <div className="vision-logo-panel__logo">
-              <Image
-                alt=""
-                fill
-                sizes="(max-width: 820px) 160px, 220px"
-                src="/images/logos/Logo MIF 2020.png"
-              />
-            </div>
+          <div className="vision-video-panel">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="vision-video"
+              src="/videos/animasi logo.mp4"
+            />
           </div>
 
           <MissionAccordion items={missions} />

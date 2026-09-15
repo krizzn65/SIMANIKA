@@ -11,11 +11,11 @@
 | Metrik | Nilai |
 |--------|-------|
 | **Total Tasks** | 165 |
-| **Selesai** | 4 |
+| **Selesai** | 5 |
 | **Dalam Proses** | 0 |
-| **Belum Dikerjakan** | 161 |
+| **Belum Dikerjakan** | 160 |
 | **Blocked** | 0 |
-| **Progress** | `░░░░░░░░░░░░░░░░░░░░` **2%** |
+| **Progress** | `█░░░░░░░░░░░░░░░░░░░` **3%** |
 
 ### Status Legend
 
@@ -156,7 +156,7 @@
 | FE-3.2 | `Footer.jsx` — kontak, sosmed, quick links | ⬜ | — |
 | FE-3.3 | `HeroSection.jsx` — tagline, CTA, bg animasi | ✅ | Inset hero, CRT visual, split CTA, masked logo marquee, game cursor |
 | FE-3.4 | `AboutSection.jsx` | ✅ | Editorial intro, scroll-linked text reveal, organization copy, three focus pillars |
-| FE-3.5 | `VisiMisiSection.jsx` | ⬜ | — |
+| FE-3.5 | `VisiMisiSection.jsx` | ✅ | Editorial title, animated logo video panel, interactive mission accordion |
 | FE-3.6 | `StrukturSection.jsx` — grid pengurus | ⬜ | — |
 | FE-3.7 | `DivisiSection.jsx` — card grid | ⬜ | — |
 | FE-3.8 | `ProkerSection.jsx` | ⬜ | — |
