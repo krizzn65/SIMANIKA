@@ -1,5 +1,6 @@
 import { ScrollRevealText } from "@/components/ui/ScrollRevealText";
 import { HaloReel } from "@/components/ui/HaloReel";
+import { PixelCorner } from "@/components/ui/PixelCorner";
 
 const haloItems = [
   {
@@ -59,6 +60,9 @@ export function AboutSection() {
   return (
     <section className="about-section" id="tentang" aria-labelledby="about-title">
       <div className="about-shell">
+        <PixelCorner position="top-right" />
+        <PixelCorner position="bottom-left" />
+
         <div className="about-code" aria-hidden="true">
           <span>SIMANIKA</span>
         </div>
@@ -81,11 +85,15 @@ export function AboutSection() {
           <div className="about-halo">
             <HaloReel
               ariaLabel="Galeri identitas HIMANIKA. Gunakan tombol panah kiri dan kanan untuk memutar kartu."
-              centerXRatio={1.02}
+              cardWidth={180}
+              cardHeight={245}
+              centerXRatio={0.92}
               frontSide="left"
               items={haloItems}
-              radiusXRatio={0.52}
-              radiusYRatio={0.32}
+              minScale={0.58}
+              radiusXRatio={0.42}
+              radiusYRatio={0.28}
+              spread={0.88}
             />
           </div>
         </div>

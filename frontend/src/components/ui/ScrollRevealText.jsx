@@ -37,9 +37,15 @@ export function ScrollRevealText({ id, lines }) {
       return undefined;
     }
 
+    let isVisible = false;
     let animationFrame = 0;
 
     const paint = () => {
+      if (!isVisible) {
+        animationFrame = 0;
+        return;
+      }
+
       const bounds = heading.getBoundingClientRect();
       const viewportHeight = window.innerHeight || 1;
       const revealStart = viewportHeight * 0.88;
@@ -57,15 +63,23 @@ export function ScrollRevealText({ id, lines }) {
     };
 
     const schedulePaint = () => {
-      if (!animationFrame) animationFrame = window.requestAnimationFrame(paint);
+      if (!animationFrame && isVisible) {
+        animationFrame = window.requestAnimationFrame(paint);
+      }
     };
 
-    schedulePaint();
+    const observer = new IntersectionObserver(([entry]) => {
+      isVisible = entry.isIntersecting;
+      if (isVisible) paint();
+    });
+    observer.observe(heading);
+
     window.addEventListener("scroll", schedulePaint, { passive: true });
     window.addEventListener("resize", schedulePaint);
 
     return () => {
-      window.cancelAnimationFrame(animationFrame);
+      observer.disconnect();
+      if (animationFrame) window.cancelAnimationFrame(animationFrame);
       window.removeEventListener("scroll", schedulePaint);
       window.removeEventListener("resize", schedulePaint);
     };

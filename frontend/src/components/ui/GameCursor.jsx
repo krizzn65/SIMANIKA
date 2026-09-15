@@ -12,27 +12,43 @@ export function GameCursor() {
     if (!cursor || !finePointer.matches) return undefined;
 
     let animationFrame = 0;
+    let pendingX = 0;
+    let pendingY = 0;
+    let isHoveringInteractive = false;
+    let isVisible = false;
+
     document.documentElement.classList.add("game-cursor-enabled");
+
+    const render = () => {
+      cursor.style.transform = `translate3d(${pendingX}px, ${pendingY}px, 0)`;
+      if (!isVisible) {
+        cursor.classList.add("game-cursor--visible");
+        isVisible = true;
+      }
+      cursor.classList.toggle("game-cursor--interactive", isHoveringInteractive);
+      animationFrame = 0;
+    };
 
     const moveCursor = (event) => {
       if (event.pointerType !== "mouse") return;
 
-      window.cancelAnimationFrame(animationFrame);
-      animationFrame = window.requestAnimationFrame(() => {
-        cursor.style.setProperty("--cursor-x", `${event.clientX}px`);
-        cursor.style.setProperty("--cursor-y", `${event.clientY}px`);
-        cursor.classList.add("game-cursor--visible");
-        cursor.classList.toggle(
-          "game-cursor--interactive",
-          Boolean(event.target.closest("a, button, [role='button']")),
-        );
-      });
+      pendingX = event.clientX;
+      pendingY = event.clientY;
+      const target = event.target;
+      isHoveringInteractive = target instanceof Element && Boolean(target.closest("a, button, [role='button'], input, select, textarea"));
+
+      if (!animationFrame) {
+        animationFrame = window.requestAnimationFrame(render);
+      }
     };
 
     const pressCursor = () => cursor.classList.add("game-cursor--pressed");
     const releaseCursor = () => cursor.classList.remove("game-cursor--pressed");
     const hideCursor = (event) => {
-      if (!event.relatedTarget) cursor.classList.remove("game-cursor--visible");
+      if (!event.relatedTarget) {
+        cursor.classList.remove("game-cursor--visible");
+        isVisible = false;
+      }
     };
 
     window.addEventListener("pointermove", moveCursor, { passive: true });
@@ -42,7 +58,7 @@ export function GameCursor() {
     window.addEventListener("blur", releaseCursor);
 
     return () => {
-      window.cancelAnimationFrame(animationFrame);
+      if (animationFrame) window.cancelAnimationFrame(animationFrame);
       document.documentElement.classList.remove("game-cursor-enabled");
       window.removeEventListener("pointermove", moveCursor);
       window.removeEventListener("pointerdown", pressCursor);

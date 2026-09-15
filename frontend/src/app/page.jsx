@@ -1,15 +1,39 @@
+import dynamic from "next/dynamic";
 import { Navbar } from "@/components/layout/Navbar";
-import { AboutSection } from "@/components/sections/AboutSection";
 import { HeroSection } from "@/components/sections/HeroSection";
-import { VisiMisiSection } from "@/components/sections/VisiMisiSection";
+import { LazySection } from "@/components/ui/LazySection";
+
+const AboutSection = dynamic(
+  () =>
+    import("@/components/sections/AboutSection").then(
+      (mod) => mod.AboutSection,
+    ),
+  { ssr: true },
+);
+
+const VisiMisiSection = dynamic(
+  () =>
+    import("@/components/sections/VisiMisiSection").then(
+      (mod) => mod.VisiMisiSection,
+    ),
+  { ssr: true },
+);
 
 export default function HomePage() {
   return (
     <main>
       <Navbar />
+      {/* Hero directly visible on first paint */}
       <HeroSection />
-      <AboutSection />
-      <VisiMisiSection />
+
+      {/* Off-screen sections rendered dynamically on scroll */}
+      <LazySection minHeight="45rem">
+        <AboutSection />
+      </LazySection>
+
+      <LazySection minHeight="55rem">
+        <VisiMisiSection />
+      </LazySection>
     </main>
   );
 }

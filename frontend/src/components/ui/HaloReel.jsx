@@ -40,6 +40,7 @@ export function HaloReel({
   const pausedRef = useRef(false);
   const draggingRef = useRef(false);
   const settlingRef = useRef(false);
+  const isVisibleRef = useRef(true);
   const dragRef = useRef({ left: 0, top: 0, angle: 0 });
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -48,9 +49,10 @@ export function HaloReel({
     const count = items.length;
     const radiusX = size.width * radiusXRatio;
     const radiusY = size.height * radiusYRatio;
+    // Slots count matching density nicely
     const slots = count
       ? clamp(
-          Math.ceil(
+          Math.round(
             TAU *
               Math.max(
                 radiusX / (cardWidth * spread),
@@ -58,7 +60,7 @@ export function HaloReel({
               ),
           ),
           count,
-          Math.max(count, 32),
+          Math.min(Math.max(count, 8), 12),
         )
       : 0;
     const step = slots ? TAU / slots : 0;
@@ -117,9 +119,9 @@ export function HaloReel({
         card.style.width = `${fittedWidth}px`;
         card.style.height = `${fittedHeight}px`;
         card.style.zIndex = `${Math.round(scale * 1000)}`;
-        card.style.opacity = `${0.42 + scale * 0.58}`;
-        card.style.filter = `saturate(${0.62 + scale * 0.38}) brightness(${0.72 + scale * 0.28})`;
-        card.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
+        card.style.opacity = `${(0.42 + scale * 0.58).toFixed(2)}`;
+        // Removed heavy filter: saturate/brightness to boost 60fps GPU performance
+        card.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
       });
     },
     [centerXRatio, frontSide, geometry, minScale, size.height, size.width],
@@ -137,7 +139,16 @@ export function HaloReel({
     const observer = new ResizeObserver(measure);
     observer.observe(stage);
 
-    return () => observer.disconnect();
+    // Stop animation when stage is off-screen
+    const io = new IntersectionObserver(([entry]) => {
+      isVisibleRef.current = entry.isIntersecting;
+    });
+    io.observe(stage);
+
+    return () => {
+      observer.disconnect();
+      io.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -165,7 +176,12 @@ export function HaloReel({
       const delta = Math.min(time - previousTime, 64);
       previousTime = time;
 
-      if (!pausedRef.current && !draggingRef.current && !settlingRef.current) {
+      if (
+        isVisibleRef.current &&
+        !pausedRef.current &&
+        !draggingRef.current &&
+        !settlingRef.current
+      ) {
         elapsed += delta;
 
         if (phase === "hold" && elapsed >= holdDuration) {

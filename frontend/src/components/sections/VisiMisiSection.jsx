@@ -1,5 +1,6 @@
 import { MissionAccordion } from "@/components/ui/MissionAccordion";
 import { ScrollRevealAccent } from "@/components/ui/ScrollRevealAccent";
+import { InteractiveGrid } from "@/components/ui/InteractiveGrid";
 
 const missions = [
   {
@@ -36,6 +37,8 @@ export function VisiMisiSection() {
   return (
     <section className="vision-section" id="visi-misi" aria-labelledby="vision-title">
       <div className="vision-shell">
+        <InteractiveGrid />
+
         <div className="vision-pixel-field" aria-hidden="true">
           <i className="vision-pixel-field__node vision-pixel-field__node--one" />
           <i className="vision-pixel-field__node vision-pixel-field__node--two" />
