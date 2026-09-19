@@ -119,6 +119,7 @@ svg {
     calc(var(--hero-frame) + var(--gutter))
     0;
   pointer-events: none;
+  transform: translateZ(0);
 }
 
 .site-header__inner {
@@ -140,8 +141,11 @@ svg {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.88);
   box-shadow: 0 12px 35px rgba(7, 17, 31, 0.08);
+  -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
   pointer-events: auto;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .brand-mark {
@@ -640,7 +644,15 @@ svg {
   overflow: hidden;
   outline-offset: -0.2rem;
   isolation: isolate;
+  contain: layout paint;
   mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    #000 8%,
+    #000 92%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
     90deg,
     transparent 0,
     #000 8%,
@@ -658,7 +670,6 @@ svg {
   width: clamp(2.5rem, 7vw, 7rem);
   content: "";
   pointer-events: none;
-  backdrop-filter: blur(5px);
 }
 
 .logo-marquee::before {
@@ -677,6 +688,7 @@ svg {
   align-items: center;
   animation: logo-marquee var(--marquee-duration) linear infinite;
   will-change: transform;
+  transform: translateZ(0);
 }
 
 .logo-marquee:hover .logo-marquee__track,
@@ -878,6 +890,8 @@ svg {
   position: absolute;
   top: 0;
   left: 0;
+  width: 180px;
+  height: 245px;
   overflow: hidden;
   margin: 0;
   border: 1px solid rgba(255, 255, 255, 0.65);
@@ -887,6 +901,8 @@ svg {
     0 1.5rem 3.5rem rgba(10, 16, 32, 0.2),
     0 0 0 0.32rem rgba(255, 255, 255, 0.4);
   transform-origin: center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   will-change: transform, opacity;
 }
 
@@ -905,7 +921,6 @@ svg {
 
 .halo-reel__card--photo-alt img {
   object-position: 78% 58%;
-  filter: saturate(0.75) contrast(1.12);
 }
 
 .halo-reel__card--logo {
@@ -1513,6 +1528,7 @@ svg {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
+  contain: strict;
   --grid-offset-x: 0px;
   --grid-offset-y: 0px;
   --mouse-x: 50%;
@@ -1527,8 +1543,9 @@ svg {
     linear-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.09) 1px, transparent 1px);
   background-size: clamp(4rem, 6vw, 6.5rem) clamp(4rem, 6vw, 6.5rem);
-  transform: translate3d(var(--grid-offset-x), var(--grid-offset-y), 0);
+  transform: translate3d(var(--grid-offset-x, 0px), var(--grid-offset-y, 0px), 0);
   will-change: transform;
+  backface-visibility: hidden;
 }
 
 .vision-pixel-field {
@@ -2429,11 +2446,11 @@ svg {
 
 .divisi-card__icon {
   display: flex;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.5rem;
+  height: 2.5rem;
   align-items: center;
   justify-content: center;
-  padding: 0.35rem;
+  padding: 0.3rem;
   border: 2px solid var(--ink);
   border-radius: var(--radius-xs);
   background: var(--surface);
@@ -2446,9 +2463,13 @@ svg {
     border-color 180ms ease;
 }
 
-.divisi-card__icon svg {
+.divisi-card__icon svg,
+.divisi-card__icon img,
+.divisi-card__logo-img {
   width: 100%;
   height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .divisi-card:hover .divisi-card__icon,
@@ -2616,6 +2637,544 @@ svg {
     transform: none;
     pointer-events: auto;
     margin-top: 1rem;
+  }
+}
+
+/* ═══ DIVISI FLOWCHART MODAL ═══ */
+
+.divisi-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(7, 17, 31, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 2.5vw, 2.5rem);
+  animation: divisiBackdropFade 220ms ease forwards;
+}
+
+.divisi-modal {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: 10px 10px 0 var(--ink), 0 24px 64px rgba(7, 17, 31, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: divisiModalScale 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.divisi-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 1.75rem;
+  border-bottom: 2px solid var(--border);
+  background: var(--surface);
+}
+
+.divisi-modal__title-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.divisi-modal__icon-wrap {
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 2px 2px 0 var(--border);
+}
+
+.divisi-modal__logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
+}
+
+.divisi-modal__icon-fallback {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--blue);
+}
+
+.divisi-modal__eyebrow {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--blue);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.divisi-modal__title {
+  font-family: "Inter Tight", sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0.15rem 0 0 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.divisi-modal__full {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.divisi-modal__close-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.85rem;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.divisi-modal__close-btn:hover,
+.divisi-modal__close-btn:focus-visible {
+  border-color: #ef4444;
+  color: #ef4444;
+  background-color: #fef2f2;
+  box-shadow: 2px 2px 0 #ef4444;
+  outline: none;
+}
+
+.divisi-modal__close-icon {
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.divisi-modal__close-hint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  background: var(--surface-subtle);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  letter-spacing: 0.05em;
+}
+
+.divisi-modal__close-btn:hover .divisi-modal__close-hint {
+  color: #ef4444;
+  border-color: #fca5a5;
+  background: #ffffff;
+}
+
+/* ── Modal Body & Flowchart ── */
+
+.divisi-modal__body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+}
+
+.flowchart-board {
+  position: relative;
+  padding: 2.25rem 1.5rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  justify-content: center;
+  background-image: radial-gradient(rgba(21, 94, 239, 0.12) 1.2px, transparent 1.2px);
+  background-size: 18px 18px;
+}
+
+.flowchart-tree {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-width: 580px;
+  max-width: 760px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Level 1: Leader */
+.flowchart-level--leader {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.flowchart-node--leader {
+  width: 290px;
+  text-align: center;
+  padding: 1.1rem 1.25rem;
+  background: var(--surface);
+  border: 2px solid var(--blue);
+  border-radius: 8px;
+  box-shadow: 4px 4px 0 var(--blue);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.flowchart-node--leader:hover {
+  transform: translateY(-2px);
+  box-shadow: 5px 5px 0 var(--blue);
+}
+
+.flowchart-node__tag {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--blue);
+  letter-spacing: 0.08em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.4rem;
+  padding: 0.15rem 0.5rem;
+  background: var(--surface-subtle);
+  border: 1px solid rgba(21, 94, 239, 0.25);
+  border-radius: 4px;
+}
+
+.flowchart-node__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.flowchart-node__dot--cyan {
+  background: var(--blue-light);
+  box-shadow: 0 0 6px var(--blue-light);
+}
+
+.flowchart-node__role {
+  font-family: "Inter Tight", sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+.flowchart-node__title {
+  font-family: "Inter Tight", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+  margin: 0.2rem 0 0 0;
+}
+
+/* Single Connector (Ketua to Wakil) */
+.flowchart-connector--single {
+  height: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  margin: 0;
+}
+
+.flowchart-connector__line {
+  width: 2px;
+  height: 100%;
+  background: var(--blue);
+}
+
+.flowchart-connector__arrow {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--blue);
+}
+
+/* Level 2: Vice */
+.flowchart-level--vice {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.flowchart-node--vice {
+  width: 270px;
+  text-align: center;
+  padding: 0.95rem 1.15rem;
+  background: var(--surface);
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  box-shadow: 4px 4px 0 var(--ink);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.flowchart-node--vice:hover {
+  transform: translateY(-2px);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.flowchart-node--vice .flowchart-node__role {
+  font-size: 1.15rem;
+}
+
+.flowchart-node--vice .flowchart-node__title {
+  font-size: 0.82rem;
+}
+
+/* Fork Connector (Wakil splitting into parallel branches) */
+.flowchart-fork-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+.flowchart-fork__stem {
+  width: 2px;
+  height: 22px;
+  background: var(--blue);
+}
+
+.flowchart-fork__bar {
+  width: calc(50% + 0.875rem);
+  height: 2px;
+  background: var(--blue);
+}
+
+.flowchart-fork__drops {
+  width: calc(50% + 0.875rem);
+  display: flex;
+  justify-content: space-between;
+}
+
+.flowchart-fork__drop {
+  width: 2px;
+  height: 22px;
+  background: var(--blue);
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+/* Level 3: Parallel Branches */
+.flowchart-branches {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.75rem;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.flowchart-branch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.flowchart-branch__header {
+  margin-bottom: 0.85rem;
+  text-align: center;
+  width: 100%;
+}
+
+.flowchart-branch__pill {
+  display: inline-block;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  padding: 0.3rem 0.85rem;
+  background: var(--night);
+  color: #ffffff;
+  border-radius: 4px;
+  box-shadow: 2px 2px 0 var(--blue);
+  border: 1px solid var(--night);
+  text-transform: uppercase;
+}
+
+.flowchart-branch__items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+}
+
+.flowchart-node--sub {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 0.9rem 1.15rem;
+  box-shadow: 3px 3px 0 var(--border);
+  position: relative;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.flowchart-node--sub:hover {
+  border-color: var(--blue);
+  box-shadow: 3px 3px 0 var(--blue);
+  transform: translateY(-2px);
+}
+
+.flowchart-node__sub-badge {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  color: var(--blue);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.flowchart-node__sub-role {
+  font-family: "Inter Tight", sans-serif;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 0.15rem 0;
+}
+
+.flowchart-node__sub-title {
+  font-family: "Inter Tight", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--blue-dark);
+  margin: 0 0 0.35rem 0;
+}
+
+.flowchart-node__sub-desc {
+  font-family: "Inter Tight", sans-serif;
+  font-size: 0.76rem;
+  color: var(--ink-muted);
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* Modal Footer */
+.divisi-modal__footer-strip {
+  border-top: 1.5px solid var(--border);
+  background: var(--surface);
+  padding: 1.15rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.divisi-modal__desc-label,
+.divisi-modal__tags-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  letter-spacing: 0.07em;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.divisi-modal__desc-text {
+  font-size: 0.84rem;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.divisi-modal__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.divisi-modal__tag-chip {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface-subtle);
+  color: var(--blue-dark);
+}
+
+@keyframes divisiBackdropFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes divisiModalScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@media (max-width: 639px) {
+  .divisi-modal {
+    max-height: 94vh;
+  }
+
+  .divisi-modal__header {
+    padding: 0.95rem 1.15rem;
+  }
+
+  .divisi-modal__title {
+    font-size: 1.15rem;
+  }
+
+  .divisi-modal__full {
+    font-size: 0.82rem;
+  }
+
+  .flowchart-board {
+    padding: 1.5rem 1rem;
+    justify-content: flex-start;
+  }
+
+  .divisi-modal__footer-strip {
+    padding: 0.95rem 1.15rem;
   }
 }
 

@@ -36,14 +36,40 @@ export function ScrollRevealAccent({ text }) {
     }
 
     let animationFrame = 0;
+    let isVisible = false;
+    let cachedTop = 0;
+    let lastProgress = -1;
+
+    const updateMetrics = () => {
+      if (!accent) return;
+      const bounds = accent.getBoundingClientRect();
+      cachedTop = bounds.top + window.scrollY;
+    };
 
     const paint = () => {
-      const bounds = accent.getBoundingClientRect();
+      if (!isVisible) {
+        animationFrame = 0;
+        return;
+      }
+
       const viewportHeight = window.innerHeight || 1;
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      const relativeTop = cachedTop - scrollY;
       const revealStart = viewportHeight * 0.92;
       const revealEnd = viewportHeight * 0.48;
-      const revealDistance = revealStart - revealEnd;
-      const progress = clamp((revealStart - bounds.top) / revealDistance, 0, 1);
+      const revealDistance = Math.max(revealStart - revealEnd, 1);
+      const progress = clamp((revealStart - relativeTop) / revealDistance, 0, 1);
+
+      if (
+        (progress === 1 && lastProgress === 1) ||
+        (progress === 0 && lastProgress === 0) ||
+        (lastProgress !== -1 && Math.abs(progress - lastProgress) < 0.005)
+      ) {
+        animationFrame = 0;
+        return;
+      }
+      lastProgress = progress;
+
       const characterProgress = progress * (characters.length + 0.8);
 
       characters.forEach((character, index) => {
@@ -56,17 +82,36 @@ export function ScrollRevealAccent({ text }) {
     };
 
     const schedulePaint = () => {
-      if (!animationFrame) animationFrame = window.requestAnimationFrame(paint);
+      if (!animationFrame && isVisible) {
+        animationFrame = window.requestAnimationFrame(paint);
+      }
     };
 
-    schedulePaint();
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+        if (isVisible) {
+          updateMetrics();
+          paint();
+        }
+      },
+      { rootMargin: "150px 0px" },
+    );
+    observer.observe(accent);
+
+    const handleResize = () => {
+      updateMetrics();
+      schedulePaint();
+    };
+
     window.addEventListener("scroll", schedulePaint, { passive: true });
-    window.addEventListener("resize", schedulePaint);
+    window.addEventListener("resize", handleResize, { passive: true });
 
     return () => {
-      window.cancelAnimationFrame(animationFrame);
+      observer.disconnect();
+      if (animationFrame) window.cancelAnimationFrame(animationFrame);
       window.removeEventListener("scroll", schedulePaint);
-      window.removeEventListener("resize", schedulePaint);
+      window.removeEventListener("resize", handleResize);
     };
   }, [words]);
 

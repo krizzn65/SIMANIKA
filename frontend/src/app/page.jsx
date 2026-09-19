@@ -19,13 +19,7 @@ const VisiMisiSection = dynamic(
   { ssr: true },
 );
 
-const DivisiSection = dynamic(
-  () =>
-    import("@/components/sections/DivisiSection").then(
-      (mod) => mod.DivisiSection,
-    ),
-  { ssr: true },
-);
+import { DivisiSection } from "@/components/sections/DivisiSection";
 
 export default function HomePage() {
   return (
@@ -35,17 +29,15 @@ export default function HomePage() {
       <HeroSection />
 
       {/* Off-screen sections rendered dynamically on scroll */}
-      <LazySection minHeight="45rem">
+      <LazySection minHeight="45rem" rootMargin="800px 0px">
         <AboutSection />
       </LazySection>
 
-      <LazySection minHeight="55rem">
+      <LazySection minHeight="55rem" rootMargin="800px 0px">
         <VisiMisiSection />
       </LazySection>
 
-      <LazySection minHeight="45rem">
-        <DivisiSection />
-      </LazySection>
+      <DivisiSection />
     </main>
   );
 }

@@ -116,11 +116,23 @@ export function HaloReel({
         const x = centerX + radiusX * horizontalPosition - fittedWidth / 2;
         const y = centerY + radiusY * Math.sin(angle) - fittedHeight / 2;
 
-        card.style.width = `${fittedWidth}px`;
-        card.style.height = `${fittedHeight}px`;
-        card.style.zIndex = `${Math.round(scale * 1000)}`;
-        card.style.opacity = `${(0.42 + scale * 0.58).toFixed(2)}`;
-        // Removed heavy filter: saturate/brightness to boost 60fps GPU performance
+        if (card.style.width !== `${fittedWidth}px`) {
+          card.style.width = `${fittedWidth}px`;
+          card.style.height = `${fittedHeight}px`;
+        }
+
+        const zIndex = `${Math.round(scale * 1000)}`;
+        if (card.dataset.z !== zIndex) {
+          card.dataset.z = zIndex;
+          card.style.zIndex = zIndex;
+        }
+
+        const opacity = (0.42 + scale * 0.58).toFixed(2);
+        if (card.dataset.op !== opacity) {
+          card.dataset.op = opacity;
+          card.style.opacity = opacity;
+        }
+
         card.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
       });
     },
@@ -347,6 +359,10 @@ export function HaloReel({
               cardRefs.current[index] = node;
             }}
             role={decorative ? undefined : "group"}
+            style={{
+              width: `${geometry.cardWidth || cardWidth}px`,
+              height: `${geometry.cardHeight || cardHeight}px`,
+            }}
           >
             {item.src ? (
               <img
@@ -354,6 +370,7 @@ export function HaloReel({
                 draggable={false}
                 height={cardHeight}
                 loading="lazy"
+                decoding="async"
                 src={item.src}
                 width={cardWidth}
               />

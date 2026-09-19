@@ -70,7 +70,7 @@ export function Navbar() {
               height={44}
               priority
               sizes="44px"
-              src="/images/logos/Logo MIF 2020.png"
+              src="/images/logos/Logo-MIF-2020-nav.webp"
               width={44}
             />
           </Link>

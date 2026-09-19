@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import { MissionAccordion } from "@/components/ui/MissionAccordion";
 import { ScrollRevealAccent } from "@/components/ui/ScrollRevealAccent";
 import { InteractiveGrid } from "@/components/ui/InteractiveGrid";
@@ -33,6 +36,41 @@ const missions = [
   },
 ];
 
+function VisionVideo() {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.15 },
+    );
+
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <video
+      ref={videoRef}
+      loop
+      muted
+      playsInline
+      preload="metadata"
+      className="vision-video"
+      src="/videos/animasi logo.mp4"
+    />
+  );
+}
+
 export function VisiMisiSection() {
   return (
     <section className="vision-section" id="visi-misi" aria-labelledby="vision-title">
@@ -60,14 +98,7 @@ export function VisiMisiSection() {
 
         <div className="vision-content">
           <div className="vision-video-panel">
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="vision-video"
-              src="/videos/animasi logo.mp4"
-            />
+            <VisionVideo />
           </div>
 
           <MissionAccordion items={missions} />

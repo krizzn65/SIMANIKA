@@ -4,7 +4,7 @@ import { PixelCorner } from "@/components/ui/PixelCorner";
 
 const haloItems = [
   {
-    src: "/images/simanika-hero-crt.png",
+    src: "/images/simanika-hero-crt-card.webp",
     alt: "Komputer retro di lanskap biru SIMANIKA",
     variant: "photo",
   },
@@ -15,7 +15,7 @@ const haloItems = [
     variant: "blue",
   },
   {
-    src: "/images/logos/Logo MIF 2020.png",
+    src: "/images/logos/Logo-MIF-2020-card.webp",
     alt: "Logo Manajemen Informatika",
     variant: "logo",
   },
@@ -32,7 +32,7 @@ const haloItems = [
     variant: "paper",
   },
   {
-    src: "/images/simanika-hero-crt.png",
+    src: "/images/simanika-hero-crt-card-alt.webp",
     alt: "Visual teknologi retro HIMANIKA",
     variant: "photo-alt",
   },

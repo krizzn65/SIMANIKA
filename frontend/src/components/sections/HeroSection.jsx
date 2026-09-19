@@ -21,7 +21,7 @@ export function HeroSection() {
             fill
             priority
             sizes="100vw"
-            src="/images/simanika-hero-crt.png"
+            src="/images/simanika-hero-crt.webp"
           />
           <div className="hero-visual__wash" />
           <div className="hero-visual__scanlines" />

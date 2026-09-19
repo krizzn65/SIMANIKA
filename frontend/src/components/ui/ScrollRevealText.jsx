@@ -39,6 +39,16 @@ export function ScrollRevealText({ id, lines }) {
 
     let isVisible = false;
     let animationFrame = 0;
+    let cachedTop = 0;
+    let cachedHeight = 0;
+    let lastProgress = -1;
+
+    const updateMetrics = () => {
+      if (!heading) return;
+      const bounds = heading.getBoundingClientRect();
+      cachedTop = bounds.top + window.scrollY;
+      cachedHeight = bounds.height;
+    };
 
     const paint = () => {
       if (!isVisible) {
@@ -46,11 +56,24 @@ export function ScrollRevealText({ id, lines }) {
         return;
       }
 
-      const bounds = heading.getBoundingClientRect();
       const viewportHeight = window.innerHeight || 1;
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      const relativeTop = cachedTop - scrollY;
       const revealStart = viewportHeight * 0.88;
-      const revealDistance = Math.max(viewportHeight * 0.62, bounds.height * 0.9);
-      const progress = clamp((revealStart - bounds.top) / revealDistance, 0, 1);
+      const revealDistance = Math.max(viewportHeight * 0.62, cachedHeight * 0.9);
+      const progress = clamp((revealStart - relativeTop) / revealDistance, 0, 1);
+
+      // Skip painting if progress hasn't changed noticeably or was already fully revealed
+      if (
+        (progress === 1 && lastProgress === 1) ||
+        (progress === 0 && lastProgress === 0) ||
+        (lastProgress !== -1 && Math.abs(progress - lastProgress) < 0.005)
+      ) {
+        animationFrame = 0;
+        return;
+      }
+      lastProgress = progress;
+
       const characterProgress = progress * (characters.length + 0.75);
 
       characters.forEach((character, index) => {
@@ -68,20 +91,31 @@ export function ScrollRevealText({ id, lines }) {
       }
     };
 
-    const observer = new IntersectionObserver(([entry]) => {
-      isVisible = entry.isIntersecting;
-      if (isVisible) paint();
-    });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+        if (isVisible) {
+          updateMetrics();
+          paint();
+        }
+      },
+      { rootMargin: "100px 0px" },
+    );
     observer.observe(heading);
 
+    const handleResize = () => {
+      updateMetrics();
+      schedulePaint();
+    };
+
     window.addEventListener("scroll", schedulePaint, { passive: true });
-    window.addEventListener("resize", schedulePaint);
+    window.addEventListener("resize", handleResize, { passive: true });
 
     return () => {
       observer.disconnect();
       if (animationFrame) window.cancelAnimationFrame(animationFrame);
       window.removeEventListener("scroll", schedulePaint);
-      window.removeEventListener("resize", schedulePaint);
+      window.removeEventListener("resize", handleResize);
     };
   }, [wordLines]);
 
