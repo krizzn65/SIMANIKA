@@ -1,5 +1,4 @@
 import "./globals.css";
-import { GameCursor } from "@/components/ui/GameCursor";
 
 export const metadata = {
   title: "SIMANIKA — Himpunan Mahasiswa Informatika",
@@ -25,7 +24,6 @@ export default function RootLayout({ children }) {
   return (
     <html lang="id">
       <body>
-        <GameCursor />
         {children}
       </body>
     </html>

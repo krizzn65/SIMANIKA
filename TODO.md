@@ -11,11 +11,11 @@
 | Metrik | Nilai |
 |--------|-------|
 | **Total Tasks** | 165 |
-| **Selesai** | 5 |
+| **Selesai** | 6 |
 | **Dalam Proses** | 0 |
-| **Belum Dikerjakan** | 160 |
+| **Belum Dikerjakan** | 159 |
 | **Blocked** | 0 |
-| **Progress** | `█░░░░░░░░░░░░░░░░░░░` **3%** |
+| **Progress** | `█░░░░░░░░░░░░░░░░░░░` **4%** |
 
 ### Status Legend
 
@@ -158,7 +158,7 @@
 | FE-3.4 | `AboutSection.jsx` | ✅ | Editorial intro, scroll-linked text reveal, organization copy, three focus pillars |
 | FE-3.5 | `VisiMisiSection.jsx` | ✅ | Editorial title, animated logo video panel, interactive mission accordion |
 | FE-3.6 | `StrukturSection.jsx` — grid pengurus | ⬜ | — |
-| FE-3.7 | `DivisiSection.jsx` — card grid | ⬜ | — |
+| FE-3.7 | `DivisiSection.jsx` — card grid | ✅ | Bento 12-col grid (7-5 / 4-4-4), pixel icons, hover-reveal program tags |
 | FE-3.8 | `ProkerSection.jsx` | ⬜ | — |
 | FE-3.9 | `StatistikSection.jsx` — counter animasi | ⬜ | Intersection Observer |
 | FE-3.10 | `UpcomingEventsSection.jsx` — preview cards | ⬜ | — |

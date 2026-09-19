@@ -19,6 +19,14 @@ const VisiMisiSection = dynamic(
   { ssr: true },
 );
 
+const DivisiSection = dynamic(
+  () =>
+    import("@/components/sections/DivisiSection").then(
+      (mod) => mod.DivisiSection,
+    ),
+  { ssr: true },
+);
+
 export default function HomePage() {
   return (
     <main>
@@ -34,6 +42,11 @@ export default function HomePage() {
       <LazySection minHeight="55rem">
         <VisiMisiSection />
       </LazySection>
+
+      <LazySection minHeight="45rem">
+        <DivisiSection />
+      </LazySection>
     </main>
   );
 }
+
