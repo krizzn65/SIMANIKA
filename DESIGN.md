@@ -21,7 +21,7 @@ Komposisi visual ditetapkan dengan rasio:
 ### Tujuan desain
 
 1. Membuat HIMANIKA terlihat kredibel sekaligus dekat dengan mahasiswa.
-2. Mengarahkan pengunjung dengan cepat ke Event, OPREC, dan Partnership.
+2. Mengarahkan pengunjung dengan cepat ke Event, OPREC, dan merchandise.
 3. Menampilkan banyak informasi tanpa terasa seperti portal administrasi lama.
 4. Memiliki identitas 8-bit yang konsisten tetapi tetap mudah dibaca dan diakses.
 5. Dapat diterapkan konsisten pada public site, user dashboard, dan admin dashboard.
@@ -34,7 +34,7 @@ Komposisi visual ditetapkan dengan rasio:
 |---|---|---|
 | Hero besar | Headline dominan, visual atmosferik, CTA tunggal yang kuat | Headline HIMANIKA di kiri, scene digital kampus di tengah/bawah, kartu event unggulan di kanan |
 | Monokrom editorial | Putih, hitam, abu-abu; kontras tinggi | Dasar monokrom tetap dipakai, ditambah biru elektrik dan biru muda |
-| Modular cards | Kartu besar, border tipis, informasi padat tetapi rapi | Event, divisi, proker, statistik, dan partnership memakai sistem kartu yang sama |
+| Modular cards | Kartu besar, border tipis, informasi padat tetapi rapi | Event, divisi, proker, statistik, dan merchandise memakai sistem kartu yang sama |
 | Technical labels | Nomor, slash, kode versi, teks mono | Label seperti `// 01`, `STATUS: OPEN`, `EVENT_ID`, dan tahun kepengurusan |
 | Retro imagery | Objek teknologi lama dan karakter bergaya digital | Pixel mascot, monitor CRT, cursor, terminal, trophy, calendar, dan item game bertema kampus |
 | Alternating sections | Perpindahan light ke dark untuk membentuk ritme | Section utama terang, section statistik/proker/CTA memakai mode gelap |
@@ -302,7 +302,7 @@ Gunakan dua lapis sistem ikon:
 | Seminar | Microphone |
 | OPREC | Open door + cursor |
 | Divisi | Folder/module/chip sesuai fungsi |
-| Partnership | Handshake/link blocks |
+| merchandise | Handshake/link blocks |
 | Tim | Party/three avatars |
 | Kode tim | Key/cartridge |
 | Success | Blue flag/check tile |
@@ -354,7 +354,7 @@ Rules:
 **Editorial card**
 
 - Radius 14–20 px, border tipis, media besar, whitespace lega.
-- Cocok untuk event, gallery, article, dan partnership.
+- Cocok untuk event, gallery, article, dan merchandise.
 - Hover menaikkan media dan menggeser arrow 4 px.
 
 **Pixel card**
@@ -411,7 +411,7 @@ Gunakan mono 11–12 px, uppercase, letter spacing `.06em`.
 
 ### 10.1 Navbar
 
-Isi: logo SIMANIKA, Home, Event, OPREC, Partnership, login/profile. Navbar mengambang di atas hero dan berubah menjadi glass surface saat scroll.
+Isi: logo SIMANIKA, Home, Event, OPREC, merchandise, login/profile. Navbar mengambang di atas hero dan berubah menjadi glass surface saat scroll.
 
 ### 10.2 Hero — “Build Your Next Chapter”
 
@@ -542,7 +542,7 @@ Kecepatan 32–46 detik per loop, pause saat hover/focus, dan menjadi teks stati
 - Division choice memakai selectable cards dengan checkmark, bukan hanya border color.
 - CTA daftar nonaktif harus menjelaskan kapan pendaftaran dibuka kembali.
 
-### 11.4 Partnership
+### 11.4 merchandise
 
 - Nada lebih formal: kurangi pixel accent menjadi sekitar 10%.
 - Gunakan statistik, audience reach, benefit, tier sponsorship, dan logo partners.

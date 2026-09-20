@@ -12,7 +12,7 @@ const links = [
   { href: "/", icon: "home", label: "Home" },
   { href: "/events", icon: "event", label: "Event" },
   { href: "/oprec", icon: "oprec", label: "OPREC" },
-  { href: "/partnership", icon: "partnership", label: "Partnership" },
+  { href: "/merchandise", icon: "merchandise", label: "Merchandise" },
 ];
 
 function MenuIcon({ open }) {

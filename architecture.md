@@ -141,8 +141,8 @@ frontend/
 │   │   │   │       └── page.jsx# Event detail
 │   │   │   ├── oprec/
 │   │   │   │   └── page.jsx    # Oprec info
-│   │   │   ├── partnership/
-│   │   │   │   └── page.jsx    # Partnership info
+│   │   │   ├── merchandise/
+│   │   │   │   └── page.jsx    # merchandise info
 │   │   │   ├── login/
 │   │   │   │   └── page.jsx    # Login page
 │   │   │   └── register/
@@ -176,8 +176,8 @@ frontend/
 │   │   │   │   ├── page.jsx    # Manage oprec
 │   │   │   │   └── registrants/
 │   │   │   │       └── page.jsx# Oprec registrants
-│   │   │   ├── partnership/
-│   │   │   │   └── page.jsx    # Manage partnership
+│   │   │   ├── merchandise/
+│   │   │   │   └── page.jsx    # Manage merchandise
 │   │   │   ├── content/
 │   │   │   │   └── page.jsx    # Manage site content
 │   │   │   └── settings/
@@ -223,7 +223,7 @@ frontend/
 │   │   ├── eventService.js
 │   │   ├── teamService.js
 │   │   ├── oprecService.js
-│   │   ├── partnershipService.js
+│   │   ├── merchandiseService.js
 │   │   └── contentService.js
 │   ├── store/                  # Zustand stores
 │   │   ├── authStore.js
@@ -254,7 +254,7 @@ backend/
 │   │   │   │   ├── HomeController.php
 │   │   │   │   ├── PublicEventController.php
 │   │   │   │   ├── PublicOprecController.php
-│   │   │   │   └── PublicPartnershipController.php
+│   │   │   │   └── PublicmerchandiseController.php
 │   │   │   ├── User/
 │   │   │   │   ├── DashboardController.php
 │   │   │   │   ├── EventRegistrationController.php
@@ -267,7 +267,7 @@ backend/
 │   │   │       ├── TeamManagementController.php
 │   │   │       ├── OprecController.php
 │   │   │       ├── OprecRegistrantController.php
-│   │   │       ├── PartnershipController.php
+│   │   │       ├── merchandiseController.php
 │   │   │       ├── ContentController.php
 │   │   │       └── ExportController.php
 │   │   ├── Middleware/
@@ -278,13 +278,13 @@ backend/
 │   │   │   ├── Event/
 │   │   │   ├── Team/
 │   │   │   ├── Oprec/
-│   │   │   └── Partnership/
+│   │   │   └── merchandise/
 │   │   └── Resources/      # API Resource transformers
 │   │       ├── UserResource.php
 │   │       ├── EventResource.php
 │   │       ├── TeamResource.php
 │   │       ├── OprecResource.php
-│   │       └── PartnershipResource.php
+│   │       └── merchandiseResource.php
 │   ├── Models/
 │   │   ├── User.php
 │   │   ├── Event.php
@@ -298,8 +298,8 @@ backend/
 │   │   ├── Oprec.php
 │   │   ├── OprecDivision.php
 │   │   ├── OprecRegistration.php
-│   │   ├── Partnership.php
-│   │   ├── PartnershipInquiry.php
+│   │   ├── merchandise.php
+│   │   ├── merchandiseInquiry.php
 │   │   ├── SiteContent.php
 │   │   ├── StrukturOrganisasi.php
 │   │   ├── Divisi.php
@@ -353,8 +353,8 @@ backend/
 | `GET` | `/api/public/events` | List published events | ❌ |
 | `GET` | `/api/public/events/{slug}` | Detail event | ❌ |
 | `GET` | `/api/public/oprec` | Get oprec info | ❌ |
-| `GET` | `/api/public/partnerships` | List partnerships | ❌ |
-| `POST` | `/api/public/partnership-inquiry` | Submit partnership form | ❌ |
+| `GET` | `/api/public/merchandises` | List merchandises | ❌ |
+| `POST` | `/api/public/merchandise-inquiry` | Submit merchandise form | ❌ |
 
 ### 4.3 User (`/api/user`)
 
@@ -393,12 +393,12 @@ backend/
 | `PUT` | `/api/admin/oprec/{id}` | Update oprec | ✅ Admin |
 | `GET` | `/api/admin/oprec/{id}/registrants` | Data pendaftar oprec | ✅ Admin |
 | `PUT` | `/api/admin/oprec/{id}/registrants/{regId}` | Accept/reject | ✅ Admin |
-| — | **Partnership** | — | — |
-| `POST` | `/api/admin/partnerships` | Add partnership | ✅ Admin |
-| `PUT` | `/api/admin/partnerships/{id}` | Update partnership | ✅ Admin |
-| `DELETE` | `/api/admin/partnerships/{id}` | Delete partnership | ✅ Admin |
-| `GET` | `/api/admin/partnership-inquiries` | List inquiries | ✅ Admin |
-| `PUT` | `/api/admin/partnership-inquiries/{id}` | Update status inquiry | ✅ Admin |
+| — | **merchandise** | — | — |
+| `POST` | `/api/admin/merchandises` | Add merchandise | ✅ Admin |
+| `PUT` | `/api/admin/merchandises/{id}` | Update merchandise | ✅ Admin |
+| `DELETE` | `/api/admin/merchandises/{id}` | Delete merchandise | ✅ Admin |
+| `GET` | `/api/admin/merchandise-inquiries` | List inquiries | ✅ Admin |
+| `PUT` | `/api/admin/merchandise-inquiries/{id}` | Update status inquiry | ✅ Admin |
 | — | **Content** | — | — |
 | `GET` | `/api/admin/content` | Get site content | ✅ Admin |
 | `PUT` | `/api/admin/content` | Update site content | ✅ Admin |
@@ -459,8 +459,8 @@ Proyek dipecah menjadi **10 sprint** yang bisa dikerjakan secara berurutan. Seti
 - [ ] **DB-1.10**: Buat migration `oprecs`
 - [ ] **DB-1.11**: Buat migration `oprec_divisions`
 - [ ] **DB-1.12**: Buat migration `oprec_registrations`
-- [ ] **DB-1.13**: Buat migration `partnerships`
-- [ ] **DB-1.14**: Buat migration `partnership_inquiries`
+- [ ] **DB-1.13**: Buat migration `merchandises`
+- [ ] **DB-1.14**: Buat migration `merchandise_inquiries`
 - [ ] **DB-1.15**: Buat migration `site_contents` + tabel terkait (struktur, divisi, proker, gallery, testimonials)
 - [ ] **DB-1.16**: Buat semua Eloquent Models dengan relationships
 - [ ] **DB-1.17**: Buat Seeders (admin user, sample site content)
@@ -669,28 +669,28 @@ Proyek dipecah menjadi **10 sprint** yang bisa dikerjakan secara berurutan. Seti
 
 ---
 
-### 🔵 Sprint 7 — Partnership System
+### 🔵 Sprint 7 — merchandise System
 **Durasi**: 1-2 hari
 **Dependencies**: Sprint 2
 
 #### Tasks (Backend):
-- [ ] **BE-7.1**: Buat `PublicPartnershipController` — list active partnerships
-- [ ] **BE-7.2**: Buat endpoint submit partnership inquiry (form kolaborasi)
-- [ ] **BE-7.3**: Buat admin `PartnershipController` — CRUD partnerships
+- [ ] **BE-7.1**: Buat `PublicmerchandiseController` — list active merchandises
+- [ ] **BE-7.2**: Buat endpoint submit merchandise inquiry (form kolaborasi)
+- [ ] **BE-7.3**: Buat admin `merchandiseController` — CRUD merchandises
 - [ ] **BE-7.4**: Buat admin endpoint — list & manage inquiries
 
 #### Tasks (Frontend):
-- [ ] **FE-7.1**: Buat `Partnership.jsx` — header, statistik, benefit, paket, sponsor grid, form
+- [ ] **FE-7.1**: Buat `merchandise.jsx` — header, statistik, benefit, paket, sponsor grid, form
 - [ ] **FE-7.2**: Buat form kolaborasi — submit to API
-- [ ] **FE-7.3**: Buat `partnershipService.js`
-- [ ] **FE-7.4**: Admin: `ManagePartnership.jsx` — CRUD partnership, upload logo
-- [ ] **FE-7.5**: Admin: List & manage partnership inquiries
+- [ ] **FE-7.3**: Buat `merchandiseService.js`
+- [ ] **FE-7.4**: Admin: `Managemerchandise.jsx` — CRUD merchandise, upload logo
+- [ ] **FE-7.5**: Admin: List & manage merchandise inquiries
 
 #### ✅ Done Criteria:
-- [ ] Public: Partnership page menampilkan sponsor + benefit + paket
+- [ ] Public: merchandise page menampilkan sponsor + benefit + paket
 - [ ] Public: Form kolaborasi bisa disubmit
-- [ ] Admin: CRUD partnership (termasuk upload logo)
-- [ ] Admin: Bisa lihat & kelola partnership inquiries (read/responded)
+- [ ] Admin: CRUD merchandise (termasuk upload logo)
+- [ ] Admin: Bisa lihat & kelola merchandise inquiries (read/responded)
 
 ---
 
@@ -860,7 +860,7 @@ graph TD
     S1 --> S2["Sprint 2: Auth"]
     S2 --> S4["Sprint 4: Event System"]
     S2 --> S6["Sprint 6: OPREC"]
-    S2 --> S7["Sprint 7: Partnership"]
+    S2 --> S7["Sprint 7: merchandise"]
     S4 --> S5["Sprint 5: Team System"]
     S4 --> S8["Sprint 8: Admin Dashboard"]
     S5 --> S8
@@ -889,7 +889,7 @@ graph TD
 > [!TIP]
 > **Sprint yang bisa dikerjakan paralel:**
 > - Sprint 3 (Landing Page) bisa dikerjakan **bersamaan** dengan Sprint 1 & 2 (pakai data dummy dulu)
-> - Sprint 6 (OPREC) & Sprint 7 (Partnership) bisa dikerjakan **bersamaan** setelah Sprint 2
+> - Sprint 6 (OPREC) & Sprint 7 (merchandise) bisa dikerjakan **bersamaan** setelah Sprint 2
 
 ---
 
@@ -904,7 +904,7 @@ graph TD
 | Sprint 4: Event | 3-4 hari | 7-11 hari |
 | Sprint 5: Team | 3-4 hari | 10-15 hari |
 | Sprint 6: OPREC | 2-3 hari | 12-18 hari* |
-| Sprint 7: Partnership | 1-2 hari | 13-20 hari* |
+| Sprint 7: merchandise | 1-2 hari | 13-20 hari* |
 | Sprint 8: Admin Dashboard | 2-3 hari | 15-23 hari |
 | Sprint 9: User Dashboard | 2-3 hari | 17-26 hari |
 | Sprint 10: Polish & Deploy | 3-5 hari | **20-31 hari** |

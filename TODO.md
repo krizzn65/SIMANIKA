@@ -83,8 +83,8 @@
 | DB-1.10 | Migration `oprecs` | ⬜ | — |
 | DB-1.11 | Migration `oprec_divisions` | ⬜ | — |
 | DB-1.12 | Migration `oprec_registrations` | ⬜ | — |
-| DB-1.13 | Migration `partnerships` | ⬜ | — |
-| DB-1.14 | Migration `partnership_inquiries` | ⬜ | — |
+| DB-1.13 | Migration `merchandises` | ⬜ | — |
+| DB-1.14 | Migration `merchandise_inquiries` | ⬜ | — |
 | DB-1.15 | Migration `site_contents` + tabel terkait | ⬜ | struktur, divisi, proker, gallery, testimonials |
 | DB-1.16 | Buat semua Eloquent Models + relationships | ⬜ | — |
 | DB-1.17 | Buat Seeders (admin user, sample content) | ⬜ | — |
@@ -294,7 +294,7 @@
 
 ---
 
-## Sprint 7 — Partnership System
+## Sprint 7 — merchandise System
 
 **Status**: ⬜ Belum Dimulai
 **Target**: 1-2 hari
@@ -302,22 +302,22 @@
 
 | ID | Task | Status | Catatan |
 |----|------|--------|---------|
-| BE-7.1 | `PublicPartnershipController` — list partnerships | ⬜ | — |
-| BE-7.2 | Submit partnership inquiry endpoint | ⬜ | — |
-| BE-7.3 | Admin `PartnershipController` — CRUD | ⬜ | — |
+| BE-7.1 | `PublicmerchandiseController` — list merchandises | ⬜ | — |
+| BE-7.2 | Submit merchandise inquiry endpoint | ⬜ | — |
+| BE-7.3 | Admin `merchandiseController` — CRUD | ⬜ | — |
 | BE-7.4 | Admin manage inquiries | ⬜ | — |
-| FE-7.1 | `Partnership.jsx` — full page | ⬜ | — |
+| FE-7.1 | `merchandise.jsx` — full page | ⬜ | — |
 | FE-7.2 | Form kolaborasi | ⬜ | — |
-| FE-7.3 | `partnershipService.js` | ⬜ | — |
-| FE-7.4 | Admin: `ManagePartnership.jsx` — CRUD | ⬜ | — |
+| FE-7.3 | `merchandiseService.js` | ⬜ | — |
+| FE-7.4 | Admin: `Managemerchandise.jsx` — CRUD | ⬜ | — |
 | FE-7.5 | Admin: Manage inquiries | ⬜ | — |
 
 **Done Criteria**:
 | # | Kriteria | Verified |
 |---|----------|----------|
-| 1 | Partnership page menampilkan data | ⬜ |
+| 1 | merchandise page menampilkan data | ⬜ |
 | 2 | Form kolaborasi submit berhasil | ⬜ |
-| 3 | Admin CRUD partnership (+ logo upload) | ⬜ |
+| 3 | Admin CRUD merchandise (+ logo upload) | ⬜ |
 | 4 | Admin kelola inquiries | ⬜ |
 
 ---

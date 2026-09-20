@@ -14,7 +14,7 @@
 1. **Portal informasi organisasi** — Menampilkan profil, visi-misi, struktur organisasi, dan kegiatan HIMANIKA.
 2. **Platform manajemen event** — Mengelola dan mempublikasikan event, lomba, dan kegiatan organisasi.
 3. **Sistem pendaftaran** — Menyediakan form pendaftaran untuk event, lomba, dan open recruitment (OPREC) anggota baru.
-4. **Portal partnership** — Menjembatani kerja sama dengan pihak eksternal (sponsor, media partner, dll).
+4. **Portal merchandise** — Menjembatani kerja sama dengan pihak eksternal (sponsor, media partner, dll).
 
 ### Referensi Konsep
 Website [ifestunpad.com](https://ifestunpad.com) digunakan sebagai referensi **konsep dan struktur halaman**, bukan style/design.
@@ -30,7 +30,7 @@ Website [ifestunpad.com](https://ifestunpad.com) digunakan sebagai referensi **k
 | 2 | Mempermudah pendaftaran event & oprec | ≥ 80% pendaftaran dilakukan via web |
 | 3 | Meningkatkan visibilitas organisasi | Peningkatan traffic web & engagement |
 | 4 | Mempermudah pengelolaan data peserta | Admin dapat mengelola data dalam 1 dashboard |
-| 5 | Menarik partnership/sponsor | Tersedia portal khusus partnership |
+| 5 | Menarik merchandise/sponsor | Tersedia portal khusus merchandise |
 
 ### 2.2 Target Pengguna
 - **Mahasiswa** — Calon anggota, peserta event/lomba
@@ -49,7 +49,7 @@ Website [ifestunpad.com](https://ifestunpad.com) digunakan sebagai referensi **k
 | Melihat Event & Lomba | Browse daftar event yang tersedia |
 | Mendaftar Event/Lomba | Mengisi form pendaftaran event |
 | Mendaftar OPREC | Mengisi form open recruitment anggota |
-| Melihat Partnership | Melihat daftar sponsor & partner |
+| Melihat merchandise | Melihat daftar sponsor & partner |
 | Login / Register | Membuat akun untuk mendaftar event |
 | Melihat Status Pendaftaran | Cek status pendaftaran (diterima/pending/ditolak) |
 
@@ -60,7 +60,7 @@ Website [ifestunpad.com](https://ifestunpad.com) digunakan sebagai referensi **k
 | Semua akses User | Ditambah fitur pengelolaan |
 | Kelola Event | CRUD (Create, Read, Update, Delete) event & lomba |
 | Kelola OPREC | Buka/tutup periode OPREC, kelola form, kelola pendaftar |
-| Kelola Partnership | CRUD data sponsor & media partner |
+| Kelola merchandise | CRUD data sponsor & media partner |
 | Kelola Pendaftar | Lihat, filter, accept/reject pendaftar event & oprec |
 | Dashboard Analytics | Melihat statistik pendaftar, event, dll |
 | Kelola Konten Home | Update info organisasi (about, struktur, dll) |
@@ -78,7 +78,7 @@ SIMANIKA
 │   ├── /events (Daftar Event & Lomba)
 │   ├── /events/[slug] (Detail Event)
 │   ├── /oprec (Open Recruitment)
-│   ├── /partnership (Partnership & Sponsor)
+│   ├── /merchandise (merchandise & Sponsor)
 │   ├── /login (Login Page)
 │   └── /register (Register Page)
 │
@@ -96,7 +96,7 @@ SIMANIKA
     ├── /admin/events/[id]/pendaftar (Data Pendaftar Event)
     ├── /admin/oprec (Kelola OPREC)
     ├── /admin/oprec/pendaftar (Data Pendaftar OPREC)
-    ├── /admin/partnership (Kelola Partnership)
+    ├── /admin/merchandise (Kelola merchandise)
     └── /admin/settings (Pengaturan Website)
 ```
 
@@ -112,7 +112,7 @@ Landing page utama yang menampilkan seluruh informasi organisasi HIMANIKA secara
 
 | # | Section | Deskripsi | Konten |
 |---|---------|-----------|--------|
-| 1 | **Navbar** | Navigasi utama, sticky di atas | Logo SIMANIKA, Menu (Home, Event, OPREC, Partnership), Tombol Login |
+| 1 | **Navbar** | Navigasi utama, sticky di atas | Logo SIMANIKA, Menu (Home, Event, OPREC, merchandise), Tombol Login |
 | 2 | **Hero** | Banner utama yang eye-catching | Tagline HIMANIKA, CTA button ("Lihat Event", "Gabung Sekarang"), background visual/animasi |
 | 3 | **About** | Penjelasan tentang HIMANIKA | Apa itu HIMANIKA, sejarah singkat, deskripsi organisasi |
 | 4 | **Visi & Misi** | Visi dan misi organisasi | Visi organisasi, daftar misi |
@@ -245,7 +245,7 @@ Halaman khusus untuk Open Recruitment anggota baru HIMANIKA.
 
 ---
 
-### 5.4 🤝 Partnership Page (`/partnership`)
+### 5.4 🤝 merchandise Page (`/merchandise`)
 
 Halaman untuk menarik dan menampilkan kerja sama dengan pihak eksternal.
 
@@ -253,9 +253,9 @@ Halaman untuk menarik dan menampilkan kerja sama dengan pihak eksternal.
 
 | # | Section | Deskripsi |
 |---|---------|-----------|
-| 1 | **Header** | Judul "Partnership" dengan tagline |
+| 1 | **Header** | Judul "merchandise" dengan tagline |
 | 2 | **Statistik Organisasi** | Jumlah anggota, event, peserta, jangkauan — untuk meyakinkan partner |
-| 3 | **Benefit Partnership** | Apa yang didapat partner (exposure, branding, dll) |
+| 3 | **Benefit merchandise** | Apa yang didapat partner (exposure, branding, dll) |
 | 4 | **Paket Sponsorship** | Tabel/card tier sponsor (Platinum, Gold, Silver, dll) |
 | 5 | **Sponsor Saat Ini** | Logo grid sponsor & media partner yang sudah bekerja sama |
 | 6 | **Form Kolaborasi** | Form pengajuan kerja sama: Nama, Instansi, Email, Paket yang diminati, Pesan |
@@ -367,7 +367,7 @@ Panel administrasi untuk pengurus HIMANIKA.
 | **Data Tim** | Lihat semua tim per event, anggota per tim, kode tim, status tim |
 | **Kelola OPREC** | Buka/tutup periode OPREC, kelola divisi, atur form |
 | **Data Pendaftar OPREC** | Tabel data calon anggota, filter per divisi, accept/reject, export |
-| **Kelola Partnership** | CRUD data sponsor/partner, upload logo, atur tier |
+| **Kelola merchandise** | CRUD data sponsor/partner, upload logo, atur tier |
 | **Kelola Konten** | Update teks About, Visi-Misi, Struktur (CMS sederhana) |
 | **Pengaturan** | Kelola akun admin, pengaturan umum website |
 
@@ -484,7 +484,7 @@ Kode Prefix: [UXUI    ]     Preview: UXUI01, UXUI02, UXUI03, ...
 
 Model data diimplementasikan sebagai tabel PostgreSQL melalui migration dan Eloquent. Contoh JSON di bawah adalah **bentuk data logis/API**, bukan struktur collection Firestore.
 
-Tabel domain utama: `users`, `events`, `event_form_fields`, `event_prizes`, `event_requirements`, `teams`, `team_members`, `event_registrations`, `file_uploads`, `oprecs`, `oprec_divisions`, `oprec_registrations`, `partnerships`, `partnership_inquiries`, `site_contents`, `struktur_organisasi`, `divisi`, `program_kerja`, `galleries`, dan `testimonials` (**20 tabel domain**; tabel infrastruktur Laravel dihitung terpisah).
+Tabel domain utama: `users`, `events`, `event_form_fields`, `event_prizes`, `event_requirements`, `teams`, `team_members`, `event_registrations`, `file_uploads`, `oprecs`, `oprec_divisions`, `oprec_registrations`, `merchandises`, `merchandise_inquiries`, `site_contents`, `struktur_organisasi`, `divisi`, `program_kerja`, `galleries`, dan `testimonials` (**20 tabel domain**; tabel infrastruktur Laravel dihitung terpisah).
 
 #### `users`
 ```json
@@ -637,7 +637,7 @@ Tabel domain utama: `users`, `events`, `event_form_fields`, `event_prizes`, `eve
 }
 ```
 
-#### `partnerships`
+#### `merchandises`
 ```json
 {
   "id": "string",
@@ -653,7 +653,7 @@ Tabel domain utama: `users`, `events`, `event_form_fields`, `event_prizes`, `eve
 }
 ```
 
-#### `partnershipInquiries`
+#### `merchandiseInquiries`
 ```json
 {
   "id": "string",
@@ -824,7 +824,7 @@ flowchart TD
 - [ ] Landing Page (Home) dengan semua section
 - [ ] Halaman Event (list + detail) — **read-only**
 - [ ] Halaman OPREC — **read-only**
-- [ ] Halaman Partnership — **read-only**
+- [ ] Halaman merchandise — **read-only**
 - [ ] Auth (Login + Register)
 - [ ] Responsive design
 
@@ -834,7 +834,7 @@ flowchart TD
 
 - [ ] Form pendaftaran Event (user)
 - [ ] Form pendaftaran OPREC (user)
-- [ ] Form partnership inquiry
+- [ ] Form merchandise inquiry
 - [ ] User Dashboard (status pendaftaran)
 - [ ] Admin Dashboard (overview)
 - [ ] Admin CRUD Event
@@ -845,7 +845,7 @@ flowchart TD
 > **Target**: Fitur lengkap dan polish
 
 - [ ] Admin CRUD OPREC
-- [ ] Admin kelola Partnership
+- [ ] Admin kelola merchandise
 - [ ] Admin CMS konten Home
 - [ ] Export data ke CSV/Excel
 - [ ] Email notifikasi (pendaftaran, status update)
@@ -937,7 +937,7 @@ flowchart TD
 - [ ] Upload file berfungsi
 - [ ] Pilihan divisi sesuai data yang diinput admin
 
-### Partnership
+### merchandise
 - [ ] Statistik tampil dengan benar
 - [ ] Logo sponsor terrender
 - [ ] Form kolaborasi bisa disubmit

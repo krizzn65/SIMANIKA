@@ -47,7 +47,7 @@ const divisions = [
     full: "Kewirausahaan",
     description:
       "Menumbuhkan jiwa entrepreneur dan kemandirian finansial organisasi melalui pengembangan unit usaha kreatif dan merchandise.",
-    programs: ["Official Merchandise", "Dana Usaha", "Partnership"],
+    programs: ["Official Merchandise", "Dana Usaha", "Merchandise"],
     logo: "/images/divisi/kwu.webp",
   },
   {

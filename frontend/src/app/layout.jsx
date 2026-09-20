@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "SIMANIKA — Himpunan Mahasiswa Informatika",
+  title: "SIMANIKA",
   description:
     "Ruang tumbuh, berkarya, dan berkolaborasi bagi mahasiswa Informatika.",
   icons: {

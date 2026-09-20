@@ -36,17 +36,21 @@ export function AnimatedNavIcon({ name }) {
     );
   }
 
-  return (
-    <svg {...commonProps}>
-      <path
-        className="nav-icon__link-first"
-        d="M9.5 14.5 8 16a4 4 0 0 1-5.7-5.6l3-3A4 4 0 0 1 11 7"
-      />
-      <path
-        className="nav-icon__link-second"
-        d="m14.5 9.5 1.5-1.5a4 4 0 0 1 5.7 5.6l-3 3A4 4 0 0 1 13 17"
-      />
-      <path className="nav-icon__link-center" d="m8.5 15.5 7-7" />
-    </svg>
-  );
+  if (name === "merchandise") {
+    return (
+      <svg {...commonProps}>
+        <path
+          className="nav-icon__merch-bag"
+          d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"
+        />
+        <path className="nav-icon__merch-top" d="M3 6h18" />
+        <path
+          className="nav-icon__merch-handle"
+          d="M16 10a4 4 0 0 1-8 0"
+        />
+      </svg>
+    );
+  }
+
+  return null;
 }
