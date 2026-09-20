@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MissionAccordion } from "@/components/ui/MissionAccordion";
 import { ScrollRevealAccent } from "@/components/ui/ScrollRevealAccent";
 import { InteractiveGrid } from "@/components/ui/InteractiveGrid";
+import { ReplayIcon } from "@/components/ui/ReplayIcon";
 
 const missions = [
   {
@@ -38,6 +39,7 @@ const missions = [
 
 function VisionVideo() {
   const videoRef = useRef(null);
+  const [isEnded, setIsEnded] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -46,9 +48,15 @@ function VisionVideo() {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          video.play().catch(() => {});
+          // Play video from beginning or resume if not finished yet
+          if (!video.ended) {
+            video.play().catch(() => {});
+          }
         } else {
-          video.pause();
+          // Pause if scrolled away while playing
+          if (!video.ended) {
+            video.pause();
+          }
         }
       },
       { threshold: 0.15 },
@@ -58,16 +66,54 @@ function VisionVideo() {
     return () => observer.disconnect();
   }, []);
 
+  const handleEnded = () => {
+    const video = videoRef.current;
+    if (video) {
+      video.pause();
+    }
+    setIsEnded(true);
+  };
+
+  const handleTimeUpdate = () => {
+    const video = videoRef.current;
+    if (video && video.duration > 0 && video.currentTime >= video.duration - 0.05) {
+      handleEnded();
+    }
+  };
+
+  const handleReplay = () => {
+    const video = videoRef.current;
+    if (!video || !isEnded) return;
+
+    setIsEnded(false);
+    video.currentTime = 0;
+    video.play().catch(() => {});
+  };
+
   return (
-    <video
-      ref={videoRef}
-      loop
-      muted
-      playsInline
-      preload="metadata"
-      className="vision-video"
-      src="/videos/animasi logo.mp4"
-    />
+    <div className="vision-video-wrapper">
+      <video
+        ref={videoRef}
+        muted
+        playsInline
+        preload="auto"
+        className="vision-video"
+        src="/videos/animasi logo.mp4"
+        onEnded={handleEnded}
+        onTimeUpdate={handleTimeUpdate}
+      />
+      <button
+        type="button"
+        className={`vision-replay-btn ${isEnded ? "vision-replay-btn--active" : "vision-replay-btn--disabled"}`}
+        disabled={!isEnded}
+        onClick={handleReplay}
+        aria-label={isEnded ? "Putar ulang video" : "Video sedang diputar"}
+        title={isEnded ? "Putar ulang video dari awal" : "Video sedang berjalan"}
+      >
+        <ReplayIcon size={12} className="vision-replay-btn__icon" />
+        <span className="vision-replay-btn__text">Replay</span>
+      </button>
+    </div>
   );
 }
 
