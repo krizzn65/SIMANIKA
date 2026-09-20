@@ -54,7 +54,7 @@ const divisions = [
   {
     index: "06",
     name: "Ristek",
-    full: "Riset Keilmuan & Teknologi",
+    full: "Riset & Teknologi",
     description:
       "Mendorong inovasi teknologi informasi, eksplorasi riset terapan, dan peningkatan keahlian pemrograman mahasiswa.",
     programs: ["Simanika", "Information Competition", "Research and Development"],
@@ -132,8 +132,8 @@ const divisionStructures = {
         branchName: "BIDANG INTERNAL",
         roles: [
           {
-            role: "Staff",
-            title: "Staff Bidang Internal",
+            role: "Staff Bidang Internal",
+            title: "Pengelolaan Hubungan & Koordinasi Internal",
           },
         ],
       },
@@ -141,54 +141,47 @@ const divisionStructures = {
         branchName: "BIDANG EXTERNAL",
         roles: [
           {
-            role: "Staff",
-            title: "Staff Bidang External",
+            role: "Staff Bidang External",
+            title: "Kemitraan & Relasi Pihak Eksternal",
           },
         ],
       },
     ],
   },
 
-  /* 03. PSDM */
+  /* 03. PSDM: Ketua Divisi -> Wakil Divisi -> Sekretaris Divisi -> [Bidang Akademik: Staff] & [Bidang Non-Akademik: Staff] */
   "03": {
     leader: {
-      role: "Koordinator",
-      title: "Koordinator PSDM",
-      tag: "KOORDINATOR DIVISI",
+      role: "Ketua Divisi",
+      title: "Ketua Divisi PSDM",
+      tag: "KETUA DIVISI",
     },
     vice: {
-      role: "Wakil Koordinator",
-      title: "Wakil Koordinator PSDM",
-      tag: "SUB-KOORDINATOR",
+      role: "Wakil Divisi",
+      title: "Wakil Divisi PSDM",
+      tag: "WAKIL DIVISI",
+    },
+    secretary: {
+      role: "Sekretaris Divisi",
+      title: "Sekretaris Divisi PSDM",
+      tag: "SEKRETARIS DIVISI",
     },
     branches: [
       {
-        branchName: "KADERISASI & PENGEMBANGAN",
+        branchName: "BIDANG AKADEMIK",
         roles: [
           {
-            role: "Staff Ospek Prodi",
-            title: "Orientasi Mahasiswa Baru",
-            desc: "Merancang kurikulum pembinaan, adaptasi kampus, dan regenerasi anggota baru.",
-          },
-          {
-            role: "Staff Upgrading Divisi",
-            title: "Pelatihan & Softskills",
-            desc: "Meningkatkan kapabilitas manajerial, kepemimpinan, dan soliditas pengurus.",
+            role: "Staff Bidang Akademik",
+            title: "Pengembangan Prestasi & Keilmuan Akademik",
           },
         ],
       },
       {
-        branchName: "EVENT & PRESTASI",
+        branchName: "BIDANG NON-AKADEMIK",
         roles: [
           {
-            role: "Staff Pameran Project IT",
-            title: "Showcase Karya Mahasiswa",
-            desc: "Pameran tahunan hasil proyek aplikasi dan kreativitas teknologi mahasiswa.",
-          },
-          {
-            role: "Staff IT Competition",
-            title: "Manajemen Kompetisi Informatika",
-            desc: "Menyelenggarakan Management Informatic Competition serta pembinaan kontingen lomba.",
+            role: "Staff Bidang Non-Akademik",
+            title: "Minat Bakat & Pengembangan Softskills",
           },
         ],
       },
@@ -241,92 +234,78 @@ const divisionStructures = {
     ],
   },
 
-  /* 05. KWU */
+  /* 05. KWU: Ketua Divisi -> Wakil Divisi -> Sekretaris Divisi -> [Bidang Kewirausahaan: Staff] & [Bidang Kemitraan: Staff] */
   "05": {
     leader: {
-      role: "Koordinator",
-      title: "Koordinator Kewirausahaan",
-      tag: "KOORDINATOR DIVISI",
+      role: "Ketua Divisi",
+      title: "Ketua Divisi Kewirausahaan",
+      tag: "KETUA DIVISI",
     },
     vice: {
-      role: "Wakil Koordinator",
-      title: "Wakil Koordinator KWU",
-      tag: "SUB-KOORDINATOR",
+      role: "Wakil Divisi",
+      title: "Wakil Divisi KWU",
+      tag: "WAKIL DIVISI",
+    },
+    secretary: {
+      role: "Sekretaris Divisi",
+      title: "Sekretaris Divisi KWU",
+      tag: "SEKRETARIS DIVISI",
     },
     branches: [
       {
-        branchName: "UNIT USAHA MERCHANDISE",
+        branchName: "BIDANG KEWIRAUSAHAAN",
         roles: [
           {
-            role: "Staff Official Merchandise",
-            title: "Produk & Desain Merchandise",
-            desc: "Riset tren pasar, desain PDH, lanyard, t-shirt himpunan, dan packaging.",
-          },
-          {
-            role: "Staff Distribusi & Penjualan",
-            title: "Operasional Toko & Logistik",
-            desc: "Manajemen order online, stand penjualan bazar, dan inventaris barang.",
+            role: "Staff Bidang Kewirausahaan",
+            title: "Pengembangan Usaha Kreatif & Merchandise",
           },
         ],
       },
       {
-        branchName: "DANA USAHA & KEMITRAAN",
+        branchName: "BIDANG KEMITRAAN",
         roles: [
           {
-            role: "Staff Dana Usaha",
-            title: "Inisiatif Pendanaan Mandiri",
-            desc: "Eksplorasi peluang bisnis kuliner, paid promote, dan bazar kampus.",
-          },
-          {
-            role: "Staff Partnership Vendor",
-            title: "Relasi Vendor & Sponsor",
-            desc: "Menjalin kontrak produksi dengan vendor konveksi dan mitra sponsorship.",
+            role: "Staff Bidang Kemitraan",
+            title: "Kerjasama Kemitraan & Dana Usaha",
           },
         ],
       },
     ],
   },
 
-  /* 06. Ristek */
+  /* 06. Ristek: Ketua Divisi -> Wakil Divisi -> Sekretaris Divisi -> [Bidang Riset Keilmuan: Staff] & [Bidang Pengembangan Teknologi: Staff] */
   "06": {
     leader: {
-      role: "Koordinator",
-      title: "Koordinator Riset & Teknologi",
-      tag: "KOORDINATOR DIVISI",
+      role: "Ketua Divisi",
+      title: "Ketua Divisi Riset & Teknologi",
+      tag: "KETUA DIVISI",
     },
     vice: {
-      role: "Wakil Koordinator",
-      title: "Wakil Koordinator Ristek",
-      tag: "SUB-KOORDINATOR",
+      role: "Wakil Divisi",
+      title: "Wakil Divisi Ristek",
+      tag: "WAKIL DIVISI",
+    },
+    secretary: {
+      role: "Sekretaris Divisi",
+      title: "Sekretaris Divisi Ristek",
+      tag: "SEKRETARIS DIVISI",
     },
     branches: [
       {
-        branchName: "ENGINEERING & PLATFORM",
+        branchName: "BIDANG RISET KEILMUAN",
         roles: [
           {
-            role: "Staff SIMANIKA Platform",
-            title: "Lead Engineering Portal",
-            desc: "Pengembangan sistem web portal SIMANIKA dan arsitektur database.",
-          },
-          {
-            role: "Staff UI/UX & Web Dev",
-            title: "Frontend & Desain Interaksi",
-            desc: "Perancangan UI modern, responsiveness antarmuka, dan optimasi performa web.",
+            role: "Staff Bidang Riset Keilmuan",
+            title: "Eksplorasi Riset & Pengkajian Keilmuan IT",
           },
         ],
       },
       {
-        branchName: "RISET & KOMPETISI IT",
+        branchName: "BIDANG PENGEMBANGAN TEKNOLOGI",
         roles: [
           {
-            role: "Staff Research & Dev",
-            title: "Riset Teknologi Baru",
-            desc: "Eksplorasi AI, IoT, cloud computing, dan workshop teknis pemrograman.",
-          },
-          {
-            role: "Staff Information Competition",
-            title: "Mentor Lomba IT & Hackathon",
-            desc: "Pembinaan delegasi hackathon, UI/UX contest, dan competitive programming.",
+            role: "Staff Bidang Pengembangan Teknologi",
+            title: "Pengembangan Software & Inovasi Teknologi",
           },
         ],
       },
