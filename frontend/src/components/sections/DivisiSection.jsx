@@ -9,7 +9,6 @@ const divisions = [
     index: "01",
     name: "BPH",
     full: "Badan Pengurus Harian",
-    badge: "Presidium",
     description:
       "Memimpin, mengoordinasikan, serta mengontrol seluruh arah kebijakan, program kerja, dan tata kelola organisasi HIMANIKA.",
     programs: ["Rapat 100 Hari Kerja", "Musyawarah Besar", "Upgrading Divisi"],

@@ -2601,45 +2601,149 @@ svg {
 
 @media (max-width: 639px) {
   .divisi-shell {
-    padding-top: 2.25rem;
-    padding-bottom: 3rem;
+    padding-top: 2rem;
+    padding-bottom: 2.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Scale down decorative pixel corner in shell on mobile */
+  .divisi-shell > .about-pixel-corner {
+    width: 4rem;
+    height: 4rem;
+    opacity: 0.65;
   }
 
   .divisi-header {
-    margin-bottom: 2.5rem;
+    margin: 0 auto 2rem;
+    text-align: center;
+    max-width: 100%;
+    padding: 0 0.5rem;
+  }
+
+  .divisi-eyebrow {
+    font-size: 0.7rem;
+    gap: 0.45rem;
+    margin: 0 auto 0.65rem;
+    justify-content: center;
   }
 
   .divisi-title {
-    font-size: clamp(2rem, 9vw, 3rem);
+    font-size: clamp(1.85rem, 8vw, 2.35rem);
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+    text-align: center;
   }
 
   .divisi-lead {
-    font-size: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0.65rem auto 0;
+    text-align: center;
+    max-width: 28rem;
   }
 
   .divisi-bento {
     grid-template-columns: 1fr;
-    gap: 0.75rem;
+    gap: 0.85rem;
   }
 
+  /* Card base on mobile: optimized touch target & haptic press */
   .divisi-card {
     grid-column: span 1;
-    padding: 1.35rem;
+    padding: 1.25rem 1.15rem 1.15rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(7, 17, 31, 0.04);
+    transition:
+      border-color 150ms ease,
+      transform 120ms ease,
+      box-shadow 150ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .divisi-card:active {
+    transform: scale(0.985);
+    border-color: var(--blue);
+    background: rgba(37, 99, 235, 0.02);
   }
 
   .divisi-card--featured {
-    padding: 1.35rem;
+    padding: 1.25rem 1.15rem 1.15rem;
+  }
+
+  .divisi-card__top {
+    margin-bottom: 0.85rem;
+  }
+
+  .divisi-card__index {
+    font-size: 0.8rem;
+  }
+
+  .divisi-card__badge {
+    font-size: 0.62rem;
+    padding: 0.18rem 0.45rem;
+  }
+
+  .divisi-card__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+  }
+
+  .divisi-card__icon svg,
+  .divisi-card__logo-img {
+    width: 24px;
+    height: 24px;
+  }
+
+  .divisi-card__name {
+    font-size: 1.3rem;
   }
 
   .divisi-card--featured .divisi-card__name {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
   }
 
+  .divisi-card__full {
+    font-size: 0.82rem;
+    margin: 0.15rem 0 0.4rem;
+  }
+
+  .divisi-card__desc {
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  /* Programs tag row with safe padding for the arrow button */
   .divisi-card__programs {
     opacity: 1;
     transform: none;
     pointer-events: auto;
-    margin-top: 1rem;
+    margin-top: 0.85rem;
+    padding-right: 2.25rem; /* Prevents tags from colliding with arrow */
+    gap: 0.35rem;
+  }
+
+  .divisi-card__tag {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  /* Sleek circular arrow badge on mobile */
+  .divisi-card__arrow {
+    right: 0.85rem;
+    bottom: 0.85rem;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--surface-subtle);
+    border: 1px solid var(--border);
+    font-size: 0.85rem;
+    color: var(--blue);
+    transform: none;
   }
 }
 
@@ -2794,51 +2898,47 @@ svg {
   z-index: 20;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.45rem 0.85rem;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
   border: 1.5px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--surface);
   color: var(--ink);
   cursor: pointer;
+  outline: none;
   transition:
-    border-color 150ms ease,
-    color 150ms ease,
-    background-color 150ms ease,
-    box-shadow 150ms ease;
-  font-family: "IBM Plex Mono", monospace;
+    border-color 200ms ease,
+    background-color 200ms ease,
+    color 200ms ease,
+    box-shadow 200ms ease;
+  overflow: hidden;
 }
 
 .divisi-modal__close-btn:hover,
 .divisi-modal__close-btn:focus-visible {
   border-color: #ef4444;
-  color: #ef4444;
   background-color: #fef2f2;
-  box-shadow: 2px 2px 0 #ef4444;
-  outline: none;
-}
-
-.divisi-modal__close-icon {
-  font-size: 0.85rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.divisi-modal__close-hint {
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--ink-muted);
-  background: var(--surface-subtle);
-  padding: 0.1rem 0.35rem;
-  border-radius: 3px;
-  border: 1px solid var(--border);
-  letter-spacing: 0.05em;
-}
-
-.divisi-modal__close-btn:hover .divisi-modal__close-hint {
   color: #ef4444;
-  border-color: #fca5a5;
-  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
+}
+
+.divisi-modal__close-btn:active {
+  background-color: #fee2e2;
+}
+
+/* ── 21st.dev CloseSmallIcon (Stroke-dashoffset sequential drawing) ── */
+.close-small-icon {
+  display: block;
+  pointer-events: none;
+  transition: transform 180ms ease;
+}
+
+.divisi-modal__close-btn:active .close-small-icon {
+  transform: scale(0.92);
 }
 
 /* ── Modal Body & Flowchart ── */
@@ -3147,51 +3247,227 @@ svg {
 
 @media (max-width: 639px) {
   .divisi-modal-backdrop {
-    padding: 1.25rem 0.75rem;
+    padding: 0.5rem;
+    overflow-x: hidden;
   }
 
   .divisi-modal-frame {
+    width: 100%;
     max-width: 100%;
   }
 
+  /* Frame corner brackets: scale & tuck in to prevent screen horizontal overflow */
   .divisi-modal__frame-corner {
-    width: 4.25rem;
-    height: 4.25rem;
+    width: 4rem;
+    height: 4rem;
+    filter: drop-shadow(0 3px 8px rgba(7, 17, 31, 0.35));
   }
 
   .divisi-modal__frame-corner--tr {
-    top: -1.15rem;
-    right: -1.15rem;
+    top: -0.6rem;
+    right: -0.6rem;
   }
 
   .divisi-modal__frame-corner--bl {
-    bottom: -1.15rem;
-    left: -1.15rem;
+    bottom: -0.6rem;
+    left: -0.6rem;
   }
 
   .divisi-modal {
-    max-height: 94vh;
+    max-height: 90vh;
+    border-radius: 10px;
+    box-shadow: 4px 4px 0 var(--ink), 0 16px 40px rgba(7, 17, 31, 0.35);
   }
 
+  /* Modal header compact for mobile */
   .divisi-modal__header {
-    padding: 0.95rem 1.15rem;
+    padding: 0.8rem 1rem;
+    gap: 0.65rem;
+  }
+
+  .divisi-modal__title-group {
+    gap: 0.65rem;
+  }
+
+  .divisi-modal__icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+  }
+
+  .divisi-modal__logo {
+    width: 26px;
+    height: 26px;
+  }
+
+  .divisi-modal__eyebrow {
+    font-size: 0.62rem;
   }
 
   .divisi-modal__title {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
   }
 
   .divisi-modal__full {
-    font-size: 0.82rem;
+    font-size: 0.75rem;
   }
 
+  .divisi-modal__close-btn {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    min-width: 34px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 6px;
+  }
+
+  /* Flowchart board: fit 100% horizontally without cutoffs and without horizontal scroll */
   .flowchart-board {
-    padding: 1.5rem 1rem;
-    justify-content: flex-start;
+    padding: 1.15rem 0.5rem;
+    overflow-x: hidden;
+    justify-content: center;
+    background-size: 14px 14px;
   }
 
+  .flowchart-tree {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Level 1: Leader (Ketua) on mobile */
+  .flowchart-level--leader {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .flowchart-node--leader {
+    width: 100%;
+    max-width: 240px;
+    padding: 0.7rem 0.85rem;
+    border-radius: 6px;
+    box-shadow: 3px 3px 0 var(--blue);
+  }
+
+  .flowchart-node--leader .flowchart-node__role {
+    font-size: 1.05rem;
+  }
+
+  .flowchart-node--leader .flowchart-node__title {
+    font-size: 0.72rem;
+    margin-top: 0.15rem;
+  }
+
+  /* Single vertical connectors on mobile */
+  .flowchart-connector--single {
+    height: 18px;
+  }
+
+  /* Level 2: Vice & Secretary on mobile */
+  .flowchart-level--vice,
+  .flowchart-level--secretary {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .flowchart-node--vice {
+    width: 100%;
+    max-width: 220px;
+    padding: 0.6rem 0.75rem;
+    border-radius: 6px;
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+
+  .flowchart-node--vice .flowchart-node__role {
+    font-size: 0.95rem;
+  }
+
+  .flowchart-node--vice .flowchart-node__title {
+    font-size: 0.7rem;
+    margin-top: 0.15rem;
+  }
+
+  /* Fork connector on mobile */
+  .flowchart-fork__stem {
+    height: 14px;
+  }
+
+  .flowchart-fork__bar {
+    width: calc(50% + 0.35rem);
+  }
+
+  .flowchart-fork__drops {
+    width: calc(50% + 0.35rem);
+  }
+
+  .flowchart-fork__drop {
+    height: 14px;
+  }
+
+  /* Level 3: Parallel Branches on mobile (both fit side-by-side cleanly) */
+  .flowchart-branches {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  .flowchart-branch {
+    width: 100%;
+  }
+
+  .flowchart-branch__header {
+    margin-bottom: 0.45rem;
+    width: 100%;
+    text-align: center;
+  }
+
+  .flowchart-branch__pill {
+    font-size: 0.58rem;
+    padding: 0.22rem 0.35rem;
+    letter-spacing: 0.03em;
+    box-shadow: 1.5px 1.5px 0 var(--blue);
+    line-height: 1.25;
+    text-align: center;
+    display: inline-block;
+  }
+
+  .flowchart-branch__items {
+    gap: 0.45rem;
+    width: 100%;
+  }
+
+  .flowchart-node--sub {
+    padding: 0.55rem 0.35rem;
+    border-radius: 6px;
+    box-shadow: 2px 2px 0 var(--border);
+    width: 100%;
+  }
+
+  .flowchart-node__sub-role {
+    font-size: 0.75rem;
+    line-height: 1.25;
+    word-break: break-word;
+  }
+
+  /* Modal Footer on mobile */
   .divisi-modal__footer-strip {
-    padding: 0.95rem 1.15rem;
+    padding: 0.75rem 0.95rem;
+    gap: 0.35rem;
+  }
+
+  .divisi-modal__desc-label {
+    font-size: 0.62rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .divisi-modal__desc-text {
+    font-size: 0.78rem;
+    line-height: 1.45;
   }
 }
 

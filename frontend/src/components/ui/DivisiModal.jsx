@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TechCornerBracket } from "@/components/ui/TechCornerBracket";
+import { CloseSmallIcon } from "@/components/ui/CloseSmallIcon";
 
 export function DivisiModal({ division, structure, onClose, icons }) {
   const modalRef = useRef(null);
   const isOpen = Boolean(division && structure);
+  const [closeHoverKey, setCloseHoverKey] = useState(0);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -89,10 +91,10 @@ export function DivisiModal({ division, structure, onClose, icons }) {
             type="button"
             className="divisi-modal__close-btn"
             onClick={onClose}
+            onMouseEnter={() => setCloseHoverKey((k) => k + 1)}
             aria-label="Tutup bagan struktur"
           >
-            <span className="divisi-modal__close-icon" aria-hidden="true">✕</span>
-            <span className="divisi-modal__close-hint">ESC</span>
+            <CloseSmallIcon size={20} key={closeHoverKey} />
           </button>
         </div>
 
