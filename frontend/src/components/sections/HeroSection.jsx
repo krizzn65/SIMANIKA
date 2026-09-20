@@ -17,11 +17,12 @@ export function HeroSection() {
       <div className="hero-stage">
         <div className="hero-visual" aria-hidden="true">
           <Image
-            alt=""
+            alt="Visual komputer retro SIMANIKA"
             fill
             priority
+            quality={90}
             sizes="100vw"
-            src="/images/simanika-hero-crt.webp"
+            src="/images/simanika-hero-crt.png"
           />
           <div className="hero-visual__wash" />
           <div className="hero-visual__scanlines" />

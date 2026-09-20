@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { PixelCorner } from "@/components/ui/PixelCorner";
+import { TechCornerBracket } from "@/components/ui/TechCornerBracket";
 
 export function DivisiModal({ division, structure, onClose, icons }) {
   const modalRef = useRef(null);
@@ -37,15 +37,23 @@ export function DivisiModal({ division, structure, onClose, icons }) {
       }}
       role="presentation"
     >
-      <div
-        ref={modalRef}
-        className="divisi-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-division-title"
-      >
-        <PixelCorner position="top-right" />
-        <PixelCorner position="bottom-left" />
+      <div className="divisi-modal-frame">
+        <TechCornerBracket
+          position="top-right"
+          className="divisi-modal__frame-corner divisi-modal__frame-corner--tr"
+        />
+        <TechCornerBracket
+          position="bottom-left"
+          className="divisi-modal__frame-corner divisi-modal__frame-corner--bl"
+        />
+
+        <div
+          ref={modalRef}
+          className="divisi-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-division-title"
+        >
 
         {/* Modal Topbar */}
         <div className="divisi-modal__header">
@@ -97,32 +105,44 @@ export function DivisiModal({ division, structure, onClose, icons }) {
               {/* Level 1: KETUA */}
               <div className="flowchart-level flowchart-level--leader">
                 <div className="flowchart-node flowchart-node--leader">
-                  <div className="flowchart-node__tag">
-                    <span className="flowchart-node__dot" />
-                    {structure.leader.tag || "PIMPINAN UTAMA"}
-                  </div>
                   <h4 className="flowchart-node__role">{structure.leader.role}</h4>
                   <p className="flowchart-node__title">{structure.leader.title}</p>
                 </div>
               </div>
 
-              {/* Vertical line from Ketua to Wakil */}
-              <div className="flowchart-connector flowchart-connector--single">
-                <span className="flowchart-connector__line" />
-                <span className="flowchart-connector__arrow" />
-              </div>
-
               {/* Level 2: WAKIL */}
-              <div className="flowchart-level flowchart-level--vice">
-                <div className="flowchart-node flowchart-node--vice">
-                  <div className="flowchart-node__tag">
-                    <span className="flowchart-node__dot flowchart-node__dot--cyan" />
-                    {structure.vice.tag || "WAKIL PIMPINAN"}
+              {structure.vice && (
+                <>
+                  <div className="flowchart-connector flowchart-connector--single">
+                    <span className="flowchart-connector__line" />
+                    <span className="flowchart-connector__arrow" />
                   </div>
-                  <h4 className="flowchart-node__role">{structure.vice.role}</h4>
-                  <p className="flowchart-node__title">{structure.vice.title}</p>
-                </div>
-              </div>
+
+                  <div className="flowchart-level flowchart-level--vice">
+                    <div className="flowchart-node flowchart-node--vice">
+                      <h4 className="flowchart-node__role">{structure.vice.role}</h4>
+                      <p className="flowchart-node__title">{structure.vice.title}</p>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Level 2.5: SEKRETARIS (jika ada seperti di divisi Humas) */}
+              {structure.secretary && (
+                <>
+                  <div className="flowchart-connector flowchart-connector--single">
+                    <span className="flowchart-connector__line" />
+                    <span className="flowchart-connector__arrow" />
+                  </div>
+
+                  <div className="flowchart-level flowchart-level--secretary">
+                    <div className="flowchart-node flowchart-node--vice">
+                      <h4 className="flowchart-node__role">{structure.secretary.role}</h4>
+                      <p className="flowchart-node__title">{structure.secretary.title}</p>
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Branch Connector from Wakil splitting to two parallel groups */}
               <div className="flowchart-fork-connector">
@@ -152,14 +172,7 @@ export function DivisiModal({ division, structure, onClose, icons }) {
                           className="flowchart-node flowchart-node--sub"
                           key={item.role || rIdx}
                         >
-                          <span className="flowchart-node__sub-badge">
-                            // 0{rIdx + 1}
-                          </span>
                           <h5 className="flowchart-node__sub-role">{item.role}</h5>
-                          <p className="flowchart-node__sub-title">{item.title}</p>
-                          {item.desc && (
-                            <p className="flowchart-node__sub-desc">{item.desc}</p>
-                          )}
                         </div>
                       ))}
                     </div>
@@ -169,25 +182,16 @@ export function DivisiModal({ division, structure, onClose, icons }) {
             </div>
           </div>
 
-          {/* Division Focus & Programs Preview */}
+          {/* Division Focus Preview */}
           <div className="divisi-modal__footer-strip">
             <div className="divisi-modal__desc-box">
               <span className="divisi-modal__desc-label">// TUGAS UTAMA:</span>
               <p className="divisi-modal__desc-text">{division.description}</p>
             </div>
-            <div className="divisi-modal__tags-wrap">
-              <span className="divisi-modal__tags-label">// PROGRAM KERJA:</span>
-              <div className="divisi-modal__tags">
-                {division.programs.map((p) => (
-                  <span className="divisi-modal__tag-chip" key={p}>
-                    {p}
-                  </span>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }

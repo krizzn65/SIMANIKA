@@ -12,7 +12,7 @@ const divisions = [
     badge: "Presidium",
     description:
       "Memimpin, mengoordinasikan, serta mengontrol seluruh arah kebijakan, program kerja, dan tata kelola organisasi HIMANIKA.",
-    programs: ["Rapat 100 Hari Kerja", "Manajemen Proker", "Upgrading Divisi"],
+    programs: ["Rapat 100 Hari Kerja", "Musyawarah Besar", "Upgrading Divisi"],
     logo: "/images/divisi/bph.webp",
   },
   {
@@ -27,7 +27,7 @@ const divisions = [
   {
     index: "03",
     name: "PSDM",
-    full: "Pengembangan Sumberdaya Manusia",
+    full: "Pengembangan Sumberdaya Mahasiswa",
     description:
       "Mengembangkan potensi dan prestasi seluruh mahasiswa manajemen informatika",
     programs: ["Pameran Project IT", "Ospek Prodi", "Management Informatic Competition"],
@@ -54,7 +54,7 @@ const divisions = [
   {
     index: "06",
     name: "Ristek",
-    full: "Riset & Teknologi",
+    full: "Riset Keilmuan & Teknologi",
     description:
       "Mendorong inovasi teknologi informasi, eksplorasi riset terapan, dan peningkatan keahlian pemrograman mahasiswa.",
     programs: ["Simanika", "Information Competition", "Research and Development"],
@@ -110,46 +110,39 @@ const divisionStructures = {
     ],
   },
 
-  /* 02. Humas */
+  /* 02. Humas: Ketua Divisi -> Wakil Ketua Divisi -> Sekretaris Divisi -> [Bidang Internal: Staff] & [Bidang External: Staff] */
   "02": {
     leader: {
-      role: "Koordinator",
-      title: "Koordinator Hubungan Masyarakat",
-      tag: "KOORDINATOR DIVISI",
+      role: "Ketua Divisi",
+      title: "Ketua Divisi Hubungan Masyarakat",
+      tag: "KETUA DIVISI",
     },
     vice: {
-      role: "Wakil Koordinator",
-      title: "Wakil Koordinator Humas",
-      tag: "SUB-KOORDINATOR",
+      role: "Wakil Ketua Divisi",
+      title: "Wakil Ketua Divisi Humas",
+      tag: "WAKIL KETUA",
+    },
+    secretary: {
+      role: "Sekretaris Divisi",
+      title: "Sekretaris Divisi Humas",
+      tag: "SEKRETARIS DIVISI",
     },
     branches: [
       {
-        branchName: "KERJASAMA & RELASI",
+        branchName: "BIDANG INTERNAL",
         roles: [
           {
-            role: "Staff Media Partner",
-            title: "Kerjasama Media & Komunitas",
-            desc: "Menjalin kolaborasi publikasi dengan media partner dan institusi eksternal.",
-          },
-          {
-            role: "Staff Anjangsana",
-            title: "Silaturahmi & Studi Banding",
-            desc: "Menginisiasi kunjungan kelembagaan dan forum komunikasi antarhimpunan mahasiswa.",
+            role: "Staff",
+            title: "Staff Bidang Internal",
           },
         ],
       },
       {
-        branchName: "PELAYANAN & ADVOKASI",
+        branchName: "BIDANG EXTERNAL",
         roles: [
           {
-            role: "Staff Advokasi",
-            title: "Penyerapan Aspirasi Mahasiswa",
-            desc: "Menyalurkan aspirasi dan pengawalan kebijakan akademik program studi.",
-          },
-          {
-            role: "Staff Hubungan Internal",
-            title: "Komunikasi Internal Kampus",
-            desc: "Menghubungkan komunikasi aktif antar-angkatan, alumni, dan dosen pembina.",
+            role: "Staff",
+            title: "Staff Bidang External",
           },
         ],
       },
