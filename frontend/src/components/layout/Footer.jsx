@@ -21,7 +21,7 @@ const NAVIGATION_LINKS = [
 const SOCIAL_LINKS = [
   {
     name: "Instagram",
-    href: "https://www.instagram.com/himanika_polije",
+    href: "https://www.instagram.com/sobatmif_polije",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -41,7 +41,7 @@ const SOCIAL_LINKS = [
   },
   {
     name: "TikTok",
-    href: "https://www.tiktok.com/@himanika_polije",
+    href: "https://www.tiktok.com/@himanikapolije",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -59,7 +59,7 @@ const SOCIAL_LINKS = [
   },
   {
     name: "YouTube",
-    href: "https://www.youtube.com/@himanikapolije",
+    href: "https://www.youtube.com/@himanikapolije6995",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -129,8 +129,8 @@ export function Footer() {
             <span className="site-footer__tag">ABOUT</span>
 
             <h2 className="site-footer__headline">
-              Working to empower Indonesia&apos;s{" "}
-              <span className="site-footer__highlight">tech talent.</span>
+              Empowering the next generation of{" "}
+              <span className="site-footer__highlight">digital pioneers.</span>
             </h2>
 
             <p className="site-footer__desc">
