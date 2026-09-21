@@ -15,6 +15,57 @@ const links = [
   { href: "/merchandise", icon: "merchandise", label: "Merchandise" },
 ];
 
+const landingSections = [
+  {
+    id: "hero",
+    href: "/#hero",
+    badge: "00",
+    title: "Beranda",
+    shortTitle: "Beranda",
+    desc: "Awal & tagline HIMANIKA",
+  },
+  {
+    id: "tentang",
+    href: "/#tentang",
+    badge: "01",
+    title: "Tentang HIMANIKA",
+    shortTitle: "Tentang",
+    desc: "Profil, visi bersama, & pilar",
+  },
+  {
+    id: "visi-misi",
+    href: "/#visi-misi",
+    badge: "02",
+    title: "Visi & Misi",
+    shortTitle: "Visi-Misi",
+    desc: "Arah gerak & 4 pilar misi",
+  },
+  {
+    id: "divisi",
+    href: "/#divisi",
+    badge: "03",
+    title: "Divisi Kami",
+    shortTitle: "Divisi",
+    desc: "6 divisi & struktur organisasi",
+  },
+  {
+    id: "gallery",
+    href: "/#gallery",
+    badge: "04",
+    title: "Galeri Kegiatan",
+    shortTitle: "Galeri",
+    desc: "Dokumentasi & momen kegiatan",
+  },
+  {
+    id: "testimoni",
+    href: "/#testimoni",
+    badge: "05",
+    title: "Apa Kata Mereka",
+    shortTitle: "Testimoni",
+    desc: "Cerita anggota & alumni",
+  },
+];
+
 function MenuIcon({ open }) {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" width="22" height="22">
@@ -45,8 +96,14 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
+  const [mobileHomeExpanded, setMobileHomeExpanded] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
   const menuButtonRef = useRef(null);
   const drawerRef = useRef(null);
+  const homeDropdownRef = useRef(null);
+  const subbarRef = useRef(null);
+  const homeMenuTimer = useRef(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -55,6 +112,35 @@ export function Navbar() {
 
   const isActiveLink = (href) =>
     href === "/" ? pathname === href : pathname.startsWith(href);
+
+  // Scroll spy on home page to highlight active landing section
+  useEffect(() => {
+    if (pathname !== "/") {
+      setActiveSection("");
+      return;
+    }
+
+    const sectionIds = ["hero", "tentang", "visi-misi", "divisi", "gallery", "testimoni"];
+    const handleScroll = () => {
+      const scrollPos = window.scrollY + 180;
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const id = sectionIds[i];
+        if (id === "hero" && window.scrollY < 260) {
+          setActiveSection("hero");
+          return;
+        }
+        const el = document.getElementById(id);
+        if (el && scrollPos >= el.offsetTop) {
+          setActiveSection(id);
+          return;
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [pathname]);
 
   const handleClose = () => {
     if (!open || isClosing) return;
@@ -73,17 +159,74 @@ export function Navbar() {
     }
   };
 
+  // Hover handlers for Home dropdown
+  const handleHomeMouseEnter = () => {
+    if (homeMenuTimer.current) {
+      clearTimeout(homeMenuTimer.current);
+      homeMenuTimer.current = null;
+    }
+    setIsHomeMenuOpen(true);
+  };
+
+  const handleHomeMouseLeave = () => {
+    homeMenuTimer.current = setTimeout(() => {
+      setIsHomeMenuOpen(false);
+    }, 180);
+  };
+
+  const handleHomeClick = (e) => {
+    e.preventDefault();
+    // Toggle dropdown on click
+    setIsHomeMenuOpen((prev) => !prev);
+  };
+
+  // Section click handler with smooth scroll if on home page
+  const handleSectionClick = (e, sectionId) => {
+    setIsHomeMenuOpen(false);
+    if (pathname === "/") {
+      e.preventDefault();
+      if (sectionId === "hero") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        const el = document.getElementById(sectionId);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    }
+  };
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!isHomeMenuOpen) return;
+    const handleClickOutside = (event) => {
+      if (
+        homeDropdownRef.current &&
+        !homeDropdownRef.current.contains(event.target) &&
+        subbarRef.current &&
+        !subbarRef.current.contains(event.target)
+      ) {
+        setIsHomeMenuOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", handleClickOutside);
+    return () => document.removeEventListener("pointerdown", handleClickOutside);
+  }, [isHomeMenuOpen]);
+
   useEffect(() => {
     const closeWithEscape = (event) => {
-      if (event.key === "Escape" && open) {
-        handleClose();
-        menuButtonRef.current?.focus();
+      if (event.key === "Escape") {
+        if (isHomeMenuOpen) setIsHomeMenuOpen(false);
+        if (open) {
+          handleClose();
+          menuButtonRef.current?.focus();
+        }
       }
     };
 
     window.addEventListener("keydown", closeWithEscape);
     return () => window.removeEventListener("keydown", closeWithEscape);
-  }, [open, isClosing]);
+  }, [open, isClosing, isHomeMenuOpen]);
 
   // Close when clicking/tapping anywhere outside the drawer
   useEffect(() => {
@@ -134,18 +277,93 @@ export function Navbar() {
           </Link>
 
           <nav className="desktop-nav" aria-label="Navigasi utama">
-            {links.map((link) => (
-              <Link
-                aria-current={isActiveLink(link.href) ? "page" : undefined}
-                className={isActiveLink(link.href) ? "nav-link nav-link--active" : "nav-link"}
-                href={link.href}
-                key={link.href}
-              >
-                <AnimatedNavIcon name={link.icon} />
-                <span>{link.label}</span>
-              </Link>
-            ))}
+            {links.map((link) => {
+              const isHome = link.href === "/";
+              const active = isActiveLink(link.href);
+
+              if (isHome) {
+                return (
+                  <div
+                    key={link.href}
+                    className={`nav-dropdown ${isHomeMenuOpen ? "nav-dropdown--open" : ""}`}
+                    ref={homeDropdownRef}
+                    onMouseEnter={handleHomeMouseEnter}
+                    onMouseLeave={handleHomeMouseLeave}
+                  >
+                    <Link
+                      aria-current={active ? "page" : undefined}
+                      className={active ? "nav-link nav-link--active" : "nav-link"}
+                      href={link.href}
+                      onClick={handleHomeClick}
+                      aria-expanded={isHomeMenuOpen}
+                      aria-haspopup="true"
+                    >
+                      <AnimatedNavIcon name={link.icon} />
+                      <span>{link.label}</span>
+                      <span className="nav-dropdown__chevron" aria-hidden="true">
+                        <svg viewBox="0 0 12 12" fill="none" width="9" height="9">
+                          <path
+                            d="M2.5 4.5L6 8L9.5 4.5"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </span>
+                    </Link>
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  aria-current={active ? "page" : undefined}
+                  className={active ? "nav-link nav-link--active" : "nav-link"}
+                  href={link.href}
+                  key={link.href}
+                >
+                  <AnimatedNavIcon name={link.icon} />
+                  <span>{link.label}</span>
+                </Link>
+              );
+            })}
           </nav>
+
+          {/* Desktop Multi-Column Sub-Navbar Grid */}
+          <div
+            className={`nav-subgrid ${isHomeMenuOpen ? "nav-subgrid--open" : ""}`}
+            ref={subbarRef}
+            onMouseEnter={handleHomeMouseEnter}
+            onMouseLeave={handleHomeMouseLeave}
+            role="menu"
+            aria-label="Sub navigasi landing page"
+          >
+            <div className="nav-subgrid__header">
+              <span className="nav-subgrid__tag">BAGIAN LANDING PAGE</span>
+              <span className="nav-subgrid__hint">PILIH BAGIAN</span>
+            </div>
+            <div className="nav-subgrid__list">
+              {landingSections.map((sec) => (
+                <Link
+                  key={sec.id}
+                  href={sec.href}
+                  className={`nav-subgrid__item ${activeSection === sec.id ? "nav-subgrid__item--active" : ""}`}
+                  onClick={(e) => handleSectionClick(e, sec.id)}
+                  role="menuitem"
+                >
+                  <span className="nav-subgrid__badge">{sec.badge}</span>
+                  <div className="nav-subgrid__body">
+                    <span className="nav-subgrid__title">{sec.title}</span>
+                    <span className="nav-subgrid__desc">{sec.desc}</span>
+                  </div>
+                  <span className="nav-subgrid__arrow" aria-hidden="true">
+                    →
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Desktop Login Link (hidden on mobile) */}
@@ -170,7 +388,7 @@ export function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Drawer (Half-Screen Slide-in from Right with Slide-out Close Animation) */}
+      {/* Mobile Drawer (Half-Screen Slide-in from Right) */}
       {mounted &&
         open &&
         createPortal(
@@ -212,27 +430,102 @@ export function Navbar() {
               </div>
 
               <nav className="mobile-drawer__nav">
-                {links.map((link) => (
-                  <Link
-                    aria-current={isActiveLink(link.href) ? "page" : undefined}
-                    className={
-                      isActiveLink(link.href)
-                        ? "mobile-drawer__link mobile-drawer__link--active"
-                        : "mobile-drawer__link"
-                    }
-                    href={link.href}
-                    key={link.href}
-                    onClick={handleClose}
-                  >
-                    <span className="mobile-drawer__icon-wrap">
-                      <AnimatedNavIcon name={link.icon} />
-                    </span>
-                    <span className="mobile-drawer__label">{link.label}</span>
-                    <span className="mobile-drawer__arrow" aria-hidden="true">
-                      ↗
-                    </span>
-                  </Link>
-                ))}
+                {links.map((link) => {
+                  const isHome = link.href === "/";
+                  const active = isActiveLink(link.href);
+
+                  if (isHome) {
+                    return (
+                      <div className="mobile-drawer__group" key={link.href}>
+                        <div className="mobile-drawer__link-row">
+                          <Link
+                            aria-current={active ? "page" : undefined}
+                            className={
+                              active
+                                ? "mobile-drawer__link mobile-drawer__link--active"
+                                : "mobile-drawer__link"
+                            }
+                            href={link.href}
+                            onClick={handleClose}
+                          >
+                            <span className="mobile-drawer__icon-wrap">
+                              <AnimatedNavIcon name={link.icon} />
+                            </span>
+                            <span className="mobile-drawer__label">
+                              {link.label}
+                            </span>
+                          </Link>
+                          <button
+                            type="button"
+                            className={`mobile-drawer__sub-toggle ${mobileHomeExpanded ? "mobile-drawer__sub-toggle--open" : ""}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setMobileHomeExpanded((prev) => !prev);
+                            }}
+                            aria-label="Tampilkan sub-bagian landing page"
+                            title="Sub-bagian landing page"
+                          >
+                            <svg viewBox="0 0 12 12" fill="none" width="11" height="11">
+                              <path
+                                d="M2.5 4.5L6 8L9.5 4.5"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+
+                        {mobileHomeExpanded && (
+                          <div className="mobile-drawer__sub-list">
+                            {landingSections.map((sec) => (
+                              <Link
+                                key={sec.id}
+                                href={sec.href}
+                                className="mobile-drawer__sub-item"
+                                onClick={(e) => {
+                                  handleSectionClick(e, sec.id);
+                                  handleClose();
+                                }}
+                              >
+                                <span className="mobile-drawer__sub-badge">
+                                  {sec.badge}
+                                </span>
+                                <span className="mobile-drawer__sub-title">
+                                  {sec.title}
+                                </span>
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <Link
+                      aria-current={active ? "page" : undefined}
+                      className={
+                        active
+                          ? "mobile-drawer__link mobile-drawer__link--active"
+                          : "mobile-drawer__link"
+                      }
+                      href={link.href}
+                      key={link.href}
+                      onClick={handleClose}
+                    >
+                      <span className="mobile-drawer__icon-wrap">
+                        <AnimatedNavIcon name={link.icon} />
+                      </span>
+                      <span className="mobile-drawer__label">{link.label}</span>
+                      <span className="mobile-drawer__arrow" aria-hidden="true">
+                        ↗
+                      </span>
+                    </Link>
+                  );
+                })}
               </nav>
 
               <div className="mobile-drawer__footer">

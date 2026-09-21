@@ -13,7 +13,7 @@ function ArrowUpRight() {
 
 export function HeroSection() {
   return (
-    <section className="hero" aria-labelledby="hero-title">
+    <section className="hero" id="hero" aria-labelledby="hero-title">
       <div className="hero-stage">
         <div className="hero-visual" aria-hidden="true">
           <Image

@@ -21,6 +21,22 @@ const VisiMisiSection = dynamic(
 
 import { DivisiSection } from "@/components/sections/DivisiSection";
 
+const GallerySection = dynamic(
+  () =>
+    import("@/components/sections/GallerySection").then(
+      (mod) => mod.GallerySection,
+    ),
+  { ssr: true },
+);
+
+const TestimonialsSection = dynamic(
+  () =>
+    import("@/components/sections/TestimonialsSection").then(
+      (mod) => mod.TestimonialsSection,
+    ),
+  { ssr: true },
+);
+
 export default function HomePage() {
   return (
     <main>
@@ -38,6 +54,14 @@ export default function HomePage() {
       </LazySection>
 
       <DivisiSection />
+
+      <LazySection minHeight="45rem" rootMargin="800px 0px">
+        <GallerySection />
+      </LazySection>
+
+      <LazySection minHeight="45rem" rootMargin="800px 0px">
+        <TestimonialsSection />
+      </LazySection>
     </main>
   );
 }

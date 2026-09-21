@@ -1,5 +1,12 @@
 export function PixelCorner({ position = "bottom-left", className = "" }) {
-  const isTopRight = position === "top-right";
+  let transform = "none";
+  if (position === "top-right") {
+    transform = "rotate(180deg)";
+  } else if (position === "top-left") {
+    transform = "scaleY(-1)";
+  } else if (position === "bottom-right") {
+    transform = "scaleX(-1)";
+  }
 
   return (
     <div
@@ -11,9 +18,7 @@ export function PixelCorner({ position = "bottom-left", className = "" }) {
         viewBox="0 0 160 160"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        style={{
-          transform: isTopRight ? "rotate(180deg)" : "none",
-        }}
+        style={{ transform }}
       >
         {/* Row 1 (Bottom, y=140..160) */}
         <rect x="0" y="140" width="20" height="20" fill="#155EEF" />

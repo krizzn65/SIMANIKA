@@ -1,42 +1,5 @@
 import { ScrollRevealText } from "@/components/ui/ScrollRevealText";
-import { HaloReel } from "@/components/ui/HaloReel";
 import { PixelCorner } from "@/components/ui/PixelCorner";
-
-const haloItems = [
-  {
-    src: "/images/simanika-hero-crt-card.webp",
-    alt: "Komputer retro di lanskap biru SIMANIKA",
-    variant: "photo",
-  },
-  {
-    eyebrow: "01 / HIMANIKA",
-    title: "TERHUBUNG",
-    subtitle: "Satu ruang, banyak gagasan",
-    variant: "blue",
-  },
-  {
-    src: "/images/logos/Logo-MIF-2020-card.webp",
-    alt: "Logo Manajemen Informatika",
-    variant: "logo",
-  },
-  {
-    eyebrow: "02 / KOLABORASI",
-    title: "BERKARYA",
-    subtitle: "Tumbuh melalui pengalaman",
-    variant: "night",
-  },
-  {
-    eyebrow: "03 / MAHASISWA",
-    title: "BERDAMPAK",
-    subtitle: "Ide bergerak menjadi aksi",
-    variant: "paper",
-  },
-  {
-    src: "/images/simanika-hero-crt-card-alt.webp",
-    alt: "Visual teknologi retro HIMANIKA",
-    variant: "photo-alt",
-  },
-];
 
 const pillars = [
   {
@@ -81,21 +44,6 @@ export function AboutSection() {
               ]}
             />
           </header>
-
-          <div className="about-halo">
-            <HaloReel
-              ariaLabel="Galeri identitas HIMANIKA. Gunakan tombol panah kiri dan kanan untuk memutar kartu."
-              cardWidth={180}
-              cardHeight={245}
-              centerXRatio={0.92}
-              frontSide="left"
-              items={haloItems}
-              minScale={0.58}
-              radiusXRatio={0.42}
-              radiusYRatio={0.28}
-              spread={0.88}
-            />
-          </div>
         </div>
 
         <div className="about-details">
