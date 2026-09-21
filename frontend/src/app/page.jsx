@@ -37,32 +37,42 @@ const TestimonialsSection = dynamic(
   { ssr: true },
 );
 
+import { Footer } from "@/components/layout/Footer";
+
 export default function HomePage() {
   return (
-    <main>
-      <Navbar />
-      {/* Hero directly visible on first paint */}
-      <HeroSection />
+    <div className="site-parallax-root">
+      {/* 1. Main Page Content (curtain that scrolls over the footer) */}
+      <main className="site-main-content">
+        <Navbar />
+        {/* Hero directly visible on first paint */}
+        <HeroSection />
 
-      {/* Off-screen sections rendered dynamically on scroll */}
-      <LazySection minHeight="45rem" rootMargin="800px 0px">
-        <AboutSection />
-      </LazySection>
+        {/* Off-screen sections rendered dynamically on scroll */}
+        <LazySection minHeight="45rem" rootMargin="800px 0px">
+          <AboutSection />
+        </LazySection>
 
-      <LazySection minHeight="55rem" rootMargin="800px 0px">
-        <VisiMisiSection />
-      </LazySection>
+        <LazySection minHeight="55rem" rootMargin="800px 0px">
+          <VisiMisiSection />
+        </LazySection>
 
-      <DivisiSection />
+        <DivisiSection />
 
-      <LazySection minHeight="45rem" rootMargin="800px 0px">
-        <GallerySection />
-      </LazySection>
+        <LazySection minHeight="45rem" rootMargin="800px 0px">
+          <GallerySection />
+        </LazySection>
 
-      <LazySection minHeight="45rem" rootMargin="800px 0px">
-        <TestimonialsSection />
-      </LazySection>
-    </main>
+        <LazySection minHeight="45rem" rootMargin="800px 0px">
+          <TestimonialsSection />
+        </LazySection>
+      </main>
+
+      {/* 2. Sticky Parallax Reveal Footer (IFEST Unpad style) */}
+      <div className="site-footer-sticky-wrap">
+        <Footer />
+      </div>
+    </div>
   );
 }
 
