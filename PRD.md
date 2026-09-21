@@ -227,21 +227,25 @@ Setelah ketua membuat tim, muncul halaman/modal:
 
 ### 5.3 📋 OPREC Page (`/oprec`)
 
-Halaman khusus untuk Open Recruitment anggota baru HIMANIKA.
+> Revisi alur pengguna, 21 September 2026. Kontrak lengkap: [OPREC](frontend/docs/oprec.md).
 
-#### Fitur:
-- **Status OPREC** — Banner besar: DIBUKA / DITUTUP
-- **Info OPREC** — Timeline, persyaratan, benefit jadi anggota
-- **Divisi yang Tersedia** — Card setiap divisi yang membuka rekrutmen
-- **FAQ** — Accordion pertanyaan umum seputar OPREC
-- **Tombol Daftar** — Mengarah ke form pendaftaran (perlu login)
+Urutan halaman: **headline → kartu ringkas divisi → pendaftaran/pengumuman → FAQ**.
+Headline, penjelasan, divisi, poster, jadwal, field form, dan FAQ dapat diisi admin.
+Poster berada di area pendaftaran. Tidak ada section timeline/benefit terpisah.
 
-#### Form OPREC (`/oprec/daftar`):
-- Data diri (Nama, NIM, Jurusan, Angkatan, dll)
-- Pilihan divisi (bisa pilih 1-2 divisi)
-- Motivasi bergabung (textarea)
-- Upload berkas (CV, foto, dll)
-- Pernyataan komitmen (checkbox)
+- Belum ada periode: informasi belum dibuka.
+- Admin membuka periode tetapi tanggal mulai belum tiba: countdown hari/jam/menit/detik.
+- Jadwal aktif: form inline dengan field dinamis dari admin; submit tetap memakai autentikasi Sanctum.
+- Ditutup: area yang sama menjadi tempat pengumuman, menunggu publikasi admin.
+- Saat pengumuman dipublikasikan: masukkan NIM + tanggal lahir untuk melihat diterima,
+  belum diterima, masih diproses, atau data tidak ditemukan. Lookup hasil tidak perlu login.
+- FAQ menjadi section terakhir sebelum footer.
+
+Form mendukung text, email, tel, number, date, textarea, select, radio, checkbox, dan
+file. NIM serta tanggal lahir wajib tersedia dalam schema untuk pencocokan hasil;
+kolom lain, opsi, kewajiban, dan batas berkas ditentukan admin. Hasil seleksi tidak
+tersedia pada payload publik halaman. Endpoint lookup memakai POST, no-store,
+validasi pasangan identitas, publikasi terjadwal, serta rate limit backend.
 
 ---
 
@@ -606,8 +610,12 @@ Tabel domain utama: `users`, `events`, `event_form_fields`, `event_prizes`, `eve
   "tanggalBuka": "timestamp",
   "tanggalTutup": "timestamp",
   "deskripsi": "string",
-  "persyaratan": ["string"],
-  "benefit": ["string"],
+  "headline": "string",
+  "poster": "string URL | null",
+  "schemaVersion": "string",
+  "formFields": [{ "name": "string", "type": "string", "label": "string", "required": true }],
+  "pengumuman": { "published": false, "tanggal": "timestamp | null", "pesan": "string" },
+  "faq": [{ "pertanyaan": "string", "jawaban": "string" }],
   "divisiTersedia": [
     { "nama": "string", "deskripsi": "string", "kuota": "number" }
   ],
@@ -622,6 +630,9 @@ Tabel domain utama: `users`, `events`, `event_form_fields`, `event_prizes`, `eve
   "id": "string",
   "oprecId": "string",
   "userId": "string",
+  "nim": "string (unique bersama oprecId)",
+  "tanggalLahir": "date (privat, untuk pencocokan hasil)",
+  "formData": "object (sesuai schema form admin)",
   "divisiPilihan1": "string",
   "divisiPilihan2": "string | null",
   "motivasi": "string",
@@ -767,23 +778,21 @@ flowchart TD
     L --> M["Notifikasi ke ketua: anggota baru bergabung"]
 ```
 
-### 9.4 Flow: User Mendaftar OPREC
+### 9.4 Flow: User Mendaftar OPREC dan Mengecek Hasil
 
 ```mermaid
 flowchart TD
-    A["User buka /oprec"] --> B{"OPREC dibuka?"}
-    B -- Tidak --> C["Tampilkan info OPREC ditutup"]
-    B -- Ya --> D["Baca info & persyaratan"]
-    D --> E{"Sudah login?"}
-    E -- Tidak --> F["Login / Register"]
-    F --> G["Kembali ke OPREC"]
-    E -- Ya --> G["Klik Daftar OPREC"]
-    G --> H["Isi form: data diri, divisi, motivasi"]
-    H --> I["Upload CV & foto"]
-    I --> J["Centang pernyataan komitmen"]
-    J --> K["Submit"]
-    K --> L["Konfirmasi + email notifikasi"]
-    L --> M["Cek status di Dashboard"]
+    A["Buka /oprec: headline dan kartu divisi"] --> B{"Status periode"}
+    B -- Belum dibuka --> C["Informasi / countdown tanggal mulai"]
+    B -- Aktif --> D["Isi form dinamis dari admin"]
+    D --> E["Submit dengan sesi login valid"]
+    E --> F["Validasi schema, berkas, identitas dan simpan"]
+    F --> G["Konfirmasi pendaftaran"]
+    B -- Ditutup --> H{"Pengumuman sudah dipublikasi?"}
+    H -- Belum --> I["Menunggu / countdown pengumuman"]
+    H -- Ya --> J["Input NIM + tanggal lahir"]
+    J --> K["Cek hasil privat lewat POST"]
+    K --> L["Diterima / belum diterima / diproses / data tidak ditemukan"]
 ```
 
 ### 9.5 Flow: Admin Mengelola Event

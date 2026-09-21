@@ -1,0 +1,75 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test from "node:test";
+const source = await readFile(new URL("../src/lib/oprec.js", import.meta.url), "utf8");
+const { normalizeOprec, normalizeFields, oprecState, oprecDate, validBirthDate, validateOprecForm, safePosterUrl } = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
+const identity = [{ name: "nim", type: "text", label: "NIM", required: true }, { name: "tanggal_lahir", type: "date", label: "Tanggal lahir", required: true }];
+const raw = { id: 1, periode: "2026/2027", status: "open", tanggalBuka: "2026-10-01T08:00:00+07:00", tanggalTutup: "2026-10-14T23:59:00+07:00", divisiTersedia: [{ nama: "Kominfo", kuota: 10 }], formFields: identity };
+const oprec = normalizeOprec(raw);
+const start = Date.parse(raw.tanggalBuka);
+const end = Date.parse(raw.tanggalTutup);
+
+test("registration boundaries: empty, countdown, open, closed", () => {
+  assert.equal(oprecState(null).key, "empty");
+  assert.equal(oprecState(oprec, start - 1).key, "soon");
+  assert.equal(oprecState(oprec, start - 1).target, raw.tanggalBuka);
+  assert.equal(oprecState(oprec, start).key, "open");
+  assert.equal(oprecState(oprec, end - 1).key, "open");
+  assert.equal(oprecState(oprec, end).key, "closed");
+  assert.equal(oprecState({ ...oprec, status: "closed" }, start).key, "closed");
+  assert.equal(oprecState({ ...oprec, tanggalTutup: null }, start).key, "empty");
+  assert.equal(oprecState({ ...oprec, divisiTersedia: [] }, start).key, "empty");
+});
+test("announcement publication and schedule gate result lookup", () => {
+  const announcement = normalizeOprec({ ...raw, pengumuman: { published: true, tanggal: "2026-10-20T08:00:00+07:00" } });
+  const publication = Date.parse(announcement.pengumuman.tanggal);
+  assert.equal(oprecState(announcement, start).key, "open");
+  assert.equal(oprecState(announcement, end).key, "closed");
+  assert.equal(oprecState(announcement, end).target, announcement.pengumuman.tanggal);
+  assert.equal(oprecState(announcement, publication).key, "announcement");
+  assert.equal(oprecState({ ...announcement, pengumuman: { ...announcement.pengumuman, published: false } }, publication).key, "closed");
+  assert.equal(oprecState({ ...announcement, status: "closed", pengumuman: { published: true, tanggal: null } }, start).key, "announcement");
+});
+test("reject malformed periods and dates without timezones", () => {
+  assert.equal(normalizeOprec(null), null);
+  for (const data of [undefined, {}, { ...raw, id: "../admin" }, { ...raw, status: "draft" }, { ...raw, tanggalBuka: "2026-10-01T08:00:00" }, { ...raw, tanggalTutup: raw.tanggalBuka }]) assert.throws(() => normalizeOprec(data));
+});
+test("field schema requires identity, unique safe keys and supported types", () => {
+  assert.equal(normalizeFields(identity).length, 2);
+  assert.deepEqual(normalizeFields([]), []);
+  for (const fields of [[identity[0]], [...identity, identity[0]], [...identity, { name: "constructor", type: "text", label: "A" }], [...identity, { name: "foo", type: "html", label: "A" }], [...identity, { name: "foo", type: "select", label: "A", options: [] }]]) assert.throws(() => normalizeFields(fields));
+});
+test("validates required fields, choices, checkbox, email and number ranges", () => {
+  const fields = normalizeFields([...identity,
+    { name: "email", type: "email", label: "Email", required: true },
+    { name: "divisi", type: "select", label: "Divisi", options: ["Kominfo"], required: true },
+    { name: "komitmen", type: "checkbox", label: "Komitmen", required: true },
+    { name: "semester", type: "number", label: "Semester", min: 1, max: 8 },
+  ]);
+  const form = new FormData();
+  assert.equal(Object.keys(validateOprecForm(fields, form)).length, 5);
+  for (const [key, value] of Object.entries({ nim: "E12345", tanggal_lahir: "2005-02-28", email: "a@example.com", divisi: "Kominfo", komitmen: "on", semester: "3" })) form.set(key, value);
+  assert.deepEqual(validateOprecForm(fields, form), {});
+  form.set("divisi", "forged"); form.set("semester", "99"); form.set("email", "invalid"); form.set("komitmen", "no");
+  assert.equal(Object.keys(validateOprecForm(fields, form)).length, 4);
+  form.append("nim", "E99999");
+  assert.ok(validateOprecForm(fields, form).nim);
+});
+test("birth date handles leap days, impossible dates and future dates", () => {
+  assert.equal(validBirthDate("2004-02-29", start), true);
+  for (const value of ["2005-02-29", "2026-02-31", "2100-01-01", "1899-12-31", "not-a-date"]) assert.equal(validBirthDate(value, start), false);
+});
+test("files have type and size limits", () => {
+  const fields = normalizeFields([...identity, { name: "cv", type: "file", label: "CV", accept: [".pdf"], maxSizeMB: 1 }]);
+  const form = new FormData(); form.set("nim", "E12345"); form.set("tanggal_lahir", "2004-02-29");
+  form.set("cv", new Blob(["document"], { type: "application/pdf" }), "cv.pdf");
+  assert.deepEqual(validateOprecForm(fields, form), {});
+  form.set("cv", new Blob(["script"]), "cv.exe"); assert.ok(validateOprecForm(fields, form).cv);
+  form.set("cv", new Blob([new Uint8Array(1024 * 1024 + 1)]), "cv.pdf"); assert.ok(validateOprecForm(fields, form).cv);
+});
+test("posters reject unsafe URLs and dates display in WIB", () => {
+  for (const url of ["javascript:alert(1)", "//evil.example", "/\\evil.example", "https://user:pass@example.com"]) assert.equal(safePosterUrl(url), null);
+  assert.equal(safePosterUrl("/images/poster.webp"), "/images/poster.webp");
+  assert.equal(safePosterUrl("https://example.com/poster.webp"), "https://example.com/poster.webp");
+  assert.match(oprecDate("2026-10-01T18:00:00Z"), /2 Oktober 2026/);
+});

@@ -1,3 +1,4 @@
+import { ScrollReset } from "@/components/layout/ScrollReset";
 import "./globals.css";
 
 export const metadata = {
@@ -23,7 +24,16 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="id">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if('scrollRestoration' in history){history.scrollRestoration='manual';}}catch(e){}",
+          }}
+        />
+      </head>
       <body>
+        <ScrollReset />
         {children}
       </body>
     </html>

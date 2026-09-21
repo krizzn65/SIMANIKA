@@ -63,14 +63,23 @@
 html {
   background: var(--background);
   color: var(--ink);
-  scroll-behavior: smooth;
-  scroll-padding-top: 6rem;
+  overflow-anchor: none;
+}
+
+#hero,
+#tentang,
+#visi-misi,
+#divisi,
+#gallery,
+#testimoni {
+  scroll-margin-top: 6rem;
 }
 
 body {
   min-width: 320px;
   margin: 0;
   overflow-x: clip;
+  overflow-anchor: none;
   background: var(--background);
   color: var(--ink);
   font-family: "Inter Tight", Inter, Arial, sans-serif;
@@ -2048,6 +2057,10 @@ svg {
     --gutter: 1.5rem;
   }
 
+  .site-header {
+    padding-top: 0.5rem;
+  }
+
   .desktop-nav,
   .login-link {
     display: none;
@@ -2538,7 +2551,7 @@ svg {
   }
 
   .site-header {
-    padding-top: 0.9rem;
+    padding-top: 0.5rem;
   }
 
   .hero-stage,
@@ -4795,32 +4808,48 @@ svg {
   position: relative;
   min-height: 100vh;
   background-color: #07111f;
+  overflow-anchor: none;
 }
 
 .site-main-content {
   position: relative;
   z-index: 1;
   background-color: var(--background);
-  min-height: 100vh;
-}
-
-.site-main-content::after {
-  position: absolute;
-  right: 0;
-  bottom: -1rem;
-  left: 0;
-  height: 1rem;
-  background: linear-gradient(rgba(7, 17, 31, 0.2), transparent);
-  content: "";
-  pointer-events: none;
+  overflow-anchor: none;
 }
 
 .site-footer-wrap {
-  position: sticky;
-  bottom: 0;
+  position: relative;
+  z-index: 1;
   width: 100%;
-  z-index: 0;
-  transform: translateZ(0);
+  overflow-anchor: none;
+}
+
+/* Parallax curtain reveal footer is strictly scoped to desktop screens (>= 1024px)
+   On mobile, sticky bottom: 0 caused scroll anchoring jumps and snap-to-footer issues */
+@media (min-width: 1024px) {
+  .site-main-content {
+    min-height: 100vh;
+  }
+
+  .site-main-content::after {
+    position: absolute;
+    right: 0;
+    bottom: -1rem;
+    left: 0;
+    height: 1rem;
+    background: linear-gradient(rgba(7, 17, 31, 0.2), transparent);
+    content: "";
+    pointer-events: none;
+  }
+
+  .site-footer-wrap {
+    position: sticky;
+    bottom: 0;
+    z-index: 0;
+    transform: translateZ(0);
+    overflow-anchor: none;
+  }
 }
 
 .site-footer-wrapper {
@@ -4828,6 +4857,7 @@ svg {
   width: 100%;
   overflow: hidden;
   contain: paint;
+  overflow-anchor: none;
   background-color: #214afe;
   background-image:
     radial-gradient(circle at 85% 15%, rgba(0, 240, 255, 0.16) 0%, transparent 48%),

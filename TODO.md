@@ -12,8 +12,8 @@
 |--------|-------|
 | **Total Tasks** | 165 |
 | **Selesai** | 6 |
-| **Dalam Proses** | 4 |
-| **Belum Dikerjakan** | 155 |
+| **Dalam Proses** | 7 |
+| **Belum Dikerjakan** | 152 |
 | **Blocked** | 0 |
 | **Progress** | `█░░░░░░░░░░░░░░░░░░░` **4%** |
 
@@ -120,7 +120,7 @@
 | FE-2.1 | `authStore` (Zustand, tanpa menyimpan token) | ⬜ | — |
 | FE-2.2 | `authService` — API calls | ⬜ | — |
 | FE-2.3 | Axios `withCredentials`, CSRF cookie, handle 401/419 | ⬜ | — |
-| FE-2.4 | `Login.jsx` page | ⬜ | — |
+| FE-2.4 | `Login.jsx` page | ⬜ | UI `/login` diperbarui 22 Sep 2026: layout form kiri/visual kanan dipertahankan, latar putih, grid hover, aksesibilitas input. Integrasi autentikasi dan verifikasi browser belum selesai. |
 | FE-2.5 | `Register.jsx` page | ⬜ | — |
 | FE-2.6 | `ProtectedRoute` component | ⬜ | — |
 | FE-2.7 | `AdminRoute` component | ⬜ | — |
@@ -264,20 +264,20 @@
 
 ## Sprint 6 — OPREC System
 
-**Status**: ⬜ Belum Dimulai
+**Status**: 🔄 Halaman publik dan service tersedia; menunggu integrasi backend dan verifikasi browser
 **Target**: 2-3 hari
 **Dependency**: Sprint 2
 
 | ID | Task | Status | Catatan |
 |----|------|--------|---------|
-| BE-6.1 | `PublicOprecController` — get active oprec | ⬜ | — |
+| BE-6.1 | `PublicOprecController` — periode dan lookup hasil | ⬜ | Tambahkan poster/schema/publikasi hasil; lookup privat NIM+tanggal lahir dengan rate limit persisten. |
 | BE-6.2 | `OprecRegistrationController` — submit + upload | ⬜ | — |
 | BE-6.3 | Admin `OprecController` — CRUD oprec + divisions | ⬜ | — |
 | BE-6.4 | Admin `OprecRegistrantController` — list, accept/reject | ⬜ | — |
 | BE-6.5 | Form Requests oprec registration | ⬜ | — |
-| FE-6.1 | `Oprec.jsx` — status, info, divisi, FAQ | ⬜ | — |
-| FE-6.2 | `OprecRegister.jsx` — form pendaftaran | ⬜ | — |
-| FE-6.3 | `oprecService.js` — API calls | ⬜ | — |
+| FE-6.1 | `Oprec.jsx` — headline, divisi, pendaftaran/pengumuman, FAQ | 🔄 | Alur revisi pengguna: poster admin, countdown jadwal, state pengumuman, FAQ paling bawah. Menunggu browser dan API nyata. |
+| FE-6.2 | Form OPREC dinamis + cek hasil inline | 🔄 | Renderer schema admin, validasi isian/berkas, submit via adapter Next, lookup NIM/tanggal lahir. Persistence Laravel dan auth/login belum tersedia. |
+| FE-6.3 | `oprecService.js` — API calls | 🔄 | GET periode dan adapter POST register/result dengan status/schema guard, no-store, timeout dan respons minimal. Kontrak `frontend/docs/oprec.md`. Integrasi backend belum diverifikasi. |
 | FE-6.4 | Dashboard section "OPREC Saya" | ⬜ | — |
 | FE-6.5 | Admin: `ManageOprec.jsx` — CRUD | ⬜ | — |
 | FE-6.6 | Admin: `OprecRegistrants.jsx` — tabel, accept/reject | ⬜ | — |
@@ -296,7 +296,7 @@
 
 ## Sprint 7 — merchandise System
 
-**Status**: ⬜ Belum Dimulai
+**Status**: ⬜ Halaman sementara Coming Soon tersedia; fitur merchandise penuh belum dimulai
 **Target**: 1-2 hari
 **Dependency**: Sprint 2
 
@@ -306,7 +306,7 @@
 | BE-7.2 | Submit merchandise inquiry endpoint | ⬜ | — |
 | BE-7.3 | Admin `merchandiseController` — CRUD | ⬜ | — |
 | BE-7.4 | Admin manage inquiries | ⬜ | — |
-| FE-7.1 | `merchandise.jsx` — full page | ⬜ | — |
+| FE-7.1 | `merchandise.jsx` — full page | ⬜ | Route `/merchandise` menampilkan Coming Soon sesuai scope sementara pengguna; halaman penuh belum dikerjakan. |
 | FE-7.2 | Form kolaborasi | ⬜ | — |
 | FE-7.3 | `merchandiseService.js` | ⬜ | — |
 | FE-7.4 | Admin: `Managemerchandise.jsx` — CRUD | ⬜ | — |
@@ -430,6 +430,9 @@ Log perubahan signifikan selama pengembangan.
 
 | Tanggal | Sprint | Perubahan | Oleh |
 |---------|--------|-----------|------|
+| 2026-09-21 | Sprint 7 | Tambah route `/merchandise` Coming Soon sesuai permintaan, metadata, navigasi Home/Event, navbar dan footer parallax bersama. Tanpa dependency atau animasi tambahan. | AI |
+| 2026-09-21 | Sprint 6 | Rombak OPREC sesuai arahan: headline → divisi → poster + countdown/form/pengumuman → FAQ. Form schema admin dan lookup NIM/tanggal lahir, adapter API Next. 39 pemeriksaan logika V8 lulus; runtime build/browser WSL masih terhalang. | AI |
+| 2026-09-21 | Sprint 6 | Halaman OPREC publik siap data admin, status berbasis jadwal, divisi, timeline, persyaratan, benefit dan FAQ. 18 pemeriksaan logika V8 lulus; build/browser terhalang runtime WSL 1. | AI |
 | 2026-09-21 | Sprint 4 | Implementasi frontend daftar/detail event dinamis, service API, kontrak admin, filter dan pagination. 13 pemeriksaan logika V8 lulus; build/browser belum terverifikasi karena Node Windows tidak berjalan pada WSL 1. | AI |
 | 2026-09-12 | — | PRD v1.0 selesai | AI |
 | 2026-09-12 | — | Architecture v1.0 selesai | AI |

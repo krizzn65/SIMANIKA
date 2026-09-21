@@ -537,10 +537,15 @@ Kecepatan 32–46 detik per loop, pause saat hover/focus, dan menjadi teks stati
 
 ### 11.3 OPREC
 
-- Status `DIBUKA` atau `DITUTUP` menjadi signal utama di hero.
-- Timeline rekrutmen divisualkan seperti level progression tanpa menyamarkan tanggal nyata.
-- Division choice memakai selectable cards dengan checkmark, bukan hanya border color.
-- CTA daftar nonaktif harus menjelaskan kapan pendaftaran dibuka kembali.
+- Urutan revisi 21 September 2026: headline → kartu divisi ringkas → poster +
+  pendaftaran/pengumuman → FAQ paling bawah.
+- Headline editorial; divisi sebagai kartu informatif, tanpa pilihan yang tampak tersimpan.
+- Admin dapat mengganti poster. Rasio frame 3:4, object-fit contain, fallback bila kosong.
+- Area utama berubah: belum dibuka, countdown, form aktif, ditutup, pengumuman.
+- Countdown hanya pada komponen angka kecil, bukan animasi seluruh halaman.
+- Form dibangun dari schema admin, label terlihat, error per kolom, feedback submit.
+- Pengumuman melalui NIM + tanggal lahir; hasil memiliki teks jelas dan tidak hanya warna.
+- FAQ native details/summary; tidak ada section tambahan setelah FAQ sebelum footer.
 
 ### 11.4 merchandise
 

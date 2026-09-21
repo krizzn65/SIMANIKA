@@ -211,9 +211,14 @@ export function Navbar() {
   };
 
   const handleHomeClick = (e) => {
+    setIsHomeMenuOpen(false);
+    if (pathname !== "/") {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      return;
+    }
+    // If already on "/", smoothly scroll to top
     e.preventDefault();
-    // Toggle dropdown on click
-    setIsHomeMenuOpen((prev) => !prev);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Section click handler with smooth scroll if on home page
@@ -300,7 +305,19 @@ export function Navbar() {
       <div className="site-header__inner">
         {/* Desktop Navbar Capsule (hidden on mobile) */}
         <div className="nav-capsule">
-          <Link className="brand-mark" href="/" aria-label="SIMANIKA — Beranda">
+          <Link
+            className="brand-mark"
+            href="/"
+            aria-label="SIMANIKA — Beranda"
+            onClick={() => {
+              setIsHomeMenuOpen(false);
+              if (pathname !== "/") {
+                window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+              } else {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            }}
+          >
             <Image
               alt=""
               className="brand-mark__logo"
@@ -358,6 +375,11 @@ export function Navbar() {
                   className={active ? "nav-link nav-link--active" : "nav-link"}
                   href={link.href}
                   key={link.href}
+                  onClick={() => {
+                    if (pathname !== link.href) {
+                      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+                    }
+                  }}
                 >
                   <AnimatedNavIcon name={link.icon} />
                   <span>{link.label}</span>
@@ -482,7 +504,14 @@ export function Navbar() {
                                 : "mobile-drawer__link"
                             }
                             href={link.href}
-                            onClick={handleClose}
+                            onClick={() => {
+                              handleClose();
+                              if (pathname !== "/") {
+                                window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+                              } else {
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                              }
+                            }}
                           >
                             <span className="mobile-drawer__icon-wrap">
                               <AnimatedNavIcon name={link.icon} />

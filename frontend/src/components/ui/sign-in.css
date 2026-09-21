@@ -1,0 +1,92 @@
+/* SIMANIKA authentication: white editorial surface, blue actions, restrained motion. */
+.simanika-signin-root { position: relative; isolation: isolate; min-height: 100dvh; width: 100%; display: flex; flex-direction: column; background: #fff; color: var(--ink); font-family: "Inter Tight", Inter, sans-serif; overflow: hidden; }
+.simanika-signin-root::before { content: ""; position: absolute; z-index: -1; inset: -40px; pointer-events: none; background-image: linear-gradient(rgba(21,94,239,.065) 1px, transparent 1px), linear-gradient(90deg, rgba(21,94,239,.065) 1px, transparent 1px); background-size: 40px 40px; animation: signin-grid-drift 6s linear infinite; animation-play-state: paused; }
+.simanika-signin-root :focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+.simanika-signin-form-col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: clamp(1.5rem, 4vw, 3rem); position: relative; z-index: 1; overflow: hidden; }
+.simanika-pixel-corner { position: absolute; pointer-events: none; user-select: none; z-index: 0; width: clamp(140px, 18vw, 260px); height: auto; opacity: .88; transition: opacity 200ms ease; }
+.simanika-pixel-corner--tl { top: 0; left: 0; }
+.simanika-pixel-corner--bl { bottom: 0; left: 0; }
+@media (max-width: 640px) {
+  .simanika-pixel-corner { width: 125px; opacity: .75; }
+}
+.simanika-signin-box { width: 100%; max-width: 440px; position: relative; z-index: 2; }
+.simanika-signin-brand-link { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; gap: .65rem; padding: .65rem 1rem; border: 2px dashed #c0ccdd; border-radius: 4px; background: #fff; box-shadow: 5px 5px 0 #dce5f4; color: var(--ink); font-size: .875rem; font-weight: 600; text-decoration: none; margin-bottom: 1.5rem; transition: color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease; position: relative; z-index: 2; }
+.simanika-signin-brand-link:hover, .simanika-signin-brand-link:focus-visible { color: var(--blue-dark); border-color: var(--blue); box-shadow: 3px 3px 0 #c9d9f7; transform: translate(2px, 2px); }
+.simanika-signin-back-icon { width: 19px; height: 19px; flex: none; transition: transform 240ms cubic-bezier(.2,.8,.2,1); }
+.simanika-signin-brand-link:hover .simanika-signin-back-icon, .simanika-signin-brand-link:focus-visible .simanika-signin-back-icon { transform: translateX(-4px); }
+@media (prefers-reduced-motion: reduce) { .simanika-signin-brand-link:hover, .simanika-signin-brand-link:focus-visible, .simanika-signin-brand-link:hover .simanika-signin-back-icon, .simanika-signin-brand-link:focus-visible .simanika-signin-back-icon { transform: none; } }
+.simanika-signin-eyebrow { display: inline-flex; align-items: center; gap: .55rem; margin-bottom: .8rem; color: var(--blue-dark); }
+.simanika-signin-eyebrow__dot { width: 7px; height: 7px; background: var(--blue); flex: none; }
+.simanika-signin-eyebrow__text { font: .7rem/1.6 "IBM Plex Mono", monospace; letter-spacing: .06em; }
+.simanika-signin-title { font-family: "Press Start 2P", "IBM Plex Mono", monospace; font-size: clamp(1.18rem, 2.4vw, 1.9rem); font-weight: 400; letter-spacing: -.055em; line-height: 1.58; margin: 0 0 .75rem; color: var(--ink); text-shadow: .45px 0 currentColor; }
+.simanika-signin-title em { font-style: normal; color: var(--blue); }
+.simanika-signin-desc { color: var(--ink-muted); font-size: 1rem; line-height: 1.65; margin: 0 0 1.75rem; }
+.simanika-glass-input { display: flex; align-items: center; position: relative; border-radius: 6px; border: 1px solid #aebdd0; background: #fff; transition: border-color 180ms ease, box-shadow 180ms ease; }
+.simanika-glass-input:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(21,94,239,.12); }
+.simanika-glass-input > div { position: relative; width: 100%; }
+.simanika-glass-input input { box-sizing: border-box; width: 100%; min-height: 50px; background: transparent; border: 0; border-radius: 6px; color: var(--ink); padding: .85rem 1rem; font: inherit; font-size: 1rem; }
+.simanika-glass-input input:focus-visible { outline: none; }
+.simanika-glass-input input[name="password"] { padding-right: 3.5rem; }
+.simanika-glass-input input::placeholder { color: #68778b; }
+.simanika-input-toggle { position: absolute; right: .25rem; top: 50%; transform: translateY(-50%); min-width: 44px; min-height: 44px; background: transparent; border: 0; color: var(--ink-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: .5rem; border-radius: 4px; transition: color 160ms ease; }
+.simanika-input-toggle:hover { color: var(--blue-dark); }
+.simanika-input-toggle svg { width: 20px; height: 20px; }
+.simanika-input-toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.simanika-animated-eye { overflow: visible; }
+.simanika-animated-eye__outline, .simanika-animated-eye__pupil { transform-origin: 12px 12px; transition: transform 260ms cubic-bezier(.2,.8,.2,1), opacity 220ms ease; }
+.simanika-animated-eye__slash { stroke-dasharray: 26; stroke-dashoffset: 26; transition: stroke-dashoffset 300ms cubic-bezier(.2,.8,.2,1); }
+.simanika-input-toggle[data-visible="true"] .simanika-animated-eye__pupil { transform: scale(.45); opacity: 0; }
+.simanika-input-toggle[data-visible="true"] .simanika-animated-eye__slash { stroke-dashoffset: 0; }
+.simanika-input-toggle:hover .simanika-animated-eye__outline { animation: simanika-eye-blink 520ms ease-in-out; }
+@keyframes simanika-eye-blink { 0%, 100% { transform: scaleY(1); } 45% { transform: scaleY(.12); } }
+@media (prefers-reduced-motion: reduce) { .simanika-animated-eye__outline, .simanika-animated-eye__pupil, .simanika-animated-eye__slash { animation: none !important; transition: none; } }
+.simanika-form-label { display: block; font-size: .875rem; font-weight: 500; color: var(--ink); margin-bottom: .5rem; }
+.simanika-form-group { margin-bottom: 1.15rem; }
+.simanika-form-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; margin: 1rem 0 1.25rem; font-size: .85rem; }
+.simanika-checkbox-label { display: inline-flex; align-items: center; min-height: 44px; gap: .55rem; color: var(--ink-muted); cursor: pointer; }
+.simanika-checkbox-label input[type="checkbox"] { appearance: none; display: grid; place-items: center; flex: none; width: 18px; height: 18px; margin: 0; border: 1.5px solid #526174; border-radius: 3px; background: #fff; cursor: pointer; transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
+.simanika-checkbox-label input[type="checkbox"]::after { content: ""; width: 9px; height: 5px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: translateY(-1px) rotate(-45deg) scale(0); transition: transform 220ms cubic-bezier(.2,1.4,.4,1); }
+.simanika-checkbox-label input[type="checkbox"]:checked { background: var(--blue); border-color: var(--blue); animation: simanika-checkbox-pop 260ms ease-out; }
+.simanika-checkbox-label input[type="checkbox"]:checked::after { transform: translateY(-1px) rotate(-45deg) scale(1); }
+.simanika-checkbox-label input[type="checkbox"]:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+@keyframes simanika-checkbox-pop { 50% { transform: scale(1.15); box-shadow: 0 0 0 4px rgba(21,94,239,.12); } }
+@media (prefers-reduced-motion: reduce) { .simanika-checkbox-label input[type="checkbox"], .simanika-checkbox-label input[type="checkbox"]::after { animation: none; transition: none; } }
+.simanika-link { color: var(--blue-dark); text-decoration: none; }
+.simanika-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.simanika-form-row > .simanika-link { display: inline-flex; align-items: center; min-height: 44px; }
+.simanika-btn-primary { width: 100%; min-height: 50px; display: flex; align-items: center; justify-content: center; gap: .65rem; padding: .85rem 1.5rem; border-radius: 6px; background: var(--blue); color: #fff; font: inherit; font-size: 1rem; font-weight: 500; border: 1px solid var(--blue); cursor: pointer; box-shadow: 3px 3px 0 #b9cfff; transition: background-color 180ms ease, transform 180ms ease; }
+.simanika-btn-primary:hover { background: var(--blue-dark); transform: translateY(-1px); }
+.simanika-btn-primary:active { transform: translateY(0); }
+.simanika-btn-icon-slot { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 19px; height: 19px; overflow: hidden; flex: none; }
+.simanika-btn-icon { width: 19px; height: 19px; flex: none; stroke: currentColor; transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), opacity 220ms ease; }
+.simanika-btn-icon--primary { transform: translateX(0); opacity: 1; }
+.simanika-btn-icon--secondary { position: absolute; top: 0; left: 0; transform: translateX(-120%); opacity: 0; }
+.simanika-btn-primary:hover .simanika-btn-icon--primary, .simanika-btn-primary:focus-visible .simanika-btn-icon--primary { transform: translateX(120%); opacity: 0; }
+.simanika-btn-primary:hover .simanika-btn-icon--secondary, .simanika-btn-primary:focus-visible .simanika-btn-icon--secondary { transform: translateX(0); opacity: 1; }
+.simanika-divider { display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1.5rem 0 1.25rem; }
+.simanika-divider::before, .simanika-divider::after { content: ""; height: 1px; flex: 1; background: var(--border); }
+.simanika-divider span { color: var(--ink-muted); font: .65rem/1.5 "IBM Plex Mono", monospace; text-transform: uppercase; letter-spacing: .04em; }
+.simanika-btn-social { width: 100%; min-height: 50px; display: flex; align-items: center; justify-content: center; gap: .75rem; padding: .85rem 1rem; border-radius: 6px; border: 1px solid #aebdd0; background: #fff; color: var(--ink); font: inherit; font-size: .9rem; font-weight: 500; cursor: pointer; transition: background-color 180ms ease, border-color 180ms ease; }
+.simanika-btn-social:hover { background: var(--surface-subtle); border-color: var(--blue); }
+.simanika-btn-social svg { width: 20px; height: 20px; flex: none; }
+.simanika-foot-note { text-align: center; font-size: .85rem; color: var(--ink-muted); line-height: 1.6; margin: 1.5rem 0 0; }
+.simanika-signin-hero-col { display: none; flex: 1; min-width: 0; position: relative; padding: 1.25rem; }
+.simanika-hero-stage { position: relative; width: 100%; height: 100%; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: #eff6ff; }
+.simanika-hero-image { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 43%; }
+.simanika-hero-stage::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 75%, rgba(7,17,31,.08)); pointer-events: none; }
+.simanika-testimonials-wrap { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 1; display: flex; gap: 1rem; width: 100%; padding: 0 2rem; justify-content: center; }
+.simanika-testimonial-card { display: flex; align-items: flex-start; gap: .85rem; padding: 1.15rem 1.25rem; border-radius: 8px; background: #fff; border: 1px solid var(--border); box-shadow: 4px 4px 0 rgba(7,17,31,.15); max-width: 320px; width: 100%; }
+.simanika-testimonial-avatar { width: 42px; height: 42px; border-radius: 6px; object-fit: cover; flex: none; }
+.simanika-testimonial-body { font-size: .82rem; line-height: 1.45; min-width: 0; }
+.simanika-testimonial-name { font-weight: 600; color: var(--ink); margin: 0; }
+.simanika-testimonial-handle { color: var(--blue-dark); font: .7rem/1.5 "IBM Plex Mono", monospace; margin: .2rem 0; }
+.simanika-testimonial-text { margin: .4rem 0 0; color: var(--ink-muted); font-size: .8rem; line-height: 1.5; }
+.simanika-signin-root .animate-element, .simanika-signin-root .animate-testimonial { animation: signin-enter 400ms ease-out both; }
+.simanika-signin-root .animate-slide-right { animation: signin-enter 500ms ease-out both; }
+@keyframes signin-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes signin-grid-drift { to { transform: translate3d(40px, 40px, 0); } }
+@media (hover: hover) and (pointer: fine) { .simanika-signin-root:hover::before { animation-play-state: running; } .simanika-signin-root:focus-within::before { animation-play-state: paused; } }
+@media (min-width: 768px) { .simanika-signin-root { flex-direction: row; } .simanika-signin-hero-col { display: flex; align-items: stretch; justify-content: center; height: 100vh; height: 100dvh; } .simanika-hero-stage { height: 100%; min-height: 0; } }
+@media (max-width: 1200px) { .simanika-testimonial-card--extra { display: none; } }
+@media (max-width: 767px) { .simanika-signin-form-col { padding-block: 2rem; } }
+@media (prefers-reduced-motion: reduce) { .simanika-signin-root::before, .simanika-signin-root .animate-element, .simanika-signin-root .animate-slide-right, .simanika-signin-root .animate-testimonial { animation: none; } .simanika-signin-root *, .simanika-signin-root *::before, .simanika-signin-root *::after { transition: none; } .simanika-btn-primary:hover { transform: none; } .simanika-btn-icon { transition: none !important; } .simanika-btn-primary:hover .simanika-btn-icon--primary { transform: none; opacity: 1; } .simanika-btn-primary:hover .simanika-btn-icon--secondary { display: none; } }

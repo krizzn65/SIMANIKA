@@ -155,8 +155,6 @@ frontend/
 │   │   │   │   └── page.jsx    # My teams
 │   │   │   ├── events/[slug]/register/
 │   │   │   │   └── page.jsx    # Event registration
-│   │   │   ├── oprec/register/
-│   │   │   │   └── page.jsx    # Oprec registration
 │   │   │   └── profile/
 │   │   │       └── page.jsx    # User profile
 │   │   ├── admin/              # Admin route group
@@ -352,7 +350,8 @@ backend/
 | `GET` | `/api/public/home` | Get site content (landing page) | ❌ |
 | `GET` | `/api/public/events` | List published events | ❌ |
 | `GET` | `/api/public/events/{slug}` | Detail event | ❌ |
-| `GET` | `/api/public/oprec` | Get oprec info | ❌ |
+| `GET` | `/api/public/oprec` | Get periode, poster, schema form, dan konfigurasi pengumuman | ❌ |
+| `POST` | `/api/public/oprec/{id}/result` | Hasil seleksi via pasangan NIM + tanggal lahir; rate limited, no-store | ❌ |
 | `GET` | `/api/public/merchandises` | List merchandises | ❌ |
 | `POST` | `/api/public/merchandise-inquiry` | Submit merchandise form | ❌ |
 
@@ -652,8 +651,8 @@ Proyek dipecah menjadi **10 sprint** yang bisa dikerjakan secara berurutan. Seti
 - [ ] **BE-6.5**: Buat Form Requests (StoreOprecRegistrationRequest)
 
 #### Tasks (Frontend):
-- [ ] **FE-6.1**: Buat `Oprec.jsx` — status OPREC, info, divisi cards, FAQ, CTA
-- [ ] **FE-6.2**: Buat `OprecRegister.jsx` — form: data diri, pilihan divisi, motivasi, upload
+- [ ] **FE-6.1**: Buat `Oprec.jsx` — headline, divisi cards, poster + area pendaftaran/pengumuman, FAQ
+- [ ] **FE-6.2**: Buat form OPREC inline dari schema admin — identitas NIM/tanggal lahir, field dinamis, pilihan dan upload
 - [ ] **FE-6.3**: Buat `oprecService.js` — API calls
 - [ ] **FE-6.4**: Update Dashboard — section "OPREC Saya" (status pendaftaran)
 - [ ] **FE-6.5**: Admin: `ManageOprec.jsx` — CRUD oprec + manage divisi
@@ -917,3 +916,12 @@ graph TD
 
 > [!NOTE]
 > Dokumen ini adalah **living document**. Update seiring progress development. Setiap sprint yang selesai, tandai task sebagai `[x]` dan catat blockers/issues jika ada.
+
+### Revisi OPREC — 21 September 2026
+
+Alur dan kontrak revisi pengguna berada di [frontend/docs/oprec.md](frontend/docs/oprec.md).
+Next Route Handlers `/api/oprec/register` dan `/api/oprec/result` menjadi adapter
+server ke Laravel. Registrasi tetap menggunakan `/api/user/oprec/register` dan
+Sanctum; lookup hasil publik memverifikasi NIM/tanggal lahir tanpa menampilkan
+daftar pendaftar. Schema form, validasi backend, unique NIM/periode, upload privat,
+publikasi hasil, dan rate limit persisten wajib diterapkan di Laravel.

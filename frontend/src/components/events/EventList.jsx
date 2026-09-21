@@ -6,20 +6,26 @@ export function EventList({ result, filters }) {
   const filtered = Boolean(filters.search || filters.kategori || filters.status || filters.page > 1);
   const now = Date.now();
   return (
-    <section className="event-results" aria-labelledby="event-results-title" id="agenda">
-      <div className="event-results__heading">
-        <div><span className="event-mono">// PILIH LANGKAHMU</span><h2 id="event-results-title">{filtered ? "Hasil pencarianmu." : "Semua kesempatan."}</h2></div>
-        <div className="event-results__count"><p role="status" aria-live="polite">{result.total} event{filtered ? " ditemukan" : " tersedia"}</p>{filtered && <Link className="event-reset" href="/events">Reset filter ↗</Link>}</div>
-      </div>
+    <section className="event-results" aria-label="Daftar kegiatan" id="agenda">
+      {(filtered || result.events.length > 0) && (
+        <div className="event-results__meta">
+          <p role="status" aria-live="polite">{result.total} event{filtered ? " ditemukan" : " tersedia"}</p>
+          {filtered && <Link className="event-reset" href="/events">Reset filter ↗</Link>}
+        </div>
+      )}
       {result.events.length ? (
         <div className="event-grid">{result.events.map((event) => <EventCard key={event.slug} event={event} now={now} />)}</div>
       ) : (
         <div className="event-empty">
           <div className="event-empty__inventory" aria-hidden="true"><span>+</span></div>
           <span className="event-mono">{filtered ? "PENCARIAN / 00" : "AGENDA / 00"}</span>
-          <h3>{filtered ? "Belum ada yang cocok." : "Cerita baru segera dimulai."}</h3>
-          <p>{filtered ? "Coba kata kunci lain atau hapus filter untuk melihat agenda lainnya." : "Belum ada event yang dipublikasikan. Kembali lagi untuk menemukan kegiatan terbaru dari HIMANIKA."}</p>
-          <Link className="event-button event-button--outline" href={filtered ? "/events" : "/#gallery"}>{filtered ? "Lihat semua event" : "Lihat keseruan sebelumnya"}<span aria-hidden="true">↗</span></Link>
+          <h3>{filtered ? "Belum ada yang cocok." : "Belum ada event saat ini."}</h3>
+          <p>{filtered ? "Coba kata kunci lain atau hapus filter untuk melihat agenda lainnya." : "Belum ada event yang dipublikasikan. Kembali lagi nanti untuk menemukan kegiatan terbaru dari HIMANIKA."}</p>
+          {filtered && (
+            <Link className="event-button event-button--outline" href="/events">
+              Lihat semua event<span aria-hidden="true">↗</span>
+            </Link>
+          )}
         </div>
       )}
       {result.lastPage > 1 && <nav className="event-pagination" aria-label="Halaman daftar event">

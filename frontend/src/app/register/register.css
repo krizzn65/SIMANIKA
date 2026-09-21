@@ -1,0 +1,176 @@
+@keyframes register-grid-drift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 40px 40px;
+  }
+}
+
+.register-page {
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: clamp(2rem, 5vw, 3.5rem) 1.25rem;
+  background-color: #fff;
+  background-image: linear-gradient(rgba(21,94,239,.065) 1px, transparent 1px), linear-gradient(90deg, rgba(21,94,239,.065) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: register-grid-drift 10s linear infinite;
+  color: var(--ink);
+  overflow-x: hidden;
+}
+
+.register-pixel-corner {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+  width: clamp(150px, 20vw, 300px);
+  height: auto;
+  opacity: 0.95;
+  transition: opacity 200ms ease;
+}
+
+.register-pixel-corner--tl {
+  top: 0;
+  left: 0;
+}
+
+.register-pixel-corner--br {
+  bottom: 0;
+  right: 0;
+}
+
+.register-card {
+  position: relative;
+  width: min(100%, 560px);
+  margin: auto;
+  padding: clamp(1.5rem, 4vw, 2.75rem);
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #dce5f4;
+  box-shadow: 8px 8px 0 #eaf0fb;
+  z-index: 10;
+}
+.register-back { display: inline-flex; align-items: center; gap: .6rem; min-height: 44px; padding: .55rem .85rem; border: 2px dashed #c0ccdd; background: #fff; box-shadow: 4px 4px 0 #dce5f4; font-size: .82rem; font-weight: 600; transition: color 180ms ease, border-color 180ms ease, transform 180ms ease; }
+.register-back svg { width: 18px; height: 18px; transition: transform 220ms ease; }
+.register-back:hover, .register-back:focus-visible { color: var(--blue-dark); border-color: var(--blue); transform: translate(2px,2px); }
+.register-back:hover svg, .register-back:focus-visible svg { transform: translateX(-4px); }
+.register-heading { margin: 2.3rem 0 2rem; }
+.register-eyebrow { margin: 0 0 1rem; color: var(--blue-dark); font: 500 .72rem/1.5 "IBM Plex Mono", monospace; letter-spacing: .1em; }
+.register-heading h1 { margin: 0 0 .75rem; font: 400 clamp(1.3rem, 4vw, 1.85rem)/1.55 "Press Start 2P", "IBM Plex Mono", monospace; letter-spacing: -.055em; }
+.register-heading h1 em { color: var(--blue); font-style: normal; }
+.register-heading > p:last-child { margin: 0; color: var(--ink-muted); font-size: .98rem; line-height: 1.6; }
+.register-google { display: flex; align-items: center; justify-content: center; gap: .75rem; width: 100%; min-height: 50px; padding: .85rem 1rem; border: 1px solid #aebdd0; border-radius: 6px; background: #fff; box-shadow: none; color: var(--ink); font: inherit; font-size: .95rem; font-weight: 500; cursor: pointer; transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
+.register-google:hover { border-color: var(--blue); background: var(--surface-subtle); box-shadow: 0 0 0 3px rgba(21,94,239,.1); }
+.register-google svg { width: 20px; height: 20px; flex: none; }
+.register-divider { display: flex; align-items: center; gap: 1.1rem; margin: 1.75rem 0 1.35rem; color: #7988a0; font: 500 .75rem/1.4 "IBM Plex Mono", monospace; letter-spacing: .13em; white-space: nowrap; }
+.register-divider::before, .register-divider::after { content: ""; flex: 1; border-top: 1px solid #d9e0eb; }
+.register-form { display: grid; gap: 1.15rem; }
+.register-field { display: grid; gap: .45rem; }
+.register-field label { display: block; font-size: .875rem; font-weight: 500; color: var(--ink); font-family: inherit; letter-spacing: normal; margin-bottom: 0; }
+.register-input-wrap { display: flex; align-items: center; position: relative; border-radius: 6px; border: 1px solid #aebdd0; background: #fff; transition: border-color 180ms ease, box-shadow 180ms ease; width: 100%; }
+.register-input-wrap:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(21,94,239,.12); }
+.register-field input { box-sizing: border-box; width: 100%; min-height: 50px; background: transparent; border: 0; border-radius: 6px; color: var(--ink); padding: .85rem 1rem; font: inherit; font-size: 1rem; box-shadow: none; }
+.register-field input:focus { outline: none; box-shadow: none; border: 0; }
+.register-field input::placeholder { color: #68778b; }
+.register-input-wrap input[name="password"] { padding-right: 3.5rem; }
+.register-input-toggle { position: absolute; right: .25rem; top: 50%; transform: translateY(-50%); min-width: 44px; min-height: 44px; background: transparent; border: 0; color: var(--ink-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: .5rem; border-radius: 4px; transition: color 160ms ease; }
+.register-input-toggle:hover { color: var(--blue-dark); }
+.register-input-toggle svg { width: 20px; height: 20px; }
+.register-input-toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.register-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .65rem;
+  width: 100%;
+  min-height: 50px;
+  margin-top: .35rem;
+  padding: .85rem 1.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--blue);
+  background: var(--blue);
+  box-shadow: 3px 3px 0 #b9cfff;
+  color: #fff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+.register-submit:hover {
+  background: var(--blue-dark);
+  transform: translateY(-1px);
+}
+.register-submit:active {
+  transform: translateY(0);
+}
+
+.register-submit__icon-slot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 19px;
+  height: 19px;
+  overflow: hidden;
+  flex: none;
+}
+
+.register-submit__icon {
+  width: 19px;
+  height: 19px;
+  flex: none;
+  stroke: currentColor;
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), opacity 220ms ease;
+}
+
+.register-submit__icon--primary {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.register-submit__icon--secondary {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateX(-120%);
+  opacity: 0;
+}
+
+.register-submit:hover .register-submit__icon--primary,
+.register-submit:focus-visible .register-submit__icon--primary {
+  transform: translateX(120%);
+  opacity: 0;
+}
+
+.register-submit:hover .register-submit__icon--secondary,
+.register-submit:focus-visible .register-submit__icon--secondary {
+  transform: translateX(0);
+  opacity: 1;
+}
+.register-feedback { margin: 1.25rem 0 0; padding: .8rem 1rem; border-left: 3px solid var(--blue); background: #eff6ff; color: var(--blue-dark); font-size: .88rem; line-height: 1.5; }
+.register-login { margin: 1.6rem 0 0; text-align: center; color: var(--ink-muted); font-size: .9rem; }
+.register-login a { color: var(--blue-dark); font-weight: 600; }
+.register-login a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.register-page :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+@media (max-width: 640px) {
+  .register-page { padding: 1.5rem 1rem; }
+  .register-card { padding: 1.35rem; box-shadow: 5px 5px 0 #eaf0fb; }
+  .register-heading { margin: 1.8rem 0; }
+  .register-pixel-corner {
+    width: 130px;
+    opacity: 0.8;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .register-page { animation: none; }
+  .register-page *, .register-page *::before, .register-page *::after { transition: none !important; }
+  .register-back:hover, .register-back:focus-visible, .register-back:hover svg, .register-back:focus-visible svg, .register-google:hover, .register-submit:hover { transform: none; }
+  .register-submit__icon { transition: none !important; }
+  .register-submit:hover .register-submit__icon--primary,
+  .register-submit:focus-visible .register-submit__icon--primary { transform: none; opacity: 1; }
+  .register-submit:hover .register-submit__icon--secondary,
+  .register-submit:focus-visible .register-submit__icon--secondary { display: none; }
+}

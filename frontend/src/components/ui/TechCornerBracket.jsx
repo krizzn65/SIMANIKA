@@ -14,7 +14,10 @@
  * - Native SVG crispEdges for razor-sharp rendering on all screens
  */
 export function TechCornerBracket({ position = "bottom-left", className = "" }) {
-  const isTopRight = position === "top-right";
+  let transform = "none";
+  if (position === "top-right") transform = "rotate(180deg)";
+  else if (position === "top-left") transform = "scaleY(-1)";
+  else if (position === "bottom-right") transform = "scaleX(-1)";
 
   return (
     <div
@@ -28,7 +31,7 @@ export function TechCornerBracket({ position = "bottom-left", className = "" }) 
         xmlns="http://www.w3.org/2000/svg"
         shapeRendering="crispEdges"
         style={{
-          transform: isTopRight ? "rotate(180deg)" : "none",
+          transform,
         }}
       >
         {/* ─── 1. FLOATING PIXEL HUD WIREFRAME & CALIBRATION ─── */}
