@@ -1,7 +1,7 @@
 # 📋 TODO — SIMANIKA Progress Tracker
 
 > **Issue Tracker Lokal & Memori Proyek**
-> Last Updated: 14 September 2026
+> Last Updated: 21 September 2026
 > Referensi: [PRD.md](./PRD.md) | [Architecture.md](./architecture.md)
 
 ---
@@ -12,8 +12,8 @@
 |--------|-------|
 | **Total Tasks** | 165 |
 | **Selesai** | 6 |
-| **Dalam Proses** | 0 |
-| **Belum Dikerjakan** | 159 |
+| **Dalam Proses** | 4 |
+| **Belum Dikerjakan** | 155 |
 | **Blocked** | 0 |
 | **Progress** | `█░░░░░░░░░░░░░░░░░░░` **4%** |
 
@@ -184,7 +184,7 @@
 
 ## Sprint 4 — Event System
 
-**Status**: ⬜ Belum Dimulai
+**Status**: 🔄 Frontend publik diimplementasikan; integrasi backend dan verifikasi browser menunggu runtime
 **Target**: 3-4 hari
 **Dependency**: Sprint 1, Sprint 2
 
@@ -199,11 +199,11 @@
 | BE-4.7 | Admin create event: nested form fields, prizes | ⬜ | — |
 | BE-4.8 | `EventRegistrantController` — list, accept/reject | ⬜ | — |
 | BE-4.9 | `ExportController` — export CSV | ⬜ | — |
-| FE-4.1 | `EventList.jsx` — grid, filter, search, pagination | ⬜ | — |
-| FE-4.2 | `EventCard.jsx` component | ⬜ | — |
-| FE-4.3 | `EventDetail.jsx` — banner, deskripsi, countdown | ⬜ | — |
+| FE-4.1 | `EventList.jsx` — grid, filter, search, pagination | 🔄 | Route `/events`: grid, pencarian, filter URL, dialog mobile, pagination, empty/loading/error. Menunggu uji browser dan API nyata. |
+| FE-4.2 | `EventCard.jsx` component | 🔄 | Kartu server, poster lazy dengan fallback, kategori, tanggal WIB, tipe peserta, status dan kuota. Menunggu verifikasi visual. |
+| FE-4.3 | `EventDetail.jsx` — banner, deskripsi, countdown | 🔄 | Route `/events/[slug]`: poster, deskripsi teks biasa, timeline, syarat, hadiah, countdown per menit. Rich text dan alur registrasi belum dibuat. |
 | FE-4.4 | `EventRegister.jsx` — dynamic form | ⬜ | — |
-| FE-4.5 | `eventService.js` — API calls | ⬜ | — |
+| FE-4.5 | `eventService.js` — API calls | 🔄 | Service GET list/detail siap `/api/public/events`, no-store, timeout, normalisasi data. CRUD/admin belum dibuat; kontrak di `frontend/docs/events.md`. |
 | FE-4.6 | Admin: `ManageEvents.jsx` — tabel + CRUD | ⬜ | — |
 | FE-4.7 | Admin: `CreateEvent.jsx` — form + form field builder | ⬜ | — |
 | FE-4.8 | Admin: `EditEvent.jsx` | ⬜ | — |
@@ -430,6 +430,7 @@ Log perubahan signifikan selama pengembangan.
 
 | Tanggal | Sprint | Perubahan | Oleh |
 |---------|--------|-----------|------|
+| 2026-09-21 | Sprint 4 | Implementasi frontend daftar/detail event dinamis, service API, kontrak admin, filter dan pagination. 13 pemeriksaan logika V8 lulus; build/browser belum terverifikasi karena Node Windows tidak berjalan pada WSL 1. | AI |
 | 2026-09-12 | — | PRD v1.0 selesai | AI |
 | 2026-09-12 | — | Architecture v1.0 selesai | AI |
 | 2026-09-12 | — | TODO tracker dibuat | AI |
@@ -447,7 +448,7 @@ Daftar bug / masalah yang ditemukan selama pengembangan.
 
 | # | Sprint | Issue | Severity | Status | Resolusi |
 |---|--------|-------|----------|--------|----------|
-| — | — | Belum ada issue | — | — | — |
+| 1 | Sprint 4 | Build dan pengujian browser belum dapat dijalankan: runtime npm/Node mengembalikan WSL 1 unsupported | Medium | Terbuka | Jalankan build dan smoke test pada Node Linux/WSL 2 atau terminal Windows yang berfungsi |
 
 ---
 

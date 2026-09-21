@@ -74,13 +74,6 @@ function VisionVideo() {
     setIsEnded(true);
   };
 
-  const handleTimeUpdate = () => {
-    const video = videoRef.current;
-    if (video && video.duration > 0 && video.currentTime >= video.duration - 0.05) {
-      handleEnded();
-    }
-  };
-
   const handleReplay = () => {
     const video = videoRef.current;
     if (!video || !isEnded) return;
@@ -96,11 +89,10 @@ function VisionVideo() {
         ref={videoRef}
         muted
         playsInline
-        preload="auto"
+        preload="metadata"
         className="vision-video"
         src="/videos/animasi logo.mp4"
         onEnded={handleEnded}
-        onTimeUpdate={handleTimeUpdate}
       />
       <button
         type="button"

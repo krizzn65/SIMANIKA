@@ -61,6 +61,7 @@ function getSlotConfig(totalCards, slot) {
 
 export function CardFanCarousel({ cards }) {
   const containerRef = useRef(null);
+  const [isInView, setIsInView] = useState(false);
   const isAnimating = useRef(false);
   const hasEntered = useRef(false);
   const directionRef = useRef(null);
@@ -71,6 +72,30 @@ export function CardFanCarousel({ cards }) {
   const [centerIndex, setCenterIndex] = useState(
     needsPagination ? HALF : totalCards >> 1,
   );
+  const [loadedIndices, setLoadedIndices] = useState(
+    () => new Set(Array.from({ length: Math.min(totalCards, MAX_VISIBLE) }, (_, index) => index)),
+  );
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || isInView) return undefined;
+    if (!("IntersectionObserver" in window)) {
+      setIsInView(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "300px 0px" },
+    );
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [isInView]);
 
   const getVisibleMap = useCallback(
     (center) => {
@@ -95,18 +120,23 @@ export function CardFanCarousel({ cards }) {
       if (isAnimating.current || !needsPagination) return;
       isAnimating.current = true;
       directionRef.current = direction;
-      setCenterIndex((prev) =>
+      const nextCenter =
         direction === "right"
-          ? (prev + 1) % totalCards
-          : (prev - 1 + totalCards) % totalCards,
-      );
+          ? (centerIndex + 1) % totalCards
+          : (centerIndex - 1 + totalCards) % totalCards;
+      setLoadedIndices((previous) => {
+        const next = new Set(previous);
+        getVisibleMap(nextCenter).forEach((_, index) => next.add(index));
+        return next;
+      });
+      setCenterIndex(nextCenter);
     },
-    [totalCards, needsPagination],
+    [centerIndex, totalCards, needsPagination, getVisibleMap],
   );
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || !totalCards) return;
+    if (!container || !totalCards || !isInView) return;
 
     const cardElements = Array.from(
       container.querySelectorAll(".fan-card"),
@@ -117,19 +147,17 @@ export function CardFanCarousel({ cards }) {
     const previouslyVisible = prevVisible.current;
     const direction = directionRef.current;
     const isFirstMount = !hasEntered.current;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const multiplier = getResponsiveMultiplier(window.innerWidth);
     const hMult = getHeightMultiplier(window.innerWidth);
     const slotCount = needsPagination ? MAX_VISIBLE : totalCards;
     const config = (slot) => getSlotConfig(slotCount, slot);
-
-    if (isFirstMount) isAnimating.current = true;
 
     let completedCount = 0;
     const visibleCount = visibleMap.size;
     const onCardDone = () => {
       if (++completedCount >= visibleCount) {
         isAnimating.current = false;
-        if (isFirstMount) hasEntered.current = true;
       }
     };
 
@@ -145,24 +173,13 @@ export function CardFanCarousel({ cards }) {
           rotation: rot,
           scale,
           opacity: 1,
+          visibility: "visible",
+          pointerEvents: "auto",
           zIndex,
         };
 
         if (isFirstMount) {
-          gsap.set(card, {
-            x: 0,
-            y: `${12 * hMult}rem`,
-            rotation: 0,
-            scale: 0.5,
-            opacity: 0,
-          });
-          gsap.to(card, {
-            ...target,
-            duration: 1.2,
-            ease: "elastic.out(1.05,.78)",
-            delay: 0.2 + slot * 0.06,
-            onComplete: onCardDone,
-          });
+          gsap.set(card, target);
         } else if (!wasVisible) {
           const enterX = direction === "right" ? 40 : -40;
           gsap.set(card, {
@@ -171,17 +188,19 @@ export function CardFanCarousel({ cards }) {
             rotation: direction === "right" ? 30 : -30,
             scale: 0.5,
             opacity: 0,
+            visibility: "visible",
+            pointerEvents: "auto",
           });
           gsap.to(card, {
             ...target,
-            duration: 0.6,
+            duration: reduceMotion ? 0 : 0.6,
             ease: "power2.out",
             onComplete: onCardDone,
           });
         } else {
           gsap.to(card, {
             ...target,
-            duration: 0.5,
+            duration: reduceMotion ? 0 : 0.5,
             ease: "power2.out",
             onComplete: onCardDone,
           });
@@ -193,16 +212,18 @@ export function CardFanCarousel({ cards }) {
           opacity: 0,
           scale: 0.5,
           rotation: direction === "right" ? -30 : 30,
-          duration: 0.4,
+          duration: reduceMotion ? 0 : 0.4,
           ease: "power2.in",
           zIndex: 0,
+          onComplete: () => gsap.set(card, { visibility: "hidden", pointerEvents: "none" }),
         });
       } else if (isFirstMount) {
-        gsap.set(card, { opacity: 0, scale: 0.3, x: 0, y: 0, zIndex: 0 });
+        gsap.set(card, { opacity: 0, scale: 0.3, x: 0, y: 0, zIndex: 0, visibility: "hidden", pointerEvents: "none" });
       }
     });
 
     prevVisible.current = new Set(visibleMap.keys());
+    if (isFirstMount) hasEntered.current = true;
 
     /* ── Hover interactions ── */
     const visibleEntries = [];
@@ -232,23 +253,37 @@ export function CardFanCarousel({ cards }) {
           const distance = Math.abs(slot - hoveredSlot);
           delay = distance * 0.02;
 
+          const isDesktop = window.innerWidth >= 1024;
+
           if (slot === hoveredSlot) {
-            targetY -= 2.5 * hM;
-            targetScale *= 1.08;
+            targetY -= (isDesktop ? 1.8 : 2.5) * hM;
+            targetScale *= isDesktop ? 1.05 : 1.08;
           } else {
-            const normalized =
-              centerSlot > 0 ? (slot - centerSlot) / centerSlot : 0;
-            const pushStrength =
-              8 *
-              (1 - Math.abs(normalized)) *
-              (1 + 0.2 * Math.max(0, 3 - distance));
+            let push;
+            let rotAdjust;
+
+            if (isDesktop) {
+              // Desktop: subtle, refined parting so cards don't scatter off-screen
+              push = Math.max(0.6, 3.2 / Math.pow(distance, 0.85));
+              rotAdjust = 1.2 / (distance + 1);
+            } else {
+              // Mobile & Tablet: keep exact original calculation
+              const normalized =
+                centerSlot > 0 ? (slot - centerSlot) / centerSlot : 0;
+              const pushStrength =
+                8 *
+                (1 - Math.abs(normalized)) *
+                (1 + 0.2 * Math.max(0, 3 - distance));
+              push = pushStrength * mult;
+              rotAdjust = 3 / (distance + 1);
+            }
 
             if (slot < hoveredSlot) {
-              targetX -= pushStrength * mult;
-              targetRot -= 3 / (distance + 1);
+              targetX -= push;
+              targetRot -= rotAdjust;
             } else {
-              targetX += pushStrength * mult;
-              targetRot += 3 / (distance + 1);
+              targetX += push;
+              targetRot += rotAdjust;
             }
 
             if (
@@ -268,12 +303,12 @@ export function CardFanCarousel({ cards }) {
           y: `${targetY}rem`,
           rotation: targetRot,
           scale: targetScale,
-          duration: 0.5,
-          delay,
+          duration: reduceMotion ? 0 : 0.5,
+          delay: reduceMotion ? 0 : delay,
           ease: "elastic.out(1,.75)",
           overwrite: "auto",
         });
-        gsap.set(el, { zIndex: base.zIndex });
+        gsap.set(el, { zIndex: slot === hoveredSlot ? 50 : base.zIndex });
       });
     };
 
@@ -315,8 +350,9 @@ export function CardFanCarousel({ cards }) {
       container.removeEventListener("mouseleave", onMouseLeave);
       window.removeEventListener("resize", onResize);
       if (leaveTimer) clearTimeout(leaveTimer);
+      gsap.killTweensOf(cardElements);
     };
-  }, [centerIndex, totalCards, getVisibleMap, needsPagination]);
+  }, [centerIndex, totalCards, getVisibleMap, needsPagination, isInView]);
 
   if (!totalCards) return null;
 
@@ -326,12 +362,15 @@ export function CardFanCarousel({ cards }) {
         {cards.map((card, index) => (
           <div className="fan-card" key={index}>
             <div className="fan-card__inner">
-              <img
-                src={card.imgUrl}
-                loading="lazy"
-                alt={card.alt || `Galeri HIMANIKA ${index + 1}`}
-                className="fan-card__img"
-              />
+              {loadedIndices.has(index) && (
+                <img
+                  src={card.imgUrl}
+                  loading="lazy"
+                  decoding="async"
+                  alt={card.alt || `Galeri HIMANIKA ${index + 1}`}
+                  className="fan-card__img"
+                />
+              )}
             </div>
           </div>
         ))}

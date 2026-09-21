@@ -1,5 +1,3 @@
-"use client";
-
 import { StaggerTestimonials } from "@/components/ui/StaggerTestimonials";
 import { PixelCorner } from "@/components/ui/PixelCorner";
 

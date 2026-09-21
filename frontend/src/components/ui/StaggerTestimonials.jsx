@@ -29,9 +29,32 @@ function getResponsiveMult(width) {
 export function StaggerTestimonials({ testimonials = [] }) {
   const containerRef = useRef(null);
   const cardRefs = useRef([]);
+  const [isInView, setIsInView] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const activeIndexRef = useRef(0);
   const isAnimating = useRef(false);
   const total = testimonials.length;
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || isInView) return undefined;
+    if (!("IntersectionObserver" in window)) {
+      setIsInView(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "300px 0px" },
+    );
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [isInView]);
 
   const getSlotForIndex = useCallback(
     (index, active) => {
@@ -56,6 +79,7 @@ export function StaggerTestimonials({ testimonials = [] }) {
       if (!total) return;
       const width = typeof window !== "undefined" ? window.innerWidth : 1200;
       const mult = getResponsiveMult(width);
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       testimonials.forEach((_, i) => {
         const el = cardRefs.current[i];
@@ -74,8 +98,9 @@ export function StaggerTestimonials({ testimonials = [] }) {
           pointerEvents: Math.abs(slot.index) <= 2 ? "auto" : "none",
         };
 
-        if (isImmediate) {
+        if (isImmediate || reduceMotion) {
           gsap.set(el, target);
+          isAnimating.current = false;
         } else {
           gsap.to(el, {
             ...target,
@@ -101,20 +126,22 @@ export function StaggerTestimonials({ testimonials = [] }) {
 
   // Initial mount layout
   useEffect(() => {
-    applyLayout(activeIndex, true);
+    if (!isInView) return undefined;
+    applyLayout(activeIndexRef.current, true);
 
     const onResize = () => {
-      applyLayout(activeIndex, true);
+      applyLayout(activeIndexRef.current, true);
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [activeIndex, applyLayout]);
+  }, [applyLayout, isInView]);
 
   const goTo = useCallback(
     (index) => {
       if (isAnimating.current) return;
       isAnimating.current = true;
       const newIndex = ((index % total) + total) % total;
+      activeIndexRef.current = newIndex;
       setActiveIndex(newIndex);
       applyLayout(newIndex, false);
     },

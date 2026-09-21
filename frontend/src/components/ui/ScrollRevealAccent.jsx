@@ -27,6 +27,7 @@ export function ScrollRevealAccent({ text }) {
     const characters = Array.from(
       accent.querySelectorAll("[data-accent-character]"),
     );
+    const lastColorSteps = new Int16Array(characters.length).fill(-1);
 
     if (reducedMotion.matches) {
       characters.forEach((character) => {
@@ -74,7 +75,10 @@ export function ScrollRevealAccent({ text }) {
 
       characters.forEach((character, index) => {
         const localProgress = clamp(characterProgress - index, 0, 1);
-        const [red, green, blue] = mixColor(localProgress);
+        const colorStep = Math.round(localProgress * 64);
+        if (colorStep === lastColorSteps[index]) return;
+        lastColorSteps[index] = colorStep;
+        const [red, green, blue] = mixColor(colorStep / 64);
         character.style.color = `rgb(${red} ${green} ${blue})`;
       });
 

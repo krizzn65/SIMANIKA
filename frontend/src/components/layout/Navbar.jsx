@@ -121,25 +121,61 @@ export function Navbar() {
     }
 
     const sectionIds = ["hero", "tentang", "visi-misi", "divisi", "gallery", "testimoni"];
-    const handleScroll = () => {
-      const scrollPos = window.scrollY + 180;
-      for (let i = sectionIds.length - 1; i >= 0; i--) {
-        const id = sectionIds[i];
-        if (id === "hero" && window.scrollY < 260) {
-          setActiveSection("hero");
-          return;
+    const sections = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
+    let offsets = [];
+    let frame = 0;
+    let currentSection = "";
+
+    const updateActiveSection = () => {
+      frame = 0;
+      const scrollY = window.scrollY;
+      const scrollPos = scrollY + 180;
+      let nextSection = "hero";
+
+      if (scrollY >= 260) {
+        for (let i = offsets.length - 1; i >= 0; i--) {
+          if (scrollPos >= offsets[i].top) {
+            nextSection = offsets[i].id;
+            break;
+          }
         }
-        const el = document.getElementById(id);
-        if (el && scrollPos >= el.offsetTop) {
-          setActiveSection(id);
-          return;
-        }
+      }
+
+      if (nextSection !== currentSection) {
+        currentSection = nextSection;
+        setActiveSection(nextSection);
       }
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
+    const scheduleUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateActiveSection);
+    };
+
+    const measureSections = () => {
+      offsets = sections.map((section) => ({
+        id: section.id,
+        top: section.getBoundingClientRect().top + window.scrollY,
+      }));
+      scheduleUpdate();
+    };
+
+    const resizeObserver =
+      typeof ResizeObserver === "function"
+        ? new ResizeObserver(measureSections)
+        : null;
+    sections.forEach((section) => resizeObserver?.observe(section));
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", measureSections, { passive: true });
+    measureSections();
+
+    return () => {
+      resizeObserver?.disconnect();
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", measureSections);
+    };
   }, [pathname]);
 
   const handleClose = () => {

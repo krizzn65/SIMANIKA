@@ -40,6 +40,10 @@ export function InteractiveGrid({ className = "" }) {
       } else {
         isMoving.current = false;
         rafId.current = null;
+        if (targetPos.current.x === 0 && targetPos.current.y === 0) {
+          currentPos.current = { x: 0, y: 0 };
+          layer.style.transform = "";
+        }
       }
     };
 
@@ -72,11 +76,17 @@ export function InteractiveGrid({ className = "" }) {
       startLoop();
     };
 
-    const handleMouseLeave = () => {
+    const stopMotion = () => {
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+      rafId.current = null;
+      isMoving.current = false;
       targetPos.current = { x: 0, y: 0 };
-      startLoop();
+      currentPos.current = { x: 0, y: 0 };
+      layer.style.transform = "";
       parentRect = null;
     };
+
+    const handleMouseLeave = () => stopMotion();
 
     const handleResize = () => {
       parentRect = null;
@@ -86,15 +96,20 @@ export function InteractiveGrid({ className = "" }) {
     parent.addEventListener("mousemove", handleMouseMove, { passive: true });
     parent.addEventListener("mouseleave", handleMouseLeave, { passive: true });
     window.addEventListener("resize", handleResize, { passive: true });
+    const observer = "IntersectionObserver" in window
+      ? new IntersectionObserver(([entry]) => {
+          if (!entry.isIntersecting) stopMotion();
+        })
+      : null;
+    observer?.observe(parent);
 
     return () => {
       parent.removeEventListener("mouseenter", handleMouseEnter);
       parent.removeEventListener("mousemove", handleMouseMove);
       parent.removeEventListener("mouseleave", handleMouseLeave);
       window.removeEventListener("resize", handleResize);
-      if (rafId.current) {
-        cancelAnimationFrame(rafId.current);
-      }
+      observer?.disconnect();
+      stopMotion();
     };
   }, []);
 

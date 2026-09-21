@@ -1,8 +1,5 @@
-"use client";
-
 import { CardFanCarousel } from "@/components/ui/CardFanCarousel";
 import { PixelCorner } from "@/components/ui/PixelCorner";
-import { InteractiveGrid } from "@/components/ui/InteractiveGrid";
 
 /* ── Default placeholder gallery images ──
    These will be replaced with dynamic images from the backend API.
@@ -64,8 +61,6 @@ export function GallerySection() {
       aria-labelledby="gallery-title"
     >
       <div className="gallery-shell">
-        <InteractiveGrid className="gallery-interactive-grid" />
-
         <div className="gallery-pixel-field" aria-hidden="true">
           <i className="gallery-pixel-field__node gallery-pixel-field__node--one" />
           <i className="gallery-pixel-field__node gallery-pixel-field__node--two" />

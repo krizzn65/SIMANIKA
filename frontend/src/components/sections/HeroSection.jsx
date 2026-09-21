@@ -13,16 +13,16 @@ function ArrowUpRight() {
 
 export function HeroSection() {
   return (
-    <section className="hero" id="hero" aria-labelledby="hero-title">
+    <section className="hero" id="hero" aria-labelledby="hero-title" data-motion-active="true">
       <div className="hero-stage">
         <div className="hero-visual" aria-hidden="true">
           <Image
-            alt="Visual komputer retro SIMANIKA"
+            alt="Maskot SIMANIKA di padang rumput"
             fill
             priority
             quality={90}
             sizes="100vw"
-            src="/images/simanika-hero-crt.png"
+            src="/images/simanika-hero-mascot.webp"
           />
           <div className="hero-visual__wash" />
           <div className="hero-visual__scanlines" />

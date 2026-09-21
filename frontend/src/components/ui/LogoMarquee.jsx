@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-
 const programs = [
   { name: "HACKFEST", style: "strong" },
   { name: "CODELAB", style: "mono" },
@@ -33,38 +29,14 @@ function LogoGroup({ clone = false }) {
 }
 
 export function LogoMarquee() {
-  const marqueeRef = useRef(null);
-  const [isVisible, setIsVisible] = useState(true);
-
-  useEffect(() => {
-    const el = marqueeRef.current;
-    if (!el) return undefined;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting);
-      },
-      { threshold: 0.05 },
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <div
-      ref={marqueeRef}
       aria-label="Program unggulan HIMANIKA. Arahkan mouse atau fokuskan untuk menghentikan animasi."
       className="logo-marquee"
       role="region"
       tabIndex={0}
     >
-      <div
-        className="logo-marquee__track"
-        style={{
-          animationPlayState: isVisible ? "running" : "paused",
-        }}
-      >
+      <div className="logo-marquee__track">
         <LogoGroup />
         <LogoGroup clone />
       </div>

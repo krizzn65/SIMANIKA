@@ -1,7 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import Image from "next/image";
+import { BackToTopButton } from "@/components/ui/BackToTopButton";
 
 const MENU_LINKS = [
   { href: "/", label: "Home" },
@@ -79,12 +77,6 @@ const SOCIAL_LINKS = [
 ];
 
 export function Footer() {
-  const scrollToTop = () => {
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
   return (
     <div className="site-footer-wrapper">
       <footer className="site-footer" aria-label="Informasi Footer dan Tautan">
@@ -208,27 +200,7 @@ export function Footer() {
             </div>
 
             {/* Back To Top Button */}
-            <button
-              type="button"
-              onClick={scrollToTop}
-              className="site-footer__top-btn"
-              aria-label="Kembali ke atas"
-              title="Kembali ke atas"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="site-footer__top-icon"
-                aria-hidden="true"
-              >
-                <path d="m18 15-6-6-6 6" />
-              </svg>
-              <span>TOP</span>
-            </button>
+            <BackToTopButton />
           </div>
         </div>
       </footer>
