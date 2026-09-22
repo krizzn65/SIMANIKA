@@ -241,6 +241,23 @@ export function Navbar() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleSectionClick = (event, sectionId) => {
+    setIsHomeMenuOpen(false);
+    if (pathname !== "/") return;
+
+    event.preventDefault();
+    if (sectionId === "hero") {
+      window.history.replaceState(null, "", "/");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+    window.history.replaceState(null, "", `/#${sectionId}`);
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   // Hover & click handlers for Account menu
   const handleAccountMouseEnter = () => {
     if (accountMenuTimer.current) {
