@@ -770,68 +770,71 @@ export function Navbar() {
 
               <div className="mobile-drawer__footer">
                 {!checked ? (
-                  <div className="mobile-drawer__login" role="status" aria-busy="true">Memeriksa sesi akun...</div>
-                ) : checkError ? (
-                  <button type="button" className="mobile-drawer__login" onClick={retryCheck}>Gagal memeriksa sesi. Coba lagi</button>
-                ) : <Link
-                  className="mobile-drawer__login"
-                  href={account ? "/dashboard" : "/login"}
-                  onClick={handleClose}
-                >
-                  <span className="mobile-drawer__login-tile mobile-drawer__login-tile--avatar" aria-hidden="true">
-                    {account ? (
-                      <UserAvatar
-                        src={account.fotoProfil}
-                        name={displayName}
-                        email={account.email}
-                        fontSize="1.05rem"
-                      />
-                    ) : (
-                      <AnimatedUserIcon />
-                    )}
-                  </span>
-                  <div style={{ display: "flex", flexDirection: "column", minWidth: 0, textAlign: "left" }}>
-                    <span style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {account ? displayName : "Masuk ke akun"}
-                    </span>
-                    {account && (
-                      <span style={{ fontSize: "0.72rem", color: "rgba(10, 16, 32, 0.55)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        Buka Dashboard →
-                      </span>
-                    )}
+                  <div className="mobile-drawer__login" role="status" aria-busy="true">
+                    Memeriksa sesi akun...
                   </div>
-                </Link>}
-                {account && (
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      handleClose();
-                      await handleLogout();
-                    }}
-                    style={{
-                      marginTop: "0.5rem",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "0.5rem",
-                      width: "100%",
-                      padding: "0.6rem 1rem",
-                      borderRadius: "0.75rem",
-                      border: "1px solid rgba(211, 47, 47, 0.2)",
-                      background: "rgba(211, 47, 47, 0.05)",
-                      color: "#d32f2f",
-                      fontSize: "0.82rem",
-                      fontWeight: 500,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                      <polyline points="16 17 21 12 16 7" />
-                      <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                    <span>Keluar Akun</span>
+                ) : checkError ? (
+                  <button type="button" className="mobile-drawer__login" onClick={retryCheck}>
+                    Gagal memeriksa sesi. Coba lagi
                   </button>
+                ) : account ? (
+                  <div className="mobile-drawer__account-section">
+                    <Link
+                      className="mobile-drawer__account-card"
+                      href="/dashboard"
+                      onClick={handleClose}
+                      title="Buka Halaman Dashboard"
+                    >
+                      <div className="mobile-drawer__account-avatar">
+                        <UserAvatar
+                          src={account.fotoProfil}
+                          name={displayName}
+                          email={account.email}
+                          size="100%"
+                          fontSize="1.05rem"
+                          borderRadius="50%"
+                        />
+                      </div>
+                      <div className="mobile-drawer__account-info">
+                        <span className="mobile-drawer__account-name">{displayName}</span>
+                        <span className="mobile-drawer__account-link">
+                          Buka Dashboard
+                        </span>
+                      </div>
+                      <span className="mobile-drawer__account-chevron" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+                          <path d="M6 12l4-4-4-4" />
+                        </svg>
+                      </span>
+                    </Link>
+
+                    <button
+                      type="button"
+                      className="mobile-drawer__logout-btn"
+                      onClick={async () => {
+                        handleClose();
+                        await handleLogout();
+                      }}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" width="16" height="16" aria-hidden="true">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                      </svg>
+                      <span>Keluar Akun</span>
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    className="mobile-drawer__login"
+                    href="/login"
+                    onClick={handleClose}
+                  >
+                    <span className="mobile-drawer__login-tile" aria-hidden="true">
+                      <AnimatedUserIcon />
+                    </span>
+                    <span>Masuk ke akun</span>
+                  </Link>
                 )}
               </div>
             </aside>
