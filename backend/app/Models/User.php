@@ -11,13 +11,45 @@ class User extends Authenticatable
 {
     use HasApiTokens, Notifiable;
 
-    protected $fillable = ['name', 'email', 'password', 'nim', 'jurusan', 'angkatan', 'foto_profil', 'role'];
+    protected $fillable = ['nama', 'name', 'email', 'password', 'nim', 'jurusan', 'angkatan', 'foto_profil', 'role', 'google_id'];
     protected $attributes = ['role' => 'user'];
     protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
     {
         return ['email_verified_at' => 'datetime', 'password' => 'hashed', 'angkatan' => 'integer'];
+    }
+
+    public function setNamaAttribute(?string $value): void
+    {
+        $this->attributes['nama'] = $value;
+        if (empty($this->attributes['name']) && !empty($value)) {
+            $this->attributes['name'] = $value;
+        }
+    }
+
+    public function setNameAttribute(?string $value): void
+    {
+        $this->attributes['name'] = $value;
+        if (empty($this->attributes['nama']) && !empty($value)) {
+            $this->attributes['nama'] = $value;
+        }
+    }
+
+    public function getNamaAttribute(?string $value): string
+    {
+        if (!empty($value)) return $value;
+        if (!empty($this->attributes['name'])) return $this->attributes['name'];
+        if (!empty($this->attributes['email'])) return explode('@', $this->attributes['email'])[0];
+        return 'Pengguna';
+    }
+
+    public function getNameAttribute(?string $value): string
+    {
+        if (!empty($value)) return $value;
+        if (!empty($this->attributes['nama'])) return $this->attributes['nama'];
+        if (!empty($this->attributes['email'])) return explode('@', $this->attributes['email'])[0];
+        return 'Pengguna';
     }
 
     public function eventRegistrations(): HasMany { return $this->hasMany(EventRegistration::class); }

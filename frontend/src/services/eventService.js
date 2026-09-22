@@ -9,13 +9,18 @@ async function requestEvents(path, query) {
   if (!base) return { kind: "unconfigured" };
   const url = new URL(`${base.replace(/\/+$/, "")}/public/events${path}`);
   if (query) url.search = query.toString();
-  const response = await fetch(url, {
-    headers: { Accept: "application/json" },
-    cache: "no-store",
-    signal: AbortSignal.timeout(8000),
-  });
+  let response;
+  try {
+    response = await fetch(url, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch {
+    return { kind: "unavailable" };
+  }
   if (response.status === 404 && path) return { kind: "not-found" };
-  if (!response.ok) throw new Error("Event API request failed");
+  if (!response.ok) return { kind: "unavailable" };
   return { kind: "ready", body: await response.json() };
 }
 
@@ -24,7 +29,7 @@ export async function getEvents(params = {}) {
   const query = new URLSearchParams({ page: String(filters.page), per_page: String(PAGE_SIZE) });
   for (const key of ["search", "kategori", "status"]) if (filters[key]) query.set(key, filters[key]);
   const response = await requestEvents("", query);
-  if (response.kind === "unconfigured") return { events: [], total: 0, currentPage: 1, lastPage: 1, configured: false };
+  if (response.kind !== "ready") return { events: [], total: 0, currentPage: 1, lastPage: 1, configured: response.kind !== "unconfigured", unavailable: response.kind === "unavailable" };
   const { data, meta } = response.body;
   if (!Array.isArray(data) || !meta || !Number.isSafeInteger(meta.total) || meta.total < 0 ||
     !Number.isSafeInteger(meta.last_page) || meta.last_page < 1 ||

@@ -9,16 +9,22 @@ let pendingProfile;
 export function useAuth() {
   const user = useAuthStore((state) => state.user);
   const checked = useAuthStore((state) => state.checked);
+  const checkError = useAuthStore((state) => state.checkError);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isAdmin = useAuthStore((state) => state.isAdmin);
   const clear = useAuthStore((state) => state.clear);
+  const failCheck = useAuthStore((state) => state.failCheck);
+  const retryCheck = useAuthStore((state) => state.retryCheck);
 
   useEffect(() => {
     if (!checked) {
       pendingProfile ??= currentUser().finally(() => { pendingProfile = null; });
-      pendingProfile.catch(clear);
+      pendingProfile.catch((error) => {
+        if (error.response?.status === 401) clear();
+        else failCheck();
+      });
     }
-  }, [checked, clear]);
+  }, [checked, clear, failCheck]);
 
-  return { user, checked, isAuthenticated, isAdmin, login, register, logout, refresh: currentUser };
+  return { user, checked, checkError, isAuthenticated, isAdmin, login, register, logout, refresh: currentUser, retryCheck };
 }

@@ -11,20 +11,26 @@ Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis bera
 | Area | Status | Yang perlu diverifikasi/diselesaikan |
 |---|---|---|
 | Stack FE | 🔄 | Next 16/React 19, Axios, Zustand, React Hook Form, Zod, Tailwind 4, Motion, Lucide, Sonner, date-fns terpasang. Build webpack dan pemeriksaan TypeScript lulus; cek Tailwind/shadcn dan audit UI responsif di browser. |
-| Runtime lokal | 🔄 | `dev.bat` menyiapkan `PHPRC` lokal; modul mbstring/pgsql/intl terverifikasi. Uji FE+BE serentak dari Windows. |
+| Runtime lokal | ✅ | `dev.bat` menjalankan Next dan PHP bersama di Windows; `/login` dan `/api/ping` sama-sama HTTP 200. |
 | Auth FE | 🔄 | Form login/daftar/pemulihan memakai Zod; sesi memakai Axios + Zustand; `useAuth`/guard tersedia. Uji cookie, CSRF, 401/419, redirect, Navbar, logout di browser. |
 | Auth BE | 🔄 | Laravel 11/Sanctum 4 dan lockfile target PHP 8.2 sesuai arsitektur; route list dan PHPUnit SQLite lulus. Uji sesi/CSRF/reset sandi di browser/PostgreSQL. |
 | Email & berkas | ⬜ | Isi SMTP sungguhan untuk email reset; uji tautan dan batas upload privat. `MAIL_MAILER=log` hanya untuk lokal. |
 | Database | 🔄 | Tiga migrasi Ran di PostgreSQL (29 tabel: 20 domain + 8 infrastruktur + migrations); cocokkan constraint/index dan uji rollback, seed, relasi. |
 | Event & OPREC | 🔄 | Cocokkan halaman dinamis dengan kontrak admin dan API; selesaikan alur pendaftaran Event/tim, OPREC, pengumuman, validasi data, serta test lintas FE↔BE. |
-| CMS, merchandise, dashboard | ⬜ | Selesaikan endpoint dan UI sesuai sprint di `architecture.md`, termasuk role admin, konten Home, analitik, dan metadata. |
+| CMS, merchandise, dashboard | 🔄 | Dashboard peserta kini berupa daftar pendaftaran event/tim/OPREC dari API pribadi. Pendaftaran event/tim, CMS, dashboard admin, dan profil menyusul sesuai sprint. |
 | Deployment | ⬜ | Uji build, PHP tests, env produksi, HTTPS/cookie domain, queue, storage, mail, monitoring, dan smoke test dari browser. |
 | Dokumentasi | 🔄 | `AGENTS.md` root dan `WORKFLOW.md` mewajibkan semua MD termasuk `architecture.md`; perbarui checklist ini saat kontrak berubah. |
 
 ### Gate verifikasi auth
 
-- [x] `npm ci`, `tsc --noEmit`, dan `next build --webpack` sukses pada Node 24 Linux sementara; build Turbopack masih perlu verifikasi di lingkungan pengguna.
-- [x] `php artisan route:list` (24 route), PHPUnit (8 test/32 assertion) dengan SQLite memori, dan `migrate:status` PostgreSQL (3 migrasi Ran); tes integrasi langsung PostgreSQL masih perlu.
+- [x] `npm ci` dan `npm run build` sukses di Windows; halaman login juga berhasil dikompilasi saat `next dev` berjalan di Windows.
+- [x] `php artisan route:list` (26 route), PHPUnit (13 test/47 assertion), dan migrasi `add_google_id_to_users_table` Ran di PostgreSQL lokal.
+- [x] Google OAuth 2.0 resmi terpasang (`laravel/socialite`, migrasi `google_id`, `GoogleAuthController`, route redirect & callback, unit & feature test lulus 100%, frontend callback di `/auth/callback`).
+- [x] Penambahan kolom `nama` di tabel `users` dengan sinkronisasi otomatis dari akun Google saat login/daftar OAuth maupun saat pendaftaran manual/update profil.
+- [x] Pembaruan Navbar: menampilkan nama pengguna saat login dan membuka sub-navbar dropdown dashboard interaktif saat di-hover atau di-klik.
+- [x] Audit keamanan auth: OAuth Google memakai state sesi dan verifikasi email; taut akun lokal otomatis dinonaktifkan, TLS tetap diverifikasi, OAuth dan auth dibatasi per IP, reset sandi mencabut sesi database/token, redirect `next` dibatasi ke path internal, dan respons CSRF 419 tidak lagi menghapus status login secara keliru.
+- [ ] Uji runtime di Windows: PHPUnit auth/OAuth dengan PHP lokal, lalu uji login Google dan reset sandi lewat browser (cookie, CSRF, callback, pencabutan sesi). Akun lokal yang emailnya sama dengan Google kini masuk memakai kata sandi; alur taut akun eksplisit memerlukan fitur tersendiri.
+- [x] Navbar dan menu mobile menunggu hasil `/auth/me` sebelum menampilkan aksi akun; kegagalan koneksi menampilkan opsi coba lagi tanpa menganggap sesi berakhir. Guard halaman terlindungi juga menunggu hasil pemeriksaan sesi.
 - [ ] Browser: daftar → sesi aktif → dashboard, login/logout, 401/403, CSRF 419, reset lewat email, dan pembaruan Navbar.
 - [ ] Form menampilkan kesalahan Zod dan backend tetap menolak input tidak valid.
 
@@ -378,20 +384,20 @@ Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis bera
 
 ## Sprint 9 — User Dashboard
 
-**Status**: ⬜ Belum Dimulai
+**Status**: 🔄 Dalam Proses
 **Target**: 2-3 hari
 **Dependency**: Sprint 4, 5, 6
 
 | ID | Task | Status | Catatan |
 |----|------|--------|---------|
-| BE-9.1 | `DashboardController` — aggregate user data | ⬜ | — |
+| BE-9.1 | `DashboardController` — aggregate user data | 🔄 | Endpoint pemilik sesi untuk event, tim, OPREC dibuat; PHPUnit/runtime belum dijalankan. |
 | BE-9.2 | User notifications endpoint (opsional) | ⬜ | — |
-| FE-9.1 | `Dashboard.jsx` — overview cards | ⬜ | — |
-| FE-9.2 | Section "Event Saya" — list + status | ⬜ | — |
-| FE-9.3 | Section "Tim Saya" — list + Bentuk/Join | ⬜ | — |
-| FE-9.4 | Section "OPREC Saya" — status | ⬜ | — |
+| FE-9.1 | `Dashboard.jsx` — overview cards | 🔄 | Arahan terbaru: dashboard daftar card pendaftaran tanpa kartu profil/statistik; build frontend lulus, uji browser menunggu. |
+| FE-9.2 | Section "Event Saya" — list + status | 🔄 | Card event individu tampil dari API; alur daftar event belum tersedia. |
+| FE-9.3 | Section "Tim Saya" — list + Bentuk/Join | 🔄 | Keanggotaan tim tampil sebagai card; alur Bentuk/Join menunggu Sprint 5. |
+| FE-9.4 | Section "OPREC Saya" — status | 🔄 | Card OPREC tampil; status seleksi ditahan sampai pengumuman terbit. |
 | FE-9.5 | `Profile.jsx` — edit + foto + password | ⬜ | — |
-| FE-9.6 | Responsive dashboard | ⬜ | — |
+| FE-9.6 | Responsive dashboard | 🔄 | Tata letak desktop/mobile disiapkan; audit browser menunggu. |
 
 **Done Criteria**:
 | # | Kriteria | Verified |
@@ -454,6 +460,7 @@ Log perubahan signifikan selama pengembangan.
 
 | Tanggal | Sprint | Perubahan | Oleh |
 |---------|--------|-----------|------|
+| 2026-09-23 | Sprint 9 | Dashboard peserta dirombak menjadi daftar card pendaftaran event/tim/OPREC dengan endpoint privat, empty/loading/error state, Navbar bersama, dan status OPREC yang tidak bocor sebelum pengumuman. Arahan desain terbaru menggantikan overview profil lama. | AI |
 | 2026-09-21 | Sprint 7 | Tambah route `/merchandise` Coming Soon sesuai permintaan, metadata, navigasi Home/Event, navbar dan footer parallax bersama. Tanpa dependency atau animasi tambahan. | AI |
 | 2026-09-22 | Sprint 0/1/2/4/6 | Siapkan kerangka Laravel 11, migrasi domain, Sanctum, auth/reset email, API Event/OPREC, adapter login/register FE. Verifikasi runtime menunggu PHP/Composer/PostgreSQL. | AI |
 | 2026-09-21 | Sprint 6 | Rombak OPREC sesuai arahan: headline → divisi → poster + countdown/form/pengumuman → FAQ. Form schema admin dan lookup NIM/tanggal lahir, adapter API Next. 39 pemeriksaan logika V8 lulus; runtime build/browser WSL masih terhalang. | AI |

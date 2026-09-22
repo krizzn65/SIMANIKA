@@ -18,9 +18,9 @@ export function EventList({ result, filters }) {
       ) : (
         <div className="event-empty">
           <div className="event-empty__inventory" aria-hidden="true"><span>+</span></div>
-          <span className="event-mono">{filtered ? "PENCARIAN / 00" : "AGENDA / 00"}</span>
-          <h3>{filtered ? "Belum ada yang cocok." : "Belum ada event saat ini."}</h3>
-          <p>{filtered ? "Coba kata kunci lain atau hapus filter untuk melihat agenda lainnya." : "Belum ada event yang dipublikasikan. Kembali lagi nanti untuk menemukan kegiatan terbaru dari HIMANIKA."}</p>
+          <span className="event-mono">{result.unavailable ? "AGENDA / TERJEDA" : filtered ? "PENCARIAN / 00" : "AGENDA / 00"}</span>
+          <h3>{result.unavailable ? "Event belum bisa dimuat." : filtered ? "Belum ada yang cocok." : "Belum ada event saat ini."}</h3>
+          <p>{result.unavailable ? "Layanan event sedang tidak merespons. Coba muat ulang halaman setelah beberapa saat." : filtered ? "Coba kata kunci lain atau hapus filter untuk melihat agenda lainnya." : "Belum ada event yang dipublikasikan. Kembali lagi nanti untuk menemukan kegiatan terbaru dari HIMANIKA."}</p>
           {filtered && (
             <Link className="event-button event-button--outline" href="/events">
               Lihat semua event<span aria-hidden="true">↗</span>

@@ -18,8 +18,15 @@ class AppServiceProvider extends ServiceProvider
             return $base.'/reset-password?'.http_build_query(['token' => $token, 'email' => $user->getEmailForPasswordReset()]);
         });
 
-        RateLimiter::for('auth', fn ($request) => Limit::perMinute(10)->by(hash('sha256', ($request->ip() ?? 'unknown').'|'.strtolower((string) $request->input('email', '')))));
-        RateLimiter::for('password', fn ($request) => Limit::perMinute(5)->by(hash('sha256', ($request->ip() ?? 'unknown').'|'.strtolower((string) $request->input('email', '')))));
+        RateLimiter::for('auth', fn ($request) => [
+            Limit::perMinute(60)->by('ip:'.($request->ip() ?? 'unknown')),
+            Limit::perMinute(10)->by(hash('sha256', ($request->ip() ?? 'unknown').'|'.strtolower((string) $request->input('email', '')))),
+        ]);
+        RateLimiter::for('password', fn ($request) => [
+            Limit::perMinute(20)->by('ip:'.($request->ip() ?? 'unknown')),
+            Limit::perMinute(5)->by(hash('sha256', ($request->ip() ?? 'unknown').'|'.strtolower((string) $request->input('email', '')))),
+        ]);
+        RateLimiter::for('oauth', fn ($request) => Limit::perMinute(20)->by('ip:'.($request->ip() ?? 'unknown')));
         RateLimiter::for('oprec-result', fn ($request) => [
             Limit::perMinute(20)->by('ip:'.($request->ip() ?? 'unknown')),
             Limit::perMinute(5)->by(hash('sha256', (string) $request->route('oprec').'|'.(string) $request->input('nim', ''))),

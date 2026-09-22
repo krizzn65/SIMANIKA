@@ -546,6 +546,12 @@ svg {
   transform: translateY(-2px);
 }
 
+.login-link--pending {
+  min-width: 8.5rem;
+  color: rgba(10, 16, 32, 0.55);
+  pointer-events: none;
+}
+
 .login-link__tile {
   display: grid;
   width: 2.3rem;
@@ -591,6 +597,346 @@ svg {
 .login-link:hover .login-link__user-body,
 .login-link:focus-visible .login-link__user-body {
   animation: login-user-body 680ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Desktop Account Nav & Sub-Navbar Dropdown ── */
+
+.nav-account {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.login-link--account {
+  cursor: pointer;
+  user-select: none;
+  font-family: inherit;
+  color: var(--ink);
+  text-align: left;
+}
+
+.login-link--account:hover,
+.login-link--account.login-link--open,
+.nav-account:hover .login-link--account {
+  border-color: rgba(21, 94, 239, 0.25);
+  box-shadow: 0 14px 36px rgba(7, 17, 31, 0.1);
+  transform: translateY(-2px);
+}
+
+.login-link__name {
+  max-width: 9.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.login-link__avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.login-link--account .login-link__tile--avatar {
+  background: var(--blue, #155eef);
+}
+
+.mobile-drawer__login-tile--avatar {
+  background: var(--blue, #155eef);
+}
+
+.login-link__chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -0.25rem;
+  color: rgba(10, 16, 32, 0.45);
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), color 160ms ease;
+}
+
+.login-link:hover .login-link__chevron,
+.login-link--open .login-link__chevron,
+.nav-account:hover .login-link__chevron {
+  color: var(--blue);
+  transform: rotate(180deg);
+}
+
+/* Sub-Navbar Dashboard Floating Card */
+.nav-account-menu {
+  position: absolute;
+  top: calc(100% + 0.65rem);
+  right: 0;
+  width: 19rem;
+  max-width: calc(100vw - 2.5rem);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(10, 16, 32, 0.1);
+  border-radius: 1.15rem;
+  padding: 0.75rem;
+  box-shadow:
+    0 22px 50px -12px rgba(7, 17, 31, 0.18),
+    0 4px 14px rgba(7, 17, 31, 0.05),
+    0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  box-sizing: border-box;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-8px) scale(0.98);
+  transition:
+    opacity 190ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 190ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 190ms;
+}
+
+/* Invisible bridge so mouse hover doesn't break when moving between button and dropdown */
+.nav-account-menu::before {
+  content: "";
+  position: absolute;
+  top: -0.85rem;
+  left: 0;
+  right: 0;
+  height: 0.85rem;
+}
+
+/* Top pointer notch pointing to account trigger button */
+.nav-account-menu::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  right: 1.6rem;
+  transform: rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.98);
+  border-left: 1px solid rgba(10, 16, 32, 0.1);
+  border-top: 1px solid rgba(10, 16, 32, 0.1);
+}
+
+.nav-account-menu--open,
+.nav-account:hover .nav-account-menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+/* Account Menu Header */
+.nav-account-menu__header {
+  padding: 0.5rem 0.6rem 0.6rem;
+  border-radius: 0.75rem;
+  background: rgba(10, 16, 32, 0.025);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.nav-account-menu__user {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.nav-account-menu__avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.55rem;
+  background: var(--night);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.nav-account-menu__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nav-account-menu__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nav-account-menu__name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-account-menu__email {
+  font-size: 0.74rem;
+  color: rgba(10, 16, 32, 0.55);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-account-menu__badge-row {
+  display: flex;
+  align-items: center;
+}
+
+.nav-account-menu__role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+  background: rgba(21, 94, 239, 0.08);
+  color: var(--blue, #155eef);
+}
+
+.nav-account-menu__divider {
+  height: 1px;
+  background: rgba(10, 16, 32, 0.06);
+  margin: 0.15rem 0;
+}
+
+/* Account Menu List */
+.nav-account-menu__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.nav-account-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.65rem;
+  text-decoration: none;
+  color: var(--ink);
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+
+.nav-account-menu__item:hover {
+  background: rgba(10, 16, 32, 0.04);
+  transform: translateX(2px);
+}
+
+.nav-account-menu__item--active {
+  background: rgba(21, 94, 239, 0.07);
+  color: var(--blue, #155eef);
+}
+
+.nav-account-menu__icon-wrap {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 0.45rem;
+  background: rgba(10, 16, 32, 0.04);
+  display: grid;
+  place-items: center;
+  color: rgba(10, 16, 32, 0.7);
+  flex-shrink: 0;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.nav-account-menu__item:hover .nav-account-menu__icon-wrap,
+.nav-account-menu__item--active .nav-account-menu__icon-wrap {
+  background: var(--blue, #155eef);
+  color: #fff;
+}
+
+.nav-account-menu__icon-wrap svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.nav-account-menu__item-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.nav-account-menu__item-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+.nav-account-menu__item-desc {
+  font-size: 0.71rem;
+  color: rgba(10, 16, 32, 0.5);
+}
+
+.nav-account-menu__arrow {
+  font-size: 0.85rem;
+  color: rgba(10, 16, 32, 0.35);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.nav-account-menu__item:hover .nav-account-menu__arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Logout Button */
+.nav-account-menu__footer {
+  padding-top: 0.15rem;
+}
+
+.nav-account-menu__logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: 0.65rem;
+  background: transparent;
+  color: #d32f2f;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 150ms ease;
+}
+
+.nav-account-menu__logout-btn:hover {
+  background: rgba(211, 47, 47, 0.08);
+}
+
+.nav-account-menu__logout-icon {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 0.45rem;
+  background: rgba(211, 47, 47, 0.08);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.nav-account-menu__logout-icon svg {
+  width: 1.05rem;
+  height: 1.05rem;
 }
 
 .menu-toggle,
@@ -2065,7 +2411,8 @@ svg {
   }
 
   .desktop-nav,
-  .login-link {
+  .login-link,
+  .nav-account {
     display: none;
   }
 

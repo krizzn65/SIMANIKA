@@ -3,10 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\Event;
+use App\Models\EventRegistration;
 use App\Models\Oprec;
+use App\Models\OprecRegistration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
 
 class ApiIntegrationTest extends TestCase
@@ -37,6 +41,30 @@ class ApiIntegrationTest extends TestCase
         $this->postJson('/api/auth/forgot-password', ['email' => 'tidak-ada@example.test'])->assertOk();
     }
 
+    public function test_password_reset_revokes_existing_database_sessions(): void
+    {
+        config(['session.driver' => 'database']);
+        $user = User::create(['email' => 'reset@example.test', 'password' => 'old-password-123']);
+        DB::table('sessions')->insert([
+            'id' => 'old-session',
+            'user_id' => $user->id,
+            'payload' => 'old',
+            'last_activity' => now()->timestamp,
+        ]);
+        $token = Password::createToken($user);
+
+        $this->postJson('/api/auth/reset-password', [
+            'email' => $user->email,
+            'token' => $token,
+            'password' => 'new-password-123',
+            'password_confirmation' => 'new-password-123',
+        ])->assertOk();
+
+        $this->assertDatabaseMissing('sessions', ['id' => 'old-session']);
+        $this->postJson('/api/auth/login', ['email' => $user->email, 'password' => 'old-password-123'])
+            ->assertUnprocessable();
+    }
+
     public function test_register_creates_normal_user_and_starts_session(): void
     {
         $this->withHeaders(['Origin' => 'http://localhost:3000', 'Referer' => 'http://localhost:3000/register'])
@@ -56,6 +84,35 @@ class ApiIntegrationTest extends TestCase
     {
         $user = User::create(['email' => 'user@example.test', 'password' => 'password-yang-kuat']);
         $this->actingAs($user, 'sanctum')->getJson('/api/admin/events')->assertForbidden();
+    }
+
+    public function test_dashboard_only_returns_owners_registrations_and_hides_unpublished_oprec_result(): void
+    {
+        $owner = User::create(['email' => 'owner@example.test', 'password' => 'password-yang-kuat']);
+        $other = User::create(['email' => 'other@example.test', 'password' => 'password-yang-kuat']);
+        $event = Event::create([
+            'slug' => 'lomba-uji', 'judul' => 'Lomba Uji', 'kategori' => 'competition',
+            'tanggal_mulai' => now()->addDays(4), 'tanggal_selesai' => now()->addDays(5),
+        ]);
+        EventRegistration::create(['event_id' => $event->id, 'user_id' => $owner->id]);
+        EventRegistration::create(['event_id' => $event->id, 'user_id' => $other->id]);
+        $oprec = Oprec::create(['periode' => '2026/2027', 'schema_version' => '1', 'form_fields' => [], 'faq' => []]);
+        OprecRegistration::create([
+            'oprec_id' => $oprec->id, 'user_id' => $owner->id, 'nim' => 'E12345',
+            'tanggal_lahir' => '2004-01-01', 'form_data' => [], 'status' => 'accepted',
+        ]);
+
+        $this->getJson('/api/user/dashboard')->assertUnauthorized();
+        $this->actingAs($owner, 'sanctum')->getJson('/api/user/dashboard')
+            ->assertOk()
+            ->assertJsonCount(2, 'data.items')
+            ->assertJsonFragment(['kind' => 'oprec', 'status' => 'pending'])
+            ->assertDontSee('E12345');
+
+        $oprec->update(['pengumuman_published' => true, 'pengumuman_tanggal' => now()->subMinute()]);
+        $this->getJson('/api/user/dashboard')
+            ->assertOk()
+            ->assertJsonFragment(['kind' => 'oprec', 'status' => 'accepted']);
     }
 
     public function test_authenticated_user_can_logout_cleanly(): void

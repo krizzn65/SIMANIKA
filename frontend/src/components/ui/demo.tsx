@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SignInPage } from "@/components/ui/sign-in";
-import { login } from "@/services/authClient";
+import { login, getGoogleAuthUrl } from "@/services/authClient";
 import { loginSchema } from "@/lib/authSchemas";
+import { safeNextPath } from "@/lib/safeNextPath";
 
 export const SignInPageDemo = () => {
   const router = useRouter();
@@ -16,12 +17,30 @@ export const SignInPageDemo = () => {
     defaultValues: { email: "", password: "", rememberMe: false },
   });
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+    if (error === "google_cancelled") {
+      setFeedback("Login dengan akun Google dibatalkan.");
+    } else if (error === "google_not_configured") {
+      setFeedback("Google OAuth belum dikonfigurasi di server (.env).");
+    } else if (error === "google_failed" || error === "google_session_failed") {
+      setFeedback("Gagal memproses otentikasi Google. Silakan coba lagi.");
+    } else if (error === "google_no_email") {
+      setFeedback("Akun Google tidak memiliki alamat email publik.");
+    } else if (error === "google_unverified_email") {
+      setFeedback("Alamat email akun Google belum terverifikasi.");
+    } else if (error === "google_account_exists") {
+      setFeedback("Email ini sudah memiliki akun. Masuk dengan kata sandi untuk mengaksesnya.");
+    }
+  }, []);
+
   const handleSignIn = handleSubmit(async ({ email, password, rememberMe }) => {
     setFeedback(null);
     try {
       await login(email, password, rememberMe);
       const next = new URLSearchParams(window.location.search).get("next");
-      router.replace(next && /^\/(?!\/)/.test(next) ? next : "/dashboard");
+      router.replace(safeNextPath(next));
       router.refresh();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Login belum bisa diproses.");
@@ -29,7 +48,7 @@ export const SignInPageDemo = () => {
   }, (errors) => setFeedback(errors.email?.message || errors.password?.message || "Periksa kembali form login."));
 
   const handleGoogleSignIn = () => {
-    setFeedback("Login Google belum tersedia.");
+    window.location.href = getGoogleAuthUrl();
   };
 
   return (

@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Public\PublicEventController;
 use App\Http\Controllers\Public\PublicOprecController;
 use App\Http\Controllers\User\OprecRegistrationController;
+use App\Http\Controllers\User\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ping', fn () => response()->json(['status' => 'ok']));
@@ -29,6 +30,7 @@ Route::prefix('public')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user/dashboard', DashboardController::class);
     Route::post('/auth/logout', [LoginController::class, 'destroy']);
     Route::get('/auth/me', [ProfileController::class, 'show']);
     Route::put('/auth/profile', [ProfileController::class, 'update']);

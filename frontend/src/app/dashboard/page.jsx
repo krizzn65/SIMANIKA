@@ -1,97 +1,134 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useAuth } from "@/hooks/useAuth";
+import { Navbar } from "@/components/layout/Navbar";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import "../register/register.css";
-import "../reset-password/recovery.css";
+import { useAuth } from "@/hooks/useAuth";
+import { api } from "@/services/api";
 import "./dashboard.css";
 
-export default function DashboardPage() {
-  const router = useRouter();
-  const { user, checked: loadingComplete, logout } = useAuth();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+const statusLabels = {
+  pending: "Menunggu proses",
+  accepted: "Diterima",
+  rejected: "Belum diterima",
+  incomplete: "Perlu dilengkapi",
+  complete: "Terkirim",
+};
 
-  async function handleLogout() {
-    setIsLoggingOut(true);
-    setErrorMessage("");
-    try {
-      await logout();
-      router.replace("/");
-      router.refresh();
-    } catch (error) {
-      setIsLoggingOut(false);
-      setErrorMessage(error instanceof Error ? error.message : "Gagal keluar dari sesi. Silakan coba lagi.");
-    }
-  }
+function formatDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? null
+    : new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long", year: "numeric" }).format(date);
+}
 
-  const initial = (user?.namaLengkap || user?.email || "U").charAt(0).toUpperCase();
+function EmptyMark() {
+  return (
+    <svg viewBox="0 0 72 72" fill="none" aria-hidden="true">
+      <rect x="10" y="13" width="52" height="46" rx="4" stroke="currentColor" strokeWidth="2" />
+      <path d="M10 25h52M23 13v12M49 13v12M24 39h24M24 47h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="m47 46 4 4 8-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function RegistrationCard({ item }) {
+  const type = item.kind === "oprec" ? "OPEN RECRUITMENT" : item.kind === "team" ? "LOMBA / TIM" : "EVENT / LOMBA";
+  const date = formatDate(item.date);
+  const statusTone = ["accepted", "rejected"].includes(item.status) ? item.status : "pending";
+  return (
+    <article className="dashboard-entry">
+      <div className="dashboard-entry__top">
+        <span className="dashboard-entry__type">{type}</span>
+        <span className={"dashboard-entry__status dashboard-entry__status--" + statusTone}>
+          {statusLabels[item.status] || "Terdaftar"}
+        </span>
+      </div>
+      <div className="dashboard-entry__body">
+        <h2>{item.title}</h2>
+        <p>{item.subtitle}</p>
+      </div>
+      <div className="dashboard-entry__bottom">
+        <span>{date ? (item.kind === "oprec" ? "Pengumuman" : "Pelaksanaan") + " · " + date : "Pendaftaran tercatat"}</span>
+        <Link href={item.href}>Lihat detail <span aria-hidden="true">↗</span></Link>
+      </div>
+    </article>
+  );
+}
+
+function DashboardContent() {
+  const { user } = useAuth();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    const controller = new AbortController();
+    setLoading(true);
+    setError(false);
+    api.get("/user/dashboard", { signal: controller.signal })
+      .then(({ data }) => {
+        if (!Array.isArray(data?.data?.items)) throw new Error("Invalid dashboard response");
+        setItems(data.data.items);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setError(true);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [user?.id, attempt]);
 
   return (
-    <ProtectedRoute><main className="register-page">
-      <img src="/images/auth/pixel-corner-tl.svg" alt="" aria-hidden="true" className="register-pixel-corner register-pixel-corner--tl" />
-      <img src="/images/auth/pixel-corner-br.svg" alt="" aria-hidden="true" className="register-pixel-corner register-pixel-corner--br" />
+    <main className="dashboard-page" id="dashboard-content">
+      <div className="dashboard-container">
+        <header className="dashboard-header">
+          <div>
+            <p className="dashboard-eyebrow">SIMANIKA / DASHBOARD</p>
+            <h1>Halaman <span>Dashboard.</span></h1>
+            <p className="dashboard-intro">Semua kegiatan yang kamu ikuti, dalam satu tempat.</p>
+          </div>
+        </header>
 
-      <section className="register-card dashboard-card">
-        <div className="register-heading" style={{ margin: "0 0 1.5rem" }}>
-          <p className="register-eyebrow">SIMANIKA / DASHBOARD</p>
-          <h1 style={{ margin: 0, fontSize: "clamp(1.75rem, 3.5vw, 2.25rem)" }}>
-            {!loadingComplete ? "Memuat akun..." : <>Selamat <em>datang.</em></>}
-          </h1>
-        </div>
-
-        {user && (
-          <div className="dashboard-user-info">
-            <div className="dashboard-avatar" aria-hidden="true">{initial}</div>
-            <div className="dashboard-meta">
-              <p className="dashboard-email">{user.email}</p>
-              <span className="dashboard-badge">{user.role || "Anggota"}</span>
+        {loading ? (
+          <div className="dashboard-state" role="status" aria-live="polite">
+            <span className="dashboard-state__loading" aria-hidden="true" />
+            <p>Memuat pendaftaranmu...</p>
+          </div>
+        ) : error ? (
+          <div className="dashboard-state" role="alert">
+            <p>Pendaftaran belum bisa dimuat.</p>
+            <button type="button" onClick={() => setAttempt((value) => value + 1)}>Coba lagi <span aria-hidden="true">↗</span></button>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="dashboard-state dashboard-state--empty">
+            <div className="dashboard-state__mark"><EmptyMark /></div>
+            <h2>Belum ada pendaftaran.</h2>
+            <p>Event dan open recruitment yang kamu ikuti akan muncul di sini.</p>
+          </div>
+        ) : (
+          <section className="dashboard-list" aria-label="Daftar pendaftaran saya">
+            <div className="dashboard-list__count">{items.length} PENDAFTARAN TERCATAT</div>
+            <div className="dashboard-grid">
+              {items.map((item) => <RegistrationCard key={item.key} item={item} />)}
             </div>
-          </div>
+          </section>
         )}
+      </div>
+    </main>
+  );
+}
 
-        <div className="dashboard-actions">
-          <Link href="/events" className="dashboard-btn-secondary">
-            <span>Lihat Event</span>
-            <span aria-hidden="true">→</span>
-          </Link>
-          <Link href="/oprec" className="dashboard-btn-secondary">
-            <span>Lihat OPREC</span>
-            <span aria-hidden="true">→</span>
-          </Link>
-          {user && (
-            <button
-              type="button"
-              className="dashboard-btn-logout"
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-            >
-              {isLoggingOut ? (
-                <>
-                  <span className="dashboard-spinner" aria-hidden="true" />
-                  <span>Mengeluarkan...</span>
-                </>
-              ) : (
-                <span>Keluar</span>
-              )}
-            </button>
-          )}
-        </div>
-
-        {errorMessage && (
-          <div className="recovery-error-banner" role="alert">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="15" y1="9" x2="9" y2="15" />
-              <line x1="9" y1="9" x2="15" y2="15" />
-            </svg>
-            <p>{errorMessage}</p>
-          </div>
-        )}
-      </section>
-    </main></ProtectedRoute>
+export default function DashboardPage() {
+  return (
+    <div className="site-root dashboard-root">
+      <Navbar />
+      <ProtectedRoute><DashboardContent /></ProtectedRoute>
+    </div>
   );
 }
