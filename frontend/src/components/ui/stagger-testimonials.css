@@ -1,0 +1,211 @@
+/* ═════════════════════════════════════════════════════════════════════════
+   21ST.DEV STAGGER TESTIMONIALS COMPONENT STYLING
+   Provides complete standalone styles matching 21st.dev preview with
+   full support for Tailwind classes and responsive container heights.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+.stagger-testimonials-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  height: 600px;
+  background-color: #0b0f19;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4), 0 20px 40px -15px rgba(10, 16, 32, 0.2);
+  user-select: none;
+  isolation: isolate;
+}
+
+/* Subtle background grid pattern for depth */
+.stagger-testimonials-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(rgba(21, 94, 239, 0.12) 1px, transparent 1px),
+    radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: 0 0, 16px 16px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Card Base ── */
+.stagger-testimonial-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  cursor: pointer;
+  border-width: 2px;
+  border-style: solid;
+  padding: clamp(1.5rem, 2.5vw, 2rem);
+  transition: all 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Center / Active Card */
+.stagger-card--center {
+  z-index: 10;
+  background-color: #ffffff !important;
+  color: #0a1020 !important;
+  border-color: #155eef !important;
+  box-shadow: 0px 12px 28px -4px rgba(21, 94, 239, 0.28), 0px 8px 0px 3px #155eef !important;
+}
+
+.stagger-card--center .stagger-card-quote {
+  color: #0a1020 !important;
+  font-weight: 600;
+}
+
+.stagger-card--center .stagger-card-author {
+  color: #3b4559 !important;
+}
+
+.stagger-card--center .stagger-card-dogear-line {
+  background-color: #155eef !important;
+}
+
+/* Side / Background Cards */
+.stagger-card--side {
+  z-index: 1;
+  background-color: #151b28 !important;
+  color: #f1f5f9 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.stagger-card--side:hover {
+  border-color: rgba(21, 94, 239, 0.6) !important;
+  transform: scale(1.02);
+}
+
+.stagger-card--side .stagger-card-quote {
+  color: #e2e8f0 !important;
+  font-weight: 400;
+}
+
+.stagger-card--side .stagger-card-author {
+  color: #8b99af !important;
+}
+
+.stagger-card--side .stagger-card-dogear-line {
+  background-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+/* Dog-ear corner fold line */
+.stagger-card-dogear-line {
+  position: absolute;
+  display: block;
+  transform-origin: top right;
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+/* Card Avatar */
+.stagger-card-avatar {
+  margin-bottom: 1rem;
+  height: 3.5rem;
+  width: 3rem;
+  background-color: #1e2533;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 3px 3px 0px #0a1020;
+}
+
+.stagger-card--center .stagger-card-avatar {
+  border: 1px solid rgba(10, 16, 32, 0.15);
+  box-shadow: 3px 3px 0px #155eef;
+}
+
+/* Card Typography */
+.stagger-card-quote {
+  font-family: "Inter Tight", Inter, system-ui, sans-serif;
+  font-size: clamp(0.95rem, 1.5vw, 1.25rem);
+  line-height: 1.45;
+  margin: 0;
+  letter-spacing: -0.015em;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.stagger-card-author {
+  position: absolute;
+  bottom: clamp(1.25rem, 2vw, 2rem);
+  left: clamp(1.25rem, 2vw, 2rem);
+  right: clamp(1.25rem, 2vw, 2rem);
+  margin-top: 0.5rem;
+  font-family: "Inter Tight", Inter, system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Navigation Chevrons Bar ── */
+.stagger-nav-bar {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.75rem;
+  z-index: 20;
+}
+
+.stagger-nav-btn {
+  display: flex;
+  height: 3.5rem;
+  width: 3.5rem;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background-color: #151b28;
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 180ms ease;
+}
+
+.stagger-nav-btn:hover {
+  background-color: #155eef;
+  border-color: #155eef;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(21, 94, 239, 0.4);
+}
+
+.stagger-nav-btn:active {
+  transform: translateY(0);
+}
+
+.stagger-nav-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(21, 94, 239, 0.5), 0 0 0 5px #0b0f19;
+}
+
+/* ── Responsive adjustments ── */
+@media (max-width: 640px) {
+  .stagger-testimonials-container {
+    height: 520px;
+    border-radius: 1rem;
+  }
+
+  .stagger-card-quote {
+    font-size: 0.875rem;
+    -webkit-line-clamp: 4;
+  }
+
+  .stagger-nav-btn {
+    height: 3rem;
+    width: 3rem;
+  }
+}

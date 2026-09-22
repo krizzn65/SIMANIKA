@@ -4461,7 +4461,11 @@ svg {
   padding: clamp(3.5rem, 5vw, 6rem) var(--gutter) clamp(3.5rem, 5vw, 5.5rem);
   border: 1px solid rgba(10, 16, 32, 0.08);
   border-radius: var(--hero-radius);
-  background: #ffffff;
+  background-color: #ffffff;
+  background-image: 
+    linear-gradient(rgba(21, 94, 239, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(21, 94, 239, 0.055) 1px, transparent 1px);
+  background-size: 32px 32px;
   color: var(--ink);
   box-shadow: 0 8px 24px -8px rgba(10, 16, 32, 0.07);
 }
