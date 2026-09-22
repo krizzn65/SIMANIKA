@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { register, getGoogleAuthUrl } from "@/services/authClient";
 import { registerSchema } from "@/lib/authSchemas";
+import { safeNextPath } from "@/lib/safeNextPath";
 
 function GoogleIcon() {
   return (
@@ -26,17 +27,17 @@ export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const { register: registerField, handleSubmit } = useForm({ resolver: zodResolver(registerSchema) });
 
-  const submit = handleSubmit(async ({ email, password }) => {
+  const submit = handleSubmit(async ({ nama, email, password }) => {
     setFeedback("");
     try {
-      await register(email, password);
+      await register(email, password, nama);
       const next = new URLSearchParams(window.location.search).get("next");
-      router.replace(next && /^\/(?!\/)/.test(next) ? next : "/dashboard");
+      router.replace(safeNextPath(next));
       router.refresh();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Pendaftaran belum bisa diproses.");
     }
-  }, (errors) => setFeedback(errors.email?.message || errors.password?.message || "Periksa kembali form pendaftaran."));
+  }, (errors) => setFeedback(errors.nama?.message || errors.email?.message || errors.password?.message || "Periksa kembali form pendaftaran."));
 
   return (
     <main className="register-page">
@@ -91,6 +92,19 @@ export default function RegisterForm() {
           <div className="register-divider"><span>ATAU DENGAN EMAIL</span></div>
 
           <form className="register-form" onSubmit={submit} noValidate>
+            <div className="register-field">
+              <label htmlFor="register-nama">Nama Lengkap</label>
+              <div className="register-input-wrap">
+                <input
+                  id="register-nama"
+                  name="nama"
+                  {...registerField("nama")}
+                  type="text"
+                  autoComplete="name"
+                  placeholder="Nama lengkap kamu"
+                />
+              </div>
+            </div>
             <div className="register-field">
               <label htmlFor="register-email">Email</label>
               <div className="register-input-wrap">

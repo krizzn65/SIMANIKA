@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatedNavIcon } from "@/components/ui/AnimatedNavIcon";
 import { CloseSmallIcon } from "@/components/ui/CloseSmallIcon";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useAuth } from "@/hooks/useAuth";
 
 const links = [
@@ -94,19 +95,36 @@ function AnimatedUserIcon() {
 }
 
 export function Navbar() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [mobileHomeExpanded, setMobileHomeExpanded] = useState(false);
   const [activeSection, setActiveSection] = useState("");
-  const { user: account } = useAuth();
+  const { user: account, checked, checkError, retryCheck, logout } = useAuth();
   const menuButtonRef = useRef(null);
   const drawerRef = useRef(null);
   const homeDropdownRef = useRef(null);
   const subbarRef = useRef(null);
   const homeMenuTimer = useRef(null);
+  const accountMenuRef = useRef(null);
+  const accountMenuTimer = useRef(null);
   const pathname = usePathname();
+
+  const displayName = (() => {
+    if (!account) return "";
+    const raw = (account.nama || account.namaLengkap || account.name || "").trim();
+    if (raw && raw.toLowerCase() !== "akun saya") return raw;
+    if (account.email) {
+      const emailUser = account.email.split("@")[0].trim();
+      if (emailUser) {
+        return emailUser.charAt(0).toUpperCase() + emailUser.slice(1);
+      }
+    }
+    return "User";
+  })();
 
   useEffect(() => {
     setMounted(true);
@@ -223,21 +241,40 @@ export function Navbar() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Section click handler with smooth scroll if on home page
-  const handleSectionClick = (e, sectionId) => {
-    setIsHomeMenuOpen(false);
-    if (pathname === "/") {
-      e.preventDefault();
-      if (sectionId === "hero") {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      } else {
-        const el = document.getElementById(sectionId);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth" });
-        }
-      }
+  // Hover & click handlers for Account menu
+  const handleAccountMouseEnter = () => {
+    if (accountMenuTimer.current) {
+      clearTimeout(accountMenuTimer.current);
+      accountMenuTimer.current = null;
+    }
+    setIsAccountMenuOpen(true);
+  };
+
+  const handleAccountMouseLeave = () => {
+    accountMenuTimer.current = setTimeout(() => {
+      setIsAccountMenuOpen(false);
+    }, 180);
+  };
+
+  const handleAccountToggle = () => {
+    setIsAccountMenuOpen((prev) => !prev);
+  };
+
+  const handleLogout = async () => {
+    setIsAccountMenuOpen(false);
+    try {
+      await logout();
+      router.replace("/");
+      router.refresh();
+    } catch (err) {
+      console.error("Gagal keluar:", err);
     }
   };
+
+  useEffect(() => {
+    setIsHomeMenuOpen(false);
+    setIsAccountMenuOpen(false);
+  }, [pathname]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -256,10 +293,26 @@ export function Navbar() {
     return () => document.removeEventListener("pointerdown", handleClickOutside);
   }, [isHomeMenuOpen]);
 
+  // Close account menu on outside click
+  useEffect(() => {
+    if (!isAccountMenuOpen) return;
+    const handleClickOutside = (event) => {
+      if (
+        accountMenuRef.current &&
+        !accountMenuRef.current.contains(event.target)
+      ) {
+        setIsAccountMenuOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", handleClickOutside);
+    return () => document.removeEventListener("pointerdown", handleClickOutside);
+  }, [isAccountMenuOpen]);
+
   useEffect(() => {
     const closeWithEscape = (event) => {
       if (event.key === "Escape") {
         if (isHomeMenuOpen) setIsHomeMenuOpen(false);
+        if (isAccountMenuOpen) setIsAccountMenuOpen(false);
         if (open) {
           handleClose();
           menuButtonRef.current?.focus();
@@ -269,7 +322,7 @@ export function Navbar() {
 
     window.addEventListener("keydown", closeWithEscape);
     return () => window.removeEventListener("keydown", closeWithEscape);
-  }, [open, isClosing, isHomeMenuOpen]);
+  }, [open, isClosing, isHomeMenuOpen, isAccountMenuOpen]);
 
   // Close when clicking/tapping anywhere outside the drawer
   useEffect(() => {
@@ -426,13 +479,133 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Desktop Login Link (hidden on mobile) */}
-        <Link className="login-link" href={account ? "/dashboard" : "/login"}>
-          <span className="login-link__tile" aria-hidden="true">
-            <AnimatedUserIcon />
+        {/* Desktop Login / Account with Sub-Navbar */}
+        {!checked ? (
+          <span className="login-link login-link--pending" role="status" aria-label="Memeriksa sesi akun" aria-busy="true">
+            <span className="login-link__tile" aria-hidden="true"><AnimatedUserIcon /></span>
+            <span>Memuat...</span>
           </span>
-          <span>{account ? "Dashboard" : "Login"}</span>
-        </Link>
+        ) : checkError ? (
+          <button type="button" className="login-link" onClick={retryCheck} aria-label="Coba lagi periksa sesi akun">
+            <span className="login-link__tile" aria-hidden="true"><AnimatedUserIcon /></span>
+            <span>Coba lagi</span>
+          </button>
+        ) : !account ? (
+          <Link className="login-link" href="/login">
+            <span className="login-link__tile" aria-hidden="true">
+              <AnimatedUserIcon />
+            </span>
+            <span>Login</span>
+          </Link>
+        ) : (
+          <div
+            className="nav-account"
+            ref={accountMenuRef}
+            onMouseEnter={handleAccountMouseEnter}
+            onMouseLeave={handleAccountMouseLeave}
+          >
+            <button
+              type="button"
+              className={`login-link login-link--account ${isAccountMenuOpen ? "login-link--open" : ""}`}
+              onClick={handleAccountToggle}
+              aria-expanded={isAccountMenuOpen}
+              aria-haspopup="true"
+              aria-label={`Menu akun ${displayName}`}
+            >
+              <span className="login-link__tile login-link__tile--avatar" aria-hidden="true">
+                <UserAvatar
+                  src={account.fotoProfil}
+                  name={displayName}
+                  email={account.email}
+                  fontSize="0.95rem"
+                />
+              </span>
+              <span className="login-link__name" title={displayName}>
+                {displayName}
+              </span>
+              <span className="login-link__chevron" aria-hidden="true">
+                <svg viewBox="0 0 12 12" fill="none" width="9" height="9">
+                  <path
+                    d="M2.5 4.5L6 8L9.5 4.5"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+            </button>
+
+            {/* Desktop Sub-Navbar Dashboard Floating Menu */}
+            <div
+              className={`nav-account-menu ${isAccountMenuOpen ? "nav-account-menu--open" : ""}`}
+              role="menu"
+              aria-label="Sub navigasi dashboard akun"
+            >
+              <div className="nav-account-menu__header">
+                <div className="nav-account-menu__user">
+                  <div className="nav-account-menu__avatar" aria-hidden="true">
+                    <UserAvatar
+                      src={account.fotoProfil}
+                      name={displayName}
+                      email={account.email}
+                      fontSize="1rem"
+                    />
+                  </div>
+                  <div className="nav-account-menu__info">
+                    <span className="nav-account-menu__name">{displayName}</span>
+                    <span className="nav-account-menu__email">{account.email}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="nav-account-menu__divider" role="separator" />
+
+              <div className="nav-account-menu__list">
+                <Link
+                  href="/dashboard"
+                  className={`nav-account-menu__item ${pathname === "/dashboard" ? "nav-account-menu__item--active" : ""}`}
+                  onClick={() => setIsAccountMenuOpen(false)}
+                  role="menuitem"
+                >
+                  <span className="nav-account-menu__icon-wrap" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                    </svg>
+                  </span>
+                  <div className="nav-account-menu__item-text">
+                    <span className="nav-account-menu__item-title">Dashboard</span>
+                    <span className="nav-account-menu__item-desc">Halaman utama & ringkasan</span>
+                  </div>
+                  <span className="nav-account-menu__arrow" aria-hidden="true">→</span>
+                </Link>
+              </div>
+
+              <div className="nav-account-menu__divider" role="separator" />
+
+              <div className="nav-account-menu__footer">
+                <button
+                  type="button"
+                  className="nav-account-menu__logout-btn"
+                  onClick={handleLogout}
+                  role="menuitem"
+                >
+                  <span className="nav-account-menu__logout-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                  </span>
+                  <span>Keluar dari Akun</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Mobile Circular Menu Button (visible on mobile only, placed top-right) */}
         <button
@@ -596,16 +769,70 @@ export function Navbar() {
               </nav>
 
               <div className="mobile-drawer__footer">
-                <Link
+                {!checked ? (
+                  <div className="mobile-drawer__login" role="status" aria-busy="true">Memeriksa sesi akun...</div>
+                ) : checkError ? (
+                  <button type="button" className="mobile-drawer__login" onClick={retryCheck}>Gagal memeriksa sesi. Coba lagi</button>
+                ) : <Link
                   className="mobile-drawer__login"
                   href={account ? "/dashboard" : "/login"}
                   onClick={handleClose}
                 >
-                  <span className="mobile-drawer__login-tile" aria-hidden="true">
-                    <AnimatedUserIcon />
+                  <span className="mobile-drawer__login-tile mobile-drawer__login-tile--avatar" aria-hidden="true">
+                    {account ? (
+                      <UserAvatar
+                        src={account.fotoProfil}
+                        name={displayName}
+                        email={account.email}
+                        fontSize="1.05rem"
+                      />
+                    ) : (
+                      <AnimatedUserIcon />
+                    )}
                   </span>
-                  <span>{account ? "Dashboard saya" : "Masuk ke akun"}</span>
-                </Link>
+                  <div style={{ display: "flex", flexDirection: "column", minWidth: 0, textAlign: "left" }}>
+                    <span style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {account ? displayName : "Masuk ke akun"}
+                    </span>
+                    {account && (
+                      <span style={{ fontSize: "0.72rem", color: "rgba(10, 16, 32, 0.55)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        Buka Dashboard →
+                      </span>
+                    )}
+                  </div>
+                </Link>}
+                {account && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      handleClose();
+                      await handleLogout();
+                    }}
+                    style={{
+                      marginTop: "0.5rem",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.5rem",
+                      width: "100%",
+                      padding: "0.6rem 1rem",
+                      borderRadius: "0.75rem",
+                      border: "1px solid rgba(211, 47, 47, 0.2)",
+                      background: "rgba(211, 47, 47, 0.05)",
+                      color: "#d32f2f",
+                      fontSize: "0.82rem",
+                      fontWeight: 500,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    <span>Keluar Akun</span>
+                  </button>
+                )}
               </div>
             </aside>
           </div>,

@@ -14,7 +14,7 @@ export const api = axios.create({
 });
 
 api.interceptors.response.use((response) => response, (error) => {
-  if ([401, 419].includes(error.response?.status)) useAuthStore.getState().clear();
+  if (error.response?.status === 401) useAuthStore.getState().clear();
   const body = error.response?.data;
   const first = Object.values(body?.errors || {}).flat().find((value) => typeof value === "string");
   error.message = error.response?.status === 419

@@ -15,9 +15,7 @@ use Laravel\Socialite\Facades\Socialite;
 
 class GoogleAuthController extends Controller
 {
-    /**
-     * Dapatkan Guzzle client dengan konfigurasi SSL yang sesuai untuk OS Windows/Linux.
-     */
+    /** Dapatkan Guzzle client dengan CA bundle lokal jika tersedia. */
     protected function getHttpClient(): GuzzleClient
     {
         $options = [];
@@ -34,11 +32,6 @@ class GoogleAuthController extends Controller
                 $options['verify'] = $path;
                 break;
             }
-        }
-
-        // Jika di lingkungan lokal dan CA tidak ditemukan, gunakan verify false agar dev Windows tidak gagal
-        if (!isset($options['verify']) && app()->isLocal()) {
-            $options['verify'] = false;
         }
 
         return new GuzzleClient($options);
@@ -62,7 +55,7 @@ class GoogleAuthController extends Controller
         }
 
         try {
-            $driver = Socialite::driver('google')->stateless();
+            $driver = Socialite::driver('google');
             if ($driver instanceof \Laravel\Socialite\Two\AbstractProvider && !($driver instanceof \Mockery\MockInterface)) {
                 $driver->setHttpClient($this->getHttpClient());
             }
@@ -106,7 +99,7 @@ class GoogleAuthController extends Controller
         }
 
         try {
-            $driver = Socialite::driver('google')->stateless();
+            $driver = Socialite::driver('google');
             if ($driver instanceof \Laravel\Socialite\Two\AbstractProvider && !($driver instanceof \Mockery\MockInterface)) {
                 $driver->setHttpClient($this->getHttpClient());
             }
@@ -119,51 +112,60 @@ class GoogleAuthController extends Controller
         }
 
         $email = $googleUser->getEmail();
-        if (!$email) {
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return redirect($frontendUrl . '/login?error=google_no_email');
         }
 
+        $rawUser = $googleUser->getRaw();
+        if (($rawUser['email_verified'] ?? $rawUser['verified_email'] ?? false) !== true) {
+            return redirect($frontendUrl . '/login?error=google_unverified_email');
+        }
+
         $googleId = (string) $googleUser->getId();
+        if ($googleId === '') {
+            return redirect($frontendUrl . '/login?error=google_failed');
+        }
+        $googleName = $googleUser->getName() ?: explode('@', $email)[0];
 
         // 1. Cari berdasarkan google_id
         $user = User::where('google_id', $googleId)->first();
 
-        // 2. Jika belum ada, cari berdasarkan email (akun lokal yang sudah ada sebelumnya)
+        // Jangan tautkan akun lokal hanya berdasarkan email dari provider.
         if (!$user) {
-            $user = User::where('email', $email)->first();
-
-            if ($user) {
-                // Tautkan google_id ke akun yang sudah ada
-                $user->google_id = $googleId;
-                if (!$user->email_verified_at) {
-                    $user->email_verified_at = now();
-                }
-                if (!$user->foto_profil && $googleUser->getAvatar()) {
-                    $user->foto_profil = $googleUser->getAvatar();
-                }
-                $user->save();
-            } else {
-                // Buat akun pengguna baru dari Google
-                $user = User::create([
-                    'google_id' => $googleId,
-                    'name' => $googleUser->getName() ?: explode('@', $email)[0],
-                    'email' => $email,
-                    'email_verified_at' => now(),
-                    'foto_profil' => $googleUser->getAvatar(),
-                    'password' => bcrypt(Str::random(32)),
-                    'role' => 'user',
-                ]);
+            if (User::where('email', $email)->exists()) {
+                return redirect($frontendUrl . '/login?error=google_account_exists');
             }
+
+            // Buat akun pengguna baru dari Google.
+            $user = User::create([
+                'google_id' => $googleId,
+                'nama' => $googleName,
+                'name' => $googleName,
+                'email' => $email,
+                'email_verified_at' => now(),
+                'foto_profil' => $googleUser->getAvatar(),
+                'password' => bcrypt(Str::random(32)),
+                'role' => 'user',
+            ]);
         } else {
-            // Perbarui avatar jika ada
+            $dirty = false;
+            if ($googleName && ($user->nama !== $googleName || $user->name !== $googleName)) {
+                $user->nama = $googleName;
+                $user->name = $googleName;
+                $dirty = true;
+            }
+            // Perbarui avatar jika belum ada
             if ($googleUser->getAvatar() && !$user->foto_profil) {
                 $user->foto_profil = $googleUser->getAvatar();
+                $dirty = true;
+            }
+            if ($dirty) {
                 $user->save();
             }
         }
 
         // Login ke session web Sanctum
-        Auth::guard('web')->login($user, true);
+        Auth::guard('web')->login($user);
         $request->session()->regenerate();
 
         // Arahkan kembali ke frontend

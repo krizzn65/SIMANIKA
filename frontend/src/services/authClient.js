@@ -8,9 +8,14 @@ export async function login(email, password, remember = false) {
   return data;
 }
 
-export async function register(email, password) {
+export async function register(email, password, nama = "") {
   await initCsrf();
-  const { data } = await api.post("/auth/register", { email, password });
+  const payload = { email, password };
+  if (nama) {
+    payload.nama = nama;
+    payload.name = nama;
+  }
+  const { data } = await api.post("/auth/register", payload);
   useAuthStore.getState().setUser(data.data);
   return data;
 }

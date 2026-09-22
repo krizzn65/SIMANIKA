@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
@@ -27,6 +28,10 @@ class PasswordController extends Controller
         ]);
         $status = Password::reset($data, function (User $user, string $password): void {
             $user->forceFill(['password' => Hash::make($password), 'remember_token' => Str::random(60)])->save();
+            $user->tokens()->delete();
+            if (config('session.driver') === 'database') {
+                DB::table(config('session.table', 'sessions'))->where('user_id', $user->getKey())->delete();
+            }
         });
         if ($status !== Password::PASSWORD_RESET) return response()->json(['message' => 'Tautan reset tidak valid atau sudah kedaluwarsa.'], 422);
         return response()->json(['message' => 'Kata sandi berhasil diperbarui.']);
@@ -35,7 +40,16 @@ class PasswordController extends Controller
     public function change(Request $request)
     {
         $data = $request->validate(['current_password' => ['required', 'current_password'], 'password' => ['required', 'confirmed', PasswordRule::min(8)]]);
-        $request->user()->update(['password' => $data['password']]);
+        $user = $request->user();
+        $user->forceFill(['password' => $data['password'], 'remember_token' => Str::random(60)])->save();
+        $user->tokens()->delete();
+        if (config('session.driver') === 'database') {
+            $sessions = DB::table(config('session.table', 'sessions'))->where('user_id', $user->getKey());
+            if ($request->hasSession()) {
+                $sessions->where('id', '!=', $request->session()->getId());
+            }
+            $sessions->delete();
+        }
         return response()->json(['message' => 'Kata sandi berhasil diperbarui.']);
     }
 }

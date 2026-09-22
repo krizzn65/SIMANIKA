@@ -3,6 +3,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { currentUser } from "@/services/authClient";
+import { safeNextPath } from "@/lib/safeNextPath";
 
 function CallbackContent() {
   const router = useRouter();
@@ -22,7 +23,7 @@ function CallbackContent() {
       currentUser()
         .then(() => {
           const next = searchParams.get("next");
-          router.replace(next && /^\/(?!\/)/.test(next) ? next : "/dashboard");
+          router.replace(safeNextPath(next));
           router.refresh();
         })
         .catch((err) => {

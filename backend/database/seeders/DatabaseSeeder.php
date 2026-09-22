@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
         if ($email && $password && strlen($password) >= 12) {
             if (!User::where('email', $email)->exists()) {
                 $admin = new User;
-                $admin->forceFill(['email' => $email, 'name' => 'Admin HIMANIKA', 'password' => $password, 'role' => 'admin'])->save();
+                $admin->forceFill(['email' => $email, 'nama' => 'Admin HIMANIKA', 'name' => 'Admin HIMANIKA', 'password' => $password, 'role' => 'admin'])->save();
             }
         }
     }

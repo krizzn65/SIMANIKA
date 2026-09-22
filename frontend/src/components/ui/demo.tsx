@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { SignInPage } from "@/components/ui/sign-in";
 import { login, getGoogleAuthUrl } from "@/services/authClient";
 import { loginSchema } from "@/lib/authSchemas";
+import { safeNextPath } from "@/lib/safeNextPath";
 
 export const SignInPageDemo = () => {
   const router = useRouter();
@@ -27,6 +28,10 @@ export const SignInPageDemo = () => {
       setFeedback("Gagal memproses otentikasi Google. Silakan coba lagi.");
     } else if (error === "google_no_email") {
       setFeedback("Akun Google tidak memiliki alamat email publik.");
+    } else if (error === "google_unverified_email") {
+      setFeedback("Alamat email akun Google belum terverifikasi.");
+    } else if (error === "google_account_exists") {
+      setFeedback("Email ini sudah memiliki akun. Masuk dengan kata sandi untuk mengaksesnya.");
     }
   }, []);
 
@@ -35,7 +40,7 @@ export const SignInPageDemo = () => {
     try {
       await login(email, password, rememberMe);
       const next = new URLSearchParams(window.location.search).get("next");
-      router.replace(next && /^\/(?!\/)/.test(next) ? next : "/dashboard");
+      router.replace(safeNextPath(next));
       router.refresh();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Login belum bisa diproses.");

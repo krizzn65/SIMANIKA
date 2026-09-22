@@ -9,10 +9,14 @@ class UserResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $nama = !empty($this->nama) ? $this->nama : (!empty($this->name) ? $this->name : explode('@', $this->email)[0]);
+
         return [
             'id' => $this->id,
             'email' => $this->email,
-            'namaLengkap' => $this->name,
+            'nama' => $nama,
+            'namaLengkap' => $nama,
+            'name' => $nama,
             'nim' => $this->nim,
             'jurusan' => $this->jurusan,
             'angkatan' => $this->angkatan,
