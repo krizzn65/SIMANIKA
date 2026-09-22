@@ -1,0 +1,174 @@
+/* ═════════════════════════════════════════════════════════════════════════
+   TESTIMONIAL V2 (21ST.DEV) — Scrolling Marquee Columns Component
+   Engineered for SIMANIKA with white tech-grid backdrop, blue frame accents,
+   and smooth infinite vertical scrolling.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+.testimonial-v2-scroller {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 1.75rem;
+  width: 100%;
+  max-height: 620px;
+  overflow: hidden;
+  margin-top: 3.25rem;
+  padding-top: 0.5rem;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
+}
+
+.testimonial-column {
+  flex: 0 0 320px;
+  max-width: 340px;
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .testimonial-column--col2,
+  .testimonial-column--col3 {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .testimonial-column--col3 {
+    display: none !important;
+  }
+}
+
+.testimonial-marquee-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0 0 1.5rem 0;
+  margin: 0;
+  list-style: none;
+  background: transparent;
+}
+
+/* ── Card Styling ── */
+.testimonial-card-v2 {
+  padding: clamp(1.75rem, 2.5vw, 2.25rem);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(10, 16, 32, 0.1);
+  background: #ffffff;
+  color: #0a1020;
+  box-shadow: 
+    0 10px 25px -5px rgba(10, 16, 32, 0.05),
+    0 4px 6px -2px rgba(10, 16, 32, 0.02);
+  width: 100%;
+  box-sizing: border-box;
+  cursor: default;
+  user-select: none;
+  transition: border-color 240ms ease, box-shadow 240ms ease, transform 240ms ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle corner accent line */
+.testimonial-card-v2::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 1.5rem;
+  right: 1.5rem;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(21, 94, 239, 0.3), transparent);
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+.testimonial-card-v2:hover {
+  border-color: #155eef;
+  box-shadow: 
+    0 20px 40px -12px rgba(21, 94, 239, 0.15),
+    0 8px 16px -4px rgba(10, 16, 32, 0.06),
+    0 0 0 1px rgba(21, 94, 239, 0.2);
+}
+
+.testimonial-card-v2:hover::before {
+  opacity: 1;
+}
+
+.testimonial-card-quote {
+  font-family: "Inter Tight", Inter, system-ui, sans-serif;
+  color: #334155;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+  font-weight: 400;
+}
+
+.testimonial-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: 1.5rem;
+}
+
+.testimonial-card-avatar {
+  height: 2.75rem;
+  width: 2.75rem;
+  border-radius: 9999px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 6px rgba(10, 16, 32, 0.08);
+  transition: border-color 240ms ease, transform 240ms ease;
+}
+
+.testimonial-card-v2:hover .testimonial-card-avatar {
+  border-color: #155eef;
+  transform: scale(1.05);
+}
+
+.testimonial-card-author-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.testimonial-card-name {
+  font-family: "Inter Tight", Inter, system-ui, sans-serif;
+  font-weight: 600;
+  font-style: normal;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  color: #0a1020;
+  letter-spacing: -0.01em;
+}
+
+.testimonial-card-role {
+  font-family: "IBM Plex Mono", monospace, sans-serif;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #155eef;
+  margin-top: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Dark Mode Adaptations ── */
+.dark .testimonial-card-v2 {
+  background: #111724;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+}
+
+.dark .testimonial-card-quote {
+  color: #94a3b8;
+}
+
+.dark .testimonial-card-name {
+  color: #ffffff;
+}
+
+.dark .testimonial-card-role {
+  color: #60a5fa;
+}
+
+.dark .testimonial-card-avatar {
+  border-color: rgba(255, 255, 255, 0.15);
+}

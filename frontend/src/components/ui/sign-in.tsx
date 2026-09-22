@@ -79,7 +79,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   onSignIn,
   onGoogleSignIn,
   onResetPassword,
-  resetPasswordHref = "#lupa-sandi",
+  resetPasswordHref = "/forgot-password",
   onCreateAccount,
   backHref = "/",
   backLabel = "Kembali ke Beranda",

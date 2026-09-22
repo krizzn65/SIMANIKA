@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { register } from "@/services/authClient";
 
 function GoogleIcon() {
   return (
@@ -21,9 +22,18 @@ export default function RegisterForm() {
   const [feedback, setFeedback] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    setFeedback("Pendaftaran akun belum tersedia. Silakan coba lagi setelah layanan diaktifkan.");
+    const form = new FormData(event.currentTarget);
+    setFeedback("");
+    try {
+      await register(String(form.get("email") || "").trim(), String(form.get("password") || ""));
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.replace(next && /^\/(?!\/)/.test(next) ? next : "/dashboard");
+      router.refresh();
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : "Pendaftaran belum bisa diproses.");
+    }
   }
 
   return (

@@ -1,14 +1,26 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { SignInPage } from "@/components/ui/sign-in";
+import { login } from "@/services/authClient";
 
 export const SignInPageDemo = () => {
+  const router = useRouter();
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setFeedback("Layanan login belum tersedia. Silakan coba lagi setelah layanan diaktifkan.");
+    const form = new FormData(event.currentTarget);
+    setFeedback(null);
+    try {
+      await login(String(form.get("email") || ""), String(form.get("password") || ""), form.get("rememberMe") === "on");
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.replace(next && /^\/(?!\/)/.test(next) ? next : "/dashboard");
+      router.refresh();
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : "Login belum bisa diproses.");
+    }
   };
 
   const handleGoogleSignIn = () => {
@@ -55,3 +67,9 @@ export const SignInPageDemo = () => {
 };
 
 export default SignInPageDemo;
+
+import Component from "@/components/ui/testimonial-v2";
+
+export function DemoOne() {
+  return <Component />;
+}

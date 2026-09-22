@@ -1,7 +1,7 @@
 # 📋 TODO — SIMANIKA Progress Tracker
 
 > **Issue Tracker Lokal & Memori Proyek**
-> Last Updated: 21 September 2026
+> Last Updated: 22 September 2026
 > Referensi: [PRD.md](./PRD.md) | [Architecture.md](./architecture.md)
 
 ---
@@ -12,8 +12,8 @@
 |--------|-------|
 | **Total Tasks** | 165 |
 | **Selesai** | 6 |
-| **Dalam Proses** | 7 |
-| **Belum Dikerjakan** | 152 |
+| **Dalam Proses** | 44 |
+| **Belum Dikerjakan** | 115 |
 | **Blocked** | 0 |
 | **Progress** | `█░░░░░░░░░░░░░░░░░░░` **4%** |
 
@@ -31,7 +31,7 @@
 
 ## Sprint 0 — Project Setup & Boilerplate
 
-**Status**: ⬜ Belum Selesai (komponen FE Sprint 3 sudah ada, tetapi setup belum diverifikasi)
+**Status**: 🔄 Kerangka Laravel dan integrasi frontend disiapkan; instalasi dependency serta verifikasi runtime menunggu lingkungan PHP/PostgreSQL
 **Target**: 1-2 hari
 **Dependency**: Tidak ada
 
@@ -43,14 +43,14 @@
 | FE-0.4 | Setup folder structure frontend | ⬜ | `src/app`, `src/components`, `src/lib`, `src/store` |
 | FE-0.5 | Setup Next.js App Router dengan layout & route skeleton | ⬜ | — |
 | FE-0.6 | Setup Axios instance + interceptors | ⬜ | — |
-| BE-0.1 | Init Laravel 11 (`composer create-project`) | ⬜ | — |
-| BE-0.2 | Install BE packages (Sanctum, CORS) | ⬜ | — |
-| BE-0.3 | Setup `.env` (DB connection, CORS origins) | ⬜ | — |
-| BE-0.4 | Configure CORS middleware | ⬜ | — |
-| BE-0.5 | Setup Sanctum config untuk SPA auth | ⬜ | — |
-| BE-0.6 | Setup folder structure backend | ⬜ | — |
+| BE-0.1 | Init Laravel 11 (`composer create-project`) | 🔄 | Kerangka Laravel 11 dibuat manual; Composer/vendor belum dapat dijalankan di WSL. |
+| BE-0.2 | Install BE packages (Sanctum, CORS) | 🔄 | Dependensi tercantum di composer.json; belum terinstal. |
+| BE-0.3 | Setup `.env` (DB connection, CORS origins) | 🔄 | Template `.env.example` siap; nilai lokal/produksi perlu diisi. |
+| BE-0.4 | Configure CORS middleware | 🔄 | Origin terdaftar eksplisit dan credentials aktif; uji browser belum tersedia. |
+| BE-0.5 | Setup Sanctum config untuk SPA auth | 🔄 | Middleware stateful API dan CSRF FE siap; perlu uji sesi lintas port. |
+| BE-0.6 | Setup folder structure backend | 🔄 | Folder, route, model, controller, migration awal dibuat; belum teruji runtime. |
 | DB-0.1 | Install PostgreSQL & create database `simanika` | ⬜ | — |
-| DB-0.2 | Configure Laravel DB connection | ⬜ | — |
+| DB-0.2 | Configure Laravel DB connection | 🔄 | Konfigurasi PostgreSQL di template; koneksi belum diuji. |
 
 **Done Criteria**:
 | # | Kriteria | Verified |
@@ -65,29 +65,29 @@
 
 ## Sprint 1 — Database Schema & Migrations
 
-**Status**: ⬜ Belum Dimulai
+**Status**: 🔄 Migrasi 20 tabel domain dan tabel infrastruktur ditulis; migrate/rollback belum dijalankan
 **Target**: 1-2 hari
 **Dependency**: Sprint 0
 
 | ID | Task | Status | Catatan |
 |----|------|--------|---------|
-| DB-1.1 | Migration `users` (extend default Laravel) | ⬜ | — |
-| DB-1.2 | Migration `events` | ⬜ | — |
-| DB-1.3 | Migration `event_form_fields` | ⬜ | — |
+| DB-1.1 | Migration `users` (extend default Laravel) | 🔄 | Migrasi dibuat; belum diuji. |
+| DB-1.2 | Migration `events` | 🔄 | Migrasi dibuat; belum diuji. |
+| DB-1.3 | Migration `event_form_fields` | 🔄 | Migrasi dan model dibuat; belum diuji. |
 | DB-1.4 | Migration `event_prizes` | ⬜ | — |
 | DB-1.5 | Migration `event_requirements` | ⬜ | — |
 | DB-1.6 | Migration `teams` | ⬜ | — |
 | DB-1.7 | Migration `team_members` | ⬜ | — |
 | DB-1.8 | Migration `event_registrations` | ⬜ | — |
 | DB-1.9 | Migration `file_uploads` | ⬜ | — |
-| DB-1.10 | Migration `oprecs` | ⬜ | — |
+| DB-1.10 | Migration `oprecs` | 🔄 | Migrasi dibuat; belum diuji. |
 | DB-1.11 | Migration `oprec_divisions` | ⬜ | — |
-| DB-1.12 | Migration `oprec_registrations` | ⬜ | — |
+| DB-1.12 | Migration `oprec_registrations` | 🔄 | Migrasi dibuat; belum diuji. |
 | DB-1.13 | Migration `merchandises` | ⬜ | — |
 | DB-1.14 | Migration `merchandise_inquiries` | ⬜ | — |
 | DB-1.15 | Migration `site_contents` + tabel terkait | ⬜ | struktur, divisi, proker, gallery, testimonials |
-| DB-1.16 | Buat semua Eloquent Models + relationships | ⬜ | — |
-| DB-1.17 | Buat Seeders (admin user, sample content) | ⬜ | — |
+| DB-1.16 | Buat semua Eloquent Models + relationships | 🔄 | Model inti auth/Event/OPREC/tim dibuat; model konten dan merchandise menyusul. |
+| DB-1.17 | Buat Seeders (admin user, sample content) | 🔄 | Seeder admin berbasis env dan site content kosong; belum diuji. |
 | DB-1.18 | Buat Factories untuk testing data | ⬜ | — |
 
 **Done Criteria**:
@@ -103,31 +103,31 @@
 
 ## Sprint 2 — Authentication System
 
-**Status**: ⬜ Belum Dimulai
+**Status**: 🔄 Endpoint auth dan FE terhubung secara kode; sesi, email, serta alur lengkap belum diuji
 **Target**: 2-3 hari
 **Dependency**: Sprint 1
 
 | ID | Task | Status | Catatan |
 |----|------|--------|---------|
-| BE-2.1 | Setup Sanctum SPA authentication | ⬜ | — |
-| BE-2.2 | `RegisterController` — register + auto-login | ⬜ | — |
-| BE-2.3 | `LoginController` — login + session cookie HttpOnly | ⬜ | — |
-| BE-2.4 | `ProfileController` — get/update profile | ⬜ | — |
-| BE-2.5 | `AdminMiddleware` — cek role admin | ⬜ | — |
-| BE-2.6 | Form Requests (Register, Login, UpdateProfile) | ⬜ | — |
-| BE-2.7 | `UserResource` API Resource | ⬜ | — |
-| BE-2.8 | Route groups di `routes/api.php` | ⬜ | — |
+| BE-2.1 | Setup Sanctum SPA authentication | 🔄 | Stateful API + cookie/CSRF dikonfigurasi; belum uji runtime. |
+| BE-2.2 | `RegisterController` — register + auto-login | 🔄 | Endpoint email/password dibuat; belum uji integrasi. |
+| BE-2.3 | `LoginController` — login + session cookie HttpOnly | 🔄 | Endpoint dibuat; belum uji cookie browser. |
+| BE-2.4 | `ProfileController` — get/update profile | 🔄 | Profil dasar tersedia; upload foto menyusul. |
+| BE-2.5 | `AdminMiddleware` — cek role admin | 🔄 | Guard dibuat; test PHP belum dijalankan. |
+| BE-2.6 | Form Requests (Register, Login, UpdateProfile) | 🔄 | Register/Login dibuat; profil masih validasi controller. |
+| BE-2.7 | `UserResource` API Resource | 🔄 | Resource dibuat; belum uji respons. |
+| BE-2.8 | Route groups di `routes/api.php` | 🔄 | Auth/public/user/admin core terdaftar; endpoint sprint lanjut belum lengkap. |
 | FE-2.1 | `authStore` (Zustand, tanpa menyimpan token) | ⬜ | — |
-| FE-2.2 | `authService` — API calls | ⬜ | — |
-| FE-2.3 | Axios `withCredentials`, CSRF cookie, handle 401/419 | ⬜ | — |
-| FE-2.4 | `Login.jsx` page | ⬜ | UI `/login` diperbarui 22 Sep 2026: layout form kiri/visual kanan dipertahankan, latar putih, grid hover, aksesibilitas input. Integrasi autentikasi dan verifikasi browser belum selesai. |
-| FE-2.5 | `Register.jsx` page | ⬜ | — |
+| FE-2.2 | `authService` — API calls | 🔄 | Fetch credentials + service authClient; belum uji browser. |
+| FE-2.3 | Axios `withCredentials`, CSRF cookie, handle 401/419 | 🔄 | Implementasi Fetch setara di authClient; 401/419 dibaca, belum uji browser. |
+| FE-2.4 | `Login.jsx` page | 🔄 | Form terhubung ke login Laravel; verifikasi browser belum selesai. |
+| FE-2.5 | `Register.jsx` page | 🔄 | Form email/password sesuai arahan terbaru; terhubung ke register Laravel. |
 | FE-2.6 | `ProtectedRoute` component | ⬜ | — |
 | FE-2.7 | `AdminRoute` component | ⬜ | — |
 | FE-2.8 | `useAuth` hook | ⬜ | — |
-| FE-2.9 | Navbar conditional render (Login vs User dropdown) | ⬜ | — |
-| BE-2.9 | Forgot/reset password berbasis email | ⬜ | — |
-| FE-2.10 | Halaman forgot/reset password | ⬜ | — |
+| FE-2.9 | Navbar conditional render (Login vs User dropdown) | 🔄 | Tautan Login/Dashboard mengikuti sesi; dropdown belum dibuat. |
+| BE-2.9 | Forgot/reset password berbasis email | 🔄 | Broker password dan URL FE dibuat; SMTP belum dikonfigurasi/diuji. |
+| FE-2.10 | Halaman forgot/reset password | 🔄 | Halaman + adapter API tersedia; email end-to-end belum diuji. |
 
 **Done Criteria**:
 | # | Kriteria | Verified |
@@ -190,13 +190,13 @@
 
 | ID | Task | Status | Catatan |
 |----|------|--------|---------|
-| BE-4.1 | `PublicEventController` — list + detail | ⬜ | — |
+| BE-4.1 | `PublicEventController` — list + detail | 🔄 | Filter, pagination, draft guard disiapkan; belum uji Laravel. |
 | BE-4.2 | `EventRegistrationController` — register individu | ⬜ | — |
-| BE-4.3 | `EventResource` + `EventCollection` | ⬜ | — |
+| BE-4.3 | `EventResource` + `EventCollection` | 🔄 | Resource dan meta pagination dibuat; belum uji kontrak runtime. |
 | BE-4.4 | Form Requests event registration | ⬜ | — |
 | BE-4.5 | Handle file upload saat registrasi | ⬜ | — |
-| BE-4.6 | Admin `EventController` — CRUD event | ⬜ | — |
-| BE-4.7 | Admin create event: nested form fields, prizes | ⬜ | — |
+| BE-4.6 | Admin `EventController` — CRUD event | 🔄 | CRUD dasar dibuat; upload dan form builder belum lengkap. |
+| BE-4.7 | Admin create event: nested form fields, prizes | 🔄 | API menerima nested fields/prizes/requirements; belum uji runtime. |
 | BE-4.8 | `EventRegistrantController` — list, accept/reject | ⬜ | — |
 | BE-4.9 | `ExportController` — export CSV | ⬜ | — |
 | FE-4.1 | `EventList.jsx` — grid, filter, search, pagination | 🔄 | Route `/events`: grid, pencarian, filter URL, dialog mobile, pagination, empty/loading/error. Menunggu uji browser dan API nyata. |
@@ -270,10 +270,10 @@
 
 | ID | Task | Status | Catatan |
 |----|------|--------|---------|
-| BE-6.1 | `PublicOprecController` — periode dan lookup hasil | ⬜ | Tambahkan poster/schema/publikasi hasil; lookup privat NIM+tanggal lahir dengan rate limit persisten. |
-| BE-6.2 | `OprecRegistrationController` — submit + upload | ⬜ | — |
-| BE-6.3 | Admin `OprecController` — CRUD oprec + divisions | ⬜ | — |
-| BE-6.4 | Admin `OprecRegistrantController` — list, accept/reject | ⬜ | — |
+| BE-6.1 | `PublicOprecController` — periode dan lookup hasil | 🔄 | Payload publik, lookup privat, rate limit database siap; belum uji runtime. |
+| BE-6.2 | `OprecRegistrationController` — submit + upload | 🔄 | Validasi schema, transaksi, file privat; belum uji upload/integrasi. |
+| BE-6.3 | Admin `OprecController` — CRUD oprec + divisions | 🔄 | Create/update/list dan schema guard dibuat; delete belum ada. |
+| BE-6.4 | Admin `OprecRegistrantController` — list, accept/reject | 🔄 | Endpoint review tersedia; belum uji runtime. |
 | BE-6.5 | Form Requests oprec registration | ⬜ | — |
 | FE-6.1 | `Oprec.jsx` — headline, divisi, pendaftaran/pengumuman, FAQ | 🔄 | Alur revisi pengguna: poster admin, countdown jadwal, state pengumuman, FAQ paling bawah. Menunggu browser dan API nyata. |
 | FE-6.2 | Form OPREC dinamis + cek hasil inline | 🔄 | Renderer schema admin, validasi isian/berkas, submit via adapter Next, lookup NIM/tanggal lahir. Persistence Laravel dan auth/login belum tersedia. |
@@ -431,6 +431,7 @@ Log perubahan signifikan selama pengembangan.
 | Tanggal | Sprint | Perubahan | Oleh |
 |---------|--------|-----------|------|
 | 2026-09-21 | Sprint 7 | Tambah route `/merchandise` Coming Soon sesuai permintaan, metadata, navigasi Home/Event, navbar dan footer parallax bersama. Tanpa dependency atau animasi tambahan. | AI |
+| 2026-09-22 | Sprint 0/1/2/4/6 | Siapkan kerangka Laravel 11, migrasi domain, Sanctum, auth/reset email, API Event/OPREC, adapter login/register FE. Verifikasi runtime menunggu PHP/Composer/PostgreSQL. | AI |
 | 2026-09-21 | Sprint 6 | Rombak OPREC sesuai arahan: headline → divisi → poster + countdown/form/pengumuman → FAQ. Form schema admin dan lookup NIM/tanggal lahir, adapter API Next. 39 pemeriksaan logika V8 lulus; runtime build/browser WSL masih terhalang. | AI |
 | 2026-09-21 | Sprint 6 | Halaman OPREC publik siap data admin, status berbasis jadwal, divisi, timeline, persyaratan, benefit dan FAQ. 18 pemeriksaan logika V8 lulus; build/browser terhalang runtime WSL 1. | AI |
 | 2026-09-21 | Sprint 4 | Implementasi frontend daftar/detail event dinamis, service API, kontrak admin, filter dan pagination. 13 pemeriksaan logika V8 lulus; build/browser belum terverifikasi karena Node Windows tidak berjalan pada WSL 1. | AI |

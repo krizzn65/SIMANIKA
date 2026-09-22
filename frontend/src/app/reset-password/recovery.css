@@ -1,0 +1,9 @@
+.recovery-page .register-heading { margin-bottom: 1.8rem; }
+.recovery-page .register-card { width: min(100%, 520px); }
+.recovery-page .register-form { gap: 1.25rem; }
+.recovery-page .register-submit:disabled { opacity: .7; cursor: wait; transform: none; }
+.recovery-notice { border-left: 3px solid var(--blue); background: #eff6ff; padding: 1rem 1.15rem; color: var(--ink); line-height: 1.55; }
+.recovery-notice p { margin: 0; }
+.recovery-notice a { display: inline-block; margin-top: .7rem; color: var(--blue-dark); font-weight: 600; }
+.recovery-notice a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.recovery-notice--success { border-left-color: #13805e; background: #eaf8f1; }
