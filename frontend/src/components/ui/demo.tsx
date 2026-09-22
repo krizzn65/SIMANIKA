@@ -2,26 +2,31 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { SignInPage } from "@/components/ui/sign-in";
 import { login } from "@/services/authClient";
+import { loginSchema } from "@/lib/authSchemas";
 
 export const SignInPageDemo = () => {
   const router = useRouter();
   const [feedback, setFeedback] = useState<string | null>(null);
+  const { register, handleSubmit } = useForm<{ email: string; password: string; rememberMe: boolean }>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "", rememberMe: false },
+  });
 
-  const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
+  const handleSignIn = handleSubmit(async ({ email, password, rememberMe }) => {
     setFeedback(null);
     try {
-      await login(String(form.get("email") || ""), String(form.get("password") || ""), form.get("rememberMe") === "on");
+      await login(email, password, rememberMe);
       const next = new URLSearchParams(window.location.search).get("next");
       router.replace(next && /^\/(?!\/)/.test(next) ? next : "/dashboard");
       router.refresh();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Login belum bisa diproses.");
     }
-  };
+  }, (errors) => setFeedback(errors.email?.message || errors.password?.message || "Periksa kembali form login."));
 
   const handleGoogleSignIn = () => {
     setFeedback("Login Google belum tersedia.");
@@ -60,6 +65,7 @@ export const SignInPageDemo = () => {
         description="Satu pintu untuk mengambil peran, mengikuti kegiatan, dan terhubung dengan perjalanan HIMANIKA."
         heroImageSrc="/images/auth/minka-login.webp?v=2"
         onSignIn={handleSignIn}
+        fieldRegister={register}
         onGoogleSignIn={handleGoogleSignIn}
       />
     </div>

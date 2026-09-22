@@ -1,0 +1,137 @@
+/* ═════════════════════════════════════════════════════════════════════════
+   SIMANIKA — DASHBOARD STYLES
+   Retro-modern design consistent with SIMANIKA theme
+   ═════════════════════════════════════════════════════════════════════════ */
+
+.dashboard-card {
+  width: min(100%, 580px);
+}
+
+.dashboard-user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0 1.75rem;
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.dashboard-avatar {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #155eef;
+  color: #ffffff;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.dashboard-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.dashboard-email {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+  word-break: break-all;
+  margin: 0;
+}
+
+.dashboard-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  color: #155eef;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 0.15rem 0.5rem;
+  width: fit-content;
+  text-transform: uppercase;
+}
+
+.dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.dashboard-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 42px;
+  padding: 0.6rem 1.15rem;
+  border: 2px dashed #c0ccdd;
+  background: #ffffff;
+  color: #0f172a;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 3px 3px 0 #dce5f4;
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+
+.dashboard-btn-secondary:hover {
+  border-color: #155eef;
+  color: #155eef;
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 #dce5f4;
+}
+
+.dashboard-btn-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 42px;
+  padding: 0.6rem 1.25rem;
+  border: 1px solid #155eef;
+  background: #155eef;
+  color: #ffffff !important;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  box-shadow: 3px 3px 0 #b9cfff;
+  cursor: pointer;
+  margin-left: auto;
+  transition: all 180ms ease;
+}
+
+.dashboard-btn-logout:hover:not(:disabled) {
+  background: #0f4bcb;
+  border-color: #0f4bcb;
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 #b9cfff;
+}
+
+.dashboard-btn-logout:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.dashboard-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: dashboard-spin 0.6s linear infinite;
+}
+
+@keyframes dashboard-spin {
+  to { transform: rotate(360deg); }
+}

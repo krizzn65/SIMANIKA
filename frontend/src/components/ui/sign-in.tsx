@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useId, useState } from 'react';
+import type { UseFormRegister } from 'react-hook-form';
 import Link from 'next/link';
 import './sign-in.css';
 
@@ -25,6 +26,7 @@ export interface Testimonial {
 }
 
 export interface SignInPageProps {
+  fieldRegister?: UseFormRegister<{ email: string; password: string; rememberMe: boolean }>;
   title?: React.ReactNode;
   description?: React.ReactNode;
   heroImageSrc?: string;
@@ -77,6 +79,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   heroImageSrc,
   testimonials = [],
   onSignIn,
+  fieldRegister,
   onGoogleSignIn,
   onResetPassword,
   resetPasswordHref = "/forgot-password",
@@ -132,12 +135,13 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             <h1 className="simanika-signin-title animate-element animate-delay-100 text-4xl md:text-5xl font-semibold leading-tight">{title}</h1>
             <p className="simanika-signin-desc animate-element animate-delay-200 text-muted-foreground">{description}</p>
 
-            <form className="space-y-5" onSubmit={onSignIn}>
+            <form className="space-y-5" onSubmit={onSignIn} noValidate>
               <div className="simanika-form-group animate-element animate-delay-300">
                 <label htmlFor={`${fieldId}-email`} className="simanika-form-label text-sm font-medium text-muted-foreground">{emailLabel}</label>
                 <GlassInputWrapper>
                   <input
                     name="email"
+                    {...fieldRegister?.("email")}
                     id={`${fieldId}-email`}
                     autoComplete="email"
                     autoCapitalize="none"
@@ -156,6 +160,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                   <div className="relative w-full">
                     <input
                       name="password"
+                      {...fieldRegister?.("password")}
                       id={`${fieldId}-password`}
                       autoComplete="current-password"
                       type={showPassword ? 'text' : 'password'}
@@ -183,7 +188,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
               <div className="simanika-form-row animate-element animate-delay-500 flex items-center justify-between text-sm">
                 <label className="simanika-checkbox-label flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" name="rememberMe" className="custom-checkbox" />
+                  <input type="checkbox" name="rememberMe" {...fieldRegister?.("rememberMe")} className="custom-checkbox" />
                   <span className="text-foreground/90">{rememberMeLabel}</span>
                 </label>
                 <a

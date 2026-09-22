@@ -2,14 +2,20 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { forgotPasswordSchema, resetPasswordSchema } from "@/lib/authSchemas";
 
 export default function PasswordRecoveryForm({ mode, token = "", email = "" }) {
   const isReset = mode === "reset";
   const [feedback, setFeedback] = useState("");
   const [status, setStatus] = useState("idle");
+  const { register, handleSubmit } = useForm({
+    resolver: zodResolver(isReset ? resetPasswordSchema : forgotPasswordSchema),
+    defaultValues: { email, token },
+  });
 
-  async function handleSubmit(event) {
-    event.preventDefault();
+  const submit = handleSubmit(async (values) => {
     if (status === "loading") return;
     if (isReset && (!token || !email)) {
       setStatus("error");
@@ -17,10 +23,9 @@ export default function PasswordRecoveryForm({ mode, token = "", email = "" }) {
       return;
     }
 
-    const form = new FormData(event.currentTarget);
     const body = isReset
-      ? { token, email, password: String(form.get("password") || "") }
-      : { email: String(form.get("email") || "").trim() };
+      ? { token, email: values.email, password: values.password }
+      : { email: values.email };
 
     setStatus("loading");
     setFeedback("");
@@ -42,7 +47,10 @@ export default function PasswordRecoveryForm({ mode, token = "", email = "" }) {
       setStatus("error");
       setFeedback(error instanceof Error ? error.message : "Layanan sedang bermasalah. Coba lagi nanti.");
     }
-  }
+  }, (errors) => {
+    setStatus("error");
+    setFeedback(errors.email?.message || errors.password?.message || "Periksa kembali form.");
+  });
 
   return (
     <main className="register-page recovery-page">
@@ -63,29 +71,55 @@ export default function PasswordRecoveryForm({ mode, token = "", email = "" }) {
         </div>
 
         {isReset && (!token || !email) ? (
-          <div className="recovery-notice" role="alert">
-            <p>Tautan reset tidak lengkap atau tidak valid.</p>
-            <Link href="/forgot-password">Minta tautan baru ↗</Link>
+          <div className="recovery-notice recovery-notice--warning" role="alert">
+            <p className="recovery-notice__text">Tautan reset tidak lengkap atau tidak valid. Minta tautan baru dari halaman lupa sandi.</p>
+            <div className="recovery-notice__actions">
+              <Link href="/forgot-password" className="recovery-btn-primary">
+                <span>Minta Tautan Baru</span>
+                <span aria-hidden="true">→</span>
+              </Link>
+            </div>
           </div>
         ) : status === "success" ? (
           <div className="recovery-notice recovery-notice--success" role="status">
-            <p>{feedback}</p>
-            {isReset && <Link href="/login">Masuk ke akun ↗</Link>}
+            <div className="recovery-notice__icon-center" aria-hidden="true">
+              <div className="recovery-icon-wrapper">
+                <span className="recovery-icon-ping" />
+                <span className="recovery-icon-sparkle">
+                  <svg viewBox="0 0 24 24" width="100%" height="100%" fill="currentColor">
+                    <path d="M12 0L14.6 9.4L24 12L14.6 14.6L12 24L9.4 14.6L0 12L9.4 9.4L12 0Z" />
+                  </svg>
+                </span>
+                <span className="recovery-icon-sparkle recovery-icon-sparkle--secondary">
+                  <svg viewBox="0 0 24 24" width="100%" height="100%" fill="currentColor">
+                    <path d="M12 0L14.6 9.4L24 12L14.6 14.6L12 24L9.4 14.6L0 12L9.4 9.4L12 0Z" />
+                  </svg>
+                </span>
+                <svg viewBox="0 0 24 24" className="recovery-notice__check-icon" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.2" className="recovery-check-circle" />
+                  <path d="M7.5 12.5L10.5 15.5L16.5 9" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="recovery-check-path" />
+                </svg>
+              </div>
+            </div>
+            <h3 className="recovery-notice__title">
+              {isReset ? "Kata sandi berhasil diperbarui" : "Tautan berhasil dikirim"}
+            </h3>
+            <p className="recovery-notice__text">{feedback}</p>
           </div>
         ) : (
-          <form className="register-form" onSubmit={handleSubmit}>
+          <form className="register-form" onSubmit={submit} noValidate>
             {isReset ? (
-              <div className="register-field">
+              <><input type="hidden" {...register("email")} /><input type="hidden" {...register("token")} /><div className="register-field">
                 <label htmlFor="recovery-password">Password baru</label>
                 <div className="register-input-wrap">
-                  <input id="recovery-password" name="password" type="password" autoComplete="new-password" placeholder="Minimal 8 karakter" minLength={8} required />
+                  <input id="recovery-password" {...register("password")} type="password" autoComplete="new-password" placeholder="Minimal 8 karakter" minLength={8} required />
                 </div>
-              </div>
+              </div></>
             ) : (
               <div className="register-field">
                 <label htmlFor="recovery-email">Email</label>
                 <div className="register-input-wrap">
-                  <input id="recovery-email" name="email" type="email" autoComplete="email" placeholder="nama@email.com" required />
+                  <input id="recovery-email" {...register("email")} type="email" autoComplete="email" placeholder="nama@email.com" required />
                 </div>
               </div>
             )}
@@ -96,8 +130,19 @@ export default function PasswordRecoveryForm({ mode, token = "", email = "" }) {
           </form>
         )}
 
-        {status === "error" && <p className="register-feedback" role="alert">{feedback}</p>}
-        {!isReset && <p className="register-login">Ingat sandimu? <Link href="/login">Masuk di sini ↗</Link></p>}
+        {status === "error" && (
+          <div className="recovery-error-banner" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+            <p>{feedback}</p>
+          </div>
+        )}
+        {!isReset && status !== "success" && (
+          <p className="register-login">Ingat sandimu? <Link href="/login">Masuk di sini ↗</Link></p>
+        )}
       </div>
     </main>
   );

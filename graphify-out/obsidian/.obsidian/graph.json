@@ -1,0 +1,88 @@
+{
+  "colorGroups": [
+    {
+      "query": "tag:#community/Product_Scope_and_Events",
+      "color": {
+        "a": 1,
+        "rgb": 5142951
+      }
+    },
+    {
+      "query": "tag:#community/Project_Markdown_and_Architecture_Rules",
+      "color": {
+        "a": 1,
+        "rgb": 15896107
+      }
+    },
+    {
+      "query": "tag:#community/Integration_Contracts_and_Tests",
+      "color": {
+        "a": 1,
+        "rgb": 14767961
+      }
+    },
+    {
+      "query": "tag:#community/Visual_Design_and_Accessibility",
+      "color": {
+        "a": 1,
+        "rgb": 7780274
+      }
+    },
+    {
+      "query": "tag:#community/Dynamic_OPREC_and_Security",
+      "color": {
+        "a": 1,
+        "rgb": 5873999
+      }
+    },
+    {
+      "query": "tag:#community/System_Stack",
+      "color": {
+        "a": 1,
+        "rgb": 15583560
+      }
+    },
+    {
+      "query": "tag:#community/Authentication_Stack",
+      "color": {
+        "a": 1,
+        "rgb": 11565729
+      }
+    },
+    {
+      "query": "tag:#community/PHP_Composer_Alignment",
+      "color": {
+        "a": 1,
+        "rgb": 16752039
+      }
+    },
+    {
+      "query": "tag:#community/Nextjs_Documentation_Rules",
+      "color": {
+        "a": 1,
+        "rgb": 10253663
+      }
+    },
+    {
+      "query": "tag:#community/Agent_Workspace_Instructions",
+      "color": {
+        "a": 1,
+        "rgb": 12234924
+      }
+    },
+    {
+      "query": "tag:#community/Frontend_Architecture_Rule",
+      "color": {
+        "a": 1,
+        "rgb": 5142951
+      }
+    },
+    {
+      "query": "tag:#community/Inherited_Frontend_Rules",
+      "color": {
+        "a": 1,
+        "rgb": 15896107
+      }
+    }
+  ]
+}
