@@ -28,8 +28,9 @@ class LoginController extends Controller
         try {
             $user = $request->user();
 
-            if ($user && method_exists($user, 'currentAccessToken') && $user->currentAccessToken()) {
-                $user->currentAccessToken()->delete();
+            $accessToken = $user?->currentAccessToken();
+            if ($accessToken && method_exists($accessToken, 'delete')) {
+                $accessToken->delete();
             }
 
             Auth::guard('web')->logout();

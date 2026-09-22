@@ -31,6 +31,7 @@ Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis bera
 - [x] Audit keamanan auth: OAuth Google memakai state sesi dan verifikasi email; taut akun lokal otomatis dinonaktifkan, TLS tetap diverifikasi, OAuth dan auth dibatasi per IP, reset sandi mencabut sesi database/token, redirect `next` dibatasi ke path internal, dan respons CSRF 419 tidak lagi menghapus status login secara keliru.
 - [ ] Uji runtime di Windows: PHPUnit auth/OAuth dengan PHP lokal, lalu uji login Google dan reset sandi lewat browser (cookie, CSRF, callback, pencabutan sesi). Akun lokal yang emailnya sama dengan Google kini masuk memakai kata sandi; alur taut akun eksplisit memerlukan fitur tersendiri.
 - [x] Navbar dan menu mobile menunggu hasil `/auth/me` sebelum menampilkan aksi akun; kegagalan koneksi menampilkan opsi coba lagi tanpa menganggap sesi berakhir. Guard halaman terlindungi juga menunggu hasil pemeriksaan sesi.
+- [x] Perbaikan logout Sanctum: sesi SPA tidak lagi mencoba menghapus `TransientToken`; logout token API hanya mencabut token aktif. UI mencegah submit ganda dan mempertahankan state akun jika server benar-benar gagal.
 - [ ] Browser: daftar → sesi aktif → dashboard, login/logout, 401/403, CSRF 419, reset lewat email, dan pembaruan Navbar.
 - [ ] Form menampilkan kesalahan Zod dan backend tetap menolak input tidak valid.
 

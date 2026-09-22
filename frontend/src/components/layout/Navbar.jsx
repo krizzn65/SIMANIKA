@@ -101,6 +101,8 @@ export function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [accountError, setAccountError] = useState("");
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileHomeExpanded, setMobileHomeExpanded] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const { user: account, checked, checkError, retryCheck, logout } = useAuth();
@@ -278,13 +280,20 @@ export function Navbar() {
   };
 
   const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setAccountError("");
+    setIsLoggingOut(true);
     setIsAccountMenuOpen(false);
     try {
       await logout();
+      handleClose();
       router.replace("/");
       router.refresh();
     } catch (err) {
-      console.error("Gagal keluar:", err);
+      setAccountError(err instanceof Error ? err.message : "Gagal keluar dari akun. Coba lagi.");
+      setIsAccountMenuOpen(true);
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -604,10 +613,12 @@ export function Navbar() {
               <div className="nav-account-menu__divider" role="separator" />
 
               <div className="nav-account-menu__footer">
+                {accountError && <p className="nav-account-menu__error" role="alert">{accountError}</p>}
                 <button
                   type="button"
                   className="nav-account-menu__logout-btn"
                   onClick={handleLogout}
+                  disabled={isLoggingOut}
                   role="menuitem"
                 >
                   <span className="nav-account-menu__logout-icon" aria-hidden="true">
@@ -617,7 +628,7 @@ export function Navbar() {
                       <line x1="21" y1="12" x2="9" y2="12" />
                     </svg>
                   </span>
-                  <span>Keluar dari Akun</span>
+                  <span>{isLoggingOut ? "Sedang keluar..." : "Keluar dari Akun"}</span>
                 </button>
               </div>
             </div>
@@ -825,20 +836,19 @@ export function Navbar() {
                       </span>
                     </Link>
 
+                    {accountError && <p className="mobile-drawer__account-error" role="alert">{accountError}</p>}
                     <button
                       type="button"
                       className="mobile-drawer__logout-btn"
-                      onClick={async () => {
-                        handleClose();
-                        await handleLogout();
-                      }}
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
                     >
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" width="16" height="16" aria-hidden="true">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                         <polyline points="16 17 21 12 16 7" />
                         <line x1="21" y1="12" x2="9" y2="12" />
                       </svg>
-                      <span>Keluar Akun</span>
+                      <span>{isLoggingOut ? "Sedang keluar..." : "Keluar Akun"}</span>
                     </button>
                   </div>
                 ) : (

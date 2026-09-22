@@ -27,14 +27,21 @@ export async function currentUser() {
 }
 
 export async function logout() {
-  await initCsrf();
-  const { data } = await api.post("/auth/logout");
-  useAuthStore.getState().clear();
-  return data;
+  try {
+    await initCsrf();
+    const { data } = await api.post("/auth/logout");
+    useAuthStore.getState().clear();
+    return data;
+  } catch (error) {
+    if (error.response?.status === 401) {
+      useAuthStore.getState().clear();
+      return { message: "Sesi sudah berakhir." };
+    }
+    throw error;
+  }
 }
 
 export function getGoogleAuthUrl() {
   const base = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api").replace(/\/+$/, "");
   return `${base}/auth/google/redirect`;
 }
-
