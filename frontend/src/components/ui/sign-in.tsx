@@ -273,8 +273,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
       {/* Right column: hero image + testimonials */}
       {heroImageSrc && (
-        <section className="simanika-signin-hero-col hidden md:block flex-1 relative p-4">
-          <div className="simanika-hero-stage animate-slide-right animate-delay-300 absolute inset-4 rounded-3xl">
+        <section className="simanika-signin-hero-col hidden md:flex flex-1 relative p-4">
+          <div className="simanika-hero-stage animate-slide-right animate-delay-300 relative w-full h-full rounded-2xl overflow-hidden">
             <img
               className="simanika-hero-image"
               src={heroImageSrc}

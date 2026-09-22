@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SignInPage } from "@/components/ui/sign-in";
-import { login } from "@/services/authClient";
+import { login, getGoogleAuthUrl } from "@/services/authClient";
 import { loginSchema } from "@/lib/authSchemas";
 
 export const SignInPageDemo = () => {
@@ -15,6 +15,20 @@ export const SignInPageDemo = () => {
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "", rememberMe: false },
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+    if (error === "google_cancelled") {
+      setFeedback("Login dengan akun Google dibatalkan.");
+    } else if (error === "google_not_configured") {
+      setFeedback("Google OAuth belum dikonfigurasi di server (.env).");
+    } else if (error === "google_failed" || error === "google_session_failed") {
+      setFeedback("Gagal memproses otentikasi Google. Silakan coba lagi.");
+    } else if (error === "google_no_email") {
+      setFeedback("Akun Google tidak memiliki alamat email publik.");
+    }
+  }, []);
 
   const handleSignIn = handleSubmit(async ({ email, password, rememberMe }) => {
     setFeedback(null);
@@ -29,7 +43,7 @@ export const SignInPageDemo = () => {
   }, (errors) => setFeedback(errors.email?.message || errors.password?.message || "Periksa kembali form login."));
 
   const handleGoogleSignIn = () => {
-    setFeedback("Login Google belum tersedia.");
+    window.location.href = getGoogleAuthUrl();
   };
 
   return (

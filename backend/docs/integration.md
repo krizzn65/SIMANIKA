@@ -10,7 +10,8 @@ Gunakan host `localhost` secara konsisten. Browser mengirim cookie sesi langsung
 
 | Frontend | Backend | Catatan |
 | --- | --- | --- |
-| `/login`, `/register`, Navbar, `/dashboard` | `/api/auth/register`, `/login`, `/logout`, `/me` | Email/password; sesi Sanctum. Google OAuth belum ada. |
+| `/login`, `/register`, Navbar, `/dashboard` | `/api/auth/register`, `/login`, `/logout`, `/me` | Email/password; sesi Sanctum. |
+| Tombol Google di `/login` & `/register`, `/auth/callback` | `/api/auth/google/redirect`, `/api/auth/google/callback` | Google OAuth 2.0 via `laravel/socialite`, tautkan `google_id` dan login sesi Sanctum. |
 | `/forgot-password`, `/reset-password` | `/api/auth/forgot-password`, `/reset-password` | Email reset memakai broker Laravel; backend mengirim tautan ke halaman Next.js. SMTP harus diisi. |
 | `/events`, `/events/[slug]` | `/api/public/events`, `/api/public/events/{slug}` | Hanya event non-draft, maksimal 9 per halaman, meta total, kuota dihitung server. |
 | `/oprec`, `/oprec/detail` | `/api/public/oprec` | Payload jadwal, divisi, schema form, poster, FAQ, dan publikasi pengumuman. |

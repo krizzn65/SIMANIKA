@@ -27,3 +27,9 @@ export async function logout() {
   useAuthStore.getState().clear();
   return data;
 }
+
+export function getGoogleAuthUrl() {
+  const base = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api").replace(/\/+$/, "");
+  return `${base}/auth/google/redirect`;
+}
+

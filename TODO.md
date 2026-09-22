@@ -11,7 +11,7 @@ Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis bera
 | Area | Status | Yang perlu diverifikasi/diselesaikan |
 |---|---|---|
 | Stack FE | 🔄 | Next 16/React 19, Axios, Zustand, React Hook Form, Zod, Tailwind 4, Motion, Lucide, Sonner, date-fns terpasang. Build webpack dan pemeriksaan TypeScript lulus; cek Tailwind/shadcn dan audit UI responsif di browser. |
-| Runtime lokal | 🔄 | `dev.bat` menyiapkan `PHPRC` lokal; modul mbstring/pgsql/intl terverifikasi. Uji FE+BE serentak dari Windows. |
+| Runtime lokal | ✅ | `dev.bat` menjalankan Next dan PHP bersama di Windows; `/login` dan `/api/ping` sama-sama HTTP 200. |
 | Auth FE | 🔄 | Form login/daftar/pemulihan memakai Zod; sesi memakai Axios + Zustand; `useAuth`/guard tersedia. Uji cookie, CSRF, 401/419, redirect, Navbar, logout di browser. |
 | Auth BE | 🔄 | Laravel 11/Sanctum 4 dan lockfile target PHP 8.2 sesuai arsitektur; route list dan PHPUnit SQLite lulus. Uji sesi/CSRF/reset sandi di browser/PostgreSQL. |
 | Email & berkas | ⬜ | Isi SMTP sungguhan untuk email reset; uji tautan dan batas upload privat. `MAIL_MAILER=log` hanya untuk lokal. |
@@ -23,8 +23,9 @@ Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis bera
 
 ### Gate verifikasi auth
 
-- [x] `npm ci`, `tsc --noEmit`, dan `next build --webpack` sukses pada Node 24 Linux sementara; build Turbopack masih perlu verifikasi di lingkungan pengguna.
-- [x] `php artisan route:list` (24 route), PHPUnit (8 test/32 assertion) dengan SQLite memori, dan `migrate:status` PostgreSQL (3 migrasi Ran); tes integrasi langsung PostgreSQL masih perlu.
+- [x] `npm ci` dan `npm run build` sukses di Windows; halaman login juga berhasil dikompilasi saat `next dev` berjalan di Windows.
+- [x] `php artisan route:list` (26 route), PHPUnit (13 test/47 assertion), dan migrasi `add_google_id_to_users_table` Ran di PostgreSQL lokal.
+- [x] Google OAuth 2.0 resmi terpasang (`laravel/socialite`, migrasi `google_id`, `GoogleAuthController`, route redirect & callback, unit & feature test lulus 100%, frontend callback di `/auth/callback`).
 - [ ] Browser: daftar → sesi aktif → dashboard, login/logout, 401/403, CSRF 419, reset lewat email, dan pembaruan Navbar.
 - [ ] Form menampilkan kesalahan Zod dan backend tetap menolak input tidak valid.
 

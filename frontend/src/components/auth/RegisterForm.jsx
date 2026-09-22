@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
-import { register } from "@/services/authClient";
+import { register, getGoogleAuthUrl } from "@/services/authClient";
 import { registerSchema } from "@/lib/authSchemas";
 
 function GoogleIcon() {
@@ -80,7 +80,9 @@ export default function RegisterForm() {
           <button
             className="register-google"
             type="button"
-            onClick={() => setFeedback("Pendaftaran dengan Google belum tersedia.")}
+            onClick={() => {
+              window.location.href = getGoogleAuthUrl();
+            }}
           >
             <GoogleIcon />
             <span>Daftar dengan Google</span>
