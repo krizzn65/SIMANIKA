@@ -57,4 +57,26 @@ class ApiIntegrationTest extends TestCase
         $user = User::create(['email' => 'user@example.test', 'password' => 'password-yang-kuat']);
         $this->actingAs($user, 'sanctum')->getJson('/api/admin/events')->assertForbidden();
     }
+
+    public function test_authenticated_user_can_logout_cleanly(): void
+    {
+        $user = User::create(['email' => 'logout-test@example.test', 'password' => 'password-yang-kuat']);
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/auth/logout');
+        $response->assertOk()->assertJson(['message' => 'Berhasil keluar.']);
+    }
+
+    public function test_login_profile_and_unauthenticated_guard(): void
+    {
+        $this->getJson('/api/auth/me')->assertUnauthorized();
+
+        User::create(['email' => 'login@example.test', 'password' => 'password-yang-kuat']);
+        $this->withHeaders(['Origin' => 'http://localhost:3000', 'Referer' => 'http://localhost:3000/login'])
+            ->postJson('/api/auth/login', ['email' => 'login@example.test', 'password' => 'password-yang-kuat'])
+            ->assertOk()->assertJsonPath('data.email', 'login@example.test');
+
+        $this->getJson('/api/auth/me')->assertOk()->assertJsonPath('data.email', 'login@example.test');
+        $this->putJson('/api/auth/profile', ['name' => 'Mahasiswa Uji'])
+            ->assertOk()->assertJsonPath('data.namaLengkap', 'Mahasiswa Uji');
+        $this->putJson('/api/auth/profile', ['angkatan' => 1800])->assertUnprocessable();
+    }
 }

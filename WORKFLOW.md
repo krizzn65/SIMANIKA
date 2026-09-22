@@ -2,6 +2,8 @@
 
 Dokumen ini berisi aturan main (aturan perilaku) untuk AI (saya) selama mengerjakan proyek **SIMANIKA**. Aturan ini dibuat agar alur kerja tetap terkontrol, aman, dan meminimalisir kesalahan besar.
 
+**Aturan lintas dokumen:** Setiap pekerjaan berikutnya wajib membaca dan mengikuti seluruh file MD proyek (di luar vendor/plugin/hasil generasi), khususnya `architecture.md` untuk stack, kontrak FE↔BE, auth, dan done criteria. Periksa `AGENTS.md` di root serta aturan lokal folder yang disentuh. Jika dokumen berbeda, utamakan instruksi pengguna terbaru dan perbarui `TODO.md` agar keputusan tidak hilang.
+
 ---
 
 ## 1. Kapan AI Harus Meminta Izin (Blokir Eksekusi)

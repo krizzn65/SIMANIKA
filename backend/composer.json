@@ -26,7 +26,7 @@
     "post-create-project-cmd": ["@php artisan key:generate --ansi"]
   },
   "extra": { "laravel": { "dont-discover": [] } },
-  "config": { "optimize-autoloader": true, "preferred-install": "dist", "sort-packages": true },
+  "config": { "optimize-autoloader": true, "preferred-install": "dist", "sort-packages": true, "platform": { "php": "8.2.0" } },
   "minimum-stability": "stable",
   "prefer-stable": true
 }

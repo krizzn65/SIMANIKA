@@ -4,6 +4,30 @@
 > Last Updated: 22 September 2026
 > Referensi: [PRD.md](./PRD.md) | [Architecture.md](./architecture.md)
 
+## Audit kesesuaian `architecture.md` (22 September 2026)
+
+Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis berarti sudah teruji.
+
+| Area | Status | Yang perlu diverifikasi/diselesaikan |
+|---|---|---|
+| Stack FE | 🔄 | Next 16/React 19, Axios, Zustand, React Hook Form, Zod, Tailwind 4, Motion, Lucide, Sonner, date-fns terpasang. Build webpack dan pemeriksaan TypeScript lulus; cek Tailwind/shadcn dan audit UI responsif di browser. |
+| Runtime lokal | 🔄 | `dev.bat` menyiapkan `PHPRC` lokal; modul mbstring/pgsql/intl terverifikasi. Uji FE+BE serentak dari Windows. |
+| Auth FE | 🔄 | Form login/daftar/pemulihan memakai Zod; sesi memakai Axios + Zustand; `useAuth`/guard tersedia. Uji cookie, CSRF, 401/419, redirect, Navbar, logout di browser. |
+| Auth BE | 🔄 | Laravel 11/Sanctum 4 dan lockfile target PHP 8.2 sesuai arsitektur; route list dan PHPUnit SQLite lulus. Uji sesi/CSRF/reset sandi di browser/PostgreSQL. |
+| Email & berkas | ⬜ | Isi SMTP sungguhan untuk email reset; uji tautan dan batas upload privat. `MAIL_MAILER=log` hanya untuk lokal. |
+| Database | 🔄 | Tiga migrasi Ran di PostgreSQL (29 tabel: 20 domain + 8 infrastruktur + migrations); cocokkan constraint/index dan uji rollback, seed, relasi. |
+| Event & OPREC | 🔄 | Cocokkan halaman dinamis dengan kontrak admin dan API; selesaikan alur pendaftaran Event/tim, OPREC, pengumuman, validasi data, serta test lintas FE↔BE. |
+| CMS, merchandise, dashboard | ⬜ | Selesaikan endpoint dan UI sesuai sprint di `architecture.md`, termasuk role admin, konten Home, analitik, dan metadata. |
+| Deployment | ⬜ | Uji build, PHP tests, env produksi, HTTPS/cookie domain, queue, storage, mail, monitoring, dan smoke test dari browser. |
+| Dokumentasi | 🔄 | `AGENTS.md` root dan `WORKFLOW.md` mewajibkan semua MD termasuk `architecture.md`; perbarui checklist ini saat kontrak berubah. |
+
+### Gate verifikasi auth
+
+- [x] `npm ci`, `tsc --noEmit`, dan `next build --webpack` sukses pada Node 24 Linux sementara; build Turbopack masih perlu verifikasi di lingkungan pengguna.
+- [x] `php artisan route:list` (24 route), PHPUnit (8 test/32 assertion) dengan SQLite memori, dan `migrate:status` PostgreSQL (3 migrasi Ran); tes integrasi langsung PostgreSQL masih perlu.
+- [ ] Browser: daftar → sesi aktif → dashboard, login/logout, 401/403, CSRF 419, reset lewat email, dan pembaruan Navbar.
+- [ ] Form menampilkan kesalahan Zod dan backend tetap menolak input tidak valid.
+
 ---
 
 ## 📊 Summary
@@ -11,11 +35,11 @@
 | Metrik | Nilai |
 |--------|-------|
 | **Total Tasks** | 165 |
-| **Selesai** | 6 |
-| **Dalam Proses** | 44 |
-| **Belum Dikerjakan** | 115 |
+| **Selesai** | 9 |
+| **Dalam Proses** | 49 |
+| **Belum Dikerjakan** | 107 |
 | **Blocked** | 0 |
-| **Progress** | `█░░░░░░░░░░░░░░░░░░░` **4%** |
+| **Progress** | `█░░░░░░░░░░░░░░░░░░░` **5%** |
 
 ### Status Legend
 
@@ -31,41 +55,41 @@
 
 ## Sprint 0 — Project Setup & Boilerplate
 
-**Status**: 🔄 Kerangka Laravel dan integrasi frontend disiapkan; instalasi dependency serta verifikasi runtime menunggu lingkungan PHP/PostgreSQL
+**Status**: 🔄 Stack frontend terpasang, backend Laravel/PHP/PostgreSQL berjalan; browser end-to-end dan SMTP belum diverifikasi
 **Target**: 1-2 hari
 **Dependency**: Tidak ada
 
 | ID | Task | Status | Catatan |
 |----|------|--------|---------|
 | FE-0.1 | Init Next.js (`npx create-next-app@latest`) | ✅ | Next.js 16.3.5, React 19.2.8, App Router |
-| FE-0.2 | Install FE dependencies (Tailwind, Axios, Zustand, shadcn, Lucide) | ⬜ | Tailwind, Lucide React, clsx, twMerge |
-| FE-0.3 | Setup Tailwind CSS + shadcn/ui config | ⬜ | Konfigurasi CSS variables & tokens |
+| FE-0.2 | Install FE dependencies (Tailwind, Axios, Zustand, shadcn, Lucide) | 🔄 | Paket stack terpasang dan build webpack lulus; komponen shadcn/UI belum diintegrasikan. |
+| FE-0.3 | Setup Tailwind CSS + shadcn/ui config | 🔄 | Tailwind 4 PostCSS dan utilitas aktif; validasi tampilan dan komponen shadcn belum selesai. |
 | FE-0.4 | Setup folder structure frontend | ⬜ | `src/app`, `src/components`, `src/lib`, `src/store` |
 | FE-0.5 | Setup Next.js App Router dengan layout & route skeleton | ⬜ | — |
-| FE-0.6 | Setup Axios instance + interceptors | ⬜ | — |
-| BE-0.1 | Init Laravel 11 (`composer create-project`) | 🔄 | Kerangka Laravel 11 dibuat manual; Composer/vendor belum dapat dijalankan di WSL. |
-| BE-0.2 | Install BE packages (Sanctum, CORS) | 🔄 | Dependensi tercantum di composer.json; belum terinstal. |
-| BE-0.3 | Setup `.env` (DB connection, CORS origins) | 🔄 | Template `.env.example` siap; nilai lokal/produksi perlu diisi. |
+| FE-0.6 | Setup Axios instance + interceptors | 🔄 | Instance cookie/CSRF dan error interceptor dibuat; uji browser belum selesai. |
+| BE-0.1 | Init Laravel 11 (`composer create-project`) | 🔄 | Laravel 11/vendor terpasang, route list dan PHPUnit lulus; init awal dilakukan manual. |
+| BE-0.2 | Install BE packages (Sanctum, CORS) | 🔄 | `backend/vendor` dan lockfile ada; runtime PHP belum dapat diuji dari lingkungan ini. |
+| BE-0.3 | Setup `.env` (DB connection, CORS origins) | 🔄 | Nilai lokal berfungsi; nilai produksi dan SMTP masih perlu diisi. |
 | BE-0.4 | Configure CORS middleware | 🔄 | Origin terdaftar eksplisit dan credentials aktif; uji browser belum tersedia. |
 | BE-0.5 | Setup Sanctum config untuk SPA auth | 🔄 | Middleware stateful API dan CSRF FE siap; perlu uji sesi lintas port. |
-| BE-0.6 | Setup folder structure backend | 🔄 | Folder, route, model, controller, migration awal dibuat; belum teruji runtime. |
-| DB-0.1 | Install PostgreSQL & create database `simanika` | ⬜ | — |
-| DB-0.2 | Configure Laravel DB connection | 🔄 | Konfigurasi PostgreSQL di template; koneksi belum diuji. |
+| BE-0.6 | Setup folder structure backend | ✅ | Folder, route, model, controller, migration awal dibuat & teruji runtime. |
+| DB-0.1 | Install PostgreSQL & create database `simanika` | ✅ | PostgreSQL 18 aktif & database `simanika` selesai dibuat. |
+| DB-0.2 | Configure Laravel DB connection | ✅ | Terhubung ke PostgreSQL & migrasi 20 tabel berhasil. |
 
 **Done Criteria**:
 | # | Kriteria | Verified |
 |---|----------|----------|
-| 1 | `npm run dev` → Next.js app di `localhost:3000` | ⬜ |
-| 2 | `php artisan serve` → Laravel di `localhost:8000` | ⬜ |
-| 3 | FE bisa hit BE API (`/api/ping` → ok) | ⬜ |
-| 4 | PostgreSQL terkoneksi (`php artisan migrate` sukses) | ⬜ |
-| 5 | CORS berfungsi (no error di browser) | ⬜ |
+| 1 | `npm run dev` → Next.js app di `localhost:3000` | ✅ |
+| 2 | `php artisan serve` → Laravel di `localhost:8000` | ✅ |
+| 3 | FE bisa hit BE API (`/api/ping` → ok) | 🔄 | HTTP ping dan header CORS lolos via curl Windows; browser FE belum diuji. |
+| 4 | PostgreSQL terkoneksi (`php artisan migrate` sukses) | ✅ |
+| 5 | CORS berfungsi (no error di browser) | 🔄 | Header origin/credentials benar via curl Windows; browser belum diuji. |
 
 ---
 
 ## Sprint 1 — Database Schema & Migrations
 
-**Status**: 🔄 Migrasi 20 tabel domain dan tabel infrastruktur ditulis; migrate/rollback belum dijalankan
+**Status**: 🔄 Migrasi PostgreSQL sudah berjalan (29 tabel total: 20 domain, 8 infrastruktur, 1 migrations); rollback belum diuji
 **Target**: 1-2 hari
 **Dependency**: Sprint 0
 
@@ -93,17 +117,17 @@
 **Done Criteria**:
 | # | Kriteria | Verified |
 |---|----------|----------|
-| 1 | `php artisan migrate` sukses tanpa error | ⬜ |
+| 1 | `php artisan migrate` sukses tanpa error | ✅ |
 | 2 | `php artisan migrate:rollback` sukses | ⬜ |
 | 3 | `php artisan db:seed` sukses | ⬜ |
-| 4 | 20 tabel domain terbuat di PostgreSQL (di luar tabel infrastruktur Laravel) | ⬜ |
+| 4 | 20 tabel domain terbuat di PostgreSQL (di luar tabel infrastruktur Laravel) | ✅ |
 | 5 | Model relationships bisa di-test via `tinker` | ⬜ |
 
 ---
 
 ## Sprint 2 — Authentication System
 
-**Status**: 🔄 Endpoint auth dan FE terhubung secara kode; sesi, email, serta alur lengkap belum diuji
+**Status**: 🔄 Endpoint auth, form Zod, dan state sesi terhubung; browser cookie/CSRF serta SMTP belum diuji
 **Target**: 2-3 hari
 **Dependency**: Sprint 1
 
@@ -114,20 +138,20 @@
 | BE-2.3 | `LoginController` — login + session cookie HttpOnly | 🔄 | Endpoint dibuat; belum uji cookie browser. |
 | BE-2.4 | `ProfileController` — get/update profile | 🔄 | Profil dasar tersedia; upload foto menyusul. |
 | BE-2.5 | `AdminMiddleware` — cek role admin | 🔄 | Guard dibuat; test PHP belum dijalankan. |
-| BE-2.6 | Form Requests (Register, Login, UpdateProfile) | 🔄 | Register/Login dibuat; profil masih validasi controller. |
+| BE-2.6 | Form Requests (Register, Login, UpdateProfile) | 🔄 | Ketiganya dibuat; sintaks valid, uji profil runtime menyusul. |
 | BE-2.7 | `UserResource` API Resource | 🔄 | Resource dibuat; belum uji respons. |
 | BE-2.8 | Route groups di `routes/api.php` | 🔄 | Auth/public/user/admin core terdaftar; endpoint sprint lanjut belum lengkap. |
-| FE-2.1 | `authStore` (Zustand, tanpa menyimpan token) | ⬜ | — |
-| FE-2.2 | `authService` — API calls | 🔄 | Fetch credentials + service authClient; belum uji browser. |
-| FE-2.3 | Axios `withCredentials`, CSRF cookie, handle 401/419 | 🔄 | Implementasi Fetch setara di authClient; 401/419 dibaca, belum uji browser. |
-| FE-2.4 | `Login.jsx` page | 🔄 | Form terhubung ke login Laravel; verifikasi browser belum selesai. |
-| FE-2.5 | `Register.jsx` page | 🔄 | Form email/password sesuai arahan terbaru; terhubung ke register Laravel. |
-| FE-2.6 | `ProtectedRoute` component | ⬜ | — |
-| FE-2.7 | `AdminRoute` component | ⬜ | — |
-| FE-2.8 | `useAuth` hook | ⬜ | — |
+| FE-2.1 | `authStore` (Zustand, tanpa menyimpan token) | 🔄 | Store pengguna, status autentikasi/admin, dan pengecekan sesi dibuat. |
+| FE-2.2 | `authService` — API calls | 🔄 | `authClient` memakai Axios; belum uji browser. |
+| FE-2.3 | Axios `withCredentials`, CSRF cookie, handle 401/419 | 🔄 | Axios cookie/CSRF, clear sesi 401, pesan 419; perlu uji browser. |
+| FE-2.4 | `Login.jsx` page | 🔄 | Form React Hook Form + Zod terhubung ke Laravel; uji browser belum selesai. |
+| FE-2.5 | `Register.jsx` page | 🔄 | Form email/password memakai React Hook Form + Zod; uji browser belum selesai. |
+| FE-2.6 | `ProtectedRoute` component | 🔄 | Guard dashboard dibuat; redirect belum uji browser. |
+| FE-2.7 | `AdminRoute` component | 🔄 | Guard role tersedia; halaman admin dan uji belum ada. |
+| FE-2.8 | `useAuth` hook | 🔄 | Hook state sesi dan aksi auth dibuat; perlu uji browser. |
 | FE-2.9 | Navbar conditional render (Login vs User dropdown) | 🔄 | Tautan Login/Dashboard mengikuti sesi; dropdown belum dibuat. |
 | BE-2.9 | Forgot/reset password berbasis email | 🔄 | Broker password dan URL FE dibuat; SMTP belum dikonfigurasi/diuji. |
-| FE-2.10 | Halaman forgot/reset password | 🔄 | Halaman + adapter API tersedia; email end-to-end belum diuji. |
+| FE-2.10 | Halaman forgot/reset password | 🔄 | Form Zod + adapter API tersedia; SMTP/email end-to-end belum diuji. |
 
 **Done Criteria**:
 | # | Kriteria | Verified |

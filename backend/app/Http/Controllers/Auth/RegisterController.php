@@ -13,8 +13,10 @@ class RegisterController extends Controller
     public function __invoke(RegisterRequest $request)
     {
         $user = User::create($request->safe()->only(['email', 'password']));
-        Auth::login($user);
-        $request->session()->regenerate();
+        Auth::guard('web')->login($user);
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+        }
         return (new UserResource($user))->response()->setStatusCode(201);
     }
 }

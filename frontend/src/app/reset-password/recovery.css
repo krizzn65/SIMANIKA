@@ -1,9 +1,355 @@
-.recovery-page .register-heading { margin-bottom: 1.8rem; }
-.recovery-page .register-card { width: min(100%, 520px); }
-.recovery-page .register-form { gap: 1.25rem; }
-.recovery-page .register-submit:disabled { opacity: .7; cursor: wait; transform: none; }
-.recovery-notice { border-left: 3px solid var(--blue); background: #eff6ff; padding: 1rem 1.15rem; color: var(--ink); line-height: 1.55; }
-.recovery-notice p { margin: 0; }
-.recovery-notice a { display: inline-block; margin-top: .7rem; color: var(--blue-dark); font-weight: 600; }
-.recovery-notice a:hover { text-decoration: underline; text-underline-offset: 3px; }
-.recovery-notice--success { border-left-color: #13805e; background: #eaf8f1; }
+/* ═════════════════════════════════════════════════════════════════════════
+   SIMANIKA — PASSWORD RECOVERY STYLES
+   Clean retro tech aesthetic: dashed border, sharp rectangle, subtle green tint
+   ═════════════════════════════════════════════════════════════════════════ */
+
+.recovery-page .register-heading {
+  margin-bottom: 2rem;
+}
+
+.recovery-page .register-card {
+  width: min(100%, 540px);
+}
+
+.recovery-page .register-form {
+  gap: 1.25rem;
+}
+
+.recovery-page .register-submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+  transform: none;
+}
+
+/* ── Recovery Notice Box (Sharp rectangle, dashed frame) ── */
+.recovery-notice {
+  position: relative;
+  background: #ffffff;
+  border: 2px dashed #c0ccdd;
+  border-radius: 0 !important;
+  box-shadow: 4px 4px 0 #dce5f4;
+  padding: 1.5rem 1.6rem;
+  margin: 1.5rem 0 0.5rem;
+  color: var(--ink);
+  animation: recovery-enter 220ms ease-out both;
+}
+
+@keyframes recovery-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Subtle Pale Green Success Card (Ijo Tipis-Tipis) ── */
+.recovery-notice--success {
+  background-color: #f0fdf4 !important;
+  border: 2px dashed #86efac !important;
+  border-radius: 0 !important;
+  box-shadow: 4px 4px 0 #bbf7d0 !important;
+  padding: 1.75rem 1.5rem !important;
+  text-align: center;
+}
+
+/* ── Animated Looping Checkmark with Cekling (Sparkle & Pulse) ── */
+.recovery-notice__icon-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.95rem;
+}
+
+.recovery-icon-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+}
+
+/* Radar ping ring on cekling hit */
+.recovery-icon-ping {
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1.8px solid #22c55e;
+  pointer-events: none;
+  animation: recovery-ping-loop 2.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes recovery-ping-loop {
+  0%, 34% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  38% {
+    opacity: 0.85;
+  }
+  58% {
+    transform: scale(1.42);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.42);
+    opacity: 0;
+  }
+}
+
+/* Primary Cekling Sparkle (Top-right) */
+.recovery-icon-sparkle {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  color: #16a34a;
+  pointer-events: none;
+  transform: scale(0) rotate(0deg);
+  animation: recovery-sparkle-loop 2.8s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  filter: drop-shadow(0 0 5px #86efac);
+  z-index: 2;
+}
+
+/* Secondary Cekling Sparkle (Bottom-left) */
+.recovery-icon-sparkle--secondary {
+  position: absolute;
+  bottom: 4px;
+  left: 3px;
+  width: 13px;
+  height: 13px;
+  color: #22c55e;
+  pointer-events: none;
+  transform: scale(0) rotate(0deg);
+  animation: recovery-sparkle-sub-loop 2.8s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  filter: drop-shadow(0 0 4px #bbf7d0);
+  z-index: 2;
+}
+
+@keyframes recovery-sparkle-loop {
+  0%, 34% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  42% {
+    transform: scale(1.35) rotate(45deg);
+    opacity: 1;
+  }
+  56% {
+    transform: scale(0.95) rotate(90deg);
+    opacity: 0.9;
+  }
+  68%, 100% {
+    transform: scale(0) rotate(135deg);
+    opacity: 0;
+  }
+}
+
+@keyframes recovery-sparkle-sub-loop {
+  0%, 39% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  47% {
+    transform: scale(1.2) rotate(-35deg);
+    opacity: 0.95;
+  }
+  60% {
+    transform: scale(0.8) rotate(-75deg);
+    opacity: 0.8;
+  }
+  70%, 100% {
+    transform: scale(0) rotate(-110deg);
+    opacity: 0;
+  }
+}
+
+/* SVG Icon with Spring Pop on Cekling */
+.recovery-notice__check-icon {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  color: #16a34a;
+  z-index: 1;
+  animation: recovery-icon-bounce-loop 2.8s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+
+@keyframes recovery-icon-bounce-loop {
+  0%, 26% {
+    transform: scale(0.95);
+  }
+  36% {
+    transform: scale(1.18);
+  }
+  46% {
+    transform: scale(0.97);
+  }
+  54% {
+    transform: scale(1.03);
+  }
+  62%, 84% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  90%, 100% {
+    transform: scale(0.95);
+    opacity: 0.2;
+  }
+}
+
+/* Outer Circle Draw (stroke-dasharray 63) */
+.recovery-check-circle {
+  stroke-dasharray: 63;
+  stroke-dashoffset: 63;
+  transform-origin: center;
+  transform: rotate(-90deg);
+  animation: recovery-circle-loop 2.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@keyframes recovery-circle-loop {
+  0% {
+    stroke-dashoffset: 63;
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  26%, 84% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  90%, 100% {
+    stroke-dashoffset: 63;
+    opacity: 0;
+  }
+}
+
+/* Checkmark Stroke Draw (stroke-dasharray 24) */
+.recovery-check-path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: recovery-check-loop 2.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@keyframes recovery-check-loop {
+  0%, 14% {
+    stroke-dashoffset: 24;
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  36%, 84% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  90%, 100% {
+    stroke-dashoffset: 24;
+    opacity: 0;
+  }
+}
+
+/* ── Notice Typography ── */
+.recovery-notice__title {
+  margin: 0 0 0.5rem;
+  font-family: "Inter Tight", Inter, sans-serif;
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #14532d;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.recovery-notice__text {
+  margin: 0;
+  font-family: "Inter Tight", Inter, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #166534;
+  text-align: center;
+  font-weight: 450;
+}
+
+/* ── Warning Variant ── */
+.recovery-notice--warning {
+  border: 2px dashed #fcd34d !important;
+  border-radius: 0 !important;
+  box-shadow: 4px 4px 0 #fef3c7 !important;
+  background: #fffbeb !important;
+}
+
+.recovery-notice--warning .recovery-notice__title {
+  color: #92400e;
+}
+
+.recovery-notice--warning .recovery-notice__text {
+  color: #b45309;
+}
+
+/* ── Actions (for warning / other states) ── */
+.recovery-notice__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  margin-top: 1.15rem;
+  flex-wrap: wrap;
+}
+
+.recovery-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 42px;
+  padding: 0.6rem 1.15rem;
+  border-radius: 0;
+  background: var(--blue);
+  color: #ffffff !important;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--blue);
+  box-shadow: 3px 3px 0 #b9cfff;
+  cursor: pointer;
+  transition: background-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.recovery-btn-primary:hover {
+  background: var(--blue-dark);
+  border-color: var(--blue-dark);
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 #b9cfff;
+}
+
+/* ── Error Banner ── */
+.recovery-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0;
+  padding: 0.85rem 1.15rem;
+  border-radius: 0;
+  background: #fff;
+  border: 2px dashed #fca5a5;
+  box-shadow: 3px 3px 0 #fee2e2;
+  color: #b91c1c;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.recovery-error-banner svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.recovery-error-banner p {
+  margin: 0;
+}

@@ -3,8 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { register } from "@/services/authClient";
+import { registerSchema } from "@/lib/authSchemas";
 
 function GoogleIcon() {
   return (
@@ -21,20 +24,19 @@ export default function RegisterForm() {
   const router = useRouter();
   const [feedback, setFeedback] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const { register: registerField, handleSubmit } = useForm({ resolver: zodResolver(registerSchema) });
 
-  async function handleSubmit(event) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
+  const submit = handleSubmit(async ({ email, password }) => {
     setFeedback("");
     try {
-      await register(String(form.get("email") || "").trim(), String(form.get("password") || ""));
+      await register(email, password);
       const next = new URLSearchParams(window.location.search).get("next");
       router.replace(next && /^\/(?!\/)/.test(next) ? next : "/dashboard");
       router.refresh();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Pendaftaran belum bisa diproses.");
     }
-  }
+  }, (errors) => setFeedback(errors.email?.message || errors.password?.message || "Periksa kembali form pendaftaran."));
 
   return (
     <main className="register-page">
@@ -86,13 +88,14 @@ export default function RegisterForm() {
 
           <div className="register-divider"><span>ATAU DENGAN EMAIL</span></div>
 
-          <form className="register-form" onSubmit={handleSubmit}>
+          <form className="register-form" onSubmit={submit} noValidate>
             <div className="register-field">
               <label htmlFor="register-email">Email</label>
               <div className="register-input-wrap">
                 <input
                   id="register-email"
                   name="email"
+                  {...registerField("email")}
                   type="email"
                   autoComplete="email"
                   placeholder="nama@email.com"
@@ -106,6 +109,7 @@ export default function RegisterForm() {
                 <input
                   id="register-password"
                   name="password"
+                  {...registerField("password")}
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
                   placeholder="Minimal 8 karakter"

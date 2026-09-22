@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatedNavIcon } from "@/components/ui/AnimatedNavIcon";
 import { CloseSmallIcon } from "@/components/ui/CloseSmallIcon";
-import { currentUser } from "@/services/authClient";
+import { useAuth } from "@/hooks/useAuth";
 
 const links = [
   { href: "/", icon: "home", label: "Home" },
@@ -100,7 +100,7 @@ export function Navbar() {
   const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
   const [mobileHomeExpanded, setMobileHomeExpanded] = useState(false);
   const [activeSection, setActiveSection] = useState("");
-  const [account, setAccount] = useState(null);
+  const { user: account } = useAuth();
   const menuButtonRef = useRef(null);
   const drawerRef = useRef(null);
   const homeDropdownRef = useRef(null);
@@ -111,16 +111,6 @@ export function Navbar() {
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    let active = true;
-    currentUser().then((response) => {
-      if (active) setAccount(response.data);
-    }).catch(() => {
-      if (active) setAccount(null);
-    });
-    return () => { active = false; };
-  }, [pathname]);
 
   const isActiveLink = (href) =>
     href === "/" ? pathname === href : pathname.startsWith(href);

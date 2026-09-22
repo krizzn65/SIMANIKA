@@ -4,7 +4,7 @@
 
 Backend: `APP_URL=http://localhost:8000`, `FRONTEND_URL=http://localhost:3000`, `SANCTUM_STATEFUL_DOMAINS=localhost:3000,localhost:8000`, `CORS_ALLOWED_ORIGINS=http://localhost:3000`. Frontend: `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api` dan `API_BASE_URL=http://localhost:8000/api`.
 
-Gunakan host `localhost` secara konsisten. Browser mengirim cookie sesi langsung ke Laravel dengan `credentials: include`; `authClient.js` lebih dulu meminta `/sanctum/csrf-cookie`, lalu mengirim `X-XSRF-TOKEN` untuk mutasi. Token tidak disimpan di localStorage. Adapter server Next.js untuk OPREC meneruskan cookie sesi dan CSRF; adapter reset sandi tidak memerlukan sesi.
+Gunakan host `localhost` secara konsisten. Browser mengirim cookie sesi langsung ke Laravel melalui Axios `withCredentials`; `authClient.js` lebih dulu meminta `/sanctum/csrf-cookie`, lalu Axios mengirim `X-XSRF-TOKEN` untuk mutasi. Zustand menyimpan identitas pengguna di memori, tanpa token di localStorage. Form auth memakai React Hook Form + Zod; Laravel tetap memvalidasi input melalui FormRequest. Adapter server Next.js untuk OPREC meneruskan cookie sesi dan CSRF; adapter reset sandi tidak memerlukan sesi.
 
 ## Kontrak yang tersedia
 
@@ -22,4 +22,4 @@ Gunakan host `localhost` secara konsisten. Browser mengirim cookie sesi langsung
 
 Skema database mengikuti 20 tabel domain PRD, tetapi route untuk pendaftaran Event individu/tim, merchandise, CMS Home, dan dashboard agregat belum dibuat. Event publik tetap hanya baca data; `registrationUrl` kosong sampai alur pendaftaran nyata tersedia. Halaman merchandise tetap Coming Soon sesuai arahan terbaru. Dashboard frontend saat ini hanya memverifikasi sesi dan memberi navigasi dasar.
 
-Sebelum produksi: jalankan migration/rollback dan PHPUnit di lingkungan PHP/PostgreSQL, uji cookie/CSRF dari browser, pasang SMTP, uji upload PDF/gambar di batas ukuran, dan uji dua submit OPREC serentak. Konfigurasi host produksi harus memakai domain induk yang sama untuk cookie Sanctum atau perlu arsitektur proxy sesi terpisah.
+Verifikasi 22 September 2026: lockfile Composer menargetkan PHP 8.2 dan valid, 24 route API terdaftar, PHPUnit 8 test/32 assertion lulus di SQLite memori, tiga migrasi tercatat `Ran` di PostgreSQL lokal, dan HTTP `/api/ping` memberi 200 dengan origin serta credentials CORS yang sesuai. Build frontend webpack dan pemeriksaan TypeScript juga lulus di Node Linux sementara. Masih perlu uji cookie/CSRF dari browser, rollback migrasi di database testing, pasang SMTP, uji upload PDF/gambar di batas ukuran, dan uji dua submit OPREC serentak. Konfigurasi host produksi harus memakai domain induk yang sama untuk cookie Sanctum atau perlu arsitektur proxy sesi terpisah.
