@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -50,6 +51,7 @@ function RegistrationCard({ item }) {
 }
 
 function DashboardContent() {
+  const router = useRouter();
   const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +59,13 @@ function DashboardContent() {
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (!user) return;
+    if (user?.role === "admin") {
+      router.replace("/admin");
+    }
+  }, [user?.role, router]);
+
+  useEffect(() => {
+    if (!user || user?.role === "admin") return;
     const controller = new AbortController();
     setLoading(true);
     setError(false);
@@ -73,7 +81,11 @@ function DashboardContent() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [user?.id, attempt]);
+  }, [user?.id, user?.role, attempt]);
+
+  if (user?.role === "admin") {
+    return null;
+  }
 
   return (
     <main className="dashboard-page" id="dashboard-content">
@@ -85,49 +97,6 @@ function DashboardContent() {
             <p className="dashboard-intro">Semua kegiatan yang kamu ikuti, dalam satu tempat.</p>
           </div>
         </header>
-
-        {user?.role === "admin" && (
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: "1rem",
-            padding: "0.85rem 1.25rem",
-            marginBottom: "1.5rem",
-            borderRadius: "14px",
-            background: "linear-gradient(135deg, rgba(21, 94, 239, 0.08), rgba(21, 94, 239, 0.16))",
-            border: "1px solid rgba(21, 94, 239, 0.3)",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-              <span style={{ fontSize: "1.25rem" }}>⚡</span>
-              <div>
-                <strong style={{ display: "block", fontSize: "0.88rem", color: "#155eef" }}>Anda teridentifikasi sebagai Administrator</strong>
-                <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>Akses seluruh sistem, kelola event, dan verifikasi OPREC melalui Admin Console.</span>
-              </div>
-            </div>
-            <Link
-              href="/admin"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.35rem",
-                padding: "0.45rem 1rem",
-                borderRadius: "10px",
-                background: "#155eef",
-                color: "#ffffff",
-                fontSize: "0.82rem",
-                fontWeight: 600,
-                textDecoration: "none",
-                whiteSpace: "nowrap",
-                boxShadow: "0 2px 8px rgba(21, 94, 239, 0.35)"
-              }}
-            >
-              <span>Buka Admin Console</span>
-              <span>→</span>
-            </Link>
-          </div>
-        )}
 
         {loading ? (
           <div className="dashboard-state" role="status" aria-live="polite">

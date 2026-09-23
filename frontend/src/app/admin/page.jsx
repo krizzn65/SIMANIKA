@@ -171,7 +171,7 @@ export default function AdminDashboardPage() {
                     <th>Judul Event</th>
                     <th>Kategori</th>
                     <th>Status</th>
-                    <th>Pendaftar</th>
+                    <th>Peserta / Tim</th>
                     <th>Tipe</th>
                   </tr>
                 </thead>
@@ -208,7 +208,7 @@ export default function AdminDashboardPage() {
                         </td>
                         <td>
                           <span className="font-mono text-xs font-semibold text-slate-700">
-                            {e.totalPendaftar} {e.tipePendaftaran === "tim" ? `(${e.totalTim} tim)` : ""}
+                            {e.totalPendaftar} {e.tipePendaftaran === "tim" ? "Tim" : "Peserta"}
                           </span>
                         </td>
                         <td className="capitalize text-xs text-slate-500">
@@ -229,8 +229,8 @@ export default function AdminDashboardPage() {
           <div className="admin-card">
             <div className="admin-card-header">
               <h2 className="text-base font-bold text-slate-900">Status OPREC</h2>
-              <Link href="/admin/oprec" className="text-xs font-semibold text-blue-600 hover:text-blue-700">
-                Kelola →
+              <Link href="/admin/oprec" className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700">
+                <span>Kelola</span><ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
               </Link>
             </div>
             <div className="admin-card-body flex flex-col gap-4">

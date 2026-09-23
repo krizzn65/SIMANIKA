@@ -100,7 +100,7 @@ export default function AdminLayout({ children }) {
                     className="flex-col whitespace-pre min-w-0"
                   >
                     <span className="font-extrabold text-white tracking-tight text-base leading-none">SIMANIKA</span>
-                    <span className="text-[10px] uppercase font-mono tracking-widest text-blue-100 font-semibold mt-1">ADMIN CONSOLE</span>
+                    <span className="text-[10px] uppercase tracking-widest text-blue-100 font-semibold mt-1">ADMIN CONSOLE</span>
                   </motion.div>
                 </Link>
               </div>
@@ -146,7 +146,7 @@ export default function AdminLayout({ children }) {
                   className="flex flex-col min-w-0 flex-1 whitespace-pre"
                 >
                   <span className="text-xs font-bold text-white truncate">{displayName}</span>
-                  <span className="text-[10px] text-blue-100 uppercase tracking-wider font-mono font-semibold">SUPER ADMIN</span>
+                  <span className="text-[10px] text-blue-100 uppercase tracking-wider font-semibold">ADMIN HIMANIKA</span>
                 </motion.div>
               </div>
 
@@ -191,7 +191,7 @@ export default function AdminLayout({ children }) {
                 title="Ke Website Utama"
                 prefetch={true}
               >
-                <Globe className="w-3.5 h-3.5 text-blue-600" />
+                <Globe aria-hidden="true" className="w-4 h-4 text-blue-600" />
                 <span>Lihat Website</span>
               </Link>
             </div>

@@ -17,11 +17,8 @@ class UserResource extends JsonResource
             'nama' => $nama,
             'namaLengkap' => $nama,
             'name' => $nama,
-            'nim' => $this->nim,
-            'jurusan' => $this->jurusan,
-            'angkatan' => $this->angkatan,
-            'role' => $this->role,
             'fotoProfil' => $this->foto_profil,
+            'role' => $this->isOfficialAdmin() ? 'admin' : 'user',
         ];
     }
 }

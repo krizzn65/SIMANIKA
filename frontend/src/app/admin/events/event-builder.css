@@ -1,0 +1,65 @@
+.event-builder { --eb-blue: #155eef; color: #0f172a; }
+.event-builder-header { display: grid; gap: 1rem; }
+.event-builder-back { display: inline-flex; align-items: center; gap: .5rem; color: #155eef; font-weight: 600; width: fit-content; }
+.event-builder-title { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.event-builder-title h1 { margin: .35rem 0; font-size: clamp(1.7rem, 3vw, 2.5rem); }
+.event-builder-title p, .event-builder-preview p { color: #52627a; margin: 0; }
+.event-builder-eyebrow { color: #155eef; font-size: .82rem; font-weight: 700; letter-spacing: .08em; }
+.event-builder-actions { display: flex; flex-wrap: wrap; gap: .65rem; }
+.event-builder-actions .admin-btn { gap: .5rem; min-height: 44px; }
+.event-builder-grid--single { grid-template-columns: 1fr !important; }
+.event-builder-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(270px, 1fr); gap: 1.4rem; align-items: start; }
+.event-builder-canvas { display: grid; gap: 1rem; }
+.event-builder-empty, .event-builder-field, .event-builder-add, .event-builder-preview { background: white; border: 1px solid #cad5e5; border-radius: 18px; padding: 1.3rem; }
+.event-builder-empty { padding: 3rem 2rem; text-align: center; border-style: dashed; }
+.event-builder-empty span { color: #155eef; font-weight: 700; letter-spacing: .08em; font-size: .82rem; }
+.event-builder-empty h2 { margin: .7rem 0; }
+.event-builder-empty p { max-width: 38rem; margin: auto; color: #52627a; }
+.event-builder-field { padding: 0; overflow: hidden; }
+.event-builder-field-head { display: flex; align-items: center; gap: .75rem; padding: 1rem 1.3rem; border-bottom: 1px solid #e2e8f0; }
+.event-builder-number { background: #eff6ff; color: #155eef; padding: .4rem .55rem; border-radius: 8px; font-weight: 700; }
+.event-builder-field-actions { display: flex; gap: .2rem; margin-left: auto; }
+.event-builder-field-actions button, .event-builder-options button { min-width: 40px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; color: #52627a; border-radius: 8px; }
+.event-builder-field-actions button:hover:not(:disabled), .event-builder-options button:hover:not(:disabled) { background: #eff6ff; color: #155eef; }
+.event-builder-field-body { display: grid; gap: 1rem; padding: 1.3rem; }
+.event-builder-field-body label, .event-builder-preview-field label { display: grid; gap: .45rem; font-size: .92rem; font-weight: 600; }
+.event-builder-field-body label span, .event-builder-preview-field b { color: #c42b3a; }
+.event-builder-field-body input:not([type="checkbox"]), .event-builder-field-body select, .event-builder-preview-field :is(input, select, textarea) { width: 100%; min-height: 48px; border: 1px solid #aebccf; border-radius: 9px; padding: .65rem .8rem; background: white; color: #0f172a; font: inherit; }
+.event-builder-field-body input:focus-visible, .event-builder-field-body select:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+.event-builder-two { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.event-builder-options { display: grid; gap: .5rem; }
+.event-builder-options > div { display: flex; gap: .4rem; }
+.event-builder-options > button, .event-builder-add button { border: 1px solid #cad5e5; padding: .5rem .8rem; border-radius: 9px; display: inline-flex; gap: .4rem; align-items: center; color: #0f4bcb; font-weight: 600; }
+.event-builder-required { display: flex !important; align-items: center; gap: .6rem !important; width: fit-content; }
+.event-builder-required input { width: 20px; height: 20px; accent-color: #155eef; }
+.event-builder-hint, .event-builder-note { color: #52627a; font-size: .85rem; margin: 0; }
+.event-builder-add p { font-weight: 700; }
+.event-builder-add > div { display: flex; flex-wrap: wrap; gap: .5rem; }
+.event-builder-preview { position: sticky; top: 5.5rem; display: grid; gap: 1rem; }
+.event-builder-preview h2 { margin: 0; font-size: 1.5rem; }
+.event-builder-preview-field { display: grid; gap: .4rem; padding: 1rem 0; border-top: 1px solid #e2e8f0; }
+.event-builder-preview-field > label { display: block; }
+.event-builder-preview-field small { color: #52627a; }
+.event-builder-preview-field input:disabled, .event-builder-preview-field textarea:disabled { background: #f8fafc; }
+.event-builder-choices { display: grid; gap: .4rem; }
+.event-builder-choice { display: flex !important; align-items: center; }
+.event-builder-preview-empty { padding: 1rem; background: #eff6ff; border-radius: 9px; color: #52627a; }
+.event-builder-error, .event-builder-success { padding: .8rem 1rem; border-radius: 9px; margin: 0; }
+.event-builder-error { color: #9f1239; background: #fff1f2; }
+.event-builder-success { color: #166534; background: #f0fdf4; }
+@media (max-width: 900px) { .event-builder-grid { grid-template-columns: 1fr; } .event-builder-preview { position: static; } }
+@media (max-width: 560px) { .event-builder-two { grid-template-columns: 1fr; } .event-builder-title { flex-direction: column; } .event-builder-field-head { flex-wrap: wrap; } }
+
+.event-builder-responses { margin-top: 2rem; padding: 1.3rem; background: white; border: 1px solid #cad5e5; border-radius: 18px; display: grid; gap: 1rem; }
+.event-builder-responses h2 { margin: .3rem 0; }
+.event-builder-responses p { color: #52627a; }
+.event-builder-response-list { display: grid; gap: .8rem; }
+.event-builder-response-list article { border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; }
+.event-builder-response-list header { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; }
+.event-builder-response-list header small { color: #52627a; }
+.event-builder-response-list header span { color: #155eef; background: #eff6ff; padding: .2rem .5rem; border-radius: 99px; font-size: .8rem; }
+.event-builder-response-list dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .7rem; margin-bottom: 0; }
+.event-builder-response-list dt { color: #52627a; font-size: .85rem; }
+.event-builder-response-list dd { margin: .2rem 0 0; overflow-wrap: anywhere; }
+.event-builder-response-list dd button, .event-builder-pages button { color: #0f4bcb; text-decoration: underline; }
+.event-builder-pages { display: flex; justify-content: center; align-items: center; gap: 1rem; }

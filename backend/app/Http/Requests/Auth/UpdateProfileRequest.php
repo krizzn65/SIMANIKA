@@ -14,9 +14,11 @@ class UpdateProfileRequest extends FormRequest
         return [
             'nama' => ['sometimes', 'nullable', 'string', 'max:150'],
             'name' => ['sometimes', 'nullable', 'string', 'max:150'],
-            'nim' => ['sometimes', 'nullable', 'string', 'max:32', Rule::unique('users')->ignore($this->user()->id)],
-            'jurusan' => ['sometimes', 'nullable', 'string', 'max:150'],
-            'angkatan' => ['sometimes', 'nullable', 'integer', 'between:2000,2100'],
+            'email' => ['sometimes', 'required', 'email', 'max:254', Rule::unique('users')->ignore($this->user()->id)],
+            'nim' => ['prohibited'],
+            'jurusan' => ['prohibited'],
+            'angkatan' => ['prohibited'],
+            'foto_profil' => ['prohibited'],
         ];
     }
 }

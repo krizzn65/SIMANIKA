@@ -24,8 +24,7 @@ class UserController extends Controller
             $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search);
             $query->where(function ($q) use ($escaped) {
                 $q->where('name', 'ilike', "%{$escaped}%")
-                  ->orWhere('email', 'ilike', "%{$escaped}%")
-                  ->orWhere('nim', 'ilike', "%{$escaped}%");
+                  ->orWhere('email', 'ilike', "%{$escaped}%");
             });
         }
 
@@ -36,13 +35,8 @@ class UserController extends Controller
             }
         }
 
-        // Filter by angkatan
-        if ($angkatan = $request->query('angkatan')) {
-            $query->where('angkatan', (int) $angkatan);
-        }
-
         // Sorting
-        $allowedSorts = ['name', 'email', 'created_at', 'role', 'angkatan'];
+        $allowedSorts = ['name', 'email', 'created_at', 'role'];
         $sortBy = in_array($request->query('sort_by'), $allowedSorts) ? $request->query('sort_by') : 'created_at';
         $sortDir = strtolower($request->query('sort_dir')) === 'asc' ? 'asc' : 'desc';
 
@@ -54,10 +48,6 @@ class UserController extends Controller
             'totalUsers' => User::count(),
             'totalAdmins' => User::where('role', 'admin')->count(),
             'totalRegular' => User::where('role', 'user')->count(),
-            'totalMif' => User::where(function ($q) {
-                $q->where('jurusan', 'ilike', '%informatika%')
-                  ->orWhere('jurusan', 'ilike', '%mif%');
-            })->count(),
             'newThisWeek' => User::where('created_at', '>=', Carbon::now()->subDays(7))->count(),
         ];
 
@@ -68,11 +58,8 @@ class UserController extends Controller
                 'name' => $displayName,
                 'nama' => $displayName,
                 'email' => $u->email,
-                'nim' => $u->nim,
-                'jurusan' => $u->jurusan,
-                'angkatan' => $u->angkatan,
-                'role' => $u->role,
                 'fotoProfil' => $u->foto_profil,
+                'role' => $u->isOfficialAdmin() ? 'admin' : 'user',
                 'emailVerifiedAt' => $u->email_verified_at?->toIso8601String(),
                 'createdAt' => $u->created_at?->toIso8601String(),
                 'eventRegistrationsCount' => $u->event_registrations_count ?? 0,
@@ -115,11 +102,8 @@ class UserController extends Controller
                 'name' => $displayName,
                 'nama' => $displayName,
                 'email' => $user->email,
-                'nim' => $user->nim,
-                'jurusan' => $user->jurusan,
-                'angkatan' => $user->angkatan,
-                'role' => $user->role,
                 'fotoProfil' => $user->foto_profil,
+                'role' => $user->isOfficialAdmin() ? 'admin' : 'user',
                 'emailVerifiedAt' => $user->email_verified_at?->toIso8601String(),
                 'createdAt' => $user->created_at?->toIso8601String(),
                 'eventRegistrations' => $user->eventRegistrations->map(fn ($r) => [
@@ -149,43 +133,7 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Update user role (admin <-> user).
-     */
-    public function updateRole(Request $request, $id): JsonResponse
-    {
-        $validated = $request->validate([
-            'role' => ['required', 'string', Rule::in(['admin', 'user'])],
-        ]);
-
-        $user = User::findOrFail($id);
-
-        // Safeguard: Ensure system has at least 1 admin
-        if ($user->role === 'admin' && $validated['role'] === 'user') {
-            $adminCount = User::where('role', 'admin')->count();
-            if ($adminCount <= 1) {
-                return response()->json([
-                    'message' => 'Tidak dapat mengubah role admin terakhir demi keamanan sistem.',
-                ], 422);
-            }
-        }
-
-        $user->role = $validated['role'];
-        $user->save();
-
-        return response()->json([
-            'status' => 'success',
-            'message' => "Role pengguna {$user->name} berhasil diubah menjadi {$user->role}.",
-            'data' => [
-                'id' => $user->id,
-                'role' => $user->role,
-            ],
-        ]);
-    }
-
-    /**
-     * Update user details (name, nim, jurusan, angkatan, role).
-     */
+    /** Update user details. Role is controlled by ADMIN_EMAIL. */
     public function update(Request $request, $id): JsonResponse
     {
         $user = User::findOrFail($id);
@@ -193,30 +141,13 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'nim' => ['nullable', 'string', 'max:30'],
-            'jurusan' => ['nullable', 'string', 'max:100'],
-            'angkatan' => ['nullable', 'integer', 'min:2000', 'max:2099'],
-            'role' => ['nullable', 'string', Rule::in(['admin', 'user'])],
+            'nim' => ['prohibited'],
+            'jurusan' => ['prohibited'],
+            'angkatan' => ['prohibited'],
         ]);
-
-        if (isset($validated['role']) && $user->role === 'admin' && $validated['role'] === 'user') {
-            $adminCount = User::where('role', 'admin')->count();
-            if ($adminCount <= 1) {
-                return response()->json([
-                    'message' => 'Tidak dapat mengubah role admin terakhir demi keamanan sistem.',
-                ], 422);
-            }
-        }
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
-        $user->nim = $validated['nim'] ?? $user->nim;
-        $user->jurusan = $validated['jurusan'] ?? $user->jurusan;
-        $user->angkatan = $validated['angkatan'] ?? $user->angkatan;
-
-        if (isset($validated['role'])) {
-            $user->role = $validated['role'];
-        }
 
         $user->save();
 
@@ -227,10 +158,7 @@ class UserController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'nim' => $user->nim,
-                'jurusan' => $user->jurusan,
-                'angkatan' => $user->angkatan,
-                'role' => $user->role,
+                'role' => $user->isOfficialAdmin() ? 'admin' : 'user',
             ],
         ]);
     }

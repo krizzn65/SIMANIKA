@@ -13,9 +13,6 @@ return new class extends Migration {
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('nim', 32)->nullable()->unique();
-            $table->string('jurusan')->nullable();
-            $table->smallInteger('angkatan')->nullable();
             $table->string('role', 12)->default('user')->index();
             $table->string('foto_profil')->nullable();
             $table->rememberToken();

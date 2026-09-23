@@ -830,7 +830,8 @@ svg {
   border-radius: 0.65rem;
   text-decoration: none;
   color: var(--ink);
-  transition: background-color 150ms ease, transform 150ms ease;
+  border: 1px solid transparent;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
 }
 
 .nav-account-menu__item:hover {
@@ -843,6 +844,53 @@ svg {
   color: var(--blue, #155eef);
 }
 
+/* Distinct Admin Console Item */
+.nav-account-menu__item--admin {
+  background: rgba(21, 94, 239, 0.06);
+  border-color: rgba(21, 94, 239, 0.22);
+}
+
+.nav-account-menu__item--admin .nav-account-menu__icon-wrap {
+  background: rgba(21, 94, 239, 0.12);
+  color: #155eef;
+}
+
+.nav-account-menu__item--admin .nav-account-menu__item-title {
+  color: #155eef;
+  font-weight: 700;
+}
+
+.nav-account-menu__title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-account-menu__admin-pill {
+  font-size: 9px;
+  background: #155eef;
+  color: #ffffff;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.nav-account-menu__item--admin .nav-account-menu__arrow {
+  color: rgba(21, 94, 239, 0.5);
+}
+
+.nav-account-menu__item--admin:hover {
+  background: rgba(21, 94, 239, 0.12);
+  border-color: rgba(21, 94, 239, 0.35);
+  transform: translateX(2px);
+}
+
+.nav-account-menu__item--admin:hover .nav-account-menu__arrow {
+  color: #155eef;
+}
+
 .nav-account-menu__icon-wrap {
   width: 1.9rem;
   height: 1.9rem;
@@ -852,18 +900,25 @@ svg {
   place-items: center;
   color: rgba(10, 16, 32, 0.7);
   flex-shrink: 0;
-  transition: background-color 150ms ease, color 150ms ease;
+  transition: background-color 150ms ease, color 150ms ease, transform 150ms ease;
 }
 
 .nav-account-menu__item:hover .nav-account-menu__icon-wrap,
 .nav-account-menu__item--active .nav-account-menu__icon-wrap {
-  background: var(--blue, #155eef);
-  color: #fff;
+  background: var(--blue, #155eef) !important;
+  color: #ffffff !important;
 }
 
 .nav-account-menu__icon-wrap svg {
   width: 1.05rem;
   height: 1.05rem;
+  transition: stroke 150ms ease, color 150ms ease;
+}
+
+.nav-account-menu__item:hover .nav-account-menu__icon-wrap svg,
+.nav-account-menu__item--active .nav-account-menu__icon-wrap svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 .nav-account-menu__item-text {

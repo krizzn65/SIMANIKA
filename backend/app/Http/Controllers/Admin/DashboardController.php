@@ -48,7 +48,9 @@ class DashboardController extends Controller
                 'kategori' => $e->kategori,
                 'status' => $e->status,
                 'tipePendaftaran' => $e->tipe_pendaftaran,
-                'totalPendaftar' => $e->registrations_count,
+                'totalPendaftar' => $e->tipe_pendaftaran === 'tim'
+                    ? $e->teams_count
+                    : $e->registrations_count,
                 'totalTim' => $e->teams_count,
                 'tanggalMulai' => $e->tanggal_mulai ? (is_string($e->tanggal_mulai) ? $e->tanggal_mulai : $e->tanggal_mulai->format('Y-m-d')) : null,
             ]);

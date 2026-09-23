@@ -38,7 +38,6 @@ export default function AdminUsersPage() {
     totalUsers: 0,
     totalAdmins: 0,
     totalRegular: 0,
-    totalMif: 0,
     newThisWeek: 0,
   });
   const [meta, setMeta] = useState({
@@ -58,16 +57,10 @@ export default function AdminUsersPage() {
   // Modals state
   const [detailModalUser, setDetailModalUser] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [roleModalUser, setRoleModalUser] = useState(null);
-  const [targetRole, setTargetRole] = useState("user");
-  const [roleSubmitting, setRoleSubmitting] = useState(false);
   const [editModalUser, setEditModalUser] = useState(null);
   const [editFormData, setEditFormData] = useState({
     name: "",
     email: "",
-    nim: "",
-    jurusan: "",
-    angkatan: "",
     role: "user",
   });
   const [editSubmitting, setEditSubmitting] = useState(false);
@@ -161,41 +154,12 @@ export default function AdminUsersPage() {
       });
   };
 
-  // Open Role Modal
-  const handleOpenRoleModal = (userItem) => {
-    setRoleModalUser(userItem);
-    setTargetRole(userItem.role === "admin" ? "user" : "admin");
-  };
-
-  // Submit Role Change
-  const handleRoleSubmit = () => {
-    if (!roleModalUser) return;
-    setRoleSubmitting(true);
-    api.put(`/admin/users/${roleModalUser.id}/role`, { role: targetRole })
-      .then((res) => {
-        toast.success(res.data.message || `Role pengguna berhasil diubah ke ${targetRole}`);
-        setRoleModalUser(null);
-        fetchUsers(meta.currentPage);
-      })
-      .catch((err) => {
-        const msg = err.response?.data?.message || "Gagal mengubah role pengguna.";
-        toast.error(msg);
-      })
-      .finally(() => {
-        setRoleSubmitting(false);
-      });
-  };
-
   // Open Edit Modal
   const handleOpenEditModal = (userItem) => {
     setEditModalUser(userItem);
     setEditFormData({
       name: userItem.name || "",
       email: userItem.email || "",
-      nim: userItem.nim || "",
-      jurusan: userItem.jurusan || "",
-      angkatan: userItem.angkatan || "",
-      role: userItem.role || "user",
     });
   };
 
@@ -208,10 +172,6 @@ export default function AdminUsersPage() {
     const payload = {
       name: editFormData.name,
       email: editFormData.email,
-      nim: editFormData.nim || null,
-      jurusan: editFormData.jurusan || null,
-      angkatan: editFormData.angkatan ? parseInt(editFormData.angkatan, 10) : null,
-      role: editFormData.role,
     };
 
     api.put(`/admin/users/${editModalUser.id}`, payload)
@@ -511,11 +471,6 @@ export default function AdminUsersPage() {
                             <span className="text-xs text-slate-500 block truncate max-w-[220px]">
                               {item.email}
                             </span>
-                            {item.nim && (
-                              <span className="text-[11px] font-mono text-slate-400 block truncate">
-                                NIM: {item.nim}
-                              </span>
-                            )}
                           </div>
                         </div>
                       </td>
@@ -566,22 +521,11 @@ export default function AdminUsersPage() {
                           <div className="flex items-center justify-end">
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono font-semibold text-slate-400 bg-slate-50 border border-slate-200/60">
                               <ShieldCheck className="w-3.5 h-3.5 text-blue-500/70" />
-                              <span>SUPER ADMIN</span>
+                              <span>ADMIN HIMANIKA</span>
                             </span>
                           </div>
                         ) : (
                           <div className="flex items-center justify-end gap-1.5">
-                            {/* Role Toggle Button */}
-                            <button
-                              type="button"
-                              onClick={() => handleOpenRoleModal(item)}
-                              className="admin-btn admin-btn--secondary admin-btn--sm"
-                              title="Jadikan Administrator"
-                            >
-                              <Shield className="w-3.5 h-3.5 text-blue-600" />
-                              <span className="hidden sm:inline">Role</span>
-                            </button>
-
                             {/* Detail Button */}
                             <button
                               type="button"
@@ -698,132 +642,6 @@ export default function AdminUsersPage() {
       </div>
 
       {/* ───────────────────────────────────────────────────────────── */}
-      {/* MODAL 1: GANTI ROLE */}
-      {/* ───────────────────────────────────────────────────────────── */}
-      {roleModalUser && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal-card max-w-md p-6">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#155eef] flex items-center justify-center">
-                  <ShieldAlert className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 leading-tight">Ubah Hak Akses Role</h3>
-                  <p className="text-xs text-slate-500">Atur hak istimewa pengguna di SIMANIKA</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setRoleModalUser(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="py-4 space-y-4">
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                <div className="w-11 h-11 rounded-full overflow-hidden border border-slate-200 shadow-sm flex-shrink-0">
-                  <UserAvatar
-                    src={roleModalUser.fotoProfil}
-                    name={roleModalUser.name}
-                    email={roleModalUser.email}
-                    className="w-full h-full text-xs"
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className="text-sm font-bold text-slate-900 truncate">{roleModalUser.name}</h4>
-                  <p className="text-xs text-slate-500 truncate">{roleModalUser.email}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[11px] font-mono text-slate-500">Role saat ini:</span>
-                    <span className={`text-[10px] font-bold uppercase px-1.5 py-0.2 rounded ${
-                      roleModalUser.role === "admin"
-                        ? "bg-blue-100 text-[#155eef]"
-                        : "bg-slate-200 text-slate-700"
-                    }`}>
-                      {roleModalUser.role}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-2">
-                  Pilih Role Baru:
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setTargetRole("admin")}
-                    className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all ${
-                      targetRole === "admin"
-                        ? "border-[#155eef] bg-blue-50/80 ring-2 ring-blue-500/20"
-                        : "border-slate-200 hover:border-slate-300"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-[#155eef]">
-                      <ShieldCheck className="w-4 h-4" />
-                      <span>ADMIN</span>
-                    </div>
-                    <span className="text-[11px] text-slate-500">
-                      Akses penuh dashboard admin, kelola event, OPREC, dan user.
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setTargetRole("user")}
-                    className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all ${
-                      targetRole === "user"
-                        ? "border-slate-800 bg-slate-50 ring-2 ring-slate-800/10"
-                        : "border-slate-200 hover:border-slate-300"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                      <Users className="w-4 h-4" />
-                      <span>USER BIASA</span>
-                    </div>
-                    <span className="text-[11px] text-slate-500">
-                      Akses portal umum mahasiswa, pendaftaran event & OPREC.
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {roleModalUser.role === "admin" && targetRole === "user" && (
-                <div className="p-3 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-800 text-xs flex gap-2.5 items-start">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold">Peringatan Keamanan:</span> Akun ini akan kehilangan akses ke seluruh modul admin. Pastikan masih ada minimal satu admin aktif di sistem.
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setRoleModalUser(null)}
-                className="admin-btn admin-btn--secondary"
-                disabled={roleSubmitting}
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={handleRoleSubmit}
-                disabled={roleSubmitting || roleModalUser.role === targetRole}
-                className="admin-btn admin-btn--primary"
-              >
-                {roleSubmitting ? "Menyimpan..." : "Terapkan Perubahan Role"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ───────────────────────────────────────────────────────────── */}
       {/* MODAL 2: DETAIL PENGGUNA & RIWAYAT */}
       {/* ───────────────────────────────────────────────────────────── */}
       {(detailModalUser || detailLoading) && (
@@ -877,17 +695,6 @@ export default function AdminUsersPage() {
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">{detailModalUser.email}</p>
-                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-3 text-xs text-slate-600">
-                      <span className="font-mono bg-white px-2 py-0.5 rounded border border-slate-200">
-                        NIM: {detailModalUser.nim || "-"}
-                      </span>
-                      <span className="bg-white px-2 py-0.5 rounded border border-slate-200">
-                        {detailModalUser.jurusan || "Jurusan -"}
-                      </span>
-                      <span className="bg-white px-2 py-0.5 rounded border border-slate-200">
-                        Angkatan: {detailModalUser.angkatan || "-"}
-                      </span>
-                    </div>
                   </div>
                 </div>
 
@@ -995,7 +802,9 @@ export default function AdminUsersPage() {
 
             <form onSubmit={handleEditSubmit} className="py-4 space-y-3.5">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Nama Lengkap <span className="text-red-500 font-bold ml-0.5">*</span>
+                </label>
                 <input
                   type="text"
                   required
@@ -1006,7 +815,9 @@ export default function AdminUsersPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Email</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Email <span className="text-red-500 font-bold ml-0.5">*</span>
+                </label>
                 <input
                   type="email"
                   required
@@ -1014,54 +825,6 @@ export default function AdminUsersPage() {
                   onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
                   className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">NIM Mahasiswa</label>
-                  <input
-                    type="text"
-                    value={editFormData.nim}
-                    onChange={(e) => setEditFormData({ ...editFormData, nim: e.target.value })}
-                    placeholder="Contoh: E31240001"
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Tahun Angkatan</label>
-                  <input
-                    type="number"
-                    min="2000"
-                    max="2099"
-                    value={editFormData.angkatan}
-                    onChange={(e) => setEditFormData({ ...editFormData, angkatan: e.target.value })}
-                    placeholder="2024"
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Program Studi / Jurusan</label>
-                <input
-                  type="text"
-                  value={editFormData.jurusan}
-                  onChange={(e) => setEditFormData({ ...editFormData, jurusan: e.target.value })}
-                  placeholder="Manajemen Informatika / Teknik Informatika"
-                  className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Hak Akses Role</label>
-                <select
-                  value={editFormData.role}
-                  onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
-                  className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="user">User Biasa (Mahasiswa)</option>
-                  <option value="admin">Super Administrator</option>
-                </select>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
