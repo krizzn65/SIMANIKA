@@ -44,7 +44,7 @@ export default function AdminUsersPage() {
   const [meta, setMeta] = useState({
     currentPage: 1,
     lastPage: 1,
-    perPage: 15,
+    perPage: 10,
     total: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -89,6 +89,7 @@ export default function AdminUsersPage() {
 
     const params = {
       page,
+      per_page: 10,
       sort_by: sortBy,
       sort_dir: sortDir,
     };
@@ -266,13 +267,6 @@ export default function AdminUsersPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-mono text-xs uppercase tracking-widest text-blue-600 font-semibold">// 02</span>
-            <span className="text-slate-300">•</span>
-            <span className="font-mono text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
-              MANAGEMENT_CONSOLE : USER_REGISTRY
-            </span>
-          </div>
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
             Kelola Pengguna
           </h1>
@@ -631,30 +625,74 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Pagination Footer */}
-        {meta.lastPage > 1 && (
-          <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
-            <div>
-              Halaman <span className="font-semibold text-slate-800">{meta.currentPage}</span> dari{" "}
-              <span className="font-semibold text-slate-800">{meta.lastPage}</span> ({meta.total} total)
+        {meta.total > 0 && (
+          <div className="p-4 border-t border-slate-200 bg-slate-50/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+            <div className="flex items-center gap-2">
+              <span>
+                Menampilkan{" "}
+                <span className="font-semibold text-slate-800">
+                  {(meta.currentPage - 1) * meta.perPage + 1}
+                </span>
+                –
+                <span className="font-semibold text-slate-800">
+                  {Math.min(meta.currentPage * meta.perPage, meta.total)}
+                </span>{" "}
+                dari <span className="font-semibold text-slate-800">{meta.total}</span> data pengguna (maks. 10 per halaman)
+              </span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => fetchUsers(meta.currentPage - 1)}
-                disabled={meta.currentPage <= 1 || loading}
-                className="admin-btn admin-btn--secondary admin-btn--sm disabled:opacity-40"
-              >
-                Sebelumnya
-              </button>
-              <button
-                type="button"
-                onClick={() => fetchUsers(meta.currentPage + 1)}
-                disabled={meta.currentPage >= meta.lastPage || loading}
-                className="admin-btn admin-btn--secondary admin-btn--sm disabled:opacity-40"
-              >
-                Selanjutnya
-              </button>
-            </div>
+
+            {meta.lastPage > 1 && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => fetchUsers(meta.currentPage - 1)}
+                  disabled={meta.currentPage <= 1 || loading}
+                  className="admin-btn admin-btn--secondary admin-btn--sm disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Sebelumnya
+                </button>
+
+                {Array.from({ length: meta.lastPage }, (_, i) => i + 1).map((pageNum) => {
+                  if (
+                    meta.lastPage > 7 &&
+                    pageNum !== 1 &&
+                    pageNum !== meta.lastPage &&
+                    Math.abs(pageNum - meta.currentPage) > 1
+                  ) {
+                    if (pageNum === 2 || pageNum === meta.lastPage - 1) {
+                      return <span key={pageNum} className="px-1 text-slate-400">...</span>;
+                    }
+                    return null;
+                  }
+
+                  const isActive = pageNum === meta.currentPage;
+                  return (
+                    <button
+                      key={pageNum}
+                      type="button"
+                      onClick={() => fetchUsers(pageNum)}
+                      disabled={loading}
+                      className={`min-w-[28px] h-7 px-2 text-xs font-semibold rounded-lg flex items-center justify-center transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-blue-600 text-white shadow-sm"
+                          : "text-slate-600 hover:bg-slate-200/70 bg-white border border-slate-200"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                <button
+                  type="button"
+                  onClick={() => fetchUsers(meta.currentPage + 1)}
+                  disabled={meta.currentPage >= meta.lastPage || loading}
+                  className="admin-btn admin-btn--secondary admin-btn--sm disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Selanjutnya
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

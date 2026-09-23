@@ -46,7 +46,7 @@ class UserController extends Controller
         $sortBy = in_array($request->query('sort_by'), $allowedSorts) ? $request->query('sort_by') : 'created_at';
         $sortDir = strtolower($request->query('sort_dir')) === 'asc' ? 'asc' : 'desc';
 
-        $perPage = min(max((int) $request->query('per_page', 15), 5), 100);
+        $perPage = min(max((int) $request->query('per_page', 10), 1), 100);
         $paginated = $query->orderBy($sortBy, $sortDir)->paginate($perPage);
 
         // Stats summary for admin dashboard overview
