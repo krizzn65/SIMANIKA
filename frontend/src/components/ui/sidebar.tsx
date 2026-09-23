@@ -142,9 +142,10 @@ export const MobileSidebar = ({
           </div>
           <button
             type="button"
-            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+            className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-white/20"
             onClick={() => setOpen(!open)}
-            aria-label="Toggle menu"
+            aria-label="Buka menu admin"
+            aria-expanded={open}
           >
             <Menu className="w-5 h-5 cursor-pointer" />
           </button>
@@ -164,12 +165,14 @@ export const MobileSidebar = ({
                 className
               )}
             >
-              <div
-                className="absolute right-6 top-6 z-50 text-white hover:text-blue-100 cursor-pointer p-2 rounded-xl bg-white/15 hover:bg-white/25 transition-all"
-                onClick={() => setOpen(!open)}
+              <button
+                type="button"
+                className="absolute right-6 top-6 z-50 flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/25 hover:text-blue-100"
+                onClick={() => setOpen(false)}
+                aria-label="Tutup menu admin"
               >
-                <X className="w-5 h-5" />
-              </div>
+                <X aria-hidden="true" className="w-5 h-5" />
+              </button>
               {children}
             </motion.div>
           )}

@@ -1,0 +1,59 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { api } from "@/services/api";
+
+export function EventRegistrationForm({ event }) {
+  const [pending, setPending] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState({});
+
+  async function submit(submission) {
+    submission.preventDefault();
+    if (pending) return;
+    const form = submission.currentTarget;
+    if (!form.reportValidity()) return;
+    const body = new FormData(form);
+    for (const [key, value] of body.entries()) if (value instanceof File && value.size === 0) body.delete(key);
+    let total = 0;
+    for (const value of body.values()) if (value instanceof File) total += value.size;
+    if (total > 11 * 1024 * 1024) { setMessage("Total berkas maksimal 11 MB."); return; }
+    setPending(true); setMessage(""); setErrors({});
+    try {
+      const response = await api.post("/user/events/" + event.id + "/register", body, { headers: { "Content-Type": "multipart/form-data" }, timeout: 30000 });
+      if (response.data?.data?.submitted !== true) throw new Error("Respons pendaftaran tidak valid.");
+      setSuccess(true); form.reset();
+    } catch (error) {
+      setErrors(error.response?.data?.errors || {});
+      setMessage(error.response?.status === 401 ? "Masuk ke akun terlebih dahulu untuk mendaftar." : error.message || "Pendaftaran belum berhasil.");
+    } finally { setPending(false); }
+  }
+
+  if (success) return <div className="event-form-feedback" role="status"><h3>Pendaftaran terkirim.</h3><p>{event.tipePendaftaran === "tim" ? "Tim berhasil dibuat. Lihat kode tim di dashboard akunmu." : "Data pendaftaranmu sudah tersimpan."}</p><Link href="/dashboard">Lihat dashboard</Link></div>;
+  return <form id="form-pendaftaran" className="event-dynamic-form" onSubmit={submit} aria-busy={pending}>
+    <span className="event-mono">FORMULIR PENDAFTARAN</span>
+    <h2>Daftar {event.judul}</h2>
+    <p>Kolom bertanda * wajib diisi. Isilah sesuai petunjuk penyelenggara.</p>
+    {message && <div role="alert" className="event-form-feedback">{message}{Object.keys(errors).length > 0 && <ul>{Object.entries(errors).map(([name, value]) => <li key={name}>{name}: {Array.isArray(value) ? value[0] : value}</li>)}</ul>}</div>}
+    <fieldset disabled={pending}>
+      <legend className="event-form-sr-only">Jawaban pendaftaran</legend>
+      {event.formFields.map((field) => {
+        const id = "event-field-" + field.name;
+        return <div className="event-dynamic-field" key={field.name}>
+          {field.type !== "checkbox" && <label htmlFor={id}>{field.label}{field.required && <b aria-label="wajib"> *</b>}</label>}
+          {field.help && <small>{field.help}</small>}
+          {field.type === "textarea" ? <textarea id={id} name={field.name} rows={4} required={field.required} placeholder={field.placeholder || ""} /> :
+            field.type === "select" ? <select id={id} name={field.name} required={field.required} defaultValue=""><option value="">Pilih jawaban</option>{field.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> :
+            field.type === "radio" ? <div className="event-dynamic-choices">{field.options.map((option, index) => <label key={option.value}><input type="radio" id={index === 0 ? id : undefined} name={field.name} value={option.value} required={field.required} /> {option.label}</label>)}</div> :
+            field.type === "checkbox" ? <label className="event-dynamic-check"><input id={id} name={field.name} type="checkbox" value="on" required={field.required} /> {field.label}{field.required && <b aria-label="wajib"> *</b>}</label> :
+            field.type === "file" ? <><input id={id} name={field.name} type="file" required={field.required} accept=".pdf,.jpg,.jpeg,.png,.webp" /><small>PDF, JPG, PNG, WebP · maksimal 5 MB</small></> :
+            <input id={id} name={field.name} type={field.type} required={field.required} placeholder={field.placeholder || ""} />}
+          {errors[field.name] && <small className="event-dynamic-error">{Array.isArray(errors[field.name]) ? errors[field.name][0] : errors[field.name]}</small>}
+        </div>;
+      })}
+    </fieldset>
+    <button className="event-button" type="submit" disabled={pending}>{pending ? "Mengirim…" : event.tipePendaftaran === "tim" ? "Daftarkan tim" : "Kirim pendaftaran"}</button>
+  </form>;
+}

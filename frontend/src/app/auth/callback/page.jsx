@@ -23,13 +23,12 @@ function CallbackContent() {
       currentUser()
         .then((response) => {
           const user = response?.data;
-          const next = searchParams.get("next");
-          if (next) {
-            router.replace(safeNextPath(next));
-          } else if (user?.role === "admin") {
-            router.replace("/admin");
+          const nextParam = searchParams.get("next");
+          const safeNext = nextParam ? safeNextPath(nextParam) : null;
+          if (user?.role === "admin") {
+            router.replace(safeNext && safeNext !== "/dashboard" ? safeNext : "/admin");
           } else {
-            router.replace("/dashboard");
+            router.replace(safeNext || "/dashboard");
           }
           router.refresh();
         })

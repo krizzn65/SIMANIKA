@@ -29,7 +29,6 @@ export default function AdminSettingsPage() {
         <div className="admin-card-body flex flex-col md:flex-row items-start md:items-center gap-5">
           <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-blue-500/20 shadow-sm flex-shrink-0">
             <UserAvatar
-              src={user?.fotoProfil}
               name={displayName}
               email={user?.email}
               size="100%"
@@ -81,7 +80,7 @@ export default function AdminSettingsPage() {
                 <td className="font-mono text-xs text-blue-700">Laravel Sanctum SPA + HttpOnly Cookie + CSRF protection</td>
               </tr>
               <tr>
-                <td className="font-semibold text-slate-700">Sistem Tim (PRD 5.7)</td>
+                <td className="font-semibold text-slate-700">Sistem Tim</td>
                 <td className="font-mono text-xs text-emerald-700 font-semibold">Tersedia & Terintegrasi (Prefix generator)</td>
               </tr>
             </tbody>

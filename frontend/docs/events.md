@@ -68,7 +68,7 @@ pada request/navigasi berikutnya, bukan push real-time ke tab yang sedang terbuk
   "teamSettings": null,
   "syarat": ["Mahasiswa aktif", "Membawa laptop"],
   "hadiah": ["Materi kegiatan", "Sertifikat peserta"],
-  "registrationUrl": null
+  "formFields": [{ "name": "nama_lengkap", "label": "Nama lengkap", "type": "text", "required": true, "options": [] }]
 }
 ```
 
@@ -82,15 +82,17 @@ properti majemuk, misalnya `tanggal_mulai`, `tipe_pendaftaran`, `team_settings`.
   tak terbatas; nol = habis. `sisaKuota` dihitung **backend** dari registrasi valid.
 - Tim: `teamSettings: { minAnggota, maxAnggota, kuotaTim }`; `sisaKuota` dihitung
   dalam satuan **tim**, bukan anggota. Jangan kirim data pribadi peserta.
-- `bukaPendaftaran`, `sisaKuota`, `registrationUrl` adalah tambahan kontrak publik
+- `bukaPendaftaran`, `sisaKuota`, `formFields` adalah tambahan kontrak publik
   untuk tampilan yang belum dirinci pada model awal PRD.
-- Tautan pendaftaran hanya tampil ketika status dibuka dan `registrationUrl` tersedia.
-  Isi dengan URL pendaftaran yang benar-benar aktif; `null` sampai alur pendaftaran
-  siap. UI tidak mengarahkan pengunjung ke route registrasi/login yang belum dibuat.
+- Formulir hanya tampil ketika event terpublikasi, jadwal dibuka, dan `formFields` tersedia.
+- Admin membuat event sebagai draft, mengatur field pada `/admin/events/{id}`, lalu mempublikasikannya. Skema terkunci setelah ada pendaftar.
+- Jenis field: text, email, tel, number, date, textarea, select, radio, checkbox, dan file. File privat dibatasi 5 MB (PDF/JPG/PNG/WebP).
+- `POST /api/user/events/{id}/register` menerima jawaban multipart; anggota tim bergabung melalui `POST .../join-team` memakai kode tim.
 - Backend tetap menjadi otoritas deadline, kuota, dan izin pendaftaran.
 - `deskripsi` saat ini ditampilkan sebagai **teks biasa dengan newline**, di-escape
   oleh React. HTML tidak dieksekusi. Editor rich text/Markdown admin perlu renderer
   tersanitasi saat dikembangkan; jangan mengirim markup untuk tampilan awal ini.
+- Poster unggahan disimpan pada disk publik, tetapi dibaca lewat `GET /api/public/events/posters/{filename}` sehingga tidak bergantung pada symlink `/storage`. URL poster lama dinormalisasi oleh resource event; file yang tidak ada tetap menghasilkan 404.
 - Poster disarankan WebP/AVIF, maksimal lebar 1280px, target <200KB. CDN sebaiknya
   menyediakan thumbnail. UI menjaga rasio 16:10, `object-fit: contain` agar isi
   poster tidak terpotong, lazy loading di daftar dan fallback bila gambar rusak.
@@ -113,6 +115,5 @@ utility bar sticky. Navbar dan footer parallax menggunakan komponen homepage.
 - Uji keyboard dialog, Escape, fokus, zoom 200%, reduced motion.
 - Uji viewport 320/375/768/1024/1280/1440px dan gambar gagal dimuat.
 
-Backend Laravel, CRUD admin, autentikasi, form registrasi dinamis, serta renderer
-rich text masih pekerjaan sprint berikutnya. Integrasi nyata dan pengujian browser
-belum dapat diverifikasi dalam lingkungan WSL ini karena runtime Node tidak berjalan.
+Renderer rich text masih pekerjaan lanjutan. Verifikasi browser lintas viewport
+dan end-to-end autentikasi tetap perlu dilakukan sebelum rilis produksi.

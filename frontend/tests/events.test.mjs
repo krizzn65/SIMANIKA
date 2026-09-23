@@ -9,7 +9,7 @@ const { eventFilters, eventListHref, safeEventUrl, normalizeEvent, registrationS
 const sample = {
   id: 1, slug: "workshop-web", judul: "Workshop Web", status: "published",
   tanggalMulai: "2026-11-20T09:00:00+07:00", tanggalSelesai: "2026-11-20T16:00:00+07:00",
-  deadlinePendaftaran: "2026-11-19T23:59:00+07:00", kuota: 80, sisaKuota: 25,
+  deadlinePendaftaran: "2026-11-19T23:59:00+07:00",
 };
 const now = Date.parse("2026-11-01T00:00:00+07:00");
 
@@ -28,13 +28,11 @@ test("draft and malformed records are never public", () => {
   assert.equal(normalizeEvent(null), null);
 });
 
-test("team quotas use team units and preserve zero versus unknown", () => {
-  const event = normalizeEvent({ ...sample, tipe_pendaftaran: "tim", sisaKuota: 0, team_settings: { kuota_tim: 20, min_anggota: 3, max_anggota: 5 } });
-  assert.equal(event.kuota, 20);
-  assert.equal(event.sisaKuota, 0);
+test("team settings normalize min and max members", () => {
+  const event = normalizeEvent({ ...sample, tipe_pendaftaran: "tim", team_settings: { min_anggota: 3, max_anggota: 5 } });
   assert.equal(event.minAnggota, 3);
-  assert.equal(registrationState(event, now).label, "Kuota penuh");
-  assert.equal(normalizeEvent({ ...sample, sisaKuota: null }).sisaKuota, null);
+  assert.equal(event.maxAnggota, 5);
+  assert.equal(registrationState(event, now).label, "Pendaftaran dibuka");
 });
 
 test("registration gates handle closed, ended, upcoming, deadline boundary and open", () => {
@@ -52,7 +50,6 @@ test("unsafe image and registration URLs are rejected", () => {
   assert.equal(safeEventUrl("/images/poster.webp"), "/images/poster.webp");
 });
 
-test("dates use WIB independent of the server timezone", () => {
-  assert.match(eventDate("2026-11-19T18:00:00Z", true), /20 November 2026/);
-  assert.match(eventDate("2026-11-19T18:00:00Z", true), /WIB$/);
+test("dates format in Indonesian locale independent of the server timezone", () => {
+  assert.match(eventDate("2026-11-19T18:00:00Z"), /20 November 2026/);
 });

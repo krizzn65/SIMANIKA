@@ -10,7 +10,9 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        abort_unless($request->user()?->role === 'admin', 403);
+        // A database value alone is never sufficient. This blocks stale or
+        // accidentally promoted accounts even before the cleanup migration runs.
+        abort_unless($request->user()?->isOfficialAdmin(), 403);
         return $next($request);
     }
 }

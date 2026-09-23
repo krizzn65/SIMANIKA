@@ -152,8 +152,7 @@ class GoogleAuthController extends Controller
                 $user->name = $googleName;
                 $dirty = true;
             }
-            // Perbarui avatar jika belum ada
-            if ($googleUser->getAvatar() && !$user->foto_profil) {
+            if ($googleUser->getAvatar() && $user->foto_profil !== $googleUser->getAvatar()) {
                 $user->foto_profil = $googleUser->getAvatar();
                 $dirty = true;
             }

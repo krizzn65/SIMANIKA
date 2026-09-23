@@ -7,33 +7,51 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class EventResource extends JsonResource
 {
+    private function posterUrl(): ?string
+    {
+        if (!$this->poster) return null;
+        $path = parse_url($this->poster, PHP_URL_PATH);
+        if (is_string($path) && preg_match("~^/(?:storage/)?events/posters/([A-Za-z0-9_-]+\\.(?:jpe?g|png|webp))$~i", $path, $match)) {
+            return route("public.event-poster", ["filename" => $match[1]]);
+        }
+        if (is_string($path) && preg_match("~^/api/public/events/posters/([A-Za-z0-9_-]+\\.(?:jpe?g|png|webp))$~i", $path, $match)) {
+            return route("public.event-poster", ["filename" => $match[1]]);
+        }
+        return $this->poster;
+    }
+
     public function toArray(Request $request): array
     {
         $team = $this->tipe_pendaftaran === 'tim';
-        $capacity = $team ? $this->kuota_tim : $this->kuota;
-        $used = $team ? ($this->teams_count ?? 0) : ($this->registrations_count ?? 0);
-        $remaining = $capacity === null ? null : max(0, $capacity - $used);
         $canRegister = $this->status === 'published'
-            && $this->tanggal_selesai?->isFuture()
-            && (!$this->buka_pendaftaran || $this->buka_pendaftaran->isPast())
-            && (!$this->deadline_pendaftaran || $this->deadline_pendaftaran->isFuture())
-            && ($remaining === null || $remaining > 0);
+            && (!$this->tanggal_selesai || $this->tanggal_selesai->endOfDay()->isFuture())
+            && (!$this->buka_pendaftaran || $this->buka_pendaftaran->startOfDay()->isPast() || $this->buka_pendaftaran->isToday())
+            && (!$this->deadline_pendaftaran || $this->deadline_pendaftaran->endOfDay()->isFuture());
 
         return [
             'id' => $this->id, 'slug' => $this->slug, 'judul' => $this->judul,
             'deskripsi' => $this->deskripsi ?? '', 'kategori' => $this->kategori,
-            'poster' => $this->poster, 'tanggalMulai' => $this->tanggal_mulai?->toIso8601String(),
-            'tanggalSelesai' => $this->tanggal_selesai?->toIso8601String(),
-            'bukaPendaftaran' => $this->buka_pendaftaran?->toIso8601String(),
-            'deadlinePendaftaran' => $this->deadline_pendaftaran?->toIso8601String(),
+            'poster' => $this->posterUrl(), 'tanggalMulai' => $this->tanggal_mulai?->format('Y-m-d'),
+            'tanggalSelesai' => $this->tanggal_selesai?->format('Y-m-d'),
+            'bukaPendaftaran' => $this->buka_pendaftaran?->format('Y-m-d'),
+            'deadlinePendaftaran' => $this->deadline_pendaftaran?->format('Y-m-d'),
+            'timeline' => $this->timeline ?? [],
             'lokasi' => $this->lokasi, 'tipe' => $this->tipe, 'status' => $this->status,
-            'tipePendaftaran' => $this->tipe_pendaftaran, 'kuota' => $capacity,
-            'sisaKuota' => $remaining,
-            'teamSettings' => $team ? ['minAnggota' => $this->min_anggota, 'maxAnggota' => $this->max_anggota, 'kuotaTim' => $this->kuota_tim] : null,
+            'tipePendaftaran' => $this->tipe_pendaftaran,
+            'tipe_pendaftaran' => $this->tipe_pendaftaran,
+            'tanggal_mulai' => $this->tanggal_mulai?->format('Y-m-d'),
+            'tanggal_selesai' => $this->tanggal_selesai?->format('Y-m-d'),
+            'buka_pendaftaran' => $this->buka_pendaftaran?->format('Y-m-d'),
+            'deadline_pendaftaran' => $this->deadline_pendaftaran?->format('Y-m-d'),
+            'kode_prefix' => $this->kode_prefix,
+            'min_anggota' => $this->min_anggota,
+            'max_anggota' => $this->max_anggota,
+            'registrations_count' => $this->registrations_count ?? 0,
+            'teams_count' => $this->teams_count ?? 0,
+            'teamSettings' => $team ? ['minAnggota' => $this->min_anggota, 'maxAnggota' => $this->max_anggota] : null,
             'syarat' => $this->whenLoaded('requirements', fn () => $this->requirements->pluck('label')->all(), []),
             'hadiah' => $this->whenLoaded('prizes', fn () => $this->prizes->pluck('label')->all(), []),
-            'formFields' => $this->whenLoaded('formFields', fn () => $this->formFields->map(fn ($field) => ['name' => $field->name, 'label' => $field->label, 'type' => $field->type, 'required' => $field->required, 'options' => $field->options ?? []])->all(), []),
-            'registrationUrl' => $canRegister ? $this->registration_url : null,
+            'formFields' => $this->whenLoaded('formFields', fn () => $this->formFields->map(fn ($field) => ['name' => $field->name, 'label' => $field->label, 'type' => $field->type, 'required' => $field->required, 'options' => $field->options ?? [], 'help' => $field->help, 'placeholder' => $field->placeholder])->all(), []),
         ];
     }
 }

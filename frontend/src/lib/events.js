@@ -49,7 +49,7 @@ export function normalizeEvent(raw) {
   const strings = (value) => Array.isArray(value) ? value.filter((item) => typeof item === "string" && item.trim()) : [];
   return {
     id: raw.id ?? raw.slug, slug: raw.slug, judul: text(raw.judul),
-    deskripsi: text(raw.deskripsi), kategori: EVENT_CATEGORIES.some(([key]) => key && key === raw.kategori) ? raw.kategori : "lainnya",
+    deskripsi: text(raw.deskripsi), kategori: text(raw.kategori) || "lainnya",
     poster: safeEventUrl(raw.poster), status: raw.status,
     tanggalMulai: date(raw.tanggalMulai ?? raw.tanggal_mulai),
     tanggalSelesai: date(raw.tanggalSelesai ?? raw.tanggal_selesai),
@@ -58,28 +58,51 @@ export function normalizeEvent(raw) {
     lokasi: text(raw.lokasi) || "Lokasi akan diumumkan",
     tipe: ["online", "offline", "hybrid"].includes(raw.tipe) ? raw.tipe : null,
     tipePendaftaran: isTeam ? "tim" : "individu",
-    kuota: count(isTeam ? (team.kuotaTim ?? team.kuota_tim) : raw.kuota),
-    sisaKuota: count(raw.sisaKuota ?? raw.sisa_kuota),
     minAnggota: count(team.minAnggota ?? team.min_anggota),
     maxAnggota: count(team.maxAnggota ?? team.max_anggota),
     syarat: strings(raw.syarat), hadiah: strings(raw.hadiah),
-    registrationUrl: safeEventUrl(raw.registrationUrl ?? raw.registration_url),
+    formFields: Array.isArray(raw.formFields) ? raw.formFields.filter((field) => field && typeof field.name === "string" && typeof field.label === "string" && typeof field.type === "string").map((field) => ({ ...field, options: Array.isArray(field.options) ? field.options : [] })) : [],
+    timeline: Array.isArray(raw.timeline)
+      ? raw.timeline
+          .filter((t) => t && typeof t === "object" && text(t.judul) && date(t.tanggal))
+          .map((t) => ({ judul: text(t.judul), tanggal: date(t.tanggal) }))
+      : [],
   };
 }
 
 export function registrationState(event, now = Date.now()) {
-  if (event.status === "selesai" || (event.tanggalSelesai && Date.parse(event.tanggalSelesai) <= now)) return { key: "done", label: "Event selesai", icon: "✓" };
-  if (event.status === "closed" || (event.deadlinePendaftaran && Date.parse(event.deadlinePendaftaran) <= now)) return { key: "closed", label: "Pendaftaran ditutup", icon: "—" };
-  if (event.sisaKuota === 0 || event.kuota === 0) return { key: "closed", label: "Kuota penuh", icon: "—" };
-  if (event.bukaPendaftaran && Date.parse(event.bukaPendaftaran) > now) return { key: "soon", label: "Segera dibuka", icon: "◷" };
-  if (!event.deadlinePendaftaran && !event.registrationUrl) return { key: "soon", label: "Info pendaftaran menyusul", icon: "◷" };
+  const parseDateEnd = (d) => {
+    if (!d) return null;
+    const str = typeof d === "string" && d.length === 10 ? `${d}T23:59:59.999+07:00` : d;
+    return Date.parse(str);
+  };
+  const parseDateStart = (d) => {
+    if (!d) return null;
+    const str = typeof d === "string" && d.length === 10 ? `${d}T00:00:00.000+07:00` : d;
+    return Date.parse(str);
+  };
+
+  const endMs = parseDateEnd(event.tanggalSelesai);
+  if (event.status === "selesai" || (endMs && endMs <= now)) return { key: "done", label: "Event selesai", icon: "✓" };
+
+  const deadlineMs = parseDateEnd(event.deadlinePendaftaran);
+  if (event.status === "closed" || (deadlineMs && deadlineMs <= now)) return { key: "closed", label: "Pendaftaran ditutup", icon: "—" };
+
+  const bukaMs = parseDateStart(event.bukaPendaftaran);
+  if (bukaMs && bukaMs > now) return { key: "soon", label: "Segera dibuka", icon: "◷" };
+
+  if (!event.deadlinePendaftaran && !event.formFields?.length) return { key: "soon", label: "Info pendaftaran menyusul", icon: "◷" };
   return { key: "open", label: "Pendaftaran dibuka", icon: "●" };
 }
 
-export function eventDate(value, withTime = false) {
+export function eventDate(value) {
   if (!value) return "Jadwal akan diumumkan";
+  const dateObj = new Date(value);
+  if (isNaN(dateObj.getTime())) return "Jadwal akan diumumkan";
   return new Intl.DateTimeFormat("id-ID", {
-    day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta",
-    ...(withTime ? { hour: "2-digit", minute: "2-digit" } : {}),
-  }).format(new Date(value)) + (withTime ? " WIB" : "");
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Jakarta",
+  }).format(dateObj);
 }

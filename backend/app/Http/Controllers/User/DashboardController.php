@@ -45,7 +45,7 @@ class DashboardController extends Controller
                 'key' => 'team-'.$team->id,
                 'kind' => 'team',
                 'title' => $team->event->judul,
-                'subtitle' => $team->nama_tim,
+                'subtitle' => $team->nama_tim.' · Kode: '.$team->kode_unik,
                 'status' => $team->review_status,
                 'href' => '/events/'.$team->event->slug,
                 'date' => $team->event->tanggal_mulai?->toIso8601String(),

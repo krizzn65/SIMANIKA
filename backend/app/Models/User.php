@@ -11,13 +11,13 @@ class User extends Authenticatable
 {
     use HasApiTokens, Notifiable;
 
-    protected $fillable = ['nama', 'name', 'email', 'password', 'nim', 'jurusan', 'angkatan', 'foto_profil', 'role', 'google_id'];
+    protected $fillable = ['nama', 'name', 'email', 'password', 'foto_profil', 'google_id'];
     protected $attributes = ['role' => 'user'];
     protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
     {
-        return ['email_verified_at' => 'datetime', 'password' => 'hashed', 'angkatan' => 'integer'];
+        return ['email_verified_at' => 'datetime', 'password' => 'hashed'];
     }
 
     public function setNamaAttribute(?string $value): void
@@ -45,6 +45,18 @@ class User extends Authenticatable
             return explode('@', $this->attributes['email'])[0];
         }
         return 'Pengguna';
+    }
+
+    public static function configuredAdminEmail(): ?string
+    {
+        $email = config('admin.email');
+        return is_string($email) && trim($email) !== '' ? mb_strtolower(trim($email)) : null;
+    }
+
+    public function isOfficialAdmin(): bool
+    {
+        $configuredEmail = self::configuredAdminEmail();
+        return $configuredEmail !== null && $this->role === 'admin' && mb_strtolower(trim((string) $this->email)) === $configuredEmail;
     }
 
     public function eventRegistrations(): HasMany { return $this->hasMany(EventRegistration::class); }

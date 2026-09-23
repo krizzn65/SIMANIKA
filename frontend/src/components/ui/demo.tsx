@@ -40,13 +40,12 @@ export const SignInPageDemo = () => {
     try {
       const response = await login(email, password, rememberMe);
       const user = response?.data;
-      const next = new URLSearchParams(window.location.search).get("next");
-      if (next) {
-        router.replace(safeNextPath(next));
-      } else if (user?.role === "admin") {
-        router.replace("/admin");
+      const nextParam = new URLSearchParams(window.location.search).get("next");
+      const safeNext = nextParam ? safeNextPath(nextParam) : null;
+      if (user?.role === "admin") {
+        router.replace(safeNext && safeNext !== "/dashboard" ? safeNext : "/admin");
       } else {
-        router.replace("/dashboard");
+        router.replace(safeNext || "/dashboard");
       }
       router.refresh();
     } catch (error) {

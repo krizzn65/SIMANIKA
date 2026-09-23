@@ -13,9 +13,7 @@ export function EventCard({ event, now }) {
         <p className="event-card__date">{eventDate(event.tanggalMulai, true)}</p>
         <p className="event-card__location">{event.tipe && <span>{event.tipe} · </span>}{event.lokasi}</p>
         <div className="event-card__bottom">
-          <div><span className={`event-status event-status--${state.key}`}><span aria-hidden="true">{state.icon}</span> {state.label}</span>
-            {event.sisaKuota !== null && <small>{event.sisaKuota} slot {event.tipePendaftaran === "tim" ? "tim" : "peserta"} tersisa</small>}
-          </div>
+          <div><span className={`event-status event-status--${state.key}`}><span aria-hidden="true">{state.icon}</span> {state.label}</span></div>
           <Link className="event-card__arrow" prefetch={false} href={`/events/${event.slug}`} aria-label={`Lihat detail ${event.judul}`}>↗</Link>
         </div>
       </div>
