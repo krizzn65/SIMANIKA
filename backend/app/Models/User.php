@@ -22,33 +22,28 @@ class User extends Authenticatable
 
     public function setNamaAttribute(?string $value): void
     {
-        $this->attributes['nama'] = $value;
-        if (empty($this->attributes['name']) && !empty($value)) {
-            $this->attributes['name'] = $value;
-        }
-    }
-
-    public function setNameAttribute(?string $value): void
-    {
         $this->attributes['name'] = $value;
-        if (empty($this->attributes['nama']) && !empty($value)) {
-            $this->attributes['nama'] = $value;
-        }
     }
 
-    public function getNamaAttribute(?string $value): string
+    public function getNamaAttribute(): string
     {
-        if (!empty($value)) return $value;
-        if (!empty($this->attributes['name'])) return $this->attributes['name'];
-        if (!empty($this->attributes['email'])) return explode('@', $this->attributes['email'])[0];
+        if (!empty($this->attributes['name'])) {
+            return $this->attributes['name'];
+        }
+        if (!empty($this->attributes['email'])) {
+            return explode('@', $this->attributes['email'])[0];
+        }
         return 'Pengguna';
     }
 
     public function getNameAttribute(?string $value): string
     {
-        if (!empty($value)) return $value;
-        if (!empty($this->attributes['nama'])) return $this->attributes['nama'];
-        if (!empty($this->attributes['email'])) return explode('@', $this->attributes['email'])[0];
+        if (!empty($value)) {
+            return $value;
+        }
+        if (!empty($this->attributes['email'])) {
+            return explode('@', $this->attributes['email'])[0];
+        }
         return 'Pengguna';
     }
 

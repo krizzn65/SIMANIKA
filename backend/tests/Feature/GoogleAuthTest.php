@@ -73,7 +73,6 @@ class GoogleAuthTest extends TestCase
         $this->assertDatabaseHas('users', [
             'email' => 'budi@gmail.com',
             'google_id' => 'google-123456',
-            'nama' => 'Budi Santoso',
             'name' => 'Budi Santoso',
         ]);
 

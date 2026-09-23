@@ -15,7 +15,6 @@ class RegisterController extends Controller
         $payload = $request->safe()->only(['email', 'password']);
         $nama = $request->validated('nama') ?? $request->validated('name');
         if ($nama) {
-            $payload['nama'] = $nama;
             $payload['name'] = $nama;
         }
 

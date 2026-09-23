@@ -6,6 +6,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
+import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
 import "./dashboard.css";
 
 const statusLabels = {
@@ -22,16 +23,6 @@ function formatDate(value) {
   return Number.isNaN(date.getTime())
     ? null
     : new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long", year: "numeric" }).format(date);
-}
-
-function EmptyMark() {
-  return (
-    <svg viewBox="0 0 72 72" fill="none" aria-hidden="true">
-      <rect x="10" y="13" width="52" height="46" rx="4" stroke="currentColor" strokeWidth="2" />
-      <path d="M10 25h52M23 13v12M49 13v12M24 39h24M24 47h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="m47 46 4 4 8-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
 }
 
 function RegistrationCard({ item }) {
@@ -95,6 +86,49 @@ function DashboardContent() {
           </div>
         </header>
 
+        {user?.role === "admin" && (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "1rem",
+            padding: "0.85rem 1.25rem",
+            marginBottom: "1.5rem",
+            borderRadius: "14px",
+            background: "linear-gradient(135deg, rgba(21, 94, 239, 0.08), rgba(21, 94, 239, 0.16))",
+            border: "1px solid rgba(21, 94, 239, 0.3)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <span style={{ fontSize: "1.25rem" }}>⚡</span>
+              <div>
+                <strong style={{ display: "block", fontSize: "0.88rem", color: "#155eef" }}>Anda teridentifikasi sebagai Administrator</strong>
+                <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>Akses seluruh sistem, kelola event, dan verifikasi OPREC melalui Admin Console.</span>
+              </div>
+            </div>
+            <Link
+              href="/admin"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.35rem",
+                padding: "0.45rem 1rem",
+                borderRadius: "10px",
+                background: "#155eef",
+                color: "#ffffff",
+                fontSize: "0.82rem",
+                fontWeight: 600,
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+                boxShadow: "0 2px 8px rgba(21, 94, 239, 0.35)"
+              }}
+            >
+              <span>Buka Admin Console</span>
+              <span>→</span>
+            </Link>
+          </div>
+        )}
+
         {loading ? (
           <div className="dashboard-state" role="status" aria-live="polite">
             <span className="dashboard-state__loading" aria-hidden="true" />
@@ -107,7 +141,9 @@ function DashboardContent() {
           </div>
         ) : items.length === 0 ? (
           <div className="dashboard-state dashboard-state--empty">
-            <div className="dashboard-state__mark"><EmptyMark /></div>
+            <div className="dashboard-state__mark">
+              <CalendarPlusIcon size={48} />
+            </div>
             <h2>Belum ada pendaftaran.</h2>
             <p>Event dan open recruitment yang kamu ikuti akan muncul di sini.</p>
           </div>

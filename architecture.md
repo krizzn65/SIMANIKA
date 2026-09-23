@@ -160,6 +160,8 @@ frontend/
 │   │   ├── admin/              # Admin route group
 │   │   │   ├── layout.jsx      # Admin sidebar layout
 │   │   │   ├── page.jsx        # Admin dashboard
+│   │   │   ├── users/
+│   │   │   │   └── page.jsx    # Kelola user & hak akses role
 │   │   │   ├── events/
 │   │   │   │   ├── page.jsx    # Manage events
 │   │   │   │   ├── create/
@@ -260,6 +262,7 @@ backend/
 │   │   │   │   └── OprecRegistrationController.php
 │   │   │   └── Admin/
 │   │   │       ├── AdminDashboardController.php
+│   │   │       ├── UserController.php
 │   │   │       ├── EventController.php
 │   │   │       ├── EventRegistrantController.php
 │   │   │       ├── TeamManagementController.php
@@ -376,6 +379,12 @@ backend/
 | Method | Endpoint | Deskripsi | Auth |
 |--------|----------|-----------|------|
 | `GET` | `/api/admin/dashboard` | Admin dashboard stats | ✅ Admin |
+| — | **Users** | — | — |
+| `GET` | `/api/admin/users` | List paginasi user, filter & statistik ringkasan | ✅ Admin |
+| `GET` | `/api/admin/users/{id}` | Detail profil user & riwayat partisipasi (event/oprec) | ✅ Admin |
+| `PUT` | `/api/admin/users/{id}` | Update biodata dan data akademik user | ✅ Admin |
+| `PUT` | `/api/admin/users/{id}/role` | Ubah role hak akses user (admin/user) + safeguard | ✅ Admin |
+| `DELETE` | `/api/admin/users/{id}` | Hapus akun user (proteksi diri sendiri & admin tunggal) | ✅ Admin |
 | — | **Events** | — | — |
 | `GET` | `/api/admin/events` | List semua events | ✅ Admin |
 | `POST` | `/api/admin/events` | Create event | ✅ Admin |

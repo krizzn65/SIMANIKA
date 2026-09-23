@@ -38,9 +38,16 @@ export const SignInPageDemo = () => {
   const handleSignIn = handleSubmit(async ({ email, password, rememberMe }) => {
     setFeedback(null);
     try {
-      await login(email, password, rememberMe);
+      const response = await login(email, password, rememberMe);
+      const user = response?.data;
       const next = new URLSearchParams(window.location.search).get("next");
-      router.replace(safeNextPath(next));
+      if (next) {
+        router.replace(safeNextPath(next));
+      } else if (user?.role === "admin") {
+        router.replace("/admin");
+      } else {
+        router.replace("/dashboard");
+      }
       router.refresh();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Login belum bisa diproses.");
