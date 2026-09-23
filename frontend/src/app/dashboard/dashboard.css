@@ -49,8 +49,19 @@
   background: rgba(255, 255, 255, .88);
   text-align: center;
 }
-.dashboard-state__mark { display: grid; width: 80px; height: 80px; place-items: center; margin-bottom: 1.2rem; color: var(--blue); background: #eef4ff; }
-.dashboard-state__mark svg { width: 54px; height: 54px; }
+.dashboard-state__mark {
+  display: grid;
+  width: 80px;
+  height: 80px;
+  place-items: center;
+  margin-bottom: 1.25rem;
+  color: var(--blue);
+  background: #eef4ff;
+  border-radius: 20px;
+  border: 1px solid #d4e1f7;
+  box-shadow: 0 4px 16px rgba(21, 94, 239, 0.06);
+}
+.dashboard-state__mark svg { width: 48px; height: 48px; }
 .dashboard-state h2 { margin: 0; font-size: clamp(1.35rem, 2vw, 1.7rem); letter-spacing: -.035em; }
 .dashboard-state p { margin: .65rem 0 0; color: var(--ink-muted); line-height: 1.55; }
 .dashboard-state__links { display: flex; flex-wrap: wrap; justify-content: center; gap: .8rem; margin-top: 1.6rem; }

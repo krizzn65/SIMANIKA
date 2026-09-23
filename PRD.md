@@ -90,6 +90,7 @@ SIMANIKA
 │
 └── 🔒 Admin Pages (Perlu Login Admin)
     ├── /admin (Admin Dashboard)
+    ├── /admin/users (Kelola User / Manajemen Pengguna)
     ├── /admin/events (Kelola Event)
     ├── /admin/events/create (Buat Event Baru)
     ├── /admin/events/[id]/edit (Edit Event)
@@ -366,6 +367,7 @@ Panel administrasi untuk pengurus HIMANIKA.
 | Modul | Fitur |
 |-------|-------|
 | **Dashboard** | Statistik ringkasan: total user, total event, total pendaftar, total tim, grafik tren |
+| **Kelola User** | Manajemen direktori pengguna, pantau aktivitas pendaftaran program (event & oprec), tetapkan hak akses role (Admin/User) dengan safeguard admin terakhir, edit biodata, dan hapus akun |
 | **Kelola Event** | CRUD event, atur form pendaftaran, buka/tutup pendaftaran, set kuota, **konfigurasi sistem tim** |
 | **Data Pendaftar Event** | Tabel data peserta/tim per event, filter, search, export CSV/Excel, accept/reject |
 | **Data Tim** | Lihat semua tim per event, anggota per tim, kode tim, status tim |

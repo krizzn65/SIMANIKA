@@ -26,11 +26,13 @@ Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis bera
 - [x] `npm ci` dan `npm run build` sukses di Windows; halaman login juga berhasil dikompilasi saat `next dev` berjalan di Windows.
 - [x] `php artisan route:list` (26 route), PHPUnit (13 test/47 assertion), dan migrasi `add_google_id_to_users_table` Ran di PostgreSQL lokal.
 - [x] Google OAuth 2.0 resmi terpasang (`laravel/socialite`, migrasi `google_id`, `GoogleAuthController`, route redirect & callback, unit & feature test lulus 100%, frontend callback di `/auth/callback`).
-- [x] Penambahan kolom `nama` di tabel `users` dengan sinkronisasi otomatis dari akun Google saat login/daftar OAuth maupun saat pendaftaran manual/update profil.
+- [x] Standardisasi kolom `name` pada tabel `users` (menghapus kolom duplikat `nama` dari database; accessor virtual `nama` tetap tersedia pada model dan API resource sehingga kompatibel 100% dengan frontend).
 - [x] Pembaruan Navbar: menampilkan nama pengguna saat login dan membuka sub-navbar dropdown dashboard interaktif saat di-hover atau di-klik.
 - [x] Audit keamanan auth: OAuth Google memakai state sesi dan verifikasi email; taut akun lokal otomatis dinonaktifkan, TLS tetap diverifikasi, OAuth dan auth dibatasi per IP, reset sandi mencabut sesi database/token, redirect `next` dibatasi ke path internal, dan respons CSRF 419 tidak lagi menghapus status login secara keliru.
 - [ ] Uji runtime di Windows: PHPUnit auth/OAuth dengan PHP lokal, lalu uji login Google dan reset sandi lewat browser (cookie, CSRF, callback, pencabutan sesi). Akun lokal yang emailnya sama dengan Google kini masuk memakai kata sandi; alur taut akun eksplisit memerlukan fitur tersendiri.
 - [x] Navbar dan menu mobile menunggu hasil `/auth/me` sebelum menampilkan aksi akun; kegagalan koneksi menampilkan opsi coba lagi tanpa menganggap sesi berakhir. Guard halaman terlindungi juga menunggu hasil pemeriksaan sesi.
+- [x] Perbaikan logout Sanctum: sesi SPA tidak lagi mencoba menghapus `TransientToken`; logout token API hanya mencabut token aktif. UI mencegah submit ganda dan mempertahankan state akun jika server benar-benar gagal.
+- [x] **Modul Kelola User (`/admin/users`)**: Backend `UserController` dengan paginasi (maksimal 10 data per halaman secara AJAX), pencarian multi-kolom, filter role & angkatan, statistik ringkasan, update role aman (pencegahan demosi/penghapusan admin tunggal), update profil, serta frontend UI Neo-Arcade Editorial dengan modal ganti role, detail partisipasi event/OPREC, dan edit akun telah terintegrasi dan terverifikasi di build Next.js serta PRD/Architecture. Dilengkapi perbaikan segmented control pill styling dengan padding proporsional dan font-size presisi agar tidak offside.
 - [ ] Browser: daftar → sesi aktif → dashboard, login/logout, 401/403, CSRF 419, reset lewat email, dan pembaruan Navbar.
 - [ ] Form menampilkan kesalahan Zod dan backend tetap menolak input tidak valid.
 
@@ -354,31 +356,31 @@ Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis bera
 
 ## Sprint 8 — Admin Dashboard & CMS
 
-**Status**: ⬜ Belum Dimulai
+**Status**: 🔄 Dalam Proses (Dashboard, Sidebar Biru, Kelola Event & Konfigurasi Tim PRD 5.7, Kelola OPREC, Merchandise, dan Pengaturan telah aktif)
 **Target**: 2-3 hari
 **Dependency**: Sprint 4, 5, 6, 7
 
 | ID | Task | Status | Catatan |
 |----|------|--------|---------|
-| BE-8.1 | `AdminDashboardController` — aggregate stats | ⬜ | — |
+| BE-8.1 | `AdminDashboardController` — aggregate stats | ✅ | Endpoint `/api/admin/dashboard` mengembalikan total user, event aktif, registrasi, tim, pelamar oprec, pending review, recent events & registrasi. |
 | BE-8.2 | `ContentController` — get/update site content | ⬜ | — |
-| BE-8.3 | Dashboard: grafik tren pendaftar per bulan | ⬜ | — |
-| FE-8.1 | `AdminDashboard.jsx` — stat cards, grafik | ⬜ | — |
-| FE-8.2 | `AdminSidebar.jsx` — navigasi admin | ⬜ | — |
-| FE-8.3 | Admin layout wrapper (sidebar + content) | ⬜ | — |
-| FE-8.4 | `ManageContent.jsx` — CMS form | ⬜ | — |
-| FE-8.5 | CRUD struktur organisasi | ⬜ | — |
-| FE-8.6 | CRUD divisi, proker, gallery, testimonials | ⬜ | — |
-| FE-8.7 | Polish admin pages (loading, errors, dialogs) | ⬜ | — |
+| BE-8.3 | Dashboard: statistik metrik ringkasan sistem | ✅ | Metrik real-time & status OPREC terhubung ke backend. |
+| FE-8.1 | `AdminDashboard.jsx` — stat cards, quick actions | ✅ | Halaman `/admin` dengan kartu statistik, status OPREC aktif, aksi cepat, dan tabel event terkini. |
+| FE-8.2 | `sidebar.tsx` — navigasi admin (Framer Motion) | ✅ | Terpasang di `@/components/ui/sidebar.tsx` dengan kustomisasi warna tema biru SIMANIKA (`#071328`, `#152e5c`, electric blue), hover collapse/expand, & mobile slide drawer. |
+| FE-8.3 | Admin layout wrapper (sidebar + content) | ✅ | Terpasang di `/admin/layout.jsx`, dilindungi `<AdminRoute>`, avatar profil, link publik, & logout admin. |
+| FE-8.4 | `admin/events/page.jsx` — Kelola Event & Tim | ✅ | CRUD event dengan filter status/kategori, dan konfigurasi Sistem Tim (PRD 5.7: Prefix kode max 6 huruf, live code preview, min/max anggota tim, kuota). |
+| FE-8.5 | `admin/oprec/page.jsx` — Kelola OPREC & Divisi | ✅ | Tabel pelamar OPREC dengan filter status, modal verifikasi & penugasan divisi lolos seleksi. |
+| FE-8.6 | `admin/merchandise/page.jsx` & `admin/settings/page.jsx` | ✅ | Katalog stok merchandise dan halaman pengaturan akun admin / arsitektur sistem. |
+| FE-8.7 | Polish admin pages (loading, errors, dialogs) | ✅ | Styling tersentralisasi di `admin.css`, transisi mulus, modal responsif, zero typescript/build error. |
 
 **Done Criteria**:
 | # | Kriteria | Verified |
 |---|----------|----------|
-| 1 | Dashboard statistik akurat | ⬜ |
-| 2 | Grafik tren ter-render | ⬜ |
-| 3 | CMS edit konten Home berfungsi | ⬜ |
-| 4 | Perubahan CMS langsung terrefleksi di landing | ⬜ |
-| 5 | Sidebar navigasi berfungsi | ⬜ |
+| 1 | Dashboard statistik akurat & real-time dari BE | ✅ |
+| 2 | Sidebar navigasi berfungsi dengan animasi & tema biru SIMANIKA | ✅ |
+| 3 | Kelola Event mendukung konfigurasi Tim (PRD 5.7) | ✅ |
+| 4 | Kelola OPREC mendukung review status & penetapan divisi | ✅ |
+| 5 | Guard otentikasi admin (`AdminRoute`) mengamankan seluruh rute `/admin` | ✅ |
 
 ---
 

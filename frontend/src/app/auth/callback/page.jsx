@@ -21,9 +21,16 @@ function CallbackContent() {
 
     if (status === "success") {
       currentUser()
-        .then(() => {
+        .then((response) => {
+          const user = response?.data;
           const next = searchParams.get("next");
-          router.replace(safeNextPath(next));
+          if (next) {
+            router.replace(safeNextPath(next));
+          } else if (user?.role === "admin") {
+            router.replace("/admin");
+          } else {
+            router.replace("/dashboard");
+          }
           router.refresh();
         })
         .catch((err) => {

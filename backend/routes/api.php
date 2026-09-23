@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\OprecController as AdminOprecController;
 use App\Http\Controllers\Admin\OprecRegistrantController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\ProfileController;
@@ -38,6 +40,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/oprec/register', [OprecRegistrationController::class, 'store'])->middleware('throttle:auth');
 
     Route::prefix('admin')->middleware('admin')->group(function () {
+        Route::get('/dashboard', [AdminDashboardController::class, 'index']);
+        Route::get('/users', [AdminUserController::class, 'index']);
+        Route::get('/users/{id}', [AdminUserController::class, 'show']);
+        Route::put('/users/{id}', [AdminUserController::class, 'update']);
+        Route::put('/users/{id}/role', [AdminUserController::class, 'updateRole']);
+        Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
         Route::get('/events', [AdminEventController::class, 'index']);
         Route::post('/events', [AdminEventController::class, 'store']);
         Route::put('/events/{event}', [AdminEventController::class, 'update']);

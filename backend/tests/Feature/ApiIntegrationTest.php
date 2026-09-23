@@ -122,6 +122,18 @@ class ApiIntegrationTest extends TestCase
         $response->assertOk()->assertJson(['message' => 'Berhasil keluar.']);
     }
 
+    public function test_personal_access_token_logout_revokes_only_current_token(): void
+    {
+        $user = User::create(['email' => 'token-logout@example.test', 'password' => 'password-yang-kuat']);
+        $first = $user->createToken('first');
+        $second = $user->createToken('second');
+
+        $this->withToken($first->plainTextToken)->postJson('/api/auth/logout')->assertOk();
+
+        $this->assertDatabaseMissing('personal_access_tokens', ['id' => $first->accessToken->id]);
+        $this->assertDatabaseHas('personal_access_tokens', ['id' => $second->accessToken->id]);
+    }
+
     public function test_login_profile_and_unauthenticated_guard(): void
     {
         $this->getJson('/api/auth/me')->assertUnauthorized();

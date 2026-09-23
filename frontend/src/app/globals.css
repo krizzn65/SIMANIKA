@@ -902,6 +902,18 @@ svg {
   padding-top: 0.15rem;
 }
 
+.nav-account-menu__error,
+.mobile-drawer__account-error {
+  margin: 0 0 0.45rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid rgba(179, 38, 30, 0.2);
+  border-radius: 0.55rem;
+  background: #fff1f0;
+  color: #9f241d;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
 .nav-account-menu__logout-btn {
   display: flex;
   align-items: center;
@@ -922,6 +934,12 @@ svg {
 
 .nav-account-menu__logout-btn:hover {
   background: rgba(211, 47, 47, 0.08);
+}
+
+.nav-account-menu__logout-btn:disabled,
+.mobile-drawer__logout-btn:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 
 .nav-account-menu__logout-icon {

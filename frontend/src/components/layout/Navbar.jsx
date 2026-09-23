@@ -101,6 +101,8 @@ export function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [accountError, setAccountError] = useState("");
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileHomeExpanded, setMobileHomeExpanded] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const { user: account, checked, checkError, retryCheck, logout } = useAuth();
@@ -278,13 +280,20 @@ export function Navbar() {
   };
 
   const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setAccountError("");
+    setIsLoggingOut(true);
     setIsAccountMenuOpen(false);
     try {
       await logout();
+      handleClose();
       router.replace("/");
       router.refresh();
     } catch (err) {
-      console.error("Gagal keluar:", err);
+      setAccountError(err instanceof Error ? err.message : "Gagal keluar dari akun. Coba lagi.");
+      setIsAccountMenuOpen(true);
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -579,6 +588,30 @@ export function Navbar() {
               <div className="nav-account-menu__divider" role="separator" />
 
               <div className="nav-account-menu__list">
+                {account.role === "admin" && (
+                  <Link
+                    href="/admin"
+                    className={`nav-account-menu__item ${pathname.startsWith("/admin") ? "nav-account-menu__item--active" : ""}`}
+                    onClick={() => setIsAccountMenuOpen(false)}
+                    role="menuitem"
+                    style={{ background: "rgba(21, 94, 239, 0.08)", borderColor: "rgba(21, 94, 239, 0.25)" }}
+                  >
+                    <span className="nav-account-menu__icon-wrap" aria-hidden="true" style={{ color: "#155eef" }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      </svg>
+                    </span>
+                    <div className="nav-account-menu__item-text">
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span className="nav-account-menu__item-title" style={{ color: "#155eef", fontWeight: 700 }}>Admin Console</span>
+                        <span style={{ fontSize: "9px", background: "#155eef", color: "#fff", padding: "1px 5px", borderRadius: "4px", fontWeight: 700, textTransform: "uppercase" }}>Admin</span>
+                      </div>
+                      <span className="nav-account-menu__item-desc">Kelola event, OPREC & sistem</span>
+                    </div>
+                    <span className="nav-account-menu__arrow" aria-hidden="true">→</span>
+                  </Link>
+                )}
+
                 <Link
                   href="/dashboard"
                   className={`nav-account-menu__item ${pathname === "/dashboard" ? "nav-account-menu__item--active" : ""}`}
@@ -604,10 +637,12 @@ export function Navbar() {
               <div className="nav-account-menu__divider" role="separator" />
 
               <div className="nav-account-menu__footer">
+                {accountError && <p className="nav-account-menu__error" role="alert">{accountError}</p>}
                 <button
                   type="button"
                   className="nav-account-menu__logout-btn"
                   onClick={handleLogout}
+                  disabled={isLoggingOut}
                   role="menuitem"
                 >
                   <span className="nav-account-menu__logout-icon" aria-hidden="true">
@@ -617,7 +652,7 @@ export function Navbar() {
                       <line x1="21" y1="12" x2="9" y2="12" />
                     </svg>
                   </span>
-                  <span>Keluar dari Akun</span>
+                  <span>{isLoggingOut ? "Sedang keluar..." : "Keluar dari Akun"}</span>
                 </button>
               </div>
             </div>
@@ -796,6 +831,31 @@ export function Navbar() {
                   </button>
                 ) : account ? (
                   <div className="mobile-drawer__account-section">
+                    {account.role === "admin" && (
+                      <Link
+                        className="mobile-drawer__account-card"
+                        href="/admin"
+                        onClick={handleClose}
+                        title="Buka Admin Console"
+                        style={{ border: "1px solid rgba(21, 94, 239, 0.3)", background: "rgba(21, 94, 239, 0.08)", marginBottom: "0.5rem" }}
+                      >
+                        <div className="mobile-drawer__account-avatar" style={{ background: "#155eef", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                          </svg>
+                        </div>
+                        <div className="mobile-drawer__account-info">
+                          <span className="mobile-drawer__account-name" style={{ color: "#155eef", fontWeight: 700 }}>Admin Console</span>
+                          <span className="mobile-drawer__account-link">Kelola SIMANIKA System</span>
+                        </div>
+                        <span className="mobile-drawer__account-chevron" aria-hidden="true">
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+                            <path d="M6 12l4-4-4-4" />
+                          </svg>
+                        </span>
+                      </Link>
+                    )}
+
                     <Link
                       className="mobile-drawer__account-card"
                       href="/dashboard"
@@ -825,20 +885,19 @@ export function Navbar() {
                       </span>
                     </Link>
 
+                    {accountError && <p className="mobile-drawer__account-error" role="alert">{accountError}</p>}
                     <button
                       type="button"
                       className="mobile-drawer__logout-btn"
-                      onClick={async () => {
-                        handleClose();
-                        await handleLogout();
-                      }}
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
                     >
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" width="16" height="16" aria-hidden="true">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                         <polyline points="16 17 21 12 16 7" />
                         <line x1="21" y1="12" x2="9" y2="12" />
                       </svg>
-                      <span>Keluar Akun</span>
+                      <span>{isLoggingOut ? "Sedang keluar..." : "Keluar Akun"}</span>
                     </button>
                   </div>
                 ) : (

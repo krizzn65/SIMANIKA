@@ -139,7 +139,6 @@ class GoogleAuthController extends Controller
             // Buat akun pengguna baru dari Google.
             $user = User::create([
                 'google_id' => $googleId,
-                'nama' => $googleName,
                 'name' => $googleName,
                 'email' => $email,
                 'email_verified_at' => now(),
@@ -149,8 +148,7 @@ class GoogleAuthController extends Controller
             ]);
         } else {
             $dirty = false;
-            if ($googleName && ($user->nama !== $googleName || $user->name !== $googleName)) {
-                $user->nama = $googleName;
+            if ($googleName && $user->name !== $googleName) {
                 $user->name = $googleName;
                 $dirty = true;
             }
