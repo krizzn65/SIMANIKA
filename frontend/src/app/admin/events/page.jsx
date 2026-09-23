@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/services/api";
+import { AdminErrorNotice } from "../AdminErrorNotice";
+import { toast } from "sonner";
+import { AdminGuidebookField } from "./AdminGuidebookField";
 import {
   Calendar,
   Plus,
@@ -44,6 +47,7 @@ export default function AdminEventsPage() {
 
   // Poster State
   const [posterFile, setPosterFile] = useState(null);
+  const [guidebookFile, setGuidebookFile] = useState(null);
   const [posterPreview, setPosterPreview] = useState("");
   const [posterUploading, setPosterUploading] = useState(false);
   const [isCustomKategori, setIsCustomKategori] = useState(false);
@@ -54,6 +58,8 @@ export default function AdminEventsPage() {
     judul: "",
     slug: "",
     poster: "",
+    guidebook_type: null,
+    guidebook_value: null,
     deskripsi: "",
     kategori: "lomba",
     status: "draft",
@@ -112,6 +118,8 @@ export default function AdminEventsPage() {
       judul: "",
       slug: "",
       poster: "",
+      guidebook_type: null,
+      guidebook_value: null,
       deskripsi: "",
       kategori: "lomba",
       status: "draft",
@@ -129,6 +137,7 @@ export default function AdminEventsPage() {
       max_anggota: 5,
     });
     handleRemovePoster();
+    setGuidebookFile(null);
     setIsCustomKategori(false);
     setCustomKategori("");
     setFormError("");
@@ -193,6 +202,8 @@ export default function AdminEventsPage() {
       judul: ev.judul || "",
       slug: ev.slug || "",
       poster: ev.poster || "",
+      guidebook_type: ev.guidebookType || null,
+      guidebook_value: ev.guidebookValue || null,
       deskripsi: ev.deskripsi || "",
       kategori: isKnown ? cat : "lainnya",
       status: ev.status || "published",
@@ -206,6 +217,7 @@ export default function AdminEventsPage() {
     });
 
     setPosterFile(null);
+    setGuidebookFile(null);
     if (ev.poster) {
       setPosterPreview(ev.poster);
     } else {
@@ -244,6 +256,25 @@ export default function AdminEventsPage() {
     setPosterFile(null);
     setPosterPreview("");
     setFormData((prev) => ({ ...prev, poster: "" }));
+  };
+
+  const handleGuidebookTypeChange = (type) => {
+    setGuidebookFile(null);
+    setFormData((prev) => ({ ...prev, guidebook_type: type === "none" ? null : type, guidebook_value: null }));
+    setFormError("");
+  };
+
+  const handleGuidebookFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf" || file.size > 10 * 1024 * 1024) {
+      setFormError("Guidebook harus PDF dengan ukuran maksimal 10 MB.");
+      setGuidebookFile(null);
+      event.target.value = "";
+      return;
+    }
+    setGuidebookFile(file);
+    setFormError("");
   };
 
   const handleAddTimelineItem = (defaultJudul = "") => {
@@ -292,6 +323,30 @@ export default function AdminEventsPage() {
         });
         if (uploadRes.data?.url) {
           finalPosterUrl = uploadRes.data.path || uploadRes.data.url;
+        }
+      }
+
+      let finalGuidebookValue = formData.guidebook_value;
+      if (formData.guidebook_type === "link") {
+        try {
+          const url = new URL(String(finalGuidebookValue || ""));
+          if (url.protocol !== "https:" || url.username || url.password) throw new Error();
+          finalGuidebookValue = url.href;
+        } catch {
+          setFormError("Tautan guidebook harus menggunakan HTTPS yang valid.");
+          return;
+        }
+      }
+      if (formData.guidebook_type === "file") {
+        if (guidebookFile) {
+          const guidebookData = new FormData();
+          guidebookData.append("guidebook", guidebookFile);
+          const guidebookResponse = await api.post("/admin/events/upload-guidebook", guidebookData, { headers: { "Content-Type": "multipart/form-data" } });
+          finalGuidebookValue = guidebookResponse.data?.data?.path;
+        }
+        if (!finalGuidebookValue) {
+          setFormError("Pilih berkas PDF guidebook terlebih dahulu.");
+          return;
         }
       }
 
@@ -350,6 +405,8 @@ export default function AdminEventsPage() {
         judul: formData.judul,
         slug: computedSlug || `event-${Date.now()}`,
         poster: finalPosterUrl || null,
+        guidebook_type: formData.guidebook_type || null,
+        guidebook_value: formData.guidebook_type ? finalGuidebookValue : null,
         deskripsi: formData.deskripsi || null,
         kategori: finalKategori,
         status: formData.status,
@@ -389,7 +446,7 @@ export default function AdminEventsPage() {
         fetchEvents();
       }, 1000);
     } catch (err) {
-      setFormError(err.response?.data?.message || err.message || "Gagal menyimpan event. Periksa kembali form input.");
+      setFormError(err.message || "Gagal menyimpan event. Periksa kembali form input.");
     } finally {
       setSubmitting(false);
       setPosterUploading(false);
@@ -402,7 +459,7 @@ export default function AdminEventsPage() {
       await api.delete(`/admin/events/${event.id}`);
       fetchEvents();
     } catch (err) {
-      alert(err.message || "Gagal menghapus event.");
+      toast.error(err.message || "Gagal menghapus event.");
     }
   };
 
@@ -427,7 +484,7 @@ export default function AdminEventsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Kelola Event & Lomba</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Kelola Event & Competition</h1>
           <p className="text-xs text-slate-500 mt-0.5">
             Manajemen publikasi event, jadwal agenda, dan sistem tim HIMANIKA.
           </p>
@@ -454,6 +511,7 @@ export default function AdminEventsPage() {
         </div>
       </div>
 
+      <AdminErrorNotice message={error} onRetry={fetchEvents} />
       {/* Filter and Search Bar */}
       <div className="admin-card p-4">
         <div className="flex flex-col md:flex-row items-center gap-3">
@@ -487,7 +545,7 @@ export default function AdminEventsPage() {
               className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 bg-white focus:outline-none focus:border-blue-500"
             >
               <option value="all">Semua Kategori</option>
-              <option value="lomba">Lomba / Kompetisi</option>
+              <option value="lomba">Competition</option>
               <option value="seminar">Seminar</option>
               <option value="workshop">Workshop</option>
               <option value="lainnya">Lainnya</option>
@@ -553,12 +611,12 @@ export default function AdminEventsPage() {
                     <td>
                       <div className="flex items-center gap-1.5">
                         <span className="admin-badge admin-badge--neutral text-[10px] uppercase font-mono">
-                          {ev.kategori}
+                          {ev.kategori?.toLowerCase() === "lomba" ? "Competition" : ev.kategori}
                         </span>
                         <span className="text-[11px] text-slate-500 capitalize">({ev.tipe})</span>
                       </div>
                       <div className="text-[11px] text-blue-600 font-medium mt-1">
-                        Mode: {(ev.tipe_pendaftaran || ev.tipePendaftaran) === "tim" ? "Kompetisi Tim" : "Individu"}
+                        Mode: {(ev.tipe_pendaftaran || ev.tipePendaftaran) === "tim" ? "Tim Competition" : "Individu"}
                       </div>
                     </td>
                     <td>
@@ -625,7 +683,7 @@ export default function AdminEventsPage() {
             <div className="p-5 border-b border-slate-200 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">
-                  {editingEventId ? "Edit Event / Lomba" : "Buat Event / Lomba Baru"}
+                  {editingEventId ? "Edit Event / Competition" : "Buat Event / Competition Baru"}
                 </h2>
                 <p className="text-xs text-slate-500">
                   {editingEventId
@@ -644,7 +702,7 @@ export default function AdminEventsPage() {
 
             <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
               {formError && (
-                <div className="p-3 rounded-xl bg-red-50 text-red-700 text-xs border border-red-200">
+                <div role="alert" className="p-3 rounded-xl bg-red-50 text-red-700 text-sm border border-red-200">
                   {formError}
                 </div>
               )}
@@ -770,6 +828,15 @@ export default function AdminEventsPage() {
                     </div>
                 </div>
 
+                <AdminGuidebookField
+                  type={formData.guidebook_type}
+                  value={formData.guidebook_value}
+                  file={guidebookFile}
+                  onTypeChange={handleGuidebookTypeChange}
+                  onValueChange={(value) => setFormData((prev) => ({ ...prev, guidebook_value: value }))}
+                  onFileChange={handleGuidebookFileChange}
+                />
+
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs font-semibold text-slate-700 block">
@@ -806,7 +873,7 @@ export default function AdminEventsPage() {
                       }}
                       className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-blue-500 bg-white"
                     >
-                      <option value="lomba">Lomba / Kompetisi</option>
+                      <option value="lomba">Competition</option>
                       <option value="seminar">Seminar</option>
                       <option value="workshop">Workshop</option>
                       <option value="lainnya">Lainnya...</option>
@@ -1029,7 +1096,7 @@ export default function AdminEventsPage() {
                         onChange={() => setFormData({ ...formData, tipe_pendaftaran: "tim" })}
                         className="accent-blue-600"
                       />
-                      <span className="font-semibold">Grup / Tim Lomba</span>
+                      <span className="font-semibold">Grup / Tim Competition</span>
                     </label>
                   </div>
                 </div>

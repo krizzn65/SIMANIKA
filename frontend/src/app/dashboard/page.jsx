@@ -8,7 +8,10 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
 import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
+import { DashboardEventActions } from "./DashboardEventActions";
+import "../events/events.css";
 import "./dashboard.css";
+import "./dashboard-actions.css";
 
 const statusLabels = {
   pending: "Menunggu proses",
@@ -26,8 +29,8 @@ function formatDate(value) {
     : new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long", year: "numeric" }).format(date);
 }
 
-function RegistrationCard({ item }) {
-  const type = item.kind === "oprec" ? "OPEN RECRUITMENT" : item.kind === "team" ? "LOMBA / TIM" : "EVENT / LOMBA";
+function RegistrationCard({ item, onComplete }) {
+  const type = item.kind === "oprec" ? "OPEN RECRUITMENT" : item.kind === "team" ? "COMPETITION / TIM" : "EVENT / COMPETITION";
   const date = formatDate(item.date);
   const statusTone = ["accepted", "rejected"].includes(item.status) ? item.status : "pending";
   return (
@@ -42,6 +45,7 @@ function RegistrationCard({ item }) {
         <h2>{item.title}</h2>
         <p>{item.subtitle}</p>
       </div>
+      <DashboardEventActions item={item} onComplete={onComplete} />
       <div className="dashboard-entry__bottom">
         <span>{date ? (item.kind === "oprec" ? "Pengumuman" : "Pelaksanaan") + " · " + date : "Pendaftaran tercatat"}</span>
         <Link href={item.href}>Lihat detail <span aria-hidden="true">↗</span></Link>
@@ -120,7 +124,7 @@ function DashboardContent() {
           <section className="dashboard-list" aria-label="Daftar pendaftaran saya">
             <div className="dashboard-list__count">{items.length} PENDAFTARAN TERCATAT</div>
             <div className="dashboard-grid">
-              {items.map((item) => <RegistrationCard key={item.key} item={item} />)}
+              {items.map((item) => <RegistrationCard key={item.key} item={item} onComplete={() => setAttempt((value) => value + 1)} />)}
             </div>
           </section>
         )}

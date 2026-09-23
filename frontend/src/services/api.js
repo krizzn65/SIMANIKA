@@ -1,4 +1,5 @@
 import axios from "axios";
+import { apiErrorMessage } from "./apiError";
 import { useAuthStore } from "@/store/authStore";
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "");
@@ -15,11 +16,7 @@ export const api = axios.create({
 
 api.interceptors.response.use((response) => response, (error) => {
   if (error.response?.status === 401) useAuthStore.getState().clear();
-  const body = error.response?.data;
-  const first = Object.values(body?.errors || {}).flat().find((value) => typeof value === "string");
-  error.message = error.response?.status === 419
-    ? "Sesi kedaluwarsa. Muat ulang halaman dan coba lagi."
-    : first || body?.message || "Permintaan belum bisa diproses.";
+  error.message = apiErrorMessage(error);
   return Promise.reject(error);
 });
 

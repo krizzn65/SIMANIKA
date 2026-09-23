@@ -56,7 +56,7 @@ export function HeroSection() {
           <div className="trust-strip__inner">
             <p>
               <strong>350+ mahasiswa</strong>
-              bertumbuh bersama melalui karya, kompetisi, dan kolaborasi.
+              bertumbuh bersama melalui karya, competition, dan kolaborasi.
             </p>
             <LogoMarquee />
           </div>

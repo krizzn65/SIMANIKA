@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/services/api";
+import { AdminErrorNotice } from "../AdminErrorNotice";
+import { toast } from "sonner";
 import {
   Users,
   CheckCircle,
@@ -25,6 +27,8 @@ export default function AdminOprecPage() {
   const [loading, setLoading] = useState(true);
   const [loadingRegistrants, setLoadingRegistrants] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
+  const [loadError, setLoadError] = useState("");
+  const [registrantError, setRegistrantError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [divisionFilter, setDivisionFilter] = useState("all");
@@ -40,6 +44,7 @@ export default function AdminOprecPage() {
 
   const fetchOprecs = async () => {
     setLoading(true);
+    setLoadError("");
     try {
       const res = await api.get("/admin/oprec");
       const list = res.data?.data || [];
@@ -49,7 +54,7 @@ export default function AdminOprecPage() {
         fetchRegistrants(list[0].id);
       }
     } catch (err) {
-      console.error("Gagal memuat OPREC:", err);
+      setLoadError(err.message || "Gagal memuat OPREC.");
     } finally {
       setLoading(false);
     }
@@ -58,11 +63,12 @@ export default function AdminOprecPage() {
   const fetchRegistrants = async (oprecId) => {
     if (!oprecId) return;
     setLoadingRegistrants(true);
+    setRegistrantError("");
     try {
       const res = await api.get(`/admin/oprec/${oprecId}/registrants`);
       setRegistrants(res.data?.data || []);
     } catch (err) {
-      console.error("Gagal memuat pendaftar OPREC:", err);
+      setRegistrantError(err.message || "Gagal memuat pendaftar OPREC.");
     } finally {
       setLoadingRegistrants(false);
     }
@@ -101,7 +107,7 @@ export default function AdminOprecPage() {
       });
       fetchRegistrants(selectedOprec.id);
     } catch (err) {
-      alert(err.message || "Gagal memperbarui status.");
+      toast.error(err.message || "Gagal memperbarui status.");
     } finally {
       setActionLoading(null);
     }
@@ -122,7 +128,7 @@ export default function AdminOprecPage() {
       setReviewModal({ isOpen: false, registrant: null, status: "accepted", accepted_division_id: "", catatan: "" });
       fetchRegistrants(selectedOprec.id);
     } catch (err) {
-      alert(err.message || "Gagal menyimpan review.");
+      toast.error(err.message || "Gagal menyimpan review.");
     } finally {
       setActionLoading(null);
     }
@@ -165,6 +171,8 @@ export default function AdminOprecPage() {
         </button>
       </div>
 
+      <AdminErrorNotice message={loadError} onRetry={fetchOprecs} />
+      <AdminErrorNotice message={registrantError} onRetry={() => fetchRegistrants(selectedOprec?.id)} />
       {/* Oprec Period Selector & Division Badges */}
       {selectedOprec && (
         <div className="admin-card p-5 bg-gradient-to-r from-blue-900 to-[#071328] text-white border-blue-950">

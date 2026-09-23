@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { EventDetail } from "@/components/events/EventDetail";
+import { EventDetailView } from "@/components/events/EventDetailView";
 import { getEvent } from "@/services/eventService";
 
 export async function generateMetadata({ params }) {
@@ -13,5 +13,5 @@ export default async function EventPage({ params }) {
   const { slug } = await params;
   const event = await getEvent(slug);
   if (!event) notFound();
-  return <EventDetail event={event} />;
+  return <EventDetailView event={event} />;
 }

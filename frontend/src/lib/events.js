@@ -1,7 +1,12 @@
 export const EVENT_CATEGORIES = [
-  ["", "Semua kategori"], ["lomba", "Lomba"], ["seminar", "Seminar"],
+  ["", "Semua kategori"], ["lomba", "Competition"], ["seminar", "Seminar"],
   ["workshop", "Workshop"], ["lainnya", "Lainnya"],
 ];
+export function eventCategoryLabel(value) {
+  const category = String(value || "").trim();
+  return category.toLowerCase() === "lomba" ? "Competition" : category || "Lainnya";
+}
+
 export const EVENT_STATUSES = [
   ["", "Semua waktu"], ["upcoming", "Akan datang"],
   ["ongoing", "Berlangsung"], ["selesai", "Selesai"],
@@ -50,7 +55,7 @@ export function normalizeEvent(raw) {
   return {
     id: raw.id ?? raw.slug, slug: raw.slug, judul: text(raw.judul),
     deskripsi: text(raw.deskripsi), kategori: text(raw.kategori) || "lainnya",
-    poster: safeEventUrl(raw.poster), status: raw.status,
+    poster: safeEventUrl(raw.poster), guidebookUrl: safeEventUrl(raw.guidebookUrl), status: raw.status,
     tanggalMulai: date(raw.tanggalMulai ?? raw.tanggal_mulai),
     tanggalSelesai: date(raw.tanggalSelesai ?? raw.tanggal_selesai),
     deadlinePendaftaran: date(raw.deadlinePendaftaran ?? raw.deadline_pendaftaran),

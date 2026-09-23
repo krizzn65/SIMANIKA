@@ -46,7 +46,7 @@ export const defaultTestimonials: Testimonial[] = [
     role: "Ketua Umum HIMANIKA 2024 · Associate PM",
   },
   {
-    text: "Dukungan penuh dari himpunan saat persiapan kompetisi IT tingkat nasional benar-benar luar biasa. HIMANIKA membentuk mentalitas pemenang dan solidaritas yang solid.",
+    text: "Dukungan penuh dari himpunan saat persiapan competition IT tingkat nasional benar-benar luar biasa. HIMANIKA membentuk mentalitas pemenang dan solidaritas yang solid.",
     image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
     name: "Jessica Tan",
     role: "Alumni 2024 · Cybersecurity Analyst",

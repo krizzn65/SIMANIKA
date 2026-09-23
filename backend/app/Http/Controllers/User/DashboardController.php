@@ -15,8 +15,11 @@ class DashboardController extends Controller
     {
         $userId = $request->user()->getKey();
 
+        $activeEvent = fn ($query) => $query->where("status", "!=", "selesai")->whereDate("tanggal_selesai", ">=", today());
+
         $events = EventRegistration::query()
             ->where('user_id', $userId)
+            ->whereHas("event", $activeEvent)
             ->with('event:id,slug,judul,kategori,tanggal_mulai,poster')
             ->latest()
             ->get()
@@ -30,6 +33,7 @@ class DashboardController extends Controller
                 'href' => '/events/'.$registration->event->slug,
                 'date' => $registration->event->tanggal_mulai?->toIso8601String(),
                 'registeredAt' => $registration->created_at?->toIso8601String(),
+                'eventId' => $registration->event->id,
             ]);
 
         $teams = Team::query()
@@ -37,6 +41,7 @@ class DashboardController extends Controller
                 $query->where('ketua_id', $userId)
                     ->orWhereHas('members', fn ($members) => $members->whereKey($userId));
             })
+            ->whereHas("event", $activeEvent)
             ->with('event:id,slug,judul,kategori,tanggal_mulai')
             ->latest()
             ->get()
@@ -50,8 +55,11 @@ class DashboardController extends Controller
                 'href' => '/events/'.$team->event->slug,
                 'date' => $team->event->tanggal_mulai?->toIso8601String(),
                 'registeredAt' => $team->created_at?->toIso8601String(),
+                'eventId' => $team->event->id,
             ]);
 
+        $completedIds = $events->pluck("eventId")->concat($teams->pluck("eventId"))->all();
+        $enrollments = EventEnrollmentDashboard::items($userId, $completedIds);
         $oprecs = OprecRegistration::query()
             ->where('user_id', $userId)
             ->with('oprec:id,periode,headline,pengumuman_published,pengumuman_tanggal')
@@ -75,7 +83,7 @@ class DashboardController extends Controller
                 ];
             });
 
-        $items = $events->concat($teams)->concat($oprecs)
+        $items = $events->concat($teams)->concat($enrollments)->concat($oprecs)
             ->sortByDesc('registeredAt')
             ->values();
 

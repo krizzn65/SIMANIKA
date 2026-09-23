@@ -5,7 +5,7 @@ import { getEvents } from "@/services/eventService";
 
 export const metadata = {
   title: "Event — SIMANIKA",
-  description: "Temukan lomba, seminar, dan workshop HIMANIKA. Jelajahi agenda, jadwal, serta informasi pendaftaran event terbaru.",
+  description: "Temukan competition, seminar, dan workshop HIMANIKA. Jelajahi agenda, jadwal, serta informasi pendaftaran event terbaru.",
 };
 
 export default async function EventsPage({ searchParams }) {

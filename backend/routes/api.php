@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
+use App\Http\Controllers\EventGuidebookController;
 use App\Http\Controllers\Admin\EventFormController;
 use App\Http\Controllers\Admin\EventRegistrantController;
 use App\Http\Controllers\Admin\OprecController as AdminOprecController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Public\PublicEventController;
 use App\Http\Controllers\Public\PublicOprecController;
 use App\Http\Controllers\User\OprecRegistrationController;
 use App\Http\Controllers\User\EventRegistrationController;
+use App\Http\Controllers\User\EventEnrollmentController;
 use App\Http\Controllers\User\JoinEventTeamController;
 use App\Http\Controllers\User\DashboardController;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +32,7 @@ Route::prefix('auth')->group(function () {
 
 Route::prefix('public')->group(function () {
     Route::get('/events/posters/{filename}', [PublicEventController::class, 'poster'])->name('public.event-poster');
+    Route::get('/events/guidebooks/{filename}', [EventGuidebookController::class, 'download'])->name('public.event-guidebook');
     Route::get('/events', [PublicEventController::class, 'index']);
     Route::get('/events/{slug}', [PublicEventController::class, 'show']);
     Route::get('/oprec', [PublicOprecController::class, 'index']);
@@ -44,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/change-password', [PasswordController::class, 'change'])->middleware('throttle:password');
     Route::post('/user/oprec/register', [OprecRegistrationController::class, 'store'])->middleware('throttle:auth');
     Route::post('/user/events/{event}/register', [EventRegistrationController::class, 'store'])->middleware('throttle:auth');
+    Route::post('/user/events/{event}/enroll', EventEnrollmentController::class)->middleware('throttle:auth');
     Route::post('/user/events/{event}/join-team', JoinEventTeamController::class)->middleware('throttle:auth');
 
     Route::prefix('admin')->middleware('admin')->group(function () {
@@ -60,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/events/{event}/registrants/{kind}/{id}/files/{field}', [EventRegistrantController::class, 'download'])->name('admin.event-file');
         Route::post('/events', [AdminEventController::class, 'store']);
         Route::post('/events/upload-poster', [AdminEventController::class, 'uploadPoster']);
+        Route::post('/events/upload-guidebook', [EventGuidebookController::class, 'upload']);
         Route::put('/events/{event}', [AdminEventController::class, 'update']);
         Route::delete('/events/{event}', [AdminEventController::class, 'destroy']);
         Route::get('/oprec', [AdminOprecController::class, 'index']);

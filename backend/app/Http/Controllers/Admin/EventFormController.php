@@ -14,7 +14,9 @@ class EventFormController extends Controller
 {
     public function show(Event $event): EventResource
     {
-        return new EventResource($event->load(['formFields', 'prizes', 'requirements'])->loadCount(['registrations', 'teams']));
+        $event->load(['formFields', 'prizes', 'requirements'])->loadCount(['registrations', 'teams']);
+        $event->setAttribute('enrollments_count', DB::table('event_enrollments')->where('event_id', $event->id)->count());
+        return new EventResource($event);
     }
 
     public function save(Request $request, Event $event): EventResource
@@ -47,7 +49,7 @@ class EventFormController extends Controller
         }
         DB::transaction(function () use ($event, $fields) {
             $locked = Event::whereKey($event->id)->lockForUpdate()->firstOrFail();
-            if ($locked->registrations()->exists() || $locked->teams()->exists()) {
+            if ($locked->registrations()->exists() || $locked->teams()->exists() || DB::table("event_enrollments")->where("event_id", $locked->id)->exists()) {
                 throw ValidationException::withMessages(['form_fields' => ['Formulir tidak dapat diubah setelah ada pendaftar.']]);
             }
             $locked->formFields()->delete();

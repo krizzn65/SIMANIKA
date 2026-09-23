@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/services/api";
+import { AdminErrorNotice } from "./AdminErrorNotice";
 import {
   Users,
   Calendar,
@@ -88,6 +89,7 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
+      <AdminErrorNotice message={error ? "Ringkasan admin belum bisa dimuat. Periksa koneksi lalu coba lagi." : ""} onRetry={fetchDashboard} />
       {/* Stats Grid */}
       <div className="admin-stats-grid">
         <div className="admin-stat-card">
@@ -127,7 +129,7 @@ export default function AdminDashboardPage() {
           <div>
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Tim Terdaftar</span>
             <div className="text-2xl font-bold text-slate-900 mt-1">{loading ? "..." : stats.totalTeams}</div>
-            <span className="text-xs text-slate-400 mt-0.5 block">Grup kompetisi</span>
+            <span className="text-xs text-slate-400 mt-0.5 block">Grup competition</span>
           </div>
           <div className="admin-stat-icon">
             <Trophy className="w-5 h-5" />
@@ -155,7 +157,7 @@ export default function AdminDashboardPage() {
           <div className="admin-card">
             <div className="admin-card-header">
               <div>
-                <h2 className="text-base font-bold text-slate-900">Event & Lomba Terbaru</h2>
+                <h2 className="text-base font-bold text-slate-900">Event & Competition Terbaru</h2>
                 <p className="text-xs text-slate-500">Daftar event yang terdaftar di dalam sistem.</p>
               </div>
               <Link href="/admin/events" className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1">
@@ -198,7 +200,7 @@ export default function AdminDashboardPage() {
                         </td>
                         <td>
                           <span className="admin-badge admin-badge--neutral uppercase text-[10px]">
-                            {e.kategori}
+                            {e.kategori?.toLowerCase() === "lomba" ? "Competition" : e.kategori}
                           </span>
                         </td>
                         <td>

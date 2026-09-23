@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Event extends Model
 {
-    protected $fillable = ['slug', 'judul', 'deskripsi', 'kategori', 'poster', 'tanggal_mulai', 'tanggal_selesai', 'buka_pendaftaran', 'deadline_pendaftaran', 'lokasi', 'tipe', 'status', 'tipe_pendaftaran', 'kode_prefix', 'min_anggota', 'max_anggota', 'timeline', 'created_by'];
+    protected $fillable = ['slug', 'judul', 'deskripsi', 'kategori', 'poster', 'guidebook_type', 'guidebook_value', 'tanggal_mulai', 'tanggal_selesai', 'buka_pendaftaran', 'deadline_pendaftaran', 'lokasi', 'tipe', 'status', 'tipe_pendaftaran', 'kode_prefix', 'min_anggota', 'max_anggota', 'timeline', 'created_by'];
 
     protected function casts(): array
     {

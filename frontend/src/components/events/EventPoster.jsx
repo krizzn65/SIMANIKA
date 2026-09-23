@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { preload } from "react-dom";
 
 export function EventPoster({ src, title, eager = false }) {
   const [failed, setFailed] = useState(false);
+  if (eager && src) preload(src, { as: "image", fetchPriority: "high" });
   return (
     <div className="event-poster">
       {src && !failed ? (
-        <img src={src} alt={`Poster ${title}`} width="960" height="600" loading={eager ? "eager" : "lazy"}
+        <img src={src} alt={`Poster ${title}`} width="960" height="600" loading={eager ? "eager" : "lazy"} fetchPriority={eager ? "high" : "low"}
           decoding="async" onError={() => setFailed(true)} />
       ) : (
         <div className="event-poster__fallback" aria-label={`Poster untuk ${title} belum tersedia`} role="img">
