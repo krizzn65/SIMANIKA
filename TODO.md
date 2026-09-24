@@ -1,7 +1,7 @@
 # 📋 TODO — SIMANIKA Progress Tracker
 
 > **Issue Tracker Lokal & Memori Proyek**
-> Last Updated: 22 September 2026
+> Last Updated: 25 September 2026
 > Referensi: [PRD.md](./PRD.md) | [Architecture.md](./architecture.md)
 
 ## Audit kesesuaian `architecture.md` (22 September 2026)
@@ -12,7 +12,7 @@ Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis bera
 |---|---|---|
 | Stack FE | 🔄 | Next 16/React 19, Axios, Zustand, React Hook Form, Zod, Tailwind 4, Motion, Lucide, Sonner, date-fns terpasang. Build webpack dan pemeriksaan TypeScript lulus; cek Tailwind/shadcn dan audit UI responsif di browser. |
 | Runtime lokal | ✅ | `dev.bat` menjalankan Next dan PHP bersama di Windows; `/login` dan `/api/ping` sama-sama HTTP 200. |
-| Auth FE | 🔄 | Form login/daftar/pemulihan memakai Zod; sesi memakai Axios + Zustand; `useAuth`/guard tersedia. Uji cookie, CSRF, 401/419, redirect, Navbar, logout di browser. |
+| Auth FE | 🔄 | Form login/daftar/pemulihan memakai Zod; sesi memakai Axios + Zustand; `useAuth`/guard tersedia. Login kini punya state loading/sukses/error, toast animated yang dapat ditutup, dan reduced-motion. Uji cookie, CSRF, 401/419, redirect, Navbar, logout di browser. |
 | Auth BE | 🔄 | Laravel 11/Sanctum 4 dan lockfile target PHP 8.2 sesuai arsitektur; route list dan PHPUnit SQLite lulus. Uji sesi/CSRF/reset sandi di browser/PostgreSQL. |
 | Email & berkas | ⬜ | Isi SMTP sungguhan untuk email reset; uji tautan dan batas upload privat. `MAIL_MAILER=log` hanya untuk lokal. |
 | Database | 🔄 | Tiga migrasi Ran di PostgreSQL (29 tabel: 20 domain + 8 infrastruktur + migrations); cocokkan constraint/index dan uji rollback, seed, relasi. |
@@ -45,8 +45,8 @@ Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis bera
 |--------|-------|
 | **Total Tasks** | 165 |
 | **Selesai** | 9 |
-| **Dalam Proses** | 49 |
-| **Belum Dikerjakan** | 107 |
+| **Dalam Proses** | 51 |
+| **Belum Dikerjakan** | 105 |
 | **Blocked** | 0 |
 | **Progress** | `█░░░░░░░░░░░░░░░░░░░` **5%** |
 
@@ -262,7 +262,7 @@ Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis bera
 
 | ID | Task | Status | Catatan |
 |----|------|--------|---------|
-| BE-5.1 | `TeamService` — business logic | ⬜ | create, join, leave, kick |
+| BE-5.1 | `TeamService` — business logic | 🔄 | TeamMembershipService: request join, accept, remove, lock deadline/admin, hitung anggota accepted. Uji backend lulus; fitur leave belum masuk scope. |
 | BE-5.2 | `TeamController` (User) — create + generate kode | ⬜ | — |
 | BE-5.3 | Kode generation logic (DB transaction) | ⬜ | `lockForUpdate` + increment |
 | BE-5.4 | Join team endpoint + validasi | ⬜ | `event_id` + kode, slot, no duplicate |
@@ -274,7 +274,7 @@ Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis bera
 | FE-5.2 | Modal/page "Bentuk Tim" | ⬜ | — |
 | FE-5.3 | Modal "Join Tim" — pilih event + input kode | ⬜ | — |
 | FE-5.4 | `MyTeams.jsx` (Dashboard) — list tim | ⬜ | — |
-| FE-5.5 | "Kelola Tim" page (ketua) | ⬜ | — |
+| FE-5.5 | "Kelola Tim" page (ketua) | 🔄 | Workspace `/dashboard/events/[id]`: nama/kode, anggota, approval/remove, form dinamis compact. Build/typecheck dan browser fixture lulus; E2E sesi nyata FE–BE masih perlu. |
 | FE-5.6 | Copy-to-clipboard kode tim | ⬜ | — |
 | FE-5.7 | `teamService.js` — API calls | ⬜ | — |
 | FE-5.8 | Admin: `EventTeams.jsx` — tabel tim | ⬜ | — |
@@ -584,3 +584,18 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 | 2026-09-24 | Label HTM card event | Label pembayaran pada card publik diganti dari `Bayar` menjadi `HTM` dan ukuran teksnya disamakan dengan info Tim agar hierarki visual lebih profesional. Verifikasi lulus: frontend event test 7/7 dan typecheck. | AI |
 
 | 2026-09-24 | HTM detail event | Halaman detail event user sekarang menampilkan informasi HTM di ringkasan fakta hero, memakai helper label yang sama dengan card publik. Verifikasi lulus: frontend event test 7/7 dan typecheck. | AI |
+
+| 2026-09-24 | Card dashboard peserta | Label atas card event memakai kategori; card tim menampilkan nama, kode, serta progres anggota dari jumlah aktual terhadap maksimum dengan warna merah sebelum minimum dan hijau setelah minimum. Bagian bawah event menampilkan Free atau Unpaid; Paid disiapkan untuk status pembayaran saat konfirmasi admin tersedia. Verifikasi: typecheck frontend dan API integration 12 test/72 assertion lulus. Konfirmasi pembayaran admin dan smoke test browser masih tertunda. | AI |
+
+| 2026-09-24 | Workspace pendaftaran & approval tim | Detail dashboard memakai panel tim/kode/anggota di kiri dan form dinamis compact di kanan. Join sekarang pending sampai diterima ketua; pending tidak dihitung. Hanya ketua dapat approve/remove; event/team row lock, deadline/admin lock, satu membership per event, serta berkas privat dijaga di BE. Submit ketua mengisi tim existing, bukan membuat tim kedua. Migrasi approval berhasil di PostgreSQL lokal, anggota lama tetap accepted. Verifikasi: backend 27 test/191 assertion, frontend event 7/7, typecheck, build, dan browser fixture Chrome 320–1440px (approve, remove/cancel, submit, pending, error/retry, reduced motion, tanpa JS exception) lulus. UI diadaptasi dari pola 21st.dev, copy/check animasi, serta ikon pqoqubbw berlisensi MIT. E2E browser sesi nyata FE–BE dan stress concurrency PostgreSQL belum diuji; konfirmasi paid admin tetap tertunda. | AI |
+| 2026-09-25 | Feedback login interaktif | Halaman login kini memberi state tombol idle/loading/success/error tanpa layout shift, indikator spinner/check/error, state menghubungkan Google, serta toast animasi yang dapat ditutup dan auto-dismiss. Animasi memakai framer-motion/lucide yang sudah terpasang, mendukung keyboard, `aria-live`, `role=alert/status`, dan `prefers-reduced-motion`. Pola stateful action/toast diadaptasi dari referensi komunitas 21st.dev; tidak menambah dependency. Typecheck, diff check, dan production build lulus. Uji cookie/CSRF/login nyata tetap mengikuti gate auth. | AI |
+| 2026-09-25 | Feedback autentikasi lintas halaman | State credential dan Google dipisahkan agar hanya aksi aktif yang loading. Register, lupa sandi, reset sandi, dan callback OAuth memakai panel proses terpusat, toast sukses/gagal yang lebih ekspresif, spinner/check/error, `aria-live`, serta reduced-motion melalui komponen bersama `AuthFeedbackToast`. Verifikasi typecheck, regression test frontend 9/9, dan production build lulus; uji OAuth/cookie nyata tetap mengikuti gate auth. | AI |
+
+| 2026-09-24 | Warna status pembayaran dashboard | Status pembayaran pada card dashboard diberi tone visual: Unpaid merah, Paid hijau, dan Free netral. Verifikasi typecheck frontend lulus. | AI |
+| 2026-09-25 | Interaksi autentikasi | Feedback login dibuat eksplisit per fase (memeriksa, berhasil, gagal) agar pengguna selalu mendapat sinyal saat request async berjalan; pesan backend tetap melalui normalisasi `apiErrorMessage` dan tidak menampilkan detail SQL/stack trace. | AI |
+| 2026-09-25 | Skala builder formulir event | Builder `/admin/events/{id}` dipadatkan dengan hierarki tipografi dan spacing yang lebih proporsional: kartu field, input, action, preview peserta, dan empty/error state tetap rounded, diberi shadow ringan, focus state, serta animasi masuk yang berhenti pada reduced-motion. Polanya diadaptasi dari koleksi form-builder 21st.dev tanpa dependency baru. Verifikasi typecheck, diff check, dan production build lulus. | AI |
+| 2026-09-25 | Hierarki builder formulir | Konflik ukuran global input 16px diperbaiki secara scoped di builder desktop. Skala kini konsisten: metadata 11–12px, label/action 12–13px, kontrol 14px, judul kartu 14px, preview 18px, dan judul event maksimal 33px; mobile tetap 16px untuk mencegah zoom. Rasio editor/pratinjau, surface panel, dan heading semantik tiap field diperbaiki. Verifikasi typecheck, test frontend 9/9, production build, dan focused diff check lulus. | AI |
+| 2026-09-25 | Pratinjau builder mengikuti formulir peserta | Panel pratinjau admin kini mengikuti struktur formulir peserta: header event, keterangan model pendaftaran, label bernomor, divider antar-isian, kontrol disabled berpermukaan lembut, unggah berkas, dan CTA. Seluruhnya tetap rounded (panel 20px, kontrol/CTA 14px) agar konsisten dengan arahan admin; editor kiri tetap compact. Verifikasi typecheck, test frontend 9/9, production build, dan focused diff check lulus. | AI |
+| 2026-09-25 | Posisi toast proses autentikasi | Toast loading autentikasi tidak lagi menjadi overlay layar atau membesar. Toast compact (maksimal 340px) berada di atas-tengah viewport, sedangkan toast sukses/gagal tetap memakai posisi notifikasi biasa. Aksesibilitas `aria-live`, animasi yang dapat direduksi, dan state tombol tidak diubah. Verifikasi typecheck, tes API-error 2/2, focused diff check, dan production build lulus. | AI |
+| 2026-09-25 | Transisi masuk halaman autentikasi | Halaman daftar akun, lupa sandi, dan reset sandi kini memiliki urutan masuk yang ringkas untuk dekorasi, card, navigasi, heading, opsi Google, divider, field, CTA, dan tautan; semua memakai opacity/transform agar tidak menyebabkan layout shift. State sukses/error pemulihan tetap memakai animasi konteksnya sendiri. `prefers-reduced-motion` menonaktifkan seluruh motion. Verifikasi typecheck, tes API-error 2/2, focused diff check, dan production build lulus. | AI |
+| 2026-09-25 | Layout pratinjau builder | Pratinjau peserta pada builder kini memakai pola field form user: dua kolom untuk isian ringkas, satu kolom penuh untuk paragraf, upload, radio, dan persetujuan. Panel admin tetap compact dan rounded; lebar preview ditambah secukupnya agar pasangan field terbaca. Di bawah 900px preview kembali satu kolom. Verifikasi typecheck, tes frontend 9/9, focused diff check, dan production build lulus. | AI |

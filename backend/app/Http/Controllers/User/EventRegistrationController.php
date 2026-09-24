@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Services\TeamMembershipService;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,11 @@ class EventRegistrationController extends Controller
             ($event->deadline_pendaftaran && today()->gt($event->deadline_pendaftaran)) ||
             ($event->tanggal_selesai && today()->gt($event->tanggal_selesai))) {
             return response()->json(['message' => 'Pendaftaran event belum dibuka atau sudah ditutup.'], 409);
+        }
+        if ($event->tipe_pendaftaran === 'tim') {
+            $membership = DB::table('team_members')->where('event_id', $event->id)->where('user_id', $request->user()->id)->first();
+            $team = $membership ? $event->teams()->find($membership->team_id) : null;
+            abort_unless($team && (int) $team->ketua_id === (int) $request->user()->id, 403, 'Hanya ketua tim yang dapat mengisi formulir tim.');
         }
         $fields = $event->formFields()->get();
         if ($fields->isEmpty()) return response()->json(['message' => 'Formulir event belum tersedia.'], 409);
@@ -42,6 +48,8 @@ class EventRegistrationController extends Controller
             $rules[$field->name] = $rule;
         }
         $data = $request->validate($rules);
+        $totalBytes = collect($data)->filter(fn ($value) => $value instanceof \Illuminate\Http\UploadedFile)->sum(fn ($file) => $file->getSize());
+        if ($totalBytes > 11 * 1024 * 1024) throw ValidationException::withMessages(['event' => ['Total berkas maksimal 11 MB.']]);
         $stored = [];
         try {
             DB::transaction(function () use ($request, $event, $data, $fields, &$stored) {
@@ -52,11 +60,20 @@ class EventRegistrationController extends Controller
                     ($locked->tanggal_selesai && today()->gt($locked->tanggal_selesai))) {
                     throw ValidationException::withMessages(['event' => ['Pendaftaran sudah berubah. Muat ulang halaman.']]);
                 }
+                $team = null;
+                if ($locked->tipe_pendaftaran === 'tim') {
+                    $team = $locked->teams()->where('ketua_id', $request->user()->id)->lockForUpdate()->first();
+                    abort_unless($team, 403);
+                    app(TeamMembershipService::class)->ensureOpen($locked, $team);
+                    if ($team->form_submitted_at) {
+                        throw ValidationException::withMessages(['event' => ['Formulir tim sudah dikirim.']]);
+                    }
+                }
                 $answers = [];
                 foreach ($fields as $field) {
                     if (!array_key_exists($field->name, $data)) continue;
                     $value = $data[$field->name];
-                    if ($field->type === 'file') {
+                    if ($field->type === 'file' && $value !== null) {
                         $path = $value->store("events/{$event->id}", 'local');
                         if (!$path) throw new \RuntimeException('File storage failed');
                         $stored[] = $path;
@@ -66,32 +83,16 @@ class EventRegistrationController extends Controller
                     }
                 }
                 if ($locked->tipe_pendaftaran === 'tim') {
-                    if (DB::table('team_members')->where('event_id', $locked->id)->where('user_id', $request->user()->id)->exists()) {
-                        throw ValidationException::withMessages(['event' => ['Kamu sudah terdaftar pada tim event ini.']]);
-                    }
-                    $number = $locked->last_team_number + 1;
-                    $locked->last_team_number = $number;
-                    $locked->save();
-                    $team = $locked->teams()->create([
-                        'kode_unik' => ($locked->kode_prefix ?: 'TEAM').str_pad((string) $number, 2, '0', STR_PAD_LEFT),
-                        'nama_tim' => mb_substr(trim((string) ($answers['nama_tim'] ?? '')) ?: 'Tim '.$number, 0, 255),
-                        'ketua_id' => $request->user()->id,
-                        'jumlah_anggota' => 1,
-                        'form_data' => $answers,
-                    ]);
-                    DB::table('team_members')->insert([
-                        'team_id' => $team->id, 'event_id' => $locked->id,
-                        'user_id' => $request->user()->id, 'joined_at' => now(),
-                    ]);
+                    $team->update(['form_data' => $answers, 'form_submitted_at' => now()]);
                 } else {
                     $locked->registrations()->create(['user_id' => $request->user()->id, 'form_data' => $answers]);
                 }
             });
         } catch (UniqueConstraintViolationException $error) {
-            Storage::disk('local')->delete($stored);
+            if ($stored) Storage::disk('local')->delete($stored);
             return response()->json(['message' => 'Kamu sudah terdaftar di event ini.'], 409);
         } catch (\Throwable $error) {
-            Storage::disk('local')->delete($stored);
+            if ($stored) Storage::disk('local')->delete($stored);
             throw $error;
         }
         return response()->json(['data' => ['submitted' => true]], 201);

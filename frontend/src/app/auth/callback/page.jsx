@@ -4,6 +4,7 @@ import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { currentUser } from "@/services/authClient";
 import { safeNextPath } from "@/lib/safeNextPath";
+import AuthFeedbackToast from "@/components/ui/AuthFeedbackToast";
 
 function CallbackContent() {
   const router = useRouter();
@@ -45,43 +46,19 @@ function CallbackContent() {
   }, [router, searchParams]);
 
   return (
-    <div
+    <main
       style={{
         minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem",
         background: "#ffffff",
         fontFamily: "'Inter Tight', Inter, sans-serif",
         color: "#07111f",
-        textAlign: "center",
       }}
     >
-      <div
-        style={{
-          width: "48px",
-          height: "48px",
-          border: "3px solid #eff6ff",
-          borderTopColor: "#155eef",
-          borderRadius: "50%",
-          animation: "simanika-spin 0.8s linear infinite",
-          marginBottom: "1.5rem",
-        }}
+      <AuthFeedbackToast
+        status={errorMessage ? "error" : "loading"}
+        message={errorMessage || "Menghubungkan akun Google dan menyiapkan sesi…"}
       />
-      <style>{`
-        @keyframes simanika-spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-      <h2 style={{ fontSize: "1.25rem", fontWeight: 600, margin: "0 0 0.5rem" }}>
-        Menghubungkan Akun Google
-      </h2>
-      <p style={{ color: "#475467", fontSize: "0.95rem", margin: 0 }}>
-        {errorMessage || "Mohon tunggu sebentar, kami sedang menyiapkan sesi Anda..."}
-      </p>
-    </div>
+    </main>
   );
 }
 

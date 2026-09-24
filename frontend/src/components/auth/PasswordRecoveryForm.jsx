@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { forgotPasswordSchema, resetPasswordSchema } from "@/lib/authSchemas";
+import AuthFeedbackToast from "@/components/ui/AuthFeedbackToast";
 
 export default function PasswordRecoveryForm({ mode, token = "", email = "" }) {
   const isReset = mode === "reset";
@@ -14,6 +15,14 @@ export default function PasswordRecoveryForm({ mode, token = "", email = "" }) {
     resolver: zodResolver(isReset ? resetPasswordSchema : forgotPasswordSchema),
     defaultValues: { email, token },
   });
+
+  const submitLabel = status === "loading"
+    ? "Memproses…"
+    : status === "error"
+      ? "Coba lagi"
+      : isReset
+        ? "Simpan sandi baru"
+        : "Kirim tautan reset";
 
   const submit = handleSubmit(async (values) => {
     if (status === "loading") return;
@@ -54,6 +63,7 @@ export default function PasswordRecoveryForm({ mode, token = "", email = "" }) {
 
   return (
     <main className="register-page recovery-page">
+      <AuthFeedbackToast status={status} message={feedback} onDismiss={() => { setStatus("idle"); setFeedback(""); }} />
       <img src="/images/auth/pixel-corner-tl.svg" alt="" aria-hidden="true" className="register-pixel-corner register-pixel-corner--tl" />
       <img src="/images/auth/pixel-corner-br.svg" alt="" aria-hidden="true" className="register-pixel-corner register-pixel-corner--br" />
       <div className="register-card recovery-card">
@@ -123,23 +133,23 @@ export default function PasswordRecoveryForm({ mode, token = "", email = "" }) {
                 </div>
               </div>
             )}
-            <button className="register-submit" type="submit" disabled={status === "loading"}>
-              {status === "loading" ? "Memproses..." : isReset ? "Simpan sandi baru" : "Kirim tautan reset"}
-              <span aria-hidden="true">→</span>
+            <button
+              className="register-submit"
+              type="submit"
+              data-state={status}
+              aria-busy={status === "loading"}
+              disabled={status === "loading"}
+            >
+              <span>{submitLabel}</span>
+              <span className="register-submit__icon-slot" aria-hidden="true">
+                {status === "loading" && <span className="register-state-spinner" />}
+                {status === "error" && <span className="register-state-error">×</span>}
+                {status === "idle" && <span className="register-submit__arrow">→</span>}
+              </span>
             </button>
           </form>
         )}
 
-        {status === "error" && (
-          <div className="recovery-error-banner" role="alert">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="15" y1="9" x2="9" y2="15" />
-              <line x1="9" y1="9" x2="15" y2="15" />
-            </svg>
-            <p>{feedback}</p>
-          </div>
-        )}
         {!isReset && status !== "success" && (
           <p className="register-login">Ingat sandimu? <Link href="/login">Masuk di sini ↗</Link></p>
         )}

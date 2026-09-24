@@ -20,7 +20,7 @@ class DashboardController extends Controller
         $events = EventRegistration::query()
             ->where('user_id', $userId)
             ->whereHas("event", $activeEvent)
-            ->with('event:id,slug,judul,kategori,tanggal_mulai,poster')
+            ->with('event:id,slug,judul,kategori,tanggal_mulai,poster,payment_type,htm')
             ->latest()
             ->get()
             ->filter(fn ($registration) => $registration->event !== null)
@@ -29,8 +29,11 @@ class DashboardController extends Controller
                 'kind' => 'event',
                 'title' => $registration->event->judul,
                 'subtitle' => $registration->event->kategori,
+                'category' => $registration->event->kategori,
+                'paymentType' => $registration->event->payment_type ?? 'free',
+                'htm' => $registration->event->payment_type === 'paid' ? $registration->event->htm : null,
                 'status' => $registration->status,
-                'href' => '/events/'.$registration->event->slug,
+                'href' => '/dashboard/events/'.$registration->event->id,
                 'date' => $registration->event->tanggal_mulai?->toIso8601String(),
                 'registeredAt' => $registration->created_at?->toIso8601String(),
                 'eventId' => $registration->event->id,
@@ -39,10 +42,12 @@ class DashboardController extends Controller
         $teams = Team::query()
             ->where(function ($query) use ($userId) {
                 $query->where('ketua_id', $userId)
-                    ->orWhereHas('members', fn ($members) => $members->whereKey($userId));
+                    ->orWhereHas('participants', fn ($members) => $members->whereKey($userId));
             })
             ->whereHas("event", $activeEvent)
-            ->with('event:id,slug,judul,kategori,tanggal_mulai')
+            ->with('event:id,slug,judul,kategori,tanggal_mulai,payment_type,htm,min_anggota,max_anggota')
+            ->with(['participants' => fn ($query) => $query->whereKey($userId)])
+            ->withCount('members')
             ->latest()
             ->get()
             ->filter(fn ($team) => $team->event !== null)
@@ -51,8 +56,16 @@ class DashboardController extends Controller
                 'kind' => 'team',
                 'title' => $team->event->judul,
                 'subtitle' => $team->nama_tim.' · Kode: '.$team->kode_unik,
-                'status' => $team->review_status,
-                'href' => '/events/'.$team->event->slug,
+                'category' => $team->event->kategori,
+                'teamName' => $team->nama_tim,
+                'teamCode' => $team->kode_unik,
+                'teamMembers' => (int) $team->members_count,
+                'teamMin' => $team->event->min_anggota,
+                'teamMax' => $team->event->max_anggota,
+                'paymentType' => $team->event->payment_type ?? 'free',
+                'htm' => $team->event->payment_type === 'paid' ? $team->event->htm : null,
+                'status' => $team->participants->first()?->pivot->status === 'pending' ? 'join_pending' : $team->review_status,
+                'href' => '/dashboard/events/'.$team->event->id,
                 'date' => $team->event->tanggal_mulai?->toIso8601String(),
                 'registeredAt' => $team->created_at?->toIso8601String(),
                 'eventId' => $team->event->id,

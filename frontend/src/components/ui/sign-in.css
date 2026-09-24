@@ -90,3 +90,21 @@
 @media (max-width: 1200px) { .simanika-testimonial-card--extra { display: none; } }
 @media (max-width: 767px) { .simanika-signin-form-col { padding-block: 2rem; } }
 @media (prefers-reduced-motion: reduce) { .simanika-signin-root::before, .simanika-signin-root .animate-element, .simanika-signin-root .animate-slide-right, .simanika-signin-root .animate-testimonial { animation: none; } .simanika-signin-root *, .simanika-signin-root *::before, .simanika-signin-root *::after { transition: none; } .simanika-btn-primary:hover { transform: none; } .simanika-btn-icon { transition: none !important; } .simanika-btn-primary:hover .simanika-btn-icon--primary { transform: none; opacity: 1; } .simanika-btn-primary:hover .simanika-btn-icon--secondary { display: none; } }
+
+/* Auth feedback: a compact 21st.dev-inspired stateful action + toast pattern. */
+.simanika-btn-primary { position: relative; overflow: hidden; transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease, opacity 180ms ease; }
+.simanika-btn-primary[data-state="loading"] { cursor: wait; background: var(--blue-dark); box-shadow: 2px 2px 0 #a9c1ed; }
+.simanika-btn-primary[data-state="success"] { background: #157a59; border-color: #157a59; box-shadow: 3px 3px 0 #b7dfd1; }
+.simanika-btn-primary[data-state="error"] { background: #b33a45; border-color: #b33a45; box-shadow: 3px 3px 0 #edc0c5; }
+.simanika-btn-primary:disabled { opacity: 1; }
+.simanika-btn-primary:disabled:hover { transform: none; }
+.simanika-btn-label { display: inline-flex; min-width: 8.5rem; justify-content: center; white-space: nowrap; }
+.simanika-btn-icon-slot[data-state="loading"] .simanika-btn-spinner,
+.simanika-btn-social[data-state="loading"] .simanika-btn-spinner { animation: simanika-auth-spin 820ms linear infinite; }
+.simanika-btn-icon-slot > svg:not(.simanika-btn-spinner) { width: 19px; height: 19px; flex: none; }
+.simanika-btn-social { transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease, opacity 180ms ease; }
+.simanika-btn-social[data-state="loading"] { cursor: wait; background: var(--surface-subtle); border-color: var(--blue); box-shadow: 2px 2px 0 #c9d9f7; }
+.simanika-btn-social:disabled { opacity: 1; }
+.simanika-btn-social:disabled:hover { background: var(--surface-subtle); border-color: var(--blue); }
+.simanika-btn-spinner { width: 19px; height: 19px; flex: none; }
+@keyframes simanika-auth-spin { to { transform: rotate(360deg); } }

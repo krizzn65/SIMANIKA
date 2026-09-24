@@ -63,3 +63,107 @@
 .event-builder-response-list dd { margin: .2rem 0 0; overflow-wrap: anywhere; }
 .event-builder-response-list dd button, .event-builder-pages button { color: #0f4bcb; text-decoration: underline; }
 .event-builder-pages { display: flex; justify-content: center; align-items: center; gap: 1rem; }
+
+/* Compact rounded builder pass.
+ * Inspired by the restrained card/form rhythm in 21st.dev's form-builder collection:
+ * https://21st.dev/community/components/explore/form-builder-react-js
+ */
+.event-builder {
+  --eb-blue: #155eef;
+  --eb-ink: #0f172a;
+  --eb-muted: #52627a;
+  --eb-border: #d7e0ec;
+  --eb-surface: #ffffff;
+  width: min(100%, 1220px);
+  margin-inline: auto;
+  font-size: .875rem;
+}
+
+.event-builder-header { gap: .7rem; }
+.event-builder-back { gap: .4rem; font-size: .82rem; min-height: 2.25rem; }
+.event-builder-back svg { width: 1rem; height: 1rem; }
+.event-builder-title { gap: .75rem; }
+.event-builder-title h1 { margin: .2rem 0 .35rem; font-size: clamp(1.75rem, 2.15vw, 2.05rem); letter-spacing: -.03em; line-height: 1.12; }
+.event-builder-title > div { max-width: 44rem; }
+.event-builder-title p { font-size: .875rem; line-height: 1.5; }
+.event-builder-eyebrow { font-size: .68rem; letter-spacing: .1em; }
+.event-builder-actions { gap: .5rem; }
+.event-builder-actions .admin-btn { min-height: 2.5rem; padding: .55rem .8rem; border-radius: .75rem; font-size: .8rem; }
+.event-builder-actions .admin-btn svg { width: 1rem; height: 1rem; }
+.event-builder-grid { grid-template-columns: minmax(0, 1.35fr) minmax(420px, .95fr); gap: 1.125rem; }
+.event-builder-canvas { gap: .75rem; }
+.event-builder-empty, .event-builder-field, .event-builder-add, .event-builder-preview { border-color: var(--eb-border); border-radius: 16px; }
+.event-builder-empty { padding: 2rem 1.35rem; }
+.event-builder-empty span { font-size: .68rem; }
+.event-builder-empty h2 { margin: .55rem 0; font-size: 1.15rem; }
+.event-builder-empty p { max-width: 34rem; font-size: .82rem; line-height: 1.5; }
+.event-builder-field { box-shadow: 0 1px 2px rgba(15, 23, 42, .03); transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease; }
+.event-builder-field:hover { border-color: #bfd0e7; box-shadow: 0 8px 22px rgba(15, 23, 42, .05); transform: translateY(-1px); }
+.event-builder-field-head { gap: .6rem; padding: .75rem 1rem; background: #fcfdff; }
+.event-builder-field-head h2 { margin: 0; font-size: .875rem; font-weight: 650; letter-spacing: -.01em; line-height: 1.3; }
+.event-builder-number { display: inline-grid; width: 1.9rem; height: 1.9rem; padding: 0; place-items: center; border-radius: 9px; font-size: .75rem; }
+.event-builder-field-actions { gap: .15rem; }
+.event-builder-field-actions button, .event-builder-options button { min-width: 2.25rem; min-height: 2.25rem; border-radius: 9px; }
+.event-builder-field-actions button svg, .event-builder-options button svg { width: 1rem; height: 1rem; }
+.event-builder-field-body { gap: .75rem; padding: 1rem; }
+.event-builder-field-body label, .event-builder-preview-field label { gap: .35rem; font-size: .8rem; line-height: 1.35; }
+.admin-layout-root .event-builder-field-body input:not([type="checkbox"]), .admin-layout-root .event-builder-field-body select, .admin-layout-root .event-builder-preview-field :is(input, select, textarea) { min-height: 2.625rem; border-color: #c5d2e2; border-radius: 11px; padding: .55rem .75rem; font-size: .875rem !important; line-height: 1.35; }
+.event-builder-field-body input::placeholder, .event-builder-preview-field input::placeholder { color: #8391a4; }
+.event-builder-field-body input:focus-visible, .event-builder-field-body select:focus-visible, .event-builder-preview-field :is(input, select, textarea):focus-visible { outline: 2px solid rgba(37, 99, 235, .75); outline-offset: 2px; border-color: var(--eb-blue); }
+.event-builder-two { gap: .75rem; }
+.event-builder-options { gap: .4rem; }
+.event-builder-options > div { gap: .35rem; }
+.event-builder-options > button, .event-builder-add button { min-height: 2.35rem; padding: .45rem .7rem; border-color: var(--eb-border); border-radius: 10px; font-size: .78rem; }
+.event-builder-required { gap: .5rem !important; font-size: .8rem !important; }
+.event-builder-required input { width: 17px; height: 17px; }
+.event-builder-hint, .event-builder-note { font-size: .78rem; line-height: 1.45; }
+.event-builder-add { padding: 1rem; }
+.event-builder-add p { margin: 0 0 .5rem; font-size: .8rem; }
+.event-builder-add > div { gap: .4rem; }
+.event-builder-preview { position: sticky; top: 4.5rem; gap: 0; padding: 1.25rem; border: 1px solid #cfdced; border-radius: 20px; background: #fff; box-shadow: 0 12px 28px rgba(15, 23, 42, .05); }
+.event-builder-preview-header { display: grid; gap: .55rem; padding-bottom: 1rem; }
+.event-builder-preview h2 { margin: 0; font-size: 1.125rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.25; overflow-wrap: anywhere; }
+.event-builder-preview-header > p { margin: 0; font-size: .8125rem; line-height: 1.45; }
+.event-builder-preview-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; padding-top: 1rem; border-top: 1px solid #e0e8f2; }
+.event-builder-preview-field { min-width: 0; gap: .45rem; padding: 0; border: 0; }
+.event-builder-preview-field--wide, .event-builder-preview-empty { grid-column: 1 / -1; }
+.event-builder-preview-field label { font-size: .8rem; font-weight: 600; line-height: 1.45; }
+.event-builder-preview-field small { order: 1; font-size: .75rem; line-height: 1.4; }
+.admin-layout-root .event-builder-preview-field :is(input, select, textarea) { order: 2; min-height: 3rem; border-color: #c3d2e6; border-radius: 14px; background: #f8fafc; color: #8797ae; font-size: .875rem !important; }
+.admin-layout-root .event-builder-preview-field :is(input, select, textarea):disabled { opacity: 1; cursor: default; }
+.event-builder-preview-field textarea { min-height: 6rem !important; resize: none; }
+.event-builder-preview-field input[type="file"] { padding: .4rem .55rem; font-size: .78rem !important; border-style: solid; }
+.event-builder-preview-field input[type="file"]::file-selector-button { margin-right: .5rem; padding: .35rem .55rem; border: 1px solid #afc0d7; border-radius: 8px; background: #fff; color: var(--eb-ink); font: inherit; }
+.event-builder-preview-empty { margin-top: .9rem; padding: .85rem; border: 1px dashed #c7d6e8; border-radius: 14px; background: #f7faff; font-size: .8rem; line-height: 1.45; }
+.event-builder-preview > .admin-btn { width: 100%; min-height: 3rem; margin-top: 1rem; border-radius: 14px; font-size: .825rem; }
+.event-builder-error, .event-builder-success { padding: .65rem .8rem; border-radius: 11px; font-size: .8rem; line-height: 1.4; }
+.event-builder-responses { margin-top: 1.25rem; padding: 1rem; border-radius: 16px; gap: .75rem; }
+.event-builder-responses h2 { font-size: 1.1rem; }
+.event-builder-response-list { gap: .6rem; }
+.event-builder-response-list article { border-radius: 12px; padding: .8rem; }
+
+@keyframes event-builder-card-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+.event-builder-field { animation: event-builder-card-in 280ms ease-out both; }
+.event-builder-field:nth-child(2) { animation-delay: 35ms; }
+.event-builder-field:nth-child(3) { animation-delay: 70ms; }
+.event-builder-field:nth-child(4) { animation-delay: 105ms; }
+.event-builder-field:nth-child(5) { animation-delay: 140ms; }
+
+@media (max-width: 900px) {
+  .event-builder { width: 100%; }
+  .event-builder-preview { position: static; }
+  .event-builder-preview-fields { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .event-builder-title h1 { font-size: 1.55rem; }
+  .event-builder-title p { font-size: .82rem; }
+  .event-builder-actions { width: 100%; }
+  .event-builder-actions .admin-btn { flex: 1 1 auto; justify-content: center; }
+  .event-builder-field-head { align-items: flex-start; flex-wrap: wrap; }
+  .event-builder-field-actions { margin-left: auto; }
+  .event-builder-field-body { padding: .85rem; }
+  .admin-layout-root .event-builder-field-body input:not([type="checkbox"]), .admin-layout-root .event-builder-field-body select, .admin-layout-root .event-builder-preview-field :is(input, select, textarea) { font-size: 1rem !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .event-builder-field, .event-builder-field:hover { animation: none; transition: none; transform: none; }
+}
