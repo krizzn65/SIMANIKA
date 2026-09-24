@@ -1,7 +1,13 @@
 export const EVENT_CATEGORIES = [
-  ["", "Semua kategori"], ["lomba", "Lomba"], ["seminar", "Seminar"],
-  ["workshop", "Workshop"], ["lainnya", "Lainnya"],
+  ["", "Semua kategori"], ["hi-fest", "HI-FEST"], ["mic", "MIC"],
+  ["imce", "IMCE"], ["lainnya", "Lainnya"],
 ];
+export function eventCategoryLabel(value) {
+  const category = String(value || "").trim();
+  const normalized = category.toLowerCase();
+  return EVENT_CATEGORIES.find(([key]) => key === normalized)?.[1] || category || "Lainnya";
+}
+
 export const EVENT_STATUSES = [
   ["", "Semua waktu"], ["upcoming", "Akan datang"],
   ["ongoing", "Berlangsung"], ["selesai", "Selesai"],
@@ -50,7 +56,7 @@ export function normalizeEvent(raw) {
   return {
     id: raw.id ?? raw.slug, slug: raw.slug, judul: text(raw.judul),
     deskripsi: text(raw.deskripsi), kategori: text(raw.kategori) || "lainnya",
-    poster: safeEventUrl(raw.poster), status: raw.status,
+    poster: safeEventUrl(raw.poster), guidebookUrl: safeEventUrl(raw.guidebookUrl), status: raw.status,
     tanggalMulai: date(raw.tanggalMulai ?? raw.tanggal_mulai),
     tanggalSelesai: date(raw.tanggalSelesai ?? raw.tanggal_selesai),
     deadlinePendaftaran: date(raw.deadlinePendaftaran ?? raw.deadline_pendaftaran),
@@ -58,6 +64,8 @@ export function normalizeEvent(raw) {
     lokasi: text(raw.lokasi) || "Lokasi akan diumumkan",
     tipe: ["online", "offline", "hybrid"].includes(raw.tipe) ? raw.tipe : null,
     tipePendaftaran: isTeam ? "tim" : "individu",
+    paymentType: (raw.paymentType ?? raw.payment_type) === "paid" ? "paid" : "free",
+    htm: count(raw.htm),
     minAnggota: count(team.minAnggota ?? team.min_anggota),
     maxAnggota: count(team.maxAnggota ?? team.max_anggota),
     syarat: strings(raw.syarat), hadiah: strings(raw.hadiah),
@@ -93,6 +101,14 @@ export function registrationState(event, now = Date.now()) {
 
   if (!event.deadlinePendaftaran && !event.formFields?.length) return { key: "soon", label: "Info pendaftaran menyusul", icon: "◷" };
   return { key: "open", label: "Pendaftaran dibuka", icon: "●" };
+}
+
+
+export function eventFeeLabel(event) {
+  if (event?.paymentType !== "paid") return "Free";
+  const amount = Number(event?.htm);
+  if (!Number.isSafeInteger(amount) || amount <= 0) return "HTM belum ditentukan";
+  return `HTM · ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount)}`;
 }
 
 export function eventDate(value) {

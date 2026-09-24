@@ -583,3 +583,130 @@
   font-size: 1rem !important;
   line-height: 1.35;
 }
+
+
+/* Event editor: compact, proportional hierarchy without shrinking other admin pages. */
+.admin-event-modal {
+  max-width: 720px;
+}
+
+.admin-event-form {
+  gap: 0.875rem;
+  padding: 1.25rem;
+}
+
+.admin-event-form > .grid {
+  column-gap: 0.875rem;
+  row-gap: 0.875rem;
+}
+
+.admin-event-form :is(input:not([type="radio"]):not([type="checkbox"]), select, textarea) {
+  min-height: 2.625rem;
+  font-size: 0.875rem !important;
+  line-height: 1.4;
+}
+
+.admin-event-form label.text-xs,
+.admin-event-form .text-xs {
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.admin-event-form :is([class~="text-[10px]"], [class~="text-[11px]"]) {
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.admin-event-form .admin-option-card {
+  min-height: 3.25rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.625rem;
+  gap: 0.625rem;
+  font-size: 0.875rem;
+}
+
+.admin-event-form .admin-option-card > span {
+  font-size: 0.875rem !important;
+  line-height: 1.3;
+}
+
+.admin-event-form .admin-option-card input[type="radio"] {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.admin-event-form :is(.admin-event-timeline, .admin-event-team-config) {
+  padding: 0.875rem;
+  border-radius: 0.75rem;
+}
+
+.admin-event-form .admin-event-timeline > div:first-child {
+  margin-bottom: 0.625rem;
+}
+
+.admin-event-form .admin-event-timeline .space-y-2\.5 > div {
+  padding: 0.5rem;
+  border-radius: 0.625rem;
+}
+
+.admin-event-form .admin-event-team-config {
+  gap: 0.75rem;
+}
+
+.admin-event-form .admin-event-team-config > div:first-child {
+  font-size: 0.875rem;
+}
+
+.admin-event-form :is(.admin-event-participation, .admin-event-payment) {
+  padding-top: 0.75rem;
+}
+
+.admin-event-form .admin-event-guidebook {
+  padding: 0.875rem;
+  border-radius: 0.75rem;
+}
+
+.admin-event-form .admin-event-guidebook > div:first-child {
+  margin-bottom: 0.625rem;
+  font-size: 0.875rem;
+}
+
+.admin-event-form .admin-event-guidebook > label {
+  font-size: 0.75rem;
+}
+
+.admin-event-form .admin-event-guidebook select {
+  min-height: 2.625rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-event-form .admin-event-guidebook > div:not(:first-child) {
+  padding: 0.75rem;
+  border-radius: 0.625rem;
+  font-size: 0.8125rem;
+}
+
+.admin-event-form .admin-event-guidebook input[type="file"] {
+  min-height: 2.5rem;
+  font-size: 0.8125rem !important;
+}
+
+.admin-event-form .admin-event-guidebook p {
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+  .admin-event-modal {
+    max-height: 94vh;
+  }
+
+  .admin-event-form {
+    padding: 1rem;
+  }
+
+  .admin-event-form :is(input:not([type="radio"]):not([type="checkbox"]), select, textarea) {
+    font-size: 1rem !important;
+  }
+}

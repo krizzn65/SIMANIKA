@@ -30,9 +30,31 @@ class ApiIntegrationTest extends TestCase
         $event = Event::create(['slug' => 'uji-event', 'judul' => 'Uji Event', 'kategori' => 'workshop', 'tanggal_mulai' => $start, 'tanggal_selesai' => $start->copy()->addHours(2), 'status' => 'draft']);
         $this->getJson('/api/public/events')->assertJsonPath('meta.total', 0);
         $this->getJson('/api/public/events/uji-event')->assertNotFound();
-        $event->update(['status' => 'published']);
-        $this->getJson('/api/public/events')->assertOk()->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.slug', 'uji-event');
-        $this->getJson('/api/public/events/uji-event')->assertOk()->assertJsonPath('data.kategori', 'workshop');
+        $event->update(['status' => 'published', 'payment_type' => 'paid', 'htm' => 500000]);
+        $this->getJson('/api/public/events')->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.slug', 'uji-event')
+            ->assertJsonPath('data.0.paymentType', 'paid')
+            ->assertJsonPath('data.0.htm', 500000);
+        $this->getJson('/api/public/events/uji-event')->assertOk()
+            ->assertJsonPath('data.kategori', 'workshop')
+            ->assertJsonPath('data.paymentType', 'paid')
+            ->assertJsonPath('data.htm', 500000);
+
+        Event::create([
+            'slug' => 'hi-fest-2026',
+            'judul' => 'HI-FEST 2026',
+            'kategori' => 'hi-fest',
+            'tanggal_mulai' => $start->copy()->addDay(),
+            'tanggal_selesai' => $start->copy()->addDay()->addHours(2),
+            'status' => 'published',
+        ]);
+        $this->getJson('/api/public/events?kategori=hi-fest')->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.slug', 'hi-fest-2026');
+        $this->getJson('/api/public/events?kategori=lainnya')->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.slug', 'uji-event');
     }
 
     public function test_password_reset_request_does_not_reveal_if_email_exists(): void
@@ -113,6 +135,57 @@ class ApiIntegrationTest extends TestCase
         $this->getJson('/api/user/dashboard')
             ->assertOk()
             ->assertJsonFragment(['kind' => 'oprec', 'status' => 'accepted']);
+    }
+
+    public function test_team_registration_creates_code_then_allows_another_user_to_join(): void
+    {
+        $leader = User::create(['email' => 'leader@example.test', 'password' => 'password-yang-kuat']);
+        $member = User::create(['email' => 'member@example.test', 'password' => 'password-yang-kuat']);
+        $event = Event::create([
+            'slug' => 'team-competition',
+            'judul' => 'Team Competition',
+            'kategori' => 'lomba',
+            'tanggal_mulai' => today()->addDays(5),
+            'tanggal_selesai' => today()->addDays(6),
+            'buka_pendaftaran' => today()->subDay(),
+            'deadline_pendaftaran' => today()->addDays(4),
+            'status' => 'published',
+            'tipe_pendaftaran' => 'tim',
+            'kode_prefix' => 'BYTE',
+            'min_anggota' => 2,
+            'max_anggota' => 4,
+        ]);
+        $event->formFields()->create([
+            'name' => 'nama_lengkap',
+            'label' => 'Nama lengkap',
+            'type' => 'text',
+            'required' => true,
+            'sort_order' => 0,
+        ]);
+
+        $create = $this->actingAs($leader, 'sanctum')
+            ->postJson("/api/user/events/{$event->id}/create-team", ['nama_tim' => 'Byte Builders'])
+            ->assertCreated()
+            ->assertJsonPath('data.created', true)
+            ->assertJsonPath('data.teamName', 'Byte Builders')
+            ->assertJsonPath('data.teamCode', 'BYTE01');
+
+        $this->assertDatabaseHas('teams', ['event_id' => $event->id, 'ketua_id' => $leader->id, 'kode_unik' => 'BYTE01']);
+        $this->assertDatabaseHas('team_members', ['event_id' => $event->id, 'user_id' => $leader->id]);
+        $this->assertDatabaseHas('event_enrollments', ['event_id' => $event->id, 'user_id' => $leader->id]);
+
+        $this->actingAs($member, 'sanctum')
+            ->postJson("/api/user/events/{$event->id}/join-team", ['kode_unik' => $create->json('data.teamCode')])
+            ->assertOk()
+            ->assertJsonPath('data.joined', true);
+
+        $this->assertDatabaseHas('team_members', ['event_id' => $event->id, 'user_id' => $member->id]);
+        $this->assertDatabaseHas('event_enrollments', ['event_id' => $event->id, 'user_id' => $member->id]);
+        $this->assertDatabaseHas('teams', ['event_id' => $event->id, 'kode_unik' => 'BYTE01', 'jumlah_anggota' => 2, 'completion_status' => 'complete']);
+
+        $this->getJson('/api/user/dashboard')
+            ->assertOk()
+            ->assertJsonFragment(['kind' => 'team', 'eventId' => $event->id]);
     }
 
     public function test_authenticated_user_can_logout_cleanly(): void

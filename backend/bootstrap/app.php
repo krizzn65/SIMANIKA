@@ -20,4 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(fn ($request) => $request->is('api/*') || $request->expectsJson());
+        $exceptions->respond(function ($response, $exception, $request) {
+            if ($request->is('api/*') && $response->getStatusCode() >= 500) {
+                return response()->json(['message' => 'Layanan sedang bermasalah. Coba lagi nanti.'], 500);
+            }
+            return $response;
+        });
     })->create();

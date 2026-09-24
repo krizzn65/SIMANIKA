@@ -181,7 +181,7 @@ export default function AdminUsersPage() {
         fetchUsers(meta.currentPage);
       })
       .catch((err) => {
-        const msg = err.response?.data?.message || "Gagal memperbarui pengguna.";
+        const msg = err.message || "Gagal memperbarui pengguna.";
         toast.error(msg);
       })
       .finally(() => {
@@ -200,7 +200,7 @@ export default function AdminUsersPage() {
         fetchUsers(meta.currentPage);
       })
       .catch((err) => {
-        const msg = err.response?.data?.message || "Gagal menghapus pengguna.";
+        const msg = err.message || "Gagal menghapus pengguna.";
         toast.error(msg);
       })
       .finally(() => {
@@ -708,7 +708,7 @@ export default function AdminUsersPage() {
                   </div>
                   {detailModalUser.eventRegistrations?.length === 0 ? (
                     <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-400">
-                      Belum pernah mendaftar pada event atau lomba SIMANIKA.
+                      Belum pernah mendaftar pada event atau competition SIMANIKA.
                     </div>
                   ) : (
                     <div className="space-y-2">

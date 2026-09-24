@@ -22,7 +22,8 @@ class JoinEventTeamController extends Controller
                 if ($lockedEvent->status !== 'published' ||
                     ($lockedEvent->buka_pendaftaran && today()->lt($lockedEvent->buka_pendaftaran)) ||
                     ($lockedEvent->deadline_pendaftaran && today()->gt($lockedEvent->deadline_pendaftaran)) ||
-                    ($lockedEvent->tanggal_selesai && today()->gt($lockedEvent->tanggal_selesai))) {
+                    ($lockedEvent->tanggal_selesai && today()->gt($lockedEvent->tanggal_selesai)) ||
+                    !$lockedEvent->formFields()->exists()) {
                     throw ValidationException::withMessages(['kode_unik' => ['Pendaftaran tim sudah ditutup.']]);
                 }
                 if (DB::table('team_members')->where('event_id', $event->id)->where('user_id', $request->user()->id)->exists()) {
@@ -38,8 +39,14 @@ class JoinEventTeamController extends Controller
                     'user_id' => $request->user()->id, 'joined_at' => now(),
                 ]);
                 $team->jumlah_anggota++;
-                $team->completion_status = $team->jumlah_anggota >= $lockedEvent->min_anggota ? 'complete' : 'incomplete';
+                $team->completion_status = $team->jumlah_anggota >= ($lockedEvent->min_anggota ?? 1) ? 'complete' : 'incomplete';
                 $team->save();
+                DB::table('event_enrollments')->insertOrIgnore([
+                    'event_id' => $lockedEvent->id,
+                    'user_id' => $request->user()->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             });
         } catch (UniqueConstraintViolationException $error) {
             return response()->json(['message' => 'Kamu sudah bergabung dalam tim event ini.'], 409);

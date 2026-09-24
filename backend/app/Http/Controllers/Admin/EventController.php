@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
+use App\Support\EventGuidebookSource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -33,7 +34,7 @@ class EventController extends Controller
         if ($data['event']['status'] === 'published' && !$event->formFields()->exists()) {
             throw ValidationException::withMessages(['status' => ['Susun formulir pendaftaran sebelum mempublikasikan event.']]);
         }
-        if ($event->tipe_pendaftaran !== $data['event']['tipe_pendaftaran'] && ($event->registrations()->exists() || $event->teams()->exists())) {
+        if ($event->tipe_pendaftaran !== $data['event']['tipe_pendaftaran'] && ($event->registrations()->exists() || $event->teams()->exists() || DB::table("event_enrollments")->where("event_id", $event->id)->exists())) {
             throw ValidationException::withMessages(['tipe_pendaftaran' => ['Mode pendaftaran tidak dapat diubah setelah ada pendaftar atau tim.']]);
         }
 
@@ -46,7 +47,7 @@ class EventController extends Controller
 
     public function destroy(Event $event)
     {
-        if ($event->registrations()->exists() || $event->teams()->exists()) return response()->json(['message' => 'Event dengan pendaftar tidak dapat dihapus. Tutup publikasinya.'], 409);
+        if ($event->registrations()->exists() || $event->teams()->exists() || DB::table("event_enrollments")->where("event_id", $event->id)->exists()) return response()->json(['message' => 'Event dengan pendaftar tidak dapat dihapus. Tutup publikasinya.'], 409);
         $event->delete();
         return response()->noContent();
     }
@@ -170,6 +171,8 @@ class EventController extends Controller
             'judul' => ['required', 'string', 'max:200'], 'deskripsi' => ['nullable', 'string', 'max:20000'],
             'kategori' => ['required', 'string', 'max:60'],
             'poster' => ['nullable', 'string', 'max:2048'],
+            'guidebook_type' => ['nullable', Rule::in(['file', 'link'])],
+            'guidebook_value' => ['nullable', 'string', 'max:2048'],
             'tanggal_mulai' => ['required', 'date'], 'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal_mulai'],
             'buka_pendaftaran' => ['nullable', 'date'], 'deadline_pendaftaran' => ['nullable', 'date'],
             'timeline' => ['nullable', 'array', 'max:50'],
@@ -178,6 +181,8 @@ class EventController extends Controller
             'lokasi' => ['nullable', 'string', 'max:200'], 'tipe' => ['required', Rule::in(['online', 'offline', 'hybrid'])],
             'status' => ['required', Rule::in(['draft', 'published', 'closed', 'selesai'])],
             'tipe_pendaftaran' => ['required', Rule::in(['individu', 'tim'])],
+            'payment_type' => ['required', Rule::in(['free', 'paid'])],
+            'htm' => ['nullable', 'integer', 'min:1', 'max:999999999999'],
             'kode_prefix' => ['nullable', 'regex:/^[A-Z]{1,6}$/'], 'min_anggota' => ['nullable', 'integer', 'min:2', 'max:100'],
             'max_anggota' => ['nullable', 'integer', 'gte:min_anggota', 'max:100'],
             'hadiah' => ['array', 'max:20'], 'hadiah.*' => ['string', 'max:250'],
@@ -193,6 +198,13 @@ class EventController extends Controller
             throw ValidationException::withMessages(['form_fields' => ['Atur formulir melalui halaman detail event.']]);
         }
         $data = $request->validate($rules);
+        if ($data['payment_type'] === 'paid' && empty($data['htm'])) {
+            throw ValidationException::withMessages(['htm' => ['Nominal HTM wajib diisi untuk event berbayar.']]);
+        }
+        if ($data['payment_type'] === 'free') {
+            $data['htm'] = null;
+        }
+        EventGuidebookSource::validate($data);
         $names = array_column($data['form_fields'] ?? [], 'name');
         if (count($names) !== count(array_unique($names))) throw ValidationException::withMessages(['form_fields' => ['Nama kolom harus unik.']]);
         if ($data['tipe_pendaftaran'] === 'tim' && (empty($data['kode_prefix']) || empty($data['min_anggota']) || empty($data['max_anggota']))) {

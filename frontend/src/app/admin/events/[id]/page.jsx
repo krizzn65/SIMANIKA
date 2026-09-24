@@ -57,7 +57,7 @@ export default function EventBuilderPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const locked = Boolean(event?.registrations_count || event?.teams_count);
+  const locked = Boolean(event?.registrations_count || event?.teams_count || event?.enrollments_count);
   function change(index, update) {
     setFields((current) => current.map((field, position) => position === index ? { ...field, ...update } : field));
     setDirty(true);

@@ -1,22 +1,33 @@
 import Link from "next/link";
-import { eventDate, registrationState } from "@/lib/events";
+import { eventCategoryLabel, eventFeeLabel, registrationState } from "@/lib/events";
 import { EventPoster } from "./EventPoster";
 
 export function EventCard({ event, now }) {
   const state = registrationState(event, now);
   return (
-    <article className="event-card">
-      <EventPoster src={event.poster} title={event.judul} />
-      <div className="event-card__body">
-        <div className="event-card__tags"><span className="event-category">{event.kategori}</span><span>{event.tipePendaftaran === "tim" ? "Tim" : "Individu"}</span></div>
-        <h3><Link prefetch={false} href={`/events/${event.slug}`}>{event.judul}</Link></h3>
-        <p className="event-card__date">{eventDate(event.tanggalMulai, true)}</p>
-        <p className="event-card__location">{event.tipe && <span>{event.tipe} · </span>}{event.lokasi}</p>
-        <div className="event-card__bottom">
-          <div><span className={`event-status event-status--${state.key}`}><span aria-hidden="true">{state.icon}</span> {state.label}</span></div>
-          <Link className="event-card__arrow" prefetch={false} href={`/events/${event.slug}`} aria-label={`Lihat detail ${event.judul}`}>↗</Link>
+    <Link
+      className="event-card"
+      prefetch={false}
+      href={"/events/" + event.slug}
+      aria-label={"Masuk ke " + event.judul}
+    >
+      <article>
+        <EventPoster src={event.poster} title={event.judul} />
+        <div className="event-card__body">
+          <div className="event-card__tags">
+            <span className="event-category">{eventCategoryLabel(event.kategori)}</span>
+          </div>
+          <div className="event-card__content">
+            <h3>{event.judul}</h3>
+            <p className="event-card__date">{event.tipePendaftaran === "tim" ? "Tim " + (event.minAnggota || "?") + "–" + (event.maxAnggota || "?") + " anggota" : "Individu"}</p>
+            <p className="event-card__fee">{eventFeeLabel(event)}</p>
+            <div className="event-card__bottom">
+              <span className={"event-status event-status--" + state.key}>{state.label}</span>
+              <span className="event-card__entry">Detail <span aria-hidden="true">→</span></span>
+            </div>
+          </div>
         </div>
-      </div>
-    </article>
+      </article>
+    </Link>
   );
 }

@@ -20,10 +20,10 @@ pada request/navigasi berikutnya, bukan push real-time ke tab yang sedang terbuk
 
 ## List
 
-`GET /api/public/events?search=...&kategori=lomba&status=upcoming&page=1&per_page=9`
+`GET /api/public/events?search=...&kategori=hi-fest&status=upcoming&page=1&per_page=9`
 
 - `search`: maksimal 100 karakter, pencarian judul/topik; backend wajib validasi.
-- `kategori`: `lomba | seminar | workshop | lainnya`; kosong = semua.
+- `kategori`: `hi-fest | mic | imce | lainnya`; kosong = semua. `lainnya` juga mencakup kategori kustom dan data kategori lama.
 - `status`: waktu kegiatan `upcoming | ongoing | selesai`; kosong = semua.
   Ini **berbeda** dengan status publikasi event.
 - Upcoming: mulai > sekarang; ongoing: mulai <= sekarang < selesai;
@@ -55,6 +55,8 @@ pada request/navigasi berikutnya, bukan push real-time ke tab yang sedang terbuk
   "deskripsi": "Deskripsi kegiatan.\n\nParagraf berikutnya.",
   "kategori": "workshop",
   "poster": "https://cdn.example.com/events/workshop-web.webp",
+  "guidebookType": "link",
+  "guidebookUrl": "https://example.com/guidebook.pdf",
   "tanggalMulai": "2026-11-20T09:00:00+07:00",
   "tanggalSelesai": "2026-11-20T16:00:00+07:00",
   "bukaPendaftaran": "2026-10-01T09:00:00+07:00",
@@ -63,6 +65,8 @@ pada request/navigasi berikutnya, bukan push real-time ke tab yang sedang terbuk
   "tipe": "offline",
   "status": "published",
   "tipePendaftaran": "individu",
+  "paymentType": "paid",
+  "htm": 500000,
   "kuota": 80,
   "sisaKuota": 25,
   "teamSettings": null,
@@ -82,17 +86,22 @@ properti majemuk, misalnya `tanggal_mulai`, `tipe_pendaftaran`, `team_settings`.
   tak terbatas; nol = habis. `sisaKuota` dihitung **backend** dari registrasi valid.
 - Tim: `teamSettings: { minAnggota, maxAnggota, kuotaTim }`; `sisaKuota` dihitung
   dalam satuan **tim**, bukan anggota. Jangan kirim data pribadi peserta.
+- Pembayaran: `paymentType` hanya `free | paid`. `htm` berupa integer rupiah tanpa pemisah dan wajib positif bila `paid`; untuk `free`, backend mengembalikan `htm: null`. Card memformatnya menjadi `Free` atau `Bayar · Rp500.000`.
 - `bukaPendaftaran`, `sisaKuota`, `formFields` adalah tambahan kontrak publik
   untuk tampilan yang belum dirinci pada model awal PRD.
-- Formulir hanya tampil ketika event terpublikasi, jadwal dibuka, dan `formFields` tersedia.
+- Tombol `Daftar` hanya tampil ketika event terpublikasi, jadwal dibuka, dan `formFields` tersedia. Untuk event individu, `POST /api/user/events/{id}/enroll` menyimpan keikutsertaan secara idempoten lalu membuka dashboard.
+- Untuk competition tim, tombol `Daftar` membuka dialog bertahap. Ketua memilih **Buat tim**, mengisi nama tim, lalu frontend memanggil `POST /api/user/events/{id}/create-team` dengan `{ nama_tim }`. Respons `201` berisi `{ created, teamName, teamCode }`; dialog tetap terbuka agar kode dapat disalin sebelum tombol `Lanjut` membuka dashboard.
+- Anggota memilih **Join Tim**, memasukkan kode alfanumerik maksimal 16 karakter, lalu frontend memanggil `POST /api/user/events/{id}/join-team` dengan `{ kode_unik }`. Sukses langsung membuka dashboard. Kedua endpoint tim melakukan validasi deadline, form tersedia, kapasitas anggota, dan aturan satu user satu tim per event dalam transaksi.
+- Pembuatan maupun join tim juga menyimpan `event_enrollments` secara idempoten sehingga card dashboard langsung tersedia. Event keluar dari dashboard setelah tanggal selesai atau status `selesai`.
 - Admin membuat event sebagai draft, mengatur field pada `/admin/events/{id}`, lalu mempublikasikannya. Skema terkunci setelah ada pendaftar.
 - Jenis field: text, email, tel, number, date, textarea, select, radio, checkbox, dan file. File privat dibatasi 5 MB (PDF/JPG/PNG/WebP).
-- `POST /api/user/events/{id}/register` menerima jawaban multipart; anggota tim bergabung melalui `POST .../join-team` memakai kode tim.
+- `POST /api/user/events/{id}/register` menerima isian multipart dari dashboard untuk jawaban formulir dinamis.
 - Backend tetap menjadi otoritas deadline, kuota, dan izin pendaftaran.
 - `deskripsi` saat ini ditampilkan sebagai **teks biasa dengan newline**, di-escape
   oleh React. HTML tidak dieksekusi. Editor rich text/Markdown admin perlu renderer
   tersanitasi saat dikembangkan; jangan mengirim markup untuk tampilan awal ini.
 - Poster unggahan disimpan pada disk publik, tetapi dibaca lewat `GET /api/public/events/posters/{filename}` sehingga tidak bergantung pada symlink `/storage`. URL poster lama dinormalisasi oleh resource event; file yang tidak ada tetap menghasilkan 404.
+- Admin dapat memilih guidebook opsional berupa PDF maksimal 10 MB atau tautan HTTPS. PDF diunggah melalui `POST /api/admin/events/upload-guidebook` dan dibuka melalui `GET /api/public/events/guidebooks/{filename}`. Tombol Guidebook hanya muncul bila sumber valid tersedia.
 - Poster disarankan WebP/AVIF, maksimal lebar 1280px, target <200KB. CDN sebaiknya
   menyediakan thumbnail. UI menjaga rasio 16:10, `object-fit: contain` agar isi
   poster tidak terpotong, lazy loading di daftar dan fallback bila gambar rusak.

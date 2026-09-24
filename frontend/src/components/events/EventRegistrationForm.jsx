@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { api } from "@/services/api";
 
-export function EventRegistrationForm({ event }) {
+export function EventRegistrationForm({ event, onSuccess }) {
   const [pending, setPending] = useState(false);
   const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState("");
@@ -24,7 +24,7 @@ export function EventRegistrationForm({ event }) {
     try {
       const response = await api.post("/user/events/" + event.id + "/register", body, { headers: { "Content-Type": "multipart/form-data" }, timeout: 30000 });
       if (response.data?.data?.submitted !== true) throw new Error("Respons pendaftaran tidak valid.");
-      setSuccess(true); form.reset();
+      setSuccess(true); form.reset(); onSuccess?.();
     } catch (error) {
       setErrors(error.response?.data?.errors || {});
       setMessage(error.response?.status === 401 ? "Masuk ke akun terlebih dahulu untuk mendaftar." : error.message || "Pendaftaran belum berhasil.");
@@ -32,7 +32,7 @@ export function EventRegistrationForm({ event }) {
   }
 
   if (success) return <div className="event-form-feedback" role="status"><h3>Pendaftaran terkirim.</h3><p>{event.tipePendaftaran === "tim" ? "Tim berhasil dibuat. Lihat kode tim di dashboard akunmu." : "Data pendaftaranmu sudah tersimpan."}</p><Link href="/dashboard">Lihat dashboard</Link></div>;
-  return <form id="form-pendaftaran" className="event-dynamic-form" onSubmit={submit} aria-busy={pending}>
+  return <form id={"form-pendaftaran-" + event.id} className="event-dynamic-form" onSubmit={submit} aria-busy={pending}>
     <span className="event-mono">FORMULIR PENDAFTARAN</span>
     <h2>Daftar {event.judul}</h2>
     <p>Kolom bertanda * wajib diisi. Isilah sesuai petunjuk penyelenggara.</p>
@@ -40,7 +40,7 @@ export function EventRegistrationForm({ event }) {
     <fieldset disabled={pending}>
       <legend className="event-form-sr-only">Jawaban pendaftaran</legend>
       {event.formFields.map((field) => {
-        const id = "event-field-" + field.name;
+        const id = "event-" + event.id + "-field-" + field.name;
         return <div className="event-dynamic-field" key={field.name}>
           {field.type !== "checkbox" && <label htmlFor={id}>{field.label}{field.required && <b aria-label="wajib"> *</b>}</label>}
           {field.help && <small>{field.help}</small>}

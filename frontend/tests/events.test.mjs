@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const source = await readFile(new URL("../src/lib/events.js", import.meta.url), "utf8");
-const { eventFilters, eventListHref, safeEventUrl, normalizeEvent, registrationState, eventDate } =
+const { eventFilters, eventListHref, safeEventUrl, normalizeEvent, registrationState, eventFeeLabel, eventDate, eventCategoryLabel } =
   await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
 
 const sample = {
@@ -14,11 +14,17 @@ const sample = {
 const now = Date.parse("2026-11-01T00:00:00+07:00");
 
 test("query parameters are bounded, allowlisted and preserve search across pagination", () => {
-  const filters = eventFilters({ search: ["  web & design  ", "ignored"], kategori: "lomba", status: "upcoming", page: "2" });
+  const filters = eventFilters({ search: ["  web & design  ", "ignored"], kategori: "hi-fest", status: "upcoming", page: "2" });
   assert.equal(filters.search, "web & design");
-  assert.equal(eventListHref(filters, { page: 3 }), "/events?search=web+%26+design&kategori=lomba&status=upcoming&page=3");
+  assert.equal(eventListHref(filters, { page: 3 }), "/events?search=web+%26+design&kategori=hi-fest&status=upcoming&page=3");
   assert.deepEqual(eventFilters({ page: "-1", kategori: "invalid", status: "draft" }), { search: "", kategori: "", status: "", page: 1 });
   assert.equal(eventFilters({ search: "a".repeat(200), page: "Infinity" }).search.length, 100);
+  assert.equal(eventCategoryLabel("hi-fest"), "HI-FEST");
+  assert.equal(eventCategoryLabel("MIC"), "MIC");
+  assert.equal(eventCategoryLabel("imce"), "IMCE");
+  assert.equal(eventCategoryLabel("Komunitas"), "Komunitas");
+  assert.equal(eventFilters({ kategori: "mic" }).kategori, "mic");
+  assert.equal(eventFilters({ kategori: "imce" }).kategori, "imce");
 });
 
 test("draft and malformed records are never public", () => {
@@ -33,6 +39,17 @@ test("team settings normalize min and max members", () => {
   assert.equal(event.minAnggota, 3);
   assert.equal(event.maxAnggota, 5);
   assert.equal(registrationState(event, now).label, "Pendaftaran dibuka");
+});
+
+
+test("event payment normalizes and formats Free or Indonesian rupiah", () => {
+  const free = normalizeEvent(sample);
+  const paid = normalizeEvent({ ...sample, payment_type: "paid", htm: 500000 });
+  assert.equal(free.paymentType, "free");
+  assert.equal(eventFeeLabel(free), "Free");
+  assert.equal(paid.paymentType, "paid");
+  assert.equal(paid.htm, 500000);
+  assert.match(eventFeeLabel(paid), /HTM · Rp\s?500[.]000/);
 });
 
 test("registration gates handle closed, ended, upcoming, deadline boundary and open", () => {

@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import "./events.css";
+import "./event-detail-view.css";
 
 export default function EventsLayout({ children }) {
   return (
