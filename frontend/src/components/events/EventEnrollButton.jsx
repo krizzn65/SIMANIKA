@@ -87,7 +87,7 @@ export function EventEnrollButton({ event }) {
     setTeam((current) => ({ ...current, error: "" }));
     try {
       const { data } = await api.post(`/user/events/${event.id}/join-team`, { kode_unik: code });
-      if (data?.data?.joined !== true) throw new Error("Status bergabung belum dapat dipastikan.");
+      if (data?.data?.requested !== true) throw new Error("Status bergabung belum dapat dipastikan.");
       router.push(`/dashboard?event=${event.id}`);
     } catch (err) {
       if (err.response?.status === 401) return goToLogin();
@@ -147,11 +147,11 @@ export function EventEnrollButton({ event }) {
         </form>}
 
         {team.step === "join" && <form className="event-team-dialog__form" onSubmit={joinTeam}>
-          <p>Masukkan kode tim yang dibagikan oleh ketua tim.</p>
+          <p>Masukkan kode tim. Permintaan bergabung akan diperiksa oleh ketua tim.</p>
           <label htmlFor={`team-code-${event.id}`}>Kode tim <b aria-label="wajib">*</b></label>
           <input id={`team-code-${event.id}`} value={team.code} onChange={(e) => setTeam((current) => ({ ...current, code: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 16), error: "" }))} required minLength={3} maxLength={16} autoComplete="off" spellCheck="false" placeholder="Contoh: HACK01" aria-describedby={team.error ? `team-error-${event.id}` : undefined} autoFocus />
           {team.error && <p id={`team-error-${event.id}`} className="event-team-dialog__error" role="alert">{team.error}</p>}
-          <footer className="event-team-dialog__footer"><button type="button" className="event-team-dialog__secondary" onClick={() => selectStep("choose")} disabled={pending}>Kembali</button><button type="submit" className="event-team-dialog__primary" disabled={pending}>{pending ? "Memeriksa kode…" : "Join Tim"}</button></footer>
+          <footer className="event-team-dialog__footer"><button type="button" className="event-team-dialog__secondary" onClick={() => selectStep("choose")} disabled={pending}>Kembali</button><button type="submit" className="event-team-dialog__primary" disabled={pending}>{pending ? "Memeriksa kode…" : "Kirim permintaan"}</button></footer>
         </form>}
 
         {team.step === "code" && <div className="event-team-dialog__success">

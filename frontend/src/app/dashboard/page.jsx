@@ -8,7 +8,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
 import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
-import { DashboardEventActions } from "./DashboardEventActions";
+import { UsersRound } from "lucide-react";
 import { eventCategoryLabel } from "@/lib/events";
 import "../events/events.css";
 import "./dashboard.css";
@@ -16,6 +16,7 @@ import "./dashboard-actions.css";
 
 const statusLabels = {
   pending: "Menunggu proses",
+  join_pending: "Menunggu ketua",
   accepted: "Diterima",
   rejected: "Belum diterima",
   incomplete: "Perlu dilengkapi",
@@ -31,9 +32,17 @@ function formatDate(value) {
 }
 
 function RegistrationCard({ item, onComplete }) {
-  const type = item.kind === "oprec" ? "OPEN RECRUITMENT" : item.kind === "team" ? "COMPETITION / TIM" : "EVENT / COMPETITION";
+  const type = item.kind === "oprec" ? "OPEN RECRUITMENT" : eventCategoryLabel(item.category || item.subtitle);
   const date = formatDate(item.date);
   const statusTone = ["accepted", "rejected"].includes(item.status) ? item.status : "pending";
+  const memberCount = Number(item.teamMembers);
+  const minimum = Number(item.teamMin);
+  const maximum = Number(item.teamMax);
+  const showTeamProgress = item.kind === "team" && item.teamMembers != null && Number.isFinite(memberCount) && Number.isFinite(maximum) && maximum > 0;
+  const progress = showTeamProgress ? Math.min(100, Math.max(0, memberCount / maximum * 100)) : 0;
+  const teamReady = showTeamProgress && memberCount >= minimum;
+  const paymentLabel = item.paymentType === "paid" ? (item.paymentStatus === "paid" ? "Paid" : "Unpaid") : "Free";
+  const paymentTone = paymentLabel.toLowerCase();
   return (
     <article className="dashboard-entry">
       <div className="dashboard-entry__top">
@@ -44,11 +53,17 @@ function RegistrationCard({ item, onComplete }) {
       </div>
       <div className="dashboard-entry__body">
         <h2>{item.title}</h2>
-        <p>{item.kind === "oprec" ? item.subtitle : eventCategoryLabel(item.subtitle)}</p>
+        {item.kind === "oprec" && <p>{item.subtitle}</p>}
+        {item.kind === "team" && item.teamName && <p>{item.teamName}{item.teamCode && <> · Kode: {item.teamCode}</>}</p>}
+        {showTeamProgress && (
+          <div className="dashboard-entry__team-progress" aria-label={"Anggota tim " + memberCount + " dari maksimal " + maximum + ". Minimal " + minimum + " anggota."}>
+            <span className="dashboard-entry__team-count"><UsersRound size={17} aria-hidden="true" /> {memberCount}/{maximum}</span>
+            <span className="dashboard-entry__team-track" aria-hidden="true"><span className={teamReady ? "is-ready" : "is-waiting"} style={{ width: progress + "%" }} /></span>
+          </div>
+        )}
       </div>
-      <DashboardEventActions item={item} onComplete={onComplete} />
       <div className="dashboard-entry__bottom">
-        <span>{date ? (item.kind === "oprec" ? "Pengumuman" : "Pelaksanaan") + " · " + date : "Pendaftaran tercatat"}</span>
+        <span className={item.kind === "oprec" ? undefined : "dashboard-entry__payment dashboard-entry__payment--" + paymentTone}>{item.kind === "oprec" ? (date ? "Pengumuman · " + date : "Pendaftaran tercatat") : paymentLabel}</span>
         <Link href={item.href}>Lihat detail <span aria-hidden="true">↗</span></Link>
       </div>
     </article>

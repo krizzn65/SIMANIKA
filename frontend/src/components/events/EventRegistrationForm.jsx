@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { api } from "@/services/api";
 
-export function EventRegistrationForm({ event, onSuccess }) {
+export function EventRegistrationForm({ event, onSuccess, compact = false }) {
+  const errorRef = useRef(null);
   const [pending, setPending] = useState(false);
   const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState("");
@@ -18,6 +19,13 @@ export function EventRegistrationForm({ event, onSuccess }) {
     const body = new FormData(form);
     for (const [key, value] of body.entries()) if (value instanceof File && value.size === 0) body.delete(key);
     let total = 0;
+    const fileErrors = {};
+    for (const [name, value] of body.entries()) {
+      if (!(value instanceof File)) continue;
+      if (value.size > 5 * 1024 * 1024) fileErrors[name] = ["Berkas maksimal 5 MB."];
+      else if (!/\.(pdf|jpe?g|png|webp)$/i.test(value.name)) fileErrors[name] = ["Gunakan PDF, JPG, PNG, atau WebP."];
+    }
+    if (Object.keys(fileErrors).length) { setErrors(fileErrors); setMessage("Periksa berkas yang dipilih."); requestAnimationFrame(() => errorRef.current?.focus()); return; }
     for (const value of body.values()) if (value instanceof File) total += value.size;
     if (total > 11 * 1024 * 1024) { setMessage("Total berkas maksimal 11 MB."); return; }
     setPending(true); setMessage(""); setErrors({});
@@ -28,15 +36,15 @@ export function EventRegistrationForm({ event, onSuccess }) {
     } catch (error) {
       setErrors(error.response?.data?.errors || {});
       setMessage(error.response?.status === 401 ? "Masuk ke akun terlebih dahulu untuk mendaftar." : error.message || "Pendaftaran belum berhasil.");
+      requestAnimationFrame(() => errorRef.current?.focus());
     } finally { setPending(false); }
   }
 
-  if (success) return <div className="event-form-feedback" role="status"><h3>Pendaftaran terkirim.</h3><p>{event.tipePendaftaran === "tim" ? "Tim berhasil dibuat. Lihat kode tim di dashboard akunmu." : "Data pendaftaranmu sudah tersimpan."}</p><Link href="/dashboard">Lihat dashboard</Link></div>;
+  if (success) return <div className="event-form-feedback" role="status"><h3>Pendaftaran terkirim.</h3><p>{event.tipePendaftaran === "tim" ? "Formulir tim sudah tersimpan." : "Data pendaftaranmu sudah tersimpan."}</p><Link href="/dashboard">Lihat dashboard</Link></div>;
   return <form id={"form-pendaftaran-" + event.id} className="event-dynamic-form" onSubmit={submit} aria-busy={pending}>
-    <span className="event-mono">FORMULIR PENDAFTARAN</span>
-    <h2>Daftar {event.judul}</h2>
+    {!compact && <><span className="event-mono">FORMULIR PENDAFTARAN</span><h2>Daftar {event.judul}</h2></>}
     <p>Kolom bertanda * wajib diisi. Isilah sesuai petunjuk penyelenggara.</p>
-    {message && <div role="alert" className="event-form-feedback">{message}{Object.keys(errors).length > 0 && <ul>{Object.entries(errors).map(([name, value]) => <li key={name}>{name}: {Array.isArray(value) ? value[0] : value}</li>)}</ul>}</div>}
+    {message && <div ref={errorRef} tabIndex={-1} role="alert" className="event-form-feedback">{message}{Object.keys(errors).length > 0 && <ul>{Object.entries(errors).map(([name, value]) => <li key={name}>{event.formFields.find((field) => field.name === name)?.label || "Pendaftaran"}: {Array.isArray(value) ? value[0] : value}</li>)}</ul>}</div>}
     <fieldset disabled={pending}>
       <legend className="event-form-sr-only">Jawaban pendaftaran</legend>
       {event.formFields.map((field) => {
@@ -54,6 +62,6 @@ export function EventRegistrationForm({ event, onSuccess }) {
         </div>;
       })}
     </fieldset>
-    <button className="event-button" type="submit" disabled={pending}>{pending ? "Mengirim…" : event.tipePendaftaran === "tim" ? "Daftarkan tim" : "Kirim pendaftaran"}</button>
+    <button className="event-button" type="submit" disabled={pending}>{pending ? "Mengirim…" : event.tipePendaftaran === "tim" ? "Kirim formulir tim" : "Kirim pendaftaran"}</button>
   </form>;
 }

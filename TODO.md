@@ -45,8 +45,8 @@ Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis bera
 |--------|-------|
 | **Total Tasks** | 165 |
 | **Selesai** | 9 |
-| **Dalam Proses** | 49 |
-| **Belum Dikerjakan** | 107 |
+| **Dalam Proses** | 51 |
+| **Belum Dikerjakan** | 105 |
 | **Blocked** | 0 |
 | **Progress** | `█░░░░░░░░░░░░░░░░░░░` **5%** |
 
@@ -262,7 +262,7 @@ Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis bera
 
 | ID | Task | Status | Catatan |
 |----|------|--------|---------|
-| BE-5.1 | `TeamService` — business logic | ⬜ | create, join, leave, kick |
+| BE-5.1 | `TeamService` — business logic | 🔄 | TeamMembershipService: request join, accept, remove, lock deadline/admin, hitung anggota accepted. Uji backend lulus; fitur leave belum masuk scope. |
 | BE-5.2 | `TeamController` (User) — create + generate kode | ⬜ | — |
 | BE-5.3 | Kode generation logic (DB transaction) | ⬜ | `lockForUpdate` + increment |
 | BE-5.4 | Join team endpoint + validasi | ⬜ | `event_id` + kode, slot, no duplicate |
@@ -274,7 +274,7 @@ Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis bera
 | FE-5.2 | Modal/page "Bentuk Tim" | ⬜ | — |
 | FE-5.3 | Modal "Join Tim" — pilih event + input kode | ⬜ | — |
 | FE-5.4 | `MyTeams.jsx` (Dashboard) — list tim | ⬜ | — |
-| FE-5.5 | "Kelola Tim" page (ketua) | ⬜ | — |
+| FE-5.5 | "Kelola Tim" page (ketua) | 🔄 | Workspace `/dashboard/events/[id]`: nama/kode, anggota, approval/remove, form dinamis compact. Build/typecheck dan browser fixture lulus; E2E sesi nyata FE–BE masih perlu. |
 | FE-5.6 | Copy-to-clipboard kode tim | ⬜ | — |
 | FE-5.7 | `teamService.js` — API calls | ⬜ | — |
 | FE-5.8 | Admin: `EventTeams.jsx` — tabel tim | ⬜ | — |
@@ -584,3 +584,9 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 | 2026-09-24 | Label HTM card event | Label pembayaran pada card publik diganti dari `Bayar` menjadi `HTM` dan ukuran teksnya disamakan dengan info Tim agar hierarki visual lebih profesional. Verifikasi lulus: frontend event test 7/7 dan typecheck. | AI |
 
 | 2026-09-24 | HTM detail event | Halaman detail event user sekarang menampilkan informasi HTM di ringkasan fakta hero, memakai helper label yang sama dengan card publik. Verifikasi lulus: frontend event test 7/7 dan typecheck. | AI |
+
+| 2026-09-24 | Card dashboard peserta | Label atas card event memakai kategori; card tim menampilkan nama, kode, serta progres anggota dari jumlah aktual terhadap maksimum dengan warna merah sebelum minimum dan hijau setelah minimum. Bagian bawah event menampilkan Free atau Unpaid; Paid disiapkan untuk status pembayaran saat konfirmasi admin tersedia. Verifikasi: typecheck frontend dan API integration 12 test/72 assertion lulus. Konfirmasi pembayaran admin dan smoke test browser masih tertunda. | AI |
+
+| 2026-09-24 | Workspace pendaftaran & approval tim | Detail dashboard memakai panel tim/kode/anggota di kiri dan form dinamis compact di kanan. Join sekarang pending sampai diterima ketua; pending tidak dihitung. Hanya ketua dapat approve/remove; event/team row lock, deadline/admin lock, satu membership per event, serta berkas privat dijaga di BE. Submit ketua mengisi tim existing, bukan membuat tim kedua. Migrasi approval berhasil di PostgreSQL lokal, anggota lama tetap accepted. Verifikasi: backend 27 test/191 assertion, frontend event 7/7, typecheck, build, dan browser fixture Chrome 320–1440px (approve, remove/cancel, submit, pending, error/retry, reduced motion, tanpa JS exception) lulus. UI diadaptasi dari pola 21st.dev, copy/check animasi, serta ikon pqoqubbw berlisensi MIT. E2E browser sesi nyata FE–BE dan stress concurrency PostgreSQL belum diuji; konfirmasi paid admin tetap tertunda. | AI |
+
+| 2026-09-24 | Warna status pembayaran dashboard | Status pembayaran pada card dashboard diberi tone visual: Unpaid merah, Paid hijau, dan Free netral. Verifikasi typecheck frontend lulus. | AI |

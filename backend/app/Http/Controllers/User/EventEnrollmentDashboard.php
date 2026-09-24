@@ -16,7 +16,8 @@ class EventEnrollmentDashboard
             ->when($completedIds, fn ($query) => $query->whereNotIn('events.id', $completedIds))
             ->select('event_enrollments.id', 'event_enrollments.event_id', 'event_enrollments.created_at',
                 'events.slug', 'events.judul', 'events.kategori', 'events.tanggal_mulai',
-                'events.buka_pendaftaran', 'events.deadline_pendaftaran', 'events.status', 'events.tipe_pendaftaran')
+                'events.buka_pendaftaran', 'events.deadline_pendaftaran', 'events.status', 'events.tipe_pendaftaran',
+                'events.payment_type', 'events.htm')
             ->latest('event_enrollments.created_at')
             ->get()
             ->map(function ($enrollment) {
@@ -34,8 +35,11 @@ class EventEnrollmentDashboard
                     'kind' => $enrollment->tipe_pendaftaran === 'tim' ? 'team' : 'event',
                     'title' => $enrollment->judul,
                     'subtitle' => $enrollment->kategori,
+                    'category' => $enrollment->kategori,
+                    'paymentType' => $enrollment->payment_type ?? 'free',
+                    'htm' => $enrollment->payment_type === 'paid' ? $enrollment->htm : null,
                     'status' => 'incomplete',
-                    'href' => '/events/'.$enrollment->slug,
+                    'href' => '/dashboard/events/'.$enrollment->event_id,
                     'date' => $enrollment->tanggal_mulai,
                     'registeredAt' => $enrollment->created_at,
                     'eventId' => $enrollment->event_id,

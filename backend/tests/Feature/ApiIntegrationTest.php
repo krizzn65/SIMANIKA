@@ -177,11 +177,11 @@ class ApiIntegrationTest extends TestCase
         $this->actingAs($member, 'sanctum')
             ->postJson("/api/user/events/{$event->id}/join-team", ['kode_unik' => $create->json('data.teamCode')])
             ->assertOk()
-            ->assertJsonPath('data.joined', true);
+            ->assertJsonPath('data.requested', true);
 
         $this->assertDatabaseHas('team_members', ['event_id' => $event->id, 'user_id' => $member->id]);
         $this->assertDatabaseHas('event_enrollments', ['event_id' => $event->id, 'user_id' => $member->id]);
-        $this->assertDatabaseHas('teams', ['event_id' => $event->id, 'kode_unik' => 'BYTE01', 'jumlah_anggota' => 2, 'completion_status' => 'complete']);
+        $this->assertDatabaseHas('teams', ['event_id' => $event->id, 'kode_unik' => 'BYTE01', 'jumlah_anggota' => 1, 'completion_status' => 'incomplete']);
 
         $this->getJson('/api/user/dashboard')
             ->assertOk()
