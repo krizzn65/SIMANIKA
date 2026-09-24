@@ -86,11 +86,13 @@ properti majemuk, misalnya `tanggal_mulai`, `tipe_pendaftaran`, `team_settings`.
   dalam satuan **tim**, bukan anggota. Jangan kirim data pribadi peserta.
 - `bukaPendaftaran`, `sisaKuota`, `formFields` adalah tambahan kontrak publik
   untuk tampilan yang belum dirinci pada model awal PRD.
-- Tombol `Daftar` hanya tampil ketika event terpublikasi, jadwal dibuka, dan `formFields` tersedia. `POST /api/user/events/{id}/enroll` menyimpan keikutsertaan secara idempoten dan mengarahkan pengguna ke dashboard.
-- Card dashboard muncul segera setelah enrolment. Formulir individu serta pilihan buat/gabung tim ditampilkan di card. Event keluar dari dashboard setelah tanggal selesai atau status `selesai`.
+- Tombol `Daftar` hanya tampil ketika event terpublikasi, jadwal dibuka, dan `formFields` tersedia. Untuk event individu, `POST /api/user/events/{id}/enroll` menyimpan keikutsertaan secara idempoten lalu membuka dashboard.
+- Untuk competition tim, tombol `Daftar` membuka dialog bertahap. Ketua memilih **Buat tim**, mengisi nama tim, lalu frontend memanggil `POST /api/user/events/{id}/create-team` dengan `{ nama_tim }`. Respons `201` berisi `{ created, teamName, teamCode }`; dialog tetap terbuka agar kode dapat disalin sebelum tombol `Lanjut` membuka dashboard.
+- Anggota memilih **Join Tim**, memasukkan kode alfanumerik maksimal 16 karakter, lalu frontend memanggil `POST /api/user/events/{id}/join-team` dengan `{ kode_unik }`. Sukses langsung membuka dashboard. Kedua endpoint tim melakukan validasi deadline, form tersedia, kapasitas anggota, dan aturan satu user satu tim per event dalam transaksi.
+- Pembuatan maupun join tim juga menyimpan `event_enrollments` secara idempoten sehingga card dashboard langsung tersedia. Event keluar dari dashboard setelah tanggal selesai atau status `selesai`.
 - Admin membuat event sebagai draft, mengatur field pada `/admin/events/{id}`, lalu mempublikasikannya. Skema terkunci setelah ada pendaftar.
 - Jenis field: text, email, tel, number, date, textarea, select, radio, checkbox, dan file. File privat dibatasi 5 MB (PDF/JPG/PNG/WebP).
-- `POST /api/user/events/{id}/register` menerima isian multipart dari dashboard; anggota tim bergabung melalui `POST .../join-team` memakai kode tim.
+- `POST /api/user/events/{id}/register` menerima isian multipart dari dashboard untuk jawaban formulir dinamis.
 - Backend tetap menjadi otoritas deadline, kuota, dan izin pendaftaran.
 - `deskripsi` saat ini ditampilkan sebagai **teks biasa dengan newline**, di-escape
   oleh React. HTML tidak dieksekusi. Editor rich text/Markdown admin perlu renderer
