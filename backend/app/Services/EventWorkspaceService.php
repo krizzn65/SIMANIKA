@@ -27,11 +27,32 @@ class EventWorkspaceService
         ['team' => $team, 'registration' => $registration, 'membership' => $membership,
             'isLeader' => $isLeader, 'accepted' => $accepted] = $context;
         $fields = $event->formFields()->get();
+        $groups = $event->formGroups()->with('fields')->get();
         $canView = $event->tipe_pendaftaran === 'individu' || $accepted;
         $record = $team ?: $registration;
         $submitted = $team ? $team->form_submitted_at !== null : $registration !== null;
         $reason = app(TeamMembershipService::class)->lockReason($event, $team);
         $answers = [];
+        $groupData = $groups->map(function ($group) use ($event, $userId, $team, $canView, $reason, $isLeader) {
+            $ownerType = $group->scope === 'team' ? 'team' : 'user';
+            $ownerId = $ownerType === 'team' ? $team?->id : $userId;
+            $record = $canView && $ownerId ? DB::table('event_group_submissions')
+                ->where('group_id', $group->id)->where('owner_type', $ownerType)->where('owner_id', $ownerId)->first() : null;
+            $values = $record ? json_decode($record->form_data, true) : [];
+            return [
+                'id' => $group->id, 'title' => $group->title, 'scope' => $group->scope,
+                'editRole' => $group->edit_role, 'submitted' => (bool) $record,
+                'canEdit' => $canView && !$reason && ($group->scope === 'personal' || $group->edit_role === 'all' || $isLeader),
+                'fields' => $canView ? $group->fields->map(fn ($field) => [
+                    'name' => $field->name, 'label' => $field->label, 'type' => $field->type,
+                    'required' => (bool) $field->required, 'options' => $field->options ?? [],
+                    'help' => $field->help, 'placeholder' => $field->placeholder,
+                    'value' => $field->type === 'file' ? null : ($values[$field->name] ?? null),
+                    'downloadUrl' => $field->type === 'file' && !empty($values[$field->name])
+                        ? route('user.event-group-file', ['event' => $event->id, 'group' => $group->id, 'field' => $field->name]) : null,
+                ])->values()->all() : [],
+            ];
+        })->values()->all();
         if ($canView && $submitted) {
             foreach ($fields as $field) {
                 $value = ($record->form_data ?? [])[$field->name] ?? null;
@@ -52,6 +73,7 @@ class EventWorkspaceService
                     'required' => (bool) $field->required, 'options' => $field->options ?? [],
                     'help' => $field->help, 'placeholder' => $field->placeholder,
                 ])->values()->all() : [],
+                'formGroups' => $canView ? $groupData : [],
             ],
             'paymentStatus' => $event->payment_type === 'paid' ? 'unpaid' : 'free',
             'htm' => $event->payment_type === 'paid' ? $event->htm : null,

@@ -6,6 +6,19 @@
 
 ## Audit kesesuaian `architecture.md` (22 September 2026)
 
+### Formulir event per grup (25 September 2026)
+
+- [x] Editor admin: grup dinamis, nama/urutan, pertanyaan, aturan pribadi atau bersama, hak edit ketua/semua anggota, lipat/buka, dan pratinjau.
+- [x] API peserta: submit per grup, isolasi jawaban pribadi per user, jawaban bersama per tim, otorisasi edit/unduh berkas di server. Seluruh suite backend: 31 tes/236 assertion lulus; build Next.js webpack dan TypeScript lulus.
+- [ ] Uji browser manual lintas viewport dan sesi nyata untuk editor serta dashboard. Migrasi PostgreSQL lokal `2026_09_25_000001_create_event_form_groups` sudah diterapkan (batch 17); relasi event 15 dan tabel grup berhasil dibaca.
+- [ ] Buat panel admin untuk membaca/meninjau jawaban tiap grup dan workflow verifikasi/pembayaran; saat ini grup hanya berstatus sudah/belum dikirim.
+
+### Integritas kode tim dan event (25 September 2026)
+
+- [x] Prefix unik selama event masih ada; boleh digunakan kembali bersama nama/slug setelah event tanpa peserta dihapus. Counter dan kode yang pernah terbit tetap dicadangkan lintas event; generator memakai transaksi dan row lock. Prefix/kode lama dibackfill tanpa mengganti kode yang sudah dibagikan. Pengaturan tim dikunci setelah ada peserta. Update/publish/hapus event memakai lock agar tidak berpacu dengan pendaftaran. Migrasi PostgreSQL lokal batch 18 berhasil; 34 tes backend/266 assertion dan build Next.js/TypeScript lulus.
+- [ ] Tinjau dan remediasi dua kode historis `HACK01` pada event 15 dan 16 bersama pemilik tim sebelum mengganti salah satunya; join saat ini selalu dibatasi event yang dipilih, tetapi kode tidak unik secara global pada data historis.
+- [ ] Uji dua permintaan create-team simultan pada PostgreSQL nyata dan smoke test browser admin setelah deploy; tes SQLite tidak membuktikan perilaku lock PostgreSQL di bawah beban.
+
 Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis berarti sudah teruji.
 
 | Area | Status | Yang perlu diverifikasi/diselesaikan |
@@ -40,6 +53,8 @@ Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis bera
 ---
 
 ## 📊 Summary
+
+Verifikasi terbaru (25 September 2026): penguatan kode tim dan event lulus 34 tes backend/266 assertion serta build frontend. Angka progress sprint di bawah belum dihitung ulang karena audit browser dan remediasi data historis masih terbuka.
 
 | Metrik | Nilai |
 |--------|-------|
@@ -463,6 +478,7 @@ Log perubahan signifikan selama pengembangan.
 
 | Tanggal | Sprint | Perubahan | Oleh |
 |---------|--------|-----------|------|
+| 2026-09-25 | Sprint 5/8 | Audit kode tim: prefix unik selama event ada dan dapat dipakai lagi setelah penghapusan; nomor global per prefix serta kode terbit tetap dicadangkan, pengaturan tim terkunci sesudah peserta, dan update/hapus event memakai row lock. Data lama tidak diganti diam-diam. | AI |
 | 2026-09-23 | Sprint 9 | Dashboard peserta dirombak menjadi daftar card pendaftaran event/tim/OPREC dengan endpoint privat, empty/loading/error state, Navbar bersama, dan status OPREC yang tidak bocor sebelum pengumuman. Arahan desain terbaru menggantikan overview profil lama. | AI |
 | 2026-09-21 | Sprint 7 | Tambah route `/merchandise` Coming Soon sesuai permintaan, metadata, navigasi Home/Event, navbar dan footer parallax bersama. Tanpa dependency atau animasi tambahan. | AI |
 | 2026-09-22 | Sprint 0/1/2/4/6 | Siapkan kerangka Laravel 11, migrasi domain, Sanctum, auth/reset email, API Event/OPREC, adapter login/register FE. Verifikasi runtime menunggu PHP/Composer/PostgreSQL. | AI |
@@ -486,6 +502,7 @@ Daftar bug / masalah yang ditemukan selama pengembangan.
 
 | # | Sprint | Issue | Severity | Status | Resolusi |
 |---|--------|-------|----------|--------|----------|
+| 2 | Sprint 5 | Dua event historis (15 dan 16) memakai prefix HACK dan kode HACK01 | Medium | Perlu tindak lanjut | Pendaftaran tetap event-scoped; kode baru tidak akan diulang. Penggantian kode lama perlu koordinasi dengan pemilik tim. |
 | 1 | Sprint 4 | Build dan pengujian browser belum dapat dijalankan: runtime npm/Node mengembalikan WSL 1 unsupported | Medium | Terbuka | Jalankan build dan smoke test pada Node Linux/WSL 2 atau terminal Windows yang berfungsi |
 
 ---
@@ -496,6 +513,7 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 
 | Tanggal | Keputusan | Alasan | Impact |
 |---------|-----------|--------|--------|
+| 2026-09-25 | Prefix tim unik hanya selama dipakai event yang ada; counter/kode terbit permanen, nomor global per prefix minimal dua digit | Klarifikasi terbaru pengguna: HACK dan nama yang sama boleh dipakai setelah event lama dihapus, tanpa menerbitkan ulang kode tim lama; menggantikan keputusan nomor per-event di bawah | Sprint 5/8 |
 | 2026-09-13 | Tech stack frontend: Next.js (App Router) | Permintaan user, performa SSR/SSG & SEO bawaan yang lebih optimal | Fundamental |
 | 2026-09-12 | Tech stack backend & DB: Laravel + PostgreSQL | Permintaan user | Fundamental |
 | 2026-09-12 | Auth: Laravel Sanctum (bukan Firebase) | Selaras dengan Laravel backend | Sprint 2 |

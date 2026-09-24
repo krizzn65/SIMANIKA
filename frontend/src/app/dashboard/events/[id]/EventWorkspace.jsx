@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowUpRight, Check, Clock3, FileText, RefreshCw, UsersRound } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Check, ChevronDown, ChevronUp, Clock3, FileText, RefreshCw, UsersRound } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { EventRegistrationForm } from "@/components/events/EventRegistrationForm";
+import { EventGroupForm } from "@/components/events/EventGroupForm";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
 import { eventCategoryLabel } from "@/lib/events";
@@ -14,6 +15,17 @@ import { TeamAccessPanel } from "./TeamAccessPanel";
 import styles from "./workspace.module.css";
 
 const reviewLabels = { pending: "Menunggu verifikasi", accepted: "Diterima", rejected: "Belum diterima" };
+
+function GroupPanel({ group, eventId, onSuccess }) {
+  const [open, setOpen] = useState(true);
+  return <section className={styles.panel} aria-labelledby={`group-title-${group.id}`}>
+    <header className={styles.panelHeader}>
+      <div><h2 id={`group-title-${group.id}`}>{group.title}</h2><p className={styles.groupScope}>{group.scope === "personal" ? "Pribadi · jawabanmu hanya dapat dilihat olehmu" : group.editRole === "leader" ? "Tim · semua anggota melihat, ketua mengisi" : "Tim · semua anggota melihat dan dapat mengisi"}</p></div>
+      <div className={styles.groupActions}><span className={`${styles.badge} ${group.submitted ? styles.success : styles.neutral}`}>{group.submitted ? "Terkirim" : "Belum diisi"}</span><button type="button" className={styles.groupToggle} aria-expanded={open} aria-controls={`group-content-${group.id}`} aria-label={`${open ? "Lipat" : "Buka"} grup ${group.title}`} onClick={() => setOpen((value) => !value)}>{open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</button></div>
+    </header>
+    {open && <div id={`group-content-${group.id}`}>{group.canEdit ? <EventGroupForm key={`${group.id}-${group.submitted}`} eventId={eventId} group={group} onSuccess={onSuccess} /> : group.submitted ? <dl className={styles.answers}>{group.fields.map((field) => <div key={field.name}><dt>{field.label}</dt><dd>{field.type === "file" ? (field.downloadUrl ? <a href={field.downloadUrl} target="_blank" rel="noopener noreferrer">Lihat berkas <ArrowUpRight size={14} aria-hidden="true" /></a> : "—") : field.type === "checkbox" ? (field.value ? "Ya" : "Tidak") : String(field.value ?? "—")}</dd></div>)}</dl> : <p className={styles.groupScope}>Menunggu ketua tim mengirim jawaban grup ini.</p>}</div>}
+  </section>;
+}
 
 function WorkspaceContent({ eventId }) {
   const { user } = useAuth();
@@ -75,7 +87,9 @@ function WorkspaceContent({ eventId }) {
                 <div className={styles.payment}><span>Administrasi</span><PaymentStatus status={data.paymentStatus} /></div>
               </section>}
           </aside>
-          <section className={styles.panel} aria-labelledby="registration-title">
+          {data.event.formGroups?.length ? <div className={styles.groupStack}>
+            {data.team?.membershipStatus === "pending" ? <div className={styles.panel}><div className={styles.notice}><Clock3 size={20} aria-hidden="true" /><div><h3>Menunggu persetujuan ketua</h3><p>Formulir tersedia setelah ketua menyetujui permintaan bergabung.</p></div></div></div> : data.event.formGroups.map((group) => <GroupPanel key={group.id} group={group} eventId={data.event.id} onSuccess={load} />)}
+          </div> : <section className={styles.panel} aria-labelledby="registration-title">
             <header className={styles.panelHeader}>
               <h2 id="registration-title"><FileText size={19} aria-hidden="true" /> Data & administrasi</h2>
               <span className={`${styles.badge} ${data.form.reviewStatus === "accepted" ? styles.success : styles.neutral}`}>
@@ -92,7 +106,7 @@ function WorkspaceContent({ eventId }) {
                 </div>)}</dl>
               </> : data.form.canSubmit ? <EventRegistrationForm event={data.event} onSuccess={load} compact /> :
                 <div className={styles.notice}><FileText size={20} aria-hidden="true" /><div><h3>Formulir pendaftaran</h3><p>{data.form.lockReason || (data.team ? "Ketua tim mengisi dan mengirim satu formulir untuk seluruh tim. Jawaban akan tampil di sini setelah dikirim." : data.event.tipePendaftaran === "tim" ? "Buat atau gabung tim melalui halaman event untuk melanjutkan." : "Penyelenggara belum menyiapkan formulir.")}</p>{!data.team && data.event.tipePendaftaran === "tim" && <Link href={`/events/${data.event.slug}`}>Buka event <ArrowUpRight size={14} aria-hidden="true" /></Link>}</div></div>}
-          </section>
+          </section>}
         </div>
       </>}
     </div>

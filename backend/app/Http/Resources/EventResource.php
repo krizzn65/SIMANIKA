@@ -60,6 +60,15 @@ class EventResource extends JsonResource
             'syarat' => $this->whenLoaded('requirements', fn () => $this->requirements->pluck('label')->all(), []),
             'hadiah' => $this->whenLoaded('prizes', fn () => $this->prizes->pluck('label')->all(), []),
             'formFields' => $this->whenLoaded('formFields', fn () => $this->formFields->map(fn ($field) => ['name' => $field->name, 'label' => $field->label, 'type' => $field->type, 'required' => $field->required, 'options' => $field->options ?? [], 'help' => $field->help, 'placeholder' => $field->placeholder])->all(), []),
+            'formGroups' => $this->whenLoaded('formGroups', fn () => $this->formGroups->map(fn ($group) => [
+                'id' => $group->id, 'title' => $group->title, 'scope' => $group->scope,
+                'editRole' => $group->edit_role,
+                'fields' => $group->fields->map(fn ($field) => [
+                    'name' => $field->name, 'label' => $field->label, 'type' => $field->type,
+                    'required' => $field->required, 'options' => $field->options ?? [],
+                    'help' => $field->help, 'placeholder' => $field->placeholder,
+                ])->all(),
+            ])->all(), []),
         ];
     }
 }

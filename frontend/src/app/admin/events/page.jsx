@@ -96,7 +96,7 @@ export default function AdminEventsPage() {
     ],
     lokasi: "",
     // Team System Config (PRD 5.7)
-    kode_prefix: "HACK",
+    kode_prefix: "",
     min_anggota: 3,
     max_anggota: 5,
   });
@@ -157,7 +157,7 @@ export default function AdminEventsPage() {
         { judul: "Event Selesai", tanggal: new Date(Date.now() + 86400000 * 8).toISOString().slice(0, 10) },
       ],
       lokasi: "Online via Zoom & Discord",
-      kode_prefix: "HACK",
+      kode_prefix: "",
       min_anggota: 3,
       max_anggota: 5,
     });
@@ -512,8 +512,9 @@ export default function AdminEventsPage() {
   });
 
   // Prefix preview
-  const prefix = formData.kode_prefix || "TEAM";
-  const previewCodes = `${prefix}01, ${prefix}02, ${prefix}03, ${prefix}04...`;
+  const prefix = formData.kode_prefix;
+  const previewCodes = prefix ? `${prefix}01, ${prefix}02, ${prefix}03…` : "Isi prefix terlebih dahulu";
+  const prefixAlreadyUsed = prefix && events.some((event) => event.kode_prefix === prefix && event.id !== editingEventId);
 
   return (
     <div className="flex flex-col gap-6">
@@ -1191,8 +1192,10 @@ export default function AdminEventsPage() {
 
                     {/* Live Preview Box */}
                     <div className="p-2.5 rounded-lg bg-white border border-blue-200 text-xs">
-                      <span className="text-slate-500 font-medium">Live Preview Kode Tim: </span>
+                      <span className="text-slate-500 font-medium">Contoh format kode: </span>
                       <span className="font-mono font-bold text-blue-600">{previewCodes}</span>
+                      <p className="mt-1 text-slate-500">Nomor sebenarnya dibuat otomatis dan tidak diulang. Prefix boleh dipakai lagi setelah event lama dihapus.</p>
+                      {prefixAlreadyUsed && <p className="mt-1 text-red-600" role="alert">Prefix ini sudah dipakai event lain. Pilih prefix berbeda.</p>}
                     </div>
                   </div>
                 )}

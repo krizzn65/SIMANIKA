@@ -19,4 +19,5 @@ class Event extends Model
     public function prizes(): HasMany { return $this->hasMany(EventPrize::class)->orderBy('sort_order'); }
     public function requirements(): HasMany { return $this->hasMany(EventRequirement::class)->orderBy('sort_order'); }
     public function formFields(): HasMany { return $this->hasMany(EventFormField::class)->orderBy('sort_order'); }
+    public function formGroups(): HasMany { return $this->hasMany(EventFormGroup::class)->orderBy('sort_order'); }
 }

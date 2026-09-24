@@ -108,11 +108,21 @@ properti majemuk, misalnya `tanggal_mulai`, `tipe_pendaftaran`, `team_settings`.
 
 ## Detail pendaftaran dashboard — 24 September 2026
 
+### Formulir per grup — 25 September 2026
+
+- Editor `/admin/events/{id}` sekarang menyusun maksimal 20 grup dan 40 pertanyaan total. Setiap grup punya nama, urutan, aturan akses, pertanyaan, dan kontrol lipat/buka. Simpan memakai `PUT /api/admin/events/{id}/form` dengan `form_groups: [{ title, scope, edit_role, fields }]`. Skema terkunci setelah ada pendaftar/tim/enrolment.
+- `scope: personal` berarti satu jawaban per pengguna. Hanya pemilik akun melihat dan mengubah jawabannya, termasuk bila ia anggota tim; ketua tidak melihat data anggota lain. `scope: team` berarti satu jawaban per tim, terlihat oleh semua anggota accepted. `edit_role: leader | all` mengatur siapa yang boleh mengirim/mengubah jawaban bersama. Grup tim tidak tersedia pada event individu.
+- Workspace peserta memuat `event.formGroups[]` dengan `submitted`, `canEdit`, dan nilai field sesuai identitas sesi. Setiap grup dikirim mandiri melalui `POST /api/user/events/{event}/groups/{group}/submit` sebagai multipart. Tombol kirim berukuran sedang dan berada di kanan bawah grup.
+- Berkas grup diunduh melalui `GET /api/user/events/{event}/groups/{group}/files/{field}` dengan pemeriksaan kepemilikan jawaban dan membership accepted; path storage tidak diekspos. Formulir event lama tetap menggunakan endpoint `/register`, sedangkan event dengan grup tidak bisa memakai endpoint legacy tersebut.
+- Admin belum memiliki panel peninjauan/validasi jawaban per grup. Status verifikasi dan pembayaran dari penyelenggara tetap pekerjaan terpisah; UI peserta saat ini hanya membedakan sudah/belum dikirim.
+
 - Card dashboard membuka `/dashboard/events/{eventId}`, terpisah dari detail publik.
 - `GET /api/user/events/{event}/workspace` memakai Sanctum, hanya pemilik pendaftaran/enrolment atau anggota/pemohon pada event tersebut; respons private/no-store.
 - Respons `{ data: { event, team, paymentStatus, htm, form } }`. `team` memuat nama/kode, min/max/count, anggota aktif (nama + role, tanpa email), requests khusus ketua, serta capability `canManage` dan alasan terkunci.
 - `POST /api/user/events/{event}/teams/{team}/members/{userId}` menerima `{ action: "accept" | "remove" }`. Hanya ketua tim yang cocok dengan event; ketua tidak boleh menghapus dirinya. Remove pada pending berarti menolak permintaan.
 - Join, accept, remove, create, dan submit mengunci baris event dahulu. Accept mengecek ulang kapasitas dalam transaksi; pending tidak mengisi slot atau menaikkan progress. Anggota lama tetap accepted melalui migration.
+- Prefix tim adalah huruf kapital 1–6 karakter dan harus unik selama masih dipakai event yang ada. Setelah event tanpa peserta dihapus atau prefix-nya diganti sebelum ada peserta, prefix itu boleh dipakai event baru. Nama/judul yang sama boleh dipakai lagi setelah event lama dihapus; slug tetap unik di antara event yang ada. Kode tim memakai nomor global per prefix (`HACK01`, `HACK02`, …, `HACK100`) yang dicadangkan atomik dan tidak diulang meski prefix dipakai lagi. Preview admin hanya contoh format, bukan nomor aktual. Event lama yang sudah terlanjur berbagi prefix/kode tetap dapat dibaca; kode yang telah dibagikan tidak diubah diam-diam. Join tetap mensyaratkan event yang tepat.
+- Setelah ada tim/pendaftar, mode pendaftaran, prefix, minimum, dan maksimum anggota tidak dapat diubah. Backend memeriksa aturan ini ulang di dalam transaksi; browser menampilkan kesalahan validasi dari server.
 - Roster terkunci sesudah diterima penyelenggara, sebelum pembukaan, sesudah deadline, atau event ditutup/selesai. Review penyelenggara terpisah dari status membership.
 - Remove mencabut membership dan enrolment event tersebut, sehingga akses workspace/berkas hilang. User boleh mendaftar kembali.
 - `GET /api/user/events/{event}/files/{field}` memvalidasi membership aktif atau registrasi individu milik sesi, tipe field, serta path disk privat; tidak mengembalikan path storage mentah.

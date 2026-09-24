@@ -28,6 +28,7 @@ class EventRegistrationController extends Controller
             abort_unless($team && (int) $team->ketua_id === (int) $request->user()->id, 403, 'Hanya ketua tim yang dapat mengisi formulir tim.');
         }
         $fields = $event->formFields()->get();
+        if ($event->formGroups()->exists()) return response()->json(['message' => 'Kirim setiap grup formulir dari halaman dashboard.'], 409);
         if ($fields->isEmpty()) return response()->json(['message' => 'Formulir event belum tersedia.'], 409);
 
         $rules = [];
