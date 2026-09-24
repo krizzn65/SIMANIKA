@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { eventCategoryLabel, registrationState } from "@/lib/events";
+import { eventCategoryLabel, eventFeeLabel, registrationState } from "@/lib/events";
 import { EventPoster } from "./EventPoster";
 
 export function EventCard({ event, now }) {
@@ -20,6 +20,7 @@ export function EventCard({ event, now }) {
           <div className="event-card__content">
             <h3>{event.judul}</h3>
             <p className="event-card__date">{event.tipePendaftaran === "tim" ? "Tim " + (event.minAnggota || "?") + "–" + (event.maxAnggota || "?") + " anggota" : "Individu"}</p>
+            <p className="event-card__fee">{eventFeeLabel(event)}</p>
             <div className="event-card__bottom">
               <span className={"event-status event-status--" + state.key}>{state.label}</span>
               <span className="event-card__entry">Detail <span aria-hidden="true">→</span></span>

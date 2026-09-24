@@ -3,7 +3,7 @@
 import { BookOpen, FileText, Link2 } from "lucide-react";
 
 export function AdminGuidebookField({ type, value, file, onTypeChange, onValueChange, onFileChange }) {
-  return <div className="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+  return <div className="admin-event-guidebook md:col-span-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
     <div className="mb-3 flex items-center gap-2 text-slate-800">
       <BookOpen size={18} className="text-blue-600" aria-hidden="true" />
       <span className="font-semibold">Guidebook event</span>

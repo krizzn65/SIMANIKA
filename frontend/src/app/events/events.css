@@ -64,6 +64,7 @@
 .event-card__content { margin-top: auto; }
 .event-card h3 { margin: 0 0 .45rem; color: white; font-size: clamp(1.35rem, 2vw, 1.75rem); line-height: 1.1; letter-spacing: -.03em; overflow-wrap: anywhere; text-wrap: balance; }
 .event-card__date { margin: 0; color: rgba(255, 255, 255, .84); font-size: .88rem; line-height: 1.5; }
+.event-card__fee { margin: .18rem 0 0; color: rgba(255, 255, 255, .84); font-size: .88rem; font-weight: 500; line-height: 1.5; }
 .event-card__bottom { display: grid; gap: .75rem; margin-top: 1rem; padding-top: .9rem; border-top: 1px solid rgba(255, 255, 255, .28); }
 .event-card .event-status { color: rgba(255, 255, 255, .82); font-size: .75rem; font-weight: 600; }
 .event-card__entry { display: flex; align-items: center; justify-content: space-between; min-height: 44px; padding: 0 .9rem; border: 1px dashed rgba(255, 255, 255, .72); background: rgba(255, 255, 255, .08); color: white; font-size: .85rem; font-weight: 700; backdrop-filter: blur(8px); }

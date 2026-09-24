@@ -20,10 +20,10 @@ pada request/navigasi berikutnya, bukan push real-time ke tab yang sedang terbuk
 
 ## List
 
-`GET /api/public/events?search=...&kategori=lomba&status=upcoming&page=1&per_page=9`
+`GET /api/public/events?search=...&kategori=hi-fest&status=upcoming&page=1&per_page=9`
 
 - `search`: maksimal 100 karakter, pencarian judul/topik; backend wajib validasi.
-- `kategori`: `lomba | seminar | workshop | lainnya`; kosong = semua.
+- `kategori`: `hi-fest | mic | imce | lainnya`; kosong = semua. `lainnya` juga mencakup kategori kustom dan data kategori lama.
 - `status`: waktu kegiatan `upcoming | ongoing | selesai`; kosong = semua.
   Ini **berbeda** dengan status publikasi event.
 - Upcoming: mulai > sekarang; ongoing: mulai <= sekarang < selesai;
@@ -65,6 +65,8 @@ pada request/navigasi berikutnya, bukan push real-time ke tab yang sedang terbuk
   "tipe": "offline",
   "status": "published",
   "tipePendaftaran": "individu",
+  "paymentType": "paid",
+  "htm": 500000,
   "kuota": 80,
   "sisaKuota": 25,
   "teamSettings": null,
@@ -84,6 +86,7 @@ properti majemuk, misalnya `tanggal_mulai`, `tipe_pendaftaran`, `team_settings`.
   tak terbatas; nol = habis. `sisaKuota` dihitung **backend** dari registrasi valid.
 - Tim: `teamSettings: { minAnggota, maxAnggota, kuotaTim }`; `sisaKuota` dihitung
   dalam satuan **tim**, bukan anggota. Jangan kirim data pribadi peserta.
+- Pembayaran: `paymentType` hanya `free | paid`. `htm` berupa integer rupiah tanpa pemisah dan wajib positif bila `paid`; untuk `free`, backend mengembalikan `htm: null`. Card memformatnya menjadi `Free` atau `Bayar · Rp500.000`.
 - `bukaPendaftaran`, `sisaKuota`, `formFields` adalah tambahan kontrak publik
   untuk tampilan yang belum dirinci pada model awal PRD.
 - Tombol `Daftar` hanya tampil ketika event terpublikasi, jadwal dibuka, dan `formFields` tersedia. Untuk event individu, `POST /api/user/events/{id}/enroll` menyimpan keikutsertaan secara idempoten lalu membuka dashboard.

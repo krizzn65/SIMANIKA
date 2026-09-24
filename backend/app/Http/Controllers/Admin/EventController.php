@@ -181,6 +181,8 @@ class EventController extends Controller
             'lokasi' => ['nullable', 'string', 'max:200'], 'tipe' => ['required', Rule::in(['online', 'offline', 'hybrid'])],
             'status' => ['required', Rule::in(['draft', 'published', 'closed', 'selesai'])],
             'tipe_pendaftaran' => ['required', Rule::in(['individu', 'tim'])],
+            'payment_type' => ['required', Rule::in(['free', 'paid'])],
+            'htm' => ['nullable', 'integer', 'min:1', 'max:999999999999'],
             'kode_prefix' => ['nullable', 'regex:/^[A-Z]{1,6}$/'], 'min_anggota' => ['nullable', 'integer', 'min:2', 'max:100'],
             'max_anggota' => ['nullable', 'integer', 'gte:min_anggota', 'max:100'],
             'hadiah' => ['array', 'max:20'], 'hadiah.*' => ['string', 'max:250'],
@@ -196,6 +198,12 @@ class EventController extends Controller
             throw ValidationException::withMessages(['form_fields' => ['Atur formulir melalui halaman detail event.']]);
         }
         $data = $request->validate($rules);
+        if ($data['payment_type'] === 'paid' && empty($data['htm'])) {
+            throw ValidationException::withMessages(['htm' => ['Nominal HTM wajib diisi untuk event berbayar.']]);
+        }
+        if ($data['payment_type'] === 'free') {
+            $data['htm'] = null;
+        }
         EventGuidebookSource::validate($data);
         $names = array_column($data['form_fields'] ?? [], 'name');
         if (count($names) !== count(array_unique($names))) throw ValidationException::withMessages(['form_fields' => ['Nama kolom harus unik.']]);

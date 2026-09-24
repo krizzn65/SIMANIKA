@@ -30,9 +30,31 @@ class ApiIntegrationTest extends TestCase
         $event = Event::create(['slug' => 'uji-event', 'judul' => 'Uji Event', 'kategori' => 'workshop', 'tanggal_mulai' => $start, 'tanggal_selesai' => $start->copy()->addHours(2), 'status' => 'draft']);
         $this->getJson('/api/public/events')->assertJsonPath('meta.total', 0);
         $this->getJson('/api/public/events/uji-event')->assertNotFound();
-        $event->update(['status' => 'published']);
-        $this->getJson('/api/public/events')->assertOk()->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.slug', 'uji-event');
-        $this->getJson('/api/public/events/uji-event')->assertOk()->assertJsonPath('data.kategori', 'workshop');
+        $event->update(['status' => 'published', 'payment_type' => 'paid', 'htm' => 500000]);
+        $this->getJson('/api/public/events')->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.slug', 'uji-event')
+            ->assertJsonPath('data.0.paymentType', 'paid')
+            ->assertJsonPath('data.0.htm', 500000);
+        $this->getJson('/api/public/events/uji-event')->assertOk()
+            ->assertJsonPath('data.kategori', 'workshop')
+            ->assertJsonPath('data.paymentType', 'paid')
+            ->assertJsonPath('data.htm', 500000);
+
+        Event::create([
+            'slug' => 'hi-fest-2026',
+            'judul' => 'HI-FEST 2026',
+            'kategori' => 'hi-fest',
+            'tanggal_mulai' => $start->copy()->addDay(),
+            'tanggal_selesai' => $start->copy()->addDay()->addHours(2),
+            'status' => 'published',
+        ]);
+        $this->getJson('/api/public/events?kategori=hi-fest')->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.slug', 'hi-fest-2026');
+        $this->getJson('/api/public/events?kategori=lainnya')->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.slug', 'uji-event');
     }
 
     public function test_password_reset_request_does_not_reveal_if_email_exists(): void

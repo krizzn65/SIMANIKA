@@ -29,6 +29,27 @@ import {
   Check,
 } from "lucide-react";
 
+function currencyDigits(value) {
+  return String(value || "").replace(/\D/g, "").replace(/^0+(?=\d)/, "").slice(0, 12);
+}
+
+function formatRupiahInput(value) {
+  const digits = currencyDigits(value);
+  return digits ? new Intl.NumberFormat("id-ID").format(Number(digits)) : "";
+}
+
+const EVENT_CATEGORY_OPTIONS = [
+  ["hi-fest", "HI-FEST"],
+  ["mic", "MIC"],
+  ["imce", "IMCE"],
+];
+const EVENT_CATEGORY_KEYS = EVENT_CATEGORY_OPTIONS.map(([value]) => value);
+
+function adminEventCategoryLabel(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return EVENT_CATEGORY_OPTIONS.find(([key]) => key === normalized)?.[1] || value || "Lainnya";
+}
+
 export default function AdminEventsPage() {
   const router = useRouter();
   const [events, setEvents] = useState([]);
@@ -61,10 +82,12 @@ export default function AdminEventsPage() {
     guidebook_type: null,
     guidebook_value: null,
     deskripsi: "",
-    kategori: "lomba",
+    kategori: "hi-fest",
     status: "draft",
     tipe: "online",
     tipe_pendaftaran: "individu",
+    payment_type: "free",
+    htm: "",
     timeline: [
       { judul: "Buka Pendaftaran", tanggal: "" },
       { judul: "Batas Pendaftaran", tanggal: "" },
@@ -121,10 +144,12 @@ export default function AdminEventsPage() {
       guidebook_type: null,
       guidebook_value: null,
       deskripsi: "",
-      kategori: "lomba",
+      kategori: "hi-fest",
       status: "draft",
       tipe: "online",
       tipe_pendaftaran: "tim",
+      payment_type: "free",
+      htm: "",
       timeline: [
         { judul: "Buka Pendaftaran", tanggal: new Date().toISOString().slice(0, 10) },
         { judul: "Batas Pendaftaran", tanggal: new Date(Date.now() + 86400000 * 6).toISOString().slice(0, 10) },
@@ -154,8 +179,8 @@ export default function AdminEventsPage() {
 
   const handleEdit = (ev) => {
     setEditingEventId(ev.id);
-    const cat = (ev.kategori || "lomba").toLowerCase();
-    const isKnown = ["lomba", "seminar", "workshop"].includes(cat);
+    const cat = (ev.kategori || "hi-fest").toLowerCase();
+    const isKnown = EVENT_CATEGORY_KEYS.includes(cat);
     setIsCustomKategori(!isKnown);
     setCustomKategori(!isKnown ? (ev.kategori || "") : "");
 
@@ -209,6 +234,8 @@ export default function AdminEventsPage() {
       status: ev.status || "published",
       tipe: ev.tipe || "online",
       tipe_pendaftaran: (ev.tipe_pendaftaran || ev.tipePendaftaran) || "individu",
+      payment_type: (ev.payment_type || ev.paymentType) === "paid" ? "paid" : "free",
+      htm: ev.htm != null ? String(ev.htm) : "",
       timeline: initialTimeline,
       lokasi: ev.lokasi || "",
       kode_prefix: ev.kode_prefix || "HACK",
@@ -401,6 +428,13 @@ export default function AdminEventsPage() {
         return;
       }
 
+      const htm = formData.payment_type === "paid" ? Number(currencyDigits(formData.htm)) : null;
+      if (formData.payment_type === "paid" && (!Number.isSafeInteger(htm) || htm <= 0)) {
+        setFormError("Masukkan nominal HTM yang valid untuk event berbayar.");
+        setSubmitting(false);
+        return;
+      }
+
       const eventData = {
         judul: formData.judul,
         slug: computedSlug || `event-${Date.now()}`,
@@ -412,6 +446,8 @@ export default function AdminEventsPage() {
         status: formData.status,
         tipe: formData.tipe,
         tipe_pendaftaran: formData.tipe_pendaftaran,
+        payment_type: formData.payment_type,
+        htm,
         tanggal_mulai: derivedTanggalMulai,
         tanggal_selesai: derivedTanggalSelesai,
         buka_pendaftaran: bukaItem ? bukaItem.tanggal : null,
@@ -470,7 +506,7 @@ export default function AdminEventsPage() {
     const matchKategori = kategoriFilter === "all"
       ? true
       : kategoriFilter === "lainnya"
-        ? ev.kategori?.toLowerCase() === "lainnya" || !["lomba", "seminar", "workshop"].includes(ev.kategori?.toLowerCase())
+        ? ev.kategori?.toLowerCase() === "lainnya" || !EVENT_CATEGORY_KEYS.includes(ev.kategori?.toLowerCase())
         : ev.kategori?.toLowerCase() === kategoriFilter.toLowerCase();
     return matchSearch && matchStatus && matchKategori;
   });
@@ -545,9 +581,9 @@ export default function AdminEventsPage() {
               className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 bg-white focus:outline-none focus:border-blue-500"
             >
               <option value="all">Semua Kategori</option>
-              <option value="lomba">Competition</option>
-              <option value="seminar">Seminar</option>
-              <option value="workshop">Workshop</option>
+              {EVENT_CATEGORY_OPTIONS.map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
               <option value="lainnya">Lainnya</option>
             </select>
           </div>
@@ -611,7 +647,7 @@ export default function AdminEventsPage() {
                     <td>
                       <div className="flex items-center gap-1.5">
                         <span className="admin-badge admin-badge--neutral text-[10px] uppercase font-mono">
-                          {ev.kategori?.toLowerCase() === "lomba" ? "Competition" : ev.kategori}
+                          {adminEventCategoryLabel(ev.kategori)}
                         </span>
                         <span className="text-[11px] text-slate-500 capitalize">({ev.tipe})</span>
                       </div>
@@ -679,7 +715,7 @@ export default function AdminEventsPage() {
       {/* Modal Buat Event Baru */}
       {isModalOpen && (
         <div className="admin-modal-overlay">
-          <div className="admin-modal-card">
+          <div className="admin-modal-card admin-event-modal">
             <div className="p-5 border-b border-slate-200 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">
@@ -700,7 +736,7 @@ export default function AdminEventsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+            <form onSubmit={handleSubmit} className="admin-event-form p-6 flex flex-col gap-4">
               {formError && (
                 <div role="alert" className="p-3 rounded-xl bg-red-50 text-red-700 text-sm border border-red-200">
                   {formError}
@@ -761,7 +797,7 @@ export default function AdminEventsPage() {
                 </div>
 
                 {/* Poster / Pamflet Event Field */}
-                <div className="md:col-span-2 p-4 rounded-xl border border-slate-200 bg-slate-50/70">
+                <div className="admin-event-timeline md:col-span-2 p-4 rounded-xl border border-slate-200 bg-slate-50/70">
                   <div className="mb-2.5">
                     <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5 uppercase tracking-wider">
                       <ImageIcon className="w-4 h-4 text-blue-600" />
@@ -848,7 +884,7 @@ export default function AdminEventsPage() {
                         onClick={() => {
                           setIsCustomKategori(false);
                           setCustomKategori("");
-                          setFormData((prev) => ({ ...prev, kategori: "lomba" }));
+                          setFormData((prev) => ({ ...prev, kategori: "hi-fest" }));
                         }}
                         className="text-[11px] text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 font-medium"
                       >
@@ -873,9 +909,9 @@ export default function AdminEventsPage() {
                       }}
                       className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-blue-500 bg-white"
                     >
-                      <option value="lomba">Competition</option>
-                      <option value="seminar">Seminar</option>
-                      <option value="workshop">Workshop</option>
+                      {EVENT_CATEGORY_OPTIONS.map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
                       <option value="lainnya">Lainnya...</option>
                     </select>
                   ) : (
@@ -890,7 +926,7 @@ export default function AdminEventsPage() {
                           setCustomKategori(val);
                           setFormData((prev) => ({ ...prev, kategori: val }));
                         }}
-                        placeholder="Ketik nama kategori (cth: Bootcamp, Talkshow, Expo)..."
+                        placeholder="Ketik nama kategori lainnya..."
                         className="w-full pl-3 pr-8 py-2 rounded-xl border border-blue-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 bg-white"
                       />
                       <button
@@ -898,7 +934,7 @@ export default function AdminEventsPage() {
                         onClick={() => {
                           setIsCustomKategori(false);
                           setCustomKategori("");
-                          setFormData((prev) => ({ ...prev, kategori: "lomba" }));
+                          setFormData((prev) => ({ ...prev, kategori: "hi-fest" }));
                         }}
                         className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-md hover:bg-slate-100 transition-colors"
                         title="Batal / Kembali ke pilihan"
@@ -1070,7 +1106,7 @@ export default function AdminEventsPage() {
 
 
                 {/* Mode Pendaftaran */}
-                <div className="md:col-span-2 pt-2 border-t border-slate-200">
+                <div className="admin-event-participation md:col-span-2 pt-2 border-t border-slate-200">
                   <label className="text-xs font-bold text-slate-800 mb-2 block uppercase tracking-wider">
                     Model Kepesertaan
                   </label>
@@ -1103,7 +1139,7 @@ export default function AdminEventsPage() {
 
                 {/* Team Configuration */}
                 {formData.tipe_pendaftaran === "tim" && (
-                  <div className="md:col-span-2 p-4 rounded-xl bg-blue-50/60 border border-blue-200 flex flex-col gap-3">
+                  <div className="admin-event-team-config md:col-span-2 p-4 rounded-xl bg-blue-50/60 border border-blue-200 flex flex-col gap-3">
                     <div className="flex items-center gap-2 text-blue-800 font-bold text-sm">
                       <Trophy className="w-4 h-4 text-blue-600" />
                       <span>Konfigurasi Sistem Tim</span>
@@ -1160,6 +1196,60 @@ export default function AdminEventsPage() {
                     </div>
                   </div>
                 )}
+
+                <div className="admin-event-payment md:col-span-2 pt-2 border-t border-slate-200">
+                  <label className="text-xs font-bold text-slate-800 mb-2 block uppercase tracking-wider">
+                    Pembayaran HTM
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label className={`admin-option-card p-3 rounded-xl border cursor-pointer flex items-center gap-2.5 transition-all ${formData.payment_type === "free" ? "border-blue-500 bg-blue-50/50 text-blue-700" : "border-slate-200 bg-white"}`}>
+                      <input
+                        type="radio"
+                        name="payment_type"
+                        value="free"
+                        checked={formData.payment_type === "free"}
+                        onChange={() => setFormData((current) => ({ ...current, payment_type: "free", htm: "" }))}
+                        className="accent-blue-600"
+                      />
+                      <span className="font-semibold">Free</span>
+                    </label>
+                    <label className={`admin-option-card p-3 rounded-xl border cursor-pointer flex items-center gap-2.5 transition-all ${formData.payment_type === "paid" ? "border-blue-500 bg-blue-50/50 text-blue-700" : "border-slate-200 bg-white"}`}>
+                      <input
+                        type="radio"
+                        name="payment_type"
+                        value="paid"
+                        checked={formData.payment_type === "paid"}
+                        onChange={() => setFormData((current) => ({ ...current, payment_type: "paid" }))}
+                        className="accent-blue-600"
+                      />
+                      <span className="font-semibold">Berbayar</span>
+                    </label>
+                  </div>
+
+                  {formData.payment_type === "paid" && (
+                    <div className="mt-3 max-w-md">
+                      <label htmlFor="event-htm" className="text-xs font-semibold text-slate-700 mb-1 block">
+                        Nominal HTM <span className="text-red-500 font-bold ml-0.5">*</span>
+                      </label>
+                      <div className="flex items-stretch">
+                        <span className="inline-flex items-center px-3 border border-r-0 border-slate-300 bg-slate-50 text-slate-600 font-semibold">Rp</span>
+                        <input
+                          id="event-htm"
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="off"
+                          required
+                          value={formatRupiahInput(formData.htm)}
+                          onChange={(e) => setFormData((current) => ({ ...current, htm: currencyDigits(e.target.value) }))}
+                          placeholder="500.000"
+                          aria-describedby="event-htm-help"
+                          className="w-full px-3 py-2 rounded-none border border-slate-300 text-sm focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                      <p id="event-htm-help" className="mt-1.5 text-xs text-slate-500">Ketik angka saja. Pemisah ribuan ditambahkan otomatis.</p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-2.5">

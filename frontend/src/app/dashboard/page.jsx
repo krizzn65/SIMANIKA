@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
 import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
 import { DashboardEventActions } from "./DashboardEventActions";
+import { eventCategoryLabel } from "@/lib/events";
 import "../events/events.css";
 import "./dashboard.css";
 import "./dashboard-actions.css";
@@ -43,7 +44,7 @@ function RegistrationCard({ item, onComplete }) {
       </div>
       <div className="dashboard-entry__body">
         <h2>{item.title}</h2>
-        <p>{item.subtitle}</p>
+        <p>{item.kind === "oprec" ? item.subtitle : eventCategoryLabel(item.subtitle)}</p>
       </div>
       <DashboardEventActions item={item} onComplete={onComplete} />
       <div className="dashboard-entry__bottom">

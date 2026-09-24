@@ -34,7 +34,7 @@ class PublicEventController extends Controller
         if (!empty($filters['search'])) $query->whereRaw('LOWER(judul) LIKE ?', ['%'.mb_strtolower(str_replace(['%', '_'], ['\\%', '\\_'], $filters['search'])).'%']);
         if (!empty($filters['kategori'])) {
             if ($filters['kategori'] === 'lainnya') {
-                $query->where(fn ($q) => $q->where('kategori', 'lainnya')->orWhereNotIn('kategori', ['lomba', 'seminar', 'workshop']));
+                $query->where(fn ($q) => $q->where('kategori', 'lainnya')->orWhereNotIn('kategori', ['hi-fest', 'mic', 'imce']));
             } else {
                 $query->where('kategori', $filters['kategori']);
             }

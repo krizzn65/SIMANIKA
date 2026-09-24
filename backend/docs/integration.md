@@ -13,7 +13,7 @@ Gunakan host `localhost` secara konsisten. Browser mengirim cookie sesi langsung
 | `/login`, `/register`, Navbar, `/dashboard` | `/api/auth/register`, `/login`, `/logout`, `/me` | Email/password; sesi Sanctum. |
 | Tombol Google di `/login` & `/register`, `/auth/callback` | `/api/auth/google/redirect`, `/api/auth/google/callback` | Google OAuth 2.0 via `laravel/socialite`, tautkan `google_id` dan login sesi Sanctum. |
 | `/forgot-password`, `/reset-password` | `/api/auth/forgot-password`, `/reset-password` | Email reset memakai broker Laravel; backend mengirim tautan ke halaman Next.js. SMTP harus diisi. |
-| `/events`, `/events/[slug]` | `/api/public/events`, `/api/public/events/{slug}` | Hanya event non-draft, maksimal 9 per halaman, meta total, kuota dihitung server. |
+| `/events`, `/events/[slug]` | `/api/public/events`, `/api/public/events/{slug}` | Hanya event non-draft, maksimal 9 per halaman; kontrak menyertakan `paymentType` dan nominal integer `htm`. |
 | Dialog pendaftaran competition tim | `/api/user/events/{event}/create-team`, `/join-team` | Transaksi autentikasi; buat tim menghasilkan kode, join memvalidasi kode dan kapasitas, keduanya mencatat enrolment dashboard. |
 | `/oprec`, `/oprec/detail` | `/api/public/oprec` | Payload jadwal, divisi, schema form, poster, FAQ, dan publikasi pengumuman. |
 | Form OPREC | `/api/user/oprec/register` | Next adapter `/api/oprec/register`, cookie Sanctum, validasi backend, berkas privat. |

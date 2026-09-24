@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/services/api";
 import { AdminErrorNotice } from "./AdminErrorNotice";
+import { eventCategoryLabel } from "@/lib/events";
 import {
   Users,
   Calendar,
@@ -200,7 +201,7 @@ export default function AdminDashboardPage() {
                         </td>
                         <td>
                           <span className="admin-badge admin-badge--neutral uppercase text-[10px]">
-                            {e.kategori?.toLowerCase() === "lomba" ? "Competition" : e.kategori}
+                            {eventCategoryLabel(e.kategori)}
                           </span>
                         </td>
                         <td>

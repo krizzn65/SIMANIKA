@@ -1,10 +1,11 @@
 export const EVENT_CATEGORIES = [
-  ["", "Semua kategori"], ["lomba", "Competition"], ["seminar", "Seminar"],
-  ["workshop", "Workshop"], ["lainnya", "Lainnya"],
+  ["", "Semua kategori"], ["hi-fest", "HI-FEST"], ["mic", "MIC"],
+  ["imce", "IMCE"], ["lainnya", "Lainnya"],
 ];
 export function eventCategoryLabel(value) {
   const category = String(value || "").trim();
-  return category.toLowerCase() === "lomba" ? "Competition" : category || "Lainnya";
+  const normalized = category.toLowerCase();
+  return EVENT_CATEGORIES.find(([key]) => key === normalized)?.[1] || category || "Lainnya";
 }
 
 export const EVENT_STATUSES = [
@@ -63,6 +64,8 @@ export function normalizeEvent(raw) {
     lokasi: text(raw.lokasi) || "Lokasi akan diumumkan",
     tipe: ["online", "offline", "hybrid"].includes(raw.tipe) ? raw.tipe : null,
     tipePendaftaran: isTeam ? "tim" : "individu",
+    paymentType: (raw.paymentType ?? raw.payment_type) === "paid" ? "paid" : "free",
+    htm: count(raw.htm),
     minAnggota: count(team.minAnggota ?? team.min_anggota),
     maxAnggota: count(team.maxAnggota ?? team.max_anggota),
     syarat: strings(raw.syarat), hadiah: strings(raw.hadiah),
@@ -98,6 +101,14 @@ export function registrationState(event, now = Date.now()) {
 
   if (!event.deadlinePendaftaran && !event.formFields?.length) return { key: "soon", label: "Info pendaftaran menyusul", icon: "◷" };
   return { key: "open", label: "Pendaftaran dibuka", icon: "●" };
+}
+
+
+export function eventFeeLabel(event) {
+  if (event?.paymentType !== "paid") return "Free";
+  const amount = Number(event?.htm);
+  if (!Number.isSafeInteger(amount) || amount <= 0) return "HTM belum ditentukan";
+  return `HTM · ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount)}`;
 }
 
 export function eventDate(value) {
