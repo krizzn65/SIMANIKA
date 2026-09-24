@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -9,6 +9,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { register, getGoogleAuthUrl } from "@/services/authClient";
 import { registerSchema } from "@/lib/authSchemas";
 import { safeNextPath } from "@/lib/safeNextPath";
+import AuthFeedbackToast from "@/components/ui/AuthFeedbackToast";
 
 function GoogleIcon() {
   return (
@@ -24,23 +25,69 @@ function GoogleIcon() {
 export default function RegisterForm() {
   const router = useRouter();
   const [feedback, setFeedback] = useState("");
+  const [feedbackStatus, setFeedbackStatus] = useState("idle");
+  const [submitState, setSubmitState] = useState("idle");
+  const [googleState, setGoogleState] = useState("idle");
   const [showPassword, setShowPassword] = useState(false);
+  const feedbackTimer = useRef(null);
   const { register: registerField, handleSubmit } = useForm({ resolver: zodResolver(registerSchema) });
 
-  const submit = handleSubmit(async ({ nama, email, password }) => {
+  const clearFeedback = () => {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    feedbackTimer.current = null;
     setFeedback("");
+    setFeedbackStatus("idle");
+  };
+
+  const showFeedback = (status, message, autoDismiss = status === "loading" ? 0 : 4600) => {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    feedbackTimer.current = null;
+    setFeedbackStatus(status);
+    setFeedback(message);
+    if (autoDismiss > 0) feedbackTimer.current = setTimeout(clearFeedback, autoDismiss);
+  };
+
+  useEffect(() => () => {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+  }, []);
+
+  const submit = handleSubmit(async ({ nama, email, password }) => {
+    setSubmitState("loading");
+    showFeedback("loading", "Membuat akun dan menyiapkan profilmu…");
     try {
       await register(email, password, nama);
+      setSubmitState("success");
+      showFeedback("success", "Akun berhasil dibuat. Menyiapkan halamanmu…");
+      await new Promise((resolve) => setTimeout(resolve, 520));
       const next = new URLSearchParams(window.location.search).get("next");
       router.replace(safeNextPath(next));
       router.refresh();
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "Pendaftaran belum bisa diproses.");
+      setSubmitState("error");
+      showFeedback("error", error instanceof Error ? error.message : "Pendaftaran belum bisa diproses.");
     }
-  }, (errors) => setFeedback(errors.nama?.message || errors.email?.message || errors.password?.message || "Periksa kembali form pendaftaran."));
+  }, (errors) => {
+    setSubmitState("error");
+    showFeedback("error", errors.nama?.message || errors.email?.message || errors.password?.message || "Periksa kembali form pendaftaran.");
+  });
+
+  const handleGoogle = () => {
+    setGoogleState("loading");
+    showFeedback("loading", "Menghubungkan ke Google…");
+    window.location.assign(getGoogleAuthUrl());
+  };
+
+  const submitLabel = submitState === "loading"
+    ? "Membuat akun…"
+    : submitState === "success"
+      ? "Akun siap"
+      : submitState === "error"
+        ? "Coba lagi"
+        : "Buat akun";
 
   return (
     <main className="register-page">
+      <AuthFeedbackToast status={feedbackStatus} message={feedback} onDismiss={clearFeedback} />
       {/* Page corner pixel mosaic decorations (top-left & bottom-right) */}
       <img
         src="/images/auth/pixel-corner-tl.svg"
@@ -81,12 +128,13 @@ export default function RegisterForm() {
           <button
             className="register-google"
             type="button"
-            onClick={() => {
-              window.location.href = getGoogleAuthUrl();
-            }}
+            onClick={handleGoogle}
+            data-state={googleState}
+            aria-busy={googleState === "loading"}
+            disabled={googleState === "loading" || submitState === "loading" || submitState === "success"}
           >
-            <GoogleIcon />
-            <span>Daftar dengan Google</span>
+            {googleState === "loading" ? <span className="register-state-spinner" aria-hidden="true" /> : <GoogleIcon />}
+            <span>{googleState === "loading" ? "Menghubungkan ke Google…" : "Daftar dengan Google"}</span>
           </button>
 
           <div className="register-divider"><span>ATAU DENGAN EMAIL</span></div>
@@ -147,11 +195,20 @@ export default function RegisterForm() {
                 </button>
               </div>
             </div>
-            <button className="register-submit" type="submit">
-              <span>Buat akun</span>
+            <button
+              className="register-submit"
+              type="submit"
+              data-state={submitState}
+              aria-busy={submitState === "loading"}
+              disabled={submitState === "loading" || submitState === "success" || googleState === "loading"}
+            >
+              <span>{submitLabel}</span>
               <span className="register-submit__icon-slot" aria-hidden="true">
+                {submitState === "loading" && <span className="register-state-spinner" />}
+                {submitState === "success" && <span className="register-state-check">✓</span>}
+                {submitState === "error" && <span className="register-state-error">×</span>}
                 <svg
-                  className="register-submit__icon register-submit__icon--primary"
+                  className={`register-submit__icon register-submit__icon--primary${submitState !== "idle" ? " register-submit__icon--hidden" : ""}`}
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -163,7 +220,7 @@ export default function RegisterForm() {
                   <path d="m14 6 6 6-6 6" />
                 </svg>
                 <svg
-                  className="register-submit__icon register-submit__icon--secondary"
+                  className={`register-submit__icon register-submit__icon--secondary${submitState !== "idle" ? " register-submit__icon--hidden" : ""}`}
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -178,7 +235,6 @@ export default function RegisterForm() {
             </button>
           </form>
 
-        {feedback && <p className="register-feedback" role="status">{feedback}</p>}
         <p className="register-login">Sudah punya akun? <Link href="/login">Masuk di sini <span aria-hidden="true">↗</span></Link></p>
       </div>
   </main>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,38 +8,68 @@ import { SignInPage } from "@/components/ui/sign-in";
 import { login, getGoogleAuthUrl } from "@/services/authClient";
 import { loginSchema } from "@/lib/authSchemas";
 import { safeNextPath } from "@/lib/safeNextPath";
+import AuthFeedbackToast from "@/components/ui/AuthFeedbackToast";
 
 export const SignInPageDemo = () => {
   const router = useRouter();
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedbackStatus, setFeedbackStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [submitState, setSubmitState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [googleState, setGoogleState] = useState<"idle" | "loading">("idle");
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { register, handleSubmit } = useForm<{ email: string; password: string; rememberMe: boolean }>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "", rememberMe: false },
   });
 
+  const clearFeedback = () => {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    feedbackTimer.current = null;
+    setFeedback(null);
+    setFeedbackStatus("idle");
+  };
+
+  const showFeedback = (status: "loading" | "success" | "error", message: string, autoDismiss = status === "loading" ? 0 : 4600) => {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    feedbackTimer.current = null;
+    setFeedbackStatus(status);
+    setFeedback(message);
+    if (autoDismiss > 0) {
+      feedbackTimer.current = setTimeout(clearFeedback, autoDismiss);
+    }
+  };
+
+  useEffect(() => () => {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const error = params.get("error");
     if (error === "google_cancelled") {
-      setFeedback("Login dengan akun Google dibatalkan.");
+      showFeedback("error", "Login dengan akun Google dibatalkan.");
     } else if (error === "google_not_configured") {
-      setFeedback("Google OAuth belum dikonfigurasi di server (.env).");
+      showFeedback("error", "Google OAuth belum dikonfigurasi di server (.env).");
     } else if (error === "google_failed" || error === "google_session_failed") {
-      setFeedback("Gagal memproses otentikasi Google. Silakan coba lagi.");
+      showFeedback("error", "Gagal memproses otentikasi Google. Silakan coba lagi.");
     } else if (error === "google_no_email") {
-      setFeedback("Akun Google tidak memiliki alamat email publik.");
+      showFeedback("error", "Akun Google tidak memiliki alamat email publik.");
     } else if (error === "google_unverified_email") {
-      setFeedback("Alamat email akun Google belum terverifikasi.");
+      showFeedback("error", "Alamat email akun Google belum terverifikasi.");
     } else if (error === "google_account_exists") {
-      setFeedback("Email ini sudah memiliki akun. Masuk dengan kata sandi untuk mengaksesnya.");
+      showFeedback("error", "Email ini sudah memiliki akun. Masuk dengan kata sandi untuk mengaksesnya.");
     }
   }, []);
 
   const handleSignIn = handleSubmit(async ({ email, password, rememberMe }) => {
-    setFeedback(null);
+    setSubmitState("loading");
+    showFeedback("loading", "Memeriksa akun dan menyiapkan sesi…");
     try {
       const response = await login(email, password, rememberMe);
       const user = response?.data;
+      setSubmitState("success");
+      showFeedback("success", "Berhasil masuk. Menyiapkan halamanmu…");
+      await new Promise((resolve) => setTimeout(resolve, 520));
       const nextParam = new URLSearchParams(window.location.search).get("next");
       const safeNext = nextParam ? safeNextPath(nextParam) : null;
       if (user?.role === "admin") {
@@ -49,38 +79,23 @@ export const SignInPageDemo = () => {
       }
       router.refresh();
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "Login belum bisa diproses.");
+      setSubmitState("error");
+      showFeedback("error", error instanceof Error ? error.message : "Login belum bisa diproses.");
     }
-  }, (errors) => setFeedback(errors.email?.message || errors.password?.message || "Periksa kembali form login."));
+  }, (errors) => {
+    setSubmitState("error");
+    showFeedback("error", errors.email?.message || errors.password?.message || "Periksa kembali form login.");
+  });
 
   const handleGoogleSignIn = () => {
-    window.location.href = getGoogleAuthUrl();
+    setGoogleState("loading");
+    showFeedback("loading", "Menghubungkan ke Google…");
+    window.location.assign(getGoogleAuthUrl());
   };
 
   return (
     <div className="bg-background text-foreground">
-      {feedback && (
-        <div
-          role="alert"
-          style={{
-            position: "fixed",
-            top: "1.5rem",
-            right: "1.5rem",
-            zIndex: 9999,
-            backgroundColor: "#ffffff",
-            color: "#0a1020",
-            border: "1px solid #cad5e5",
-            padding: "0.85rem 1.25rem",
-            borderRadius: "6px",
-            boxShadow: "3px 3px 0 #cad5e5",
-            maxWidth: "min(400px, calc(100vw - 3rem))",
-            fontSize: "0.9rem",
-            fontFamily: "inherit",
-          }}
-        >
-          {feedback}
-        </div>
-      )}
+      <AuthFeedbackToast status={feedbackStatus} message={feedback} onDismiss={clearFeedback} />
       <SignInPage
         title={
           <span>
@@ -92,6 +107,8 @@ export const SignInPageDemo = () => {
         onSignIn={handleSignIn}
         fieldRegister={register}
         onGoogleSignIn={handleGoogleSignIn}
+        submitState={submitState}
+        googleState={googleState}
       />
     </div>
   );

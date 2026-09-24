@@ -9,3 +9,15 @@
 ## Prompt final
 
 Generate a brand-new HD portrait illustration for the right visual panel of the HIMANIKA login website. Use the supplied MINKA character sheet ONLY as character identity reference, not as fixed poses or layout. One single Minka, not a character sheet. Preserve blue large rounded helmet head, light icy blue face panel, large black sparkling eyes, cheerful red smile, yellow circular ear discs and yellow top cap, two short black side antenna fins, red shirt with small white collar and tiny MINKA name, dark shoulders, blue hands and shoes with yellow soles, light blue legs. New pose: Minka stands in a welcoming three-quarter stance, one hand open inviting the viewer forward, the other resting naturally at the side. Premium polished 3D toy-like illustration closely faithful to the reference, smooth matte material, soft studio lighting, crisp edges and expressive face. Minimal airy white and very pale ice-blue environment with a few subtle low white stepped platforms suggesting pixel architecture, soft ground shadow. Full character centered in middle 60 percent with generous crop-safe margins around head, hands and feet. Portrait aspect ratio 4:5, target 1600x2000 or higher native resolution. The character occupies about 60 percent image height. Refined composition, brand blue accents, bright approachable editorial aesthetic. No login UI, no buttons, no captions, no large text, no watermarks, no extra characters. This is a finished website artwork, not a mockup.
+
+## Feedback interaksi
+
+State tombol login memakai pola multi-state action (idle, loading, success, error)
+yang diadaptasi secara visual dari [Multi-State Morph Button di 21st.dev](https://21st.dev/@ruixen.ui/components/multi-state-morph-button).
+Notifikasi memakai pola toast animasi dengan auto-dismiss dan tombol tutup dari
+[UltraQualityToast di 21st.dev](https://21st.dev/@dhileepkumargm/components/ultra-quality-toast).
+Implementasi SIMANIKA ditulis ulang dengan framer-motion/lucide yang sudah ada,
+menambahkan `aria-live`, focus ring keyboard, dan dukungan `prefers-reduced-motion`;
+tidak ada source code komponen eksternal yang disalin. Komponen feedback yang sama
+dipakai pada halaman daftar, lupa sandi, dan reset sandi agar fase proses, gagal,
+dan berhasil konsisten di seluruh alur autentikasi.

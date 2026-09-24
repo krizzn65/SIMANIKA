@@ -3,6 +3,8 @@
 import React, { useId, useState } from 'react';
 import type { UseFormRegister } from 'react-hook-form';
 import Link from 'next/link';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatedCheckIcon } from '@/components/ui/AnimatedCheckIcon';
 import './sign-in.css';
 
 // --- HELPER COMPONENTS (ICONS) ---
@@ -50,6 +52,8 @@ export interface SignInPageProps {
   footerPrompt?: string;
   footerActionLabel?: string;
   createAccountHref?: string;
+  submitState?: 'idle' | 'loading' | 'success' | 'error';
+  googleState?: 'idle' | 'loading';
 }
 
 // --- SUB-COMPONENTS ---
@@ -98,9 +102,42 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   footerPrompt = "Belum memiliki akun?",
   footerActionLabel = "Daftar di sini",
   createAccountHref = "/register",
+  submitState = 'idle',
+  googleState = 'idle',
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const fieldId = useId();
+  const reduced = useReducedMotion();
+  const submitText = submitState === 'loading'
+    ? 'Memeriksa akun…'
+    : submitState === 'success'
+      ? 'Berhasil masuk'
+      : submitState === 'error'
+        ? 'Coba lagi'
+        : submitLabel;
+
+  const submitIcon = submitState === 'success' ? (
+    <AnimatedCheckIcon size={19} active />
+  ) : submitState === 'loading' ? (
+    <svg className="simanika-btn-spinner" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeDasharray="34 16" />
+    </svg>
+  ) : submitState === 'error' ? (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+      <path d="M7 7l10 10M17 7 7 17" />
+    </svg>
+  ) : (
+    <>
+      <svg className="simanika-btn-icon simanika-btn-icon--primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 12h16" />
+        <path d="m14 6 6 6-6 6" />
+      </svg>
+      <svg className="simanika-btn-icon simanika-btn-icon--secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 12h16" />
+        <path d="m14 6 6 6-6 6" />
+      </svg>
+    </>
+  );
 
   return (
     <div className="simanika-signin-root">
@@ -208,33 +245,24 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               <button
                 type="submit"
                 className="simanika-btn-primary animate-element animate-delay-600 w-full rounded-2xl bg-primary py-4 font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                data-state={submitState}
+                aria-busy={submitState === 'loading'}
+                disabled={submitState === 'loading' || submitState === 'success' || googleState === 'loading'}
               >
-                <span>{submitLabel}</span>
-                <span className="simanika-btn-icon-slot" aria-hidden="true">
-                  <svg
-                    className="simanika-btn-icon simanika-btn-icon--primary"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                <AnimatePresence initial={false} mode="wait">
+                  <motion.span
+                    key={submitState}
+                    className="simanika-btn-label"
+                    initial={reduced ? false : { opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={reduced ? { opacity: 0 } : { opacity: 0, y: -5 }}
+                    transition={{ duration: reduced ? 0 : 0.18 }}
                   >
-                    <path d="M4 12h16" />
-                    <path d="m14 6 6 6-6 6" />
-                  </svg>
-                  <svg
-                    className="simanika-btn-icon simanika-btn-icon--secondary"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M4 12h16" />
-                    <path d="m14 6 6 6-6 6" />
-                  </svg>
+                    {submitText}
+                  </motion.span>
+                </AnimatePresence>
+                <span className="simanika-btn-icon-slot" aria-hidden="true" data-state={submitState}>
+                  {submitIcon}
                 </span>
               </button>
             </form>
@@ -246,10 +274,17 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             <button
               type="button"
               onClick={onGoogleSignIn}
+              disabled={googleState === 'loading' || submitState === 'loading' || submitState === 'success'}
+              aria-busy={googleState === 'loading'}
+              data-state={googleState}
               className="simanika-btn-social animate-element animate-delay-800 w-full flex items-center justify-center gap-3 border border-border rounded-2xl py-4 hover:bg-secondary transition-colors"
             >
-              <GoogleIcon />
-              {googleLabel}
+              {googleState === 'loading' ? (
+                <svg className="simanika-btn-spinner" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeDasharray="34 16" />
+                </svg>
+              ) : <GoogleIcon />}
+              <span>{googleState === 'loading' ? 'Menghubungkan ke Google…' : googleLabel}</span>
             </button>
 
             <p className="simanika-foot-note animate-element animate-delay-900 text-center text-sm text-muted-foreground">

@@ -137,7 +137,7 @@ export default function EventBuilderPage() {
       <main className="event-builder-canvas">
         {fields.length === 0 && <div className="event-builder-empty"><span>01 / MULAI DI SINI</span><h2>Formulirmu masih kosong.</h2><p>Pilih jenis pertanyaan dari panel sebelah. Setiap kolom dapat disusun dari awal sesuai kebutuhan event.</p></div>}
         {fields.map((field, index) => <section className="event-builder-field" key={field.editorId} aria-label={"Kolom " + (index + 1)}>
-          <div className="event-builder-field-head"><span className="event-builder-number">{String(index + 1).padStart(2, "0")}</span><strong>{TYPES.find(([type]) => type === field.type)?.[1] || field.type}</strong><div className="event-builder-field-actions">
+          <div className="event-builder-field-head"><span className="event-builder-number">{String(index + 1).padStart(2, "0")}</span><h2>{TYPES.find(([type]) => type === field.type)?.[1] || field.type}</h2><div className="event-builder-field-actions">
             <button type="button" aria-label={"Geser kolom " + (index + 1) + " ke atas"} disabled={locked || index === 0} onClick={() => move(index, -1)}><ArrowUp size={17} /></button>
             <button type="button" aria-label={"Geser kolom " + (index + 1) + " ke bawah"} disabled={locked || index === fields.length - 1} onClick={() => move(index, 1)}><ArrowDown size={17} /></button>
             <button type="button" aria-label={"Hapus kolom " + (index + 1)} disabled={locked} onClick={() => { setFields(fields.filter((_, position) => position !== index)); setDirty(true); }}><Trash2 size={17} /></button>
@@ -163,8 +163,15 @@ export default function EventBuilderPage() {
         </section>)}
         {!locked && <div className="event-builder-add"><p>Tambah pertanyaan</p><div>{TYPES.map(([type, label]) => <button type="button" key={type} onClick={() => add(type)}><Plus size={16} /> {label}</button>)}</div></div>}
       </main>
-      {preview && <aside className="event-builder-preview" aria-label="Pratinjau formulir"><span className="event-builder-eyebrow">PRATINJAU PESERTA</span><h2>{event.judul}</h2><p>Formulir pendaftaran · {event.tipePendaftaran === "tim" ? "Tim" : "Individu"}</p>
-        {fields.length ? fields.map((field, index) => <div className="event-builder-preview-field" key={field.name}><label>{index + 1}. {field.label || "Pertanyaan tanpa judul"} {field.required && <b>*</b>}</label>{field.help && <small>{field.help}</small>}<PreviewField field={field} /></div>) : <div className="event-builder-preview-empty">Pertanyaan akan tampil di sini setelah ditambahkan.</div>}
+      {preview && <aside className="event-builder-preview" aria-label="Pratinjau formulir peserta">
+        <header className="event-builder-preview-header">
+          <span className="event-builder-eyebrow">PRATINJAU PESERTA</span>
+          <h2>{event.judul}</h2>
+          <p>Formulir pendaftaran · {event.tipePendaftaran === "tim" ? "Tim" : "Individu"}</p>
+        </header>
+        <div className="event-builder-preview-fields">
+          {fields.length ? fields.map((field, index) => <div className={`event-builder-preview-field${["textarea", "file", "radio", "checkbox"].includes(field.type) ? " event-builder-preview-field--wide" : ""}`} key={field.name}><label>{index + 1}. {field.label || "Pertanyaan tanpa judul"} {field.required && <b>*</b>}</label>{field.help && <small>{field.help}</small>}<PreviewField field={field} /></div>) : <div className="event-builder-preview-empty">Pertanyaan akan tampil di sini setelah ditambahkan.</div>}
+        </div>
         <button type="button" disabled className="admin-btn admin-btn--primary">Kirim pendaftaran</button>
       </aside>}
     </div>
