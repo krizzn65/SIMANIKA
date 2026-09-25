@@ -16,7 +16,12 @@ class OprecResource extends JsonResource
             'tanggalBuka' => $this->tanggal_buka?->toIso8601String(),
             'tanggalTutup' => $this->tanggal_tutup?->toIso8601String(),
             'schemaVersion' => $this->schema_version, 'formIntro' => $this->form_intro ?? '',
-            'formFields' => $this->form_fields ?? [],
+            'formFields' => collect($this->form_fields ?? [])->map(function ($field) {
+                if (($field['name'] ?? '') === 'divisi_pilihan_1') {
+                    $field['options'] = $this->divisions->map(fn ($division) => ['value' => (string) $division->id, 'label' => $division->nama])->all();
+                }
+                return $field;
+            })->all(),
             'divisiTersedia' => $this->divisions->map(fn ($division) => [
                 'id' => $division->id, 'nama' => $division->nama,
                 'namaLengkap' => $division->nama_lengkap, 'deskripsi' => $division->deskripsi,
@@ -27,6 +32,13 @@ class OprecResource extends JsonResource
                 'tanggal' => $this->pengumuman_published ? $this->pengumuman_tanggal?->toIso8601String() : null,
                 'pesan' => $this->pengumuman_published ? ($this->pengumuman_pesan ?? '') : '',
             ],
+            'stages' => $this->stages->filter(fn ($stage) => $request->user()?->role === 'admin' || $stage->published)->map(fn ($stage) => [
+                'id' => $stage->id, 'type' => $stage->type, 'headline' => $stage->headline,
+                'deskripsi' => $stage->deskripsi, 'poster' => $stage->poster,
+                'tanggalBuka' => $stage->tanggal_buka?->toIso8601String(),
+                'tanggalTutup' => $stage->tanggal_tutup?->toIso8601String(), 'published' => $stage->published,
+                ...($request->user()?->role === 'admin' ? ['formFields' => $stage->form_fields ?? []] : []),
+            ])->values()->all(),
             'faq' => $this->faq ?? [],
         ];
     }

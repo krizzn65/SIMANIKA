@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import OprecCreateDialog from "./OprecCreateDialog";
+import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
 import { api } from "@/services/api";
 import { AdminErrorNotice } from "../AdminErrorNotice";
 import { toast } from "sonner";
@@ -18,6 +21,8 @@ import {
   AlertCircle,
   ExternalLink,
   ChevronDown,
+  Plus,
+  Pencil,
 } from "lucide-react";
 
 export default function AdminOprecPage() {
@@ -32,6 +37,8 @@ export default function AdminOprecPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [divisionFilter, setDivisionFilter] = useState("all");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editingStage, setEditingStage] = useState(null);
 
   // Review Modal State
   const [reviewModal, setReviewModal] = useState({
@@ -49,10 +56,9 @@ export default function AdminOprecPage() {
       const res = await api.get("/admin/oprec");
       const list = res.data?.data || [];
       setOprecs(list);
-      if (list.length > 0 && !selectedOprec) {
-        setSelectedOprec(list[0]);
-        fetchRegistrants(list[0].id);
-      }
+      const nextSelected = list.find((item) => item.id === selectedOprec?.id) || list[0] || null;
+      setSelectedOprec(nextSelected);
+      if (nextSelected) fetchRegistrants(nextSelected.id);
     } catch (err) {
       setLoadError(err.message || "Gagal memuat OPREC.");
     } finally {
@@ -86,7 +92,7 @@ export default function AdminOprecPage() {
   const handleUpdateStatus = async (reg, newStatus) => {
     if (newStatus === "accepted") {
       // Open modal to choose accepted division
-      const defaultDiv = reg.divisiPilihan1 || selectedOprec?.divisions?.[0]?.id || "";
+      const defaultDiv = reg.divisiPilihan1 || selectedOprec?.divisiTersedia?.[0]?.id || "";
       setReviewModal({
         isOpen: true,
         registrant: reg,
@@ -152,11 +158,14 @@ export default function AdminOprecPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Kelola Open Recruitment (OPREC)</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-sm text-slate-600 mt-1">
             Manajemen seleksi calon anggota pengurus dan verifikasi berkas per divisi.
           </p>
         </div>
 
+        <div className="flex flex-wrap gap-2 items-center">
+          {oprecs.length > 1 && <label className="oprec-admin-period">Periode <select value={selectedOprec?.id || ""} onChange={(event) => { const item = oprecs.find((entry) => String(entry.id) === event.target.value); if (item) handleSelectOprec(item); }}>{oprecs.map((entry) => <option key={entry.id} value={entry.id}>{entry.periode}</option>)}</select></label>}
+          <button type="button" onClick={() => { setEditingStage(null); setCreateOpen(true); }} className="admin-btn admin-btn--primary"><CalendarPlusIcon size={20} loopDelay={2300} /> Tambah tahap</button>
         <button
           type="button"
           onClick={() => {
@@ -168,60 +177,42 @@ export default function AdminOprecPage() {
         >
           <RefreshCw className={`w-4 h-4 ${loading || loadingRegistrants ? "animate-spin" : ""}`} />
           <span>Refresh Data</span>
-        </button>
+        </button></div>
       </div>
 
       <AdminErrorNotice message={loadError} onRetry={fetchOprecs} />
-      <AdminErrorNotice message={registrantError} onRetry={() => fetchRegistrants(selectedOprec?.id)} />
-      {/* Oprec Period Selector & Division Badges */}
-      {selectedOprec && (
-        <div className="admin-card p-5 bg-gradient-to-r from-blue-900 to-[#071328] text-white border-blue-950">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className={`admin-badge text-xs ${selectedOprec.status === "open" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" : "bg-red-500/20 text-red-300 border-red-500/40"}`}>
-                  STATUS: {selectedOprec.status?.toUpperCase()}
-                </span>
-                <span className="text-xs text-blue-300 font-mono">
-                  Skema v{selectedOprec.schema_version || 1}
-                </span>
-              </div>
-              <h2 className="text-xl font-bold text-white tracking-tight">{selectedOprec.judul}</h2>
-              <p className="text-xs text-blue-200/80 mt-1 max-w-2xl">{selectedOprec.deskripsi || "Seleksi kepengurusan resmi HIMANIKA."}</p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="px-4 py-3 rounded-xl bg-white/10 border border-white/15 text-center">
-                <div className="text-xs text-blue-200">Total Berkas Masuk</div>
-                <div className="text-xl font-bold font-mono text-white mt-0.5">{registrants.length}</div>
-              </div>
+      {selectedOprec && <section className="oprec-admin-overview" aria-labelledby="oprec-overview-title">
+        <div className="oprec-admin-overview__top">
+          <div>
+            <span className="oprec-admin-overview__eyebrow">OPREC · PERIODE {selectedOprec.periode}</span>
+            <h2 id="oprec-overview-title">Pendaftaran</h2>
+            <p>Informasi pendaftaran dan tahapan seleksi calon anggota.</p>
+          </div>
+          <div className="oprec-admin-overview__count"><strong>{registrants.length}</strong><span>Berkas masuk</span></div>
+        </div>
+        <div className="oprec-admin-overview__registration">
+          <div className="oprec-admin-overview__registration-main">
+            <span className="oprec-admin-overview__step">01 / PENDAFTARAN</span>
+            <h3>{selectedOprec.headline || "Pendaftaran calon anggota HIMANIKA"}</h3>
+            <p>{selectedOprec.deskripsi || "Pendaftaran calon anggota pengurus HIMANIKA untuk periode ini."}</p>
+            <div className="oprec-admin-overview__meta">
+              <span>{selectedOprec.status === "draft" ? "Belum diterbitkan" : selectedOprec.status === "open" ? "Pendaftaran berlangsung" : "Pendaftaran selesai"}</span>
+              {selectedOprec.tanggalBuka && <span>Mulai {new Date(selectedOprec.tanggalBuka).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>}
+              {selectedOprec.tanggalTutup && <span>Berakhir {new Date(selectedOprec.tanggalTutup).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>}
             </div>
           </div>
-
-          {/* Divisions Pill List */}
-          {selectedOprec.divisions?.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap items-center gap-2">
-              <span className="text-xs text-blue-200 font-semibold mr-1">Divisi Tersedia:</span>
-              {selectedOprec.divisions.map((div) => (
-                <span
-                  key={div.id}
-                  className="px-2.5 py-1 rounded-lg bg-blue-950/60 border border-blue-400/25 text-xs text-blue-100 flex items-center gap-1.5"
-                >
-                  <span className="font-medium">{div.nama}</span>
-                  {div.kuota && <span className="text-[10px] text-blue-300 font-mono">({div.kuota} Kuota)</span>}
-                </span>
-              ))}
-            </div>
-          )}
+          <Link href={`/admin/oprec/${selectedOprec.id}/edit`} className="oprec-admin-overview__edit"><Pencil size={16} aria-hidden="true" /> Kelola formulir</Link>
         </div>
-      )}
-
+        {selectedOprec.divisiTersedia?.length > 0 && <div className="oprec-admin-overview__divisions"><strong>Divisi yang dibuka</strong><div>{selectedOprec.divisiTersedia.map((division) => <span key={division.id}>{division.nama}{division.kuota ? ` · ${division.kuota} kuota` : ""}</span>)}</div></div>}
+        {(selectedOprec.stages || []).length > 0 && <div className="oprec-admin-overview__next"><h3>Tahap berikutnya</h3><div className="oprec-admin-overview__stage-list">{selectedOprec.stages.map((stage, index) => <div className="oprec-admin-overview__stage" key={stage.id}><span className="oprec-admin-overview__stage-number">{String(index + 2).padStart(2, "0")}</span><div><strong>{stage.type === "test_tulis" ? "Tes tulis" : "Pengumuman"}</strong><p>{stage.headline}</p></div><span className="oprec-admin-overview__stage-state">{stage.published ? "Terbit" : "Belum terbit"}</span><div className="oprec-admin-overview__stage-actions">{stage.type === "test_tulis" && <Link href={`/admin/oprec/${selectedOprec.id}/stages/${stage.id}/form`}>Kelola soal</Link>}<button type="button" onClick={() => { setEditingStage(stage); setCreateOpen(true); }}>Edit informasi</button></div></div>)}</div></div>}
+      </section>}
+      <AdminErrorNotice message={registrantError} onRetry={() => fetchRegistrants(selectedOprec?.id)} />
       {/* Filter and Registrants Table */}
       <div className="admin-card">
         <div className="admin-card-header">
           <div>
             <h2 className="text-base font-bold text-slate-900">Daftar Berkas Calon Anggota</h2>
-            <p className="text-xs text-slate-500">Verifikasi kelengkapan berkas dan tentukan hasil seleksi.</p>
+            <p className="text-sm text-slate-600">Verifikasi kelengkapan berkas dan tentukan hasil seleksi.</p>
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -232,14 +223,14 @@ export default function AdminOprecPage() {
                 placeholder="Cari NIM atau nama..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-blue-500"
+                className="pl-8 pr-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 bg-white"
+              className="px-2.5 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-800 bg-white"
             >
               <option value="all">Semua Status</option>
               <option value="pending">Menunggu Review</option>
@@ -264,21 +255,21 @@ export default function AdminOprecPage() {
             <tbody>
               {loadingRegistrants ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-400">
+                  <td colSpan={6} className="text-center py-12 text-slate-600">
                     Memuat data pendaftar OPREC...
                   </td>
                 </tr>
               ) : filteredRegistrants.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-400">
+                  <td colSpan={6} className="text-center py-12 text-slate-600">
                     Belum ada calon anggota pada filter ini.
                   </td>
                 </tr>
               ) : (
                 filteredRegistrants.map((r) => {
-                  const div1 = selectedOprec?.divisions?.find((d) => d.id === r.divisiPilihan1)?.nama || `Divisi #${r.divisiPilihan1}`;
-                  const div2 = r.divisiPilihan2 ? selectedOprec?.divisions?.find((d) => d.id === r.divisiPilihan2)?.nama || `Divisi #${r.divisiPilihan2}` : null;
-                  const acceptedDiv = r.acceptedDivisionId ? selectedOprec?.divisions?.find((d) => d.id === r.acceptedDivisionId)?.nama : null;
+                  const div1 = selectedOprec?.divisiTersedia?.find((d) => d.id === r.divisiPilihan1)?.nama || `Divisi #${r.divisiPilihan1}`;
+                  const div2 = r.divisiPilihan2 ? selectedOprec?.divisiTersedia?.find((d) => d.id === r.divisiPilihan2)?.nama || `Divisi #${r.divisiPilihan2}` : null;
+                  const acceptedDiv = r.acceptedDivisionId ? selectedOprec?.divisiTersedia?.find((d) => d.id === r.acceptedDivisionId)?.nama : null;
 
                   return (
                     <tr key={r.id}>
@@ -347,6 +338,8 @@ export default function AdminOprecPage() {
         </div>
       </div>
 
+      <OprecCreateDialog open={createOpen} onClose={() => { setCreateOpen(false); setEditingStage(null); }} onCreated={fetchOprecs} selectedOprec={selectedOprec} editingStage={editingStage} />
+
       {/* Review & Acceptance Modal */}
       {reviewModal.isOpen && (
         <div className="admin-modal-overlay">
@@ -381,7 +374,7 @@ export default function AdminOprecPage() {
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-blue-500 bg-white"
                 >
                   <option value="">-- Pilih Divisi --</option>
-                  {selectedOprec?.divisions?.map((div) => (
+                  {selectedOprec?.divisiTersedia?.map((div) => (
                     <option key={div.id} value={div.id}>
                       {div.nama} {div.kuota ? `(Kuota: ${div.kuota})` : ""}
                     </option>

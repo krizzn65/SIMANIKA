@@ -166,8 +166,8 @@ lahir harus di-redact dari access/error/APM logs. Cookie tidak diteruskan untuk 
 ## Implementasi dan verifikasi
 
 Frontend, form renderer, poster, state machine, countdown, pencarian hasil dan route
-adapter Next sudah diimplementasikan. CRUD admin, persistence Laravel, endpoint hasil,
-auth/login dan pengujian integrasi nyata masih belum tersedia dalam repository.
+adapter Next sudah diimplementasikan. Status implementasi admin, backend, dan tes
+terkini dijelaskan pada bagian Alur tahap admin dan kartu publik di bawah.
 
 - `node --test tests/oprec.test.mjs tests/oprec-submission.test.mjs`
 - `npm run build`
@@ -177,3 +177,64 @@ auth/login dan pengujian integrasi nyata masih belum tersedia dalam repository.
 Verifikasi lokal: 39 pemeriksaan logika murni lulus pada V8 (input form dimodelkan
 sebagai getAll); sintaks diperiksa dengan parser Babel bawaan Next. Suite Node,
 build Next, dan browser belum dijalankan karena runtime npm menolak WSL 1.
+
+## Revisi pendaftaran — 25 September 2026
+
+Admin kini membuat atau mengedit periode dari `/admin/oprec/create` dan
+`/admin/oprec/{id}/edit`. Form pendaftaran selalu dimulai dengan Nama lengkap
+(`nama`), NIM (`nim`), Tanggal lahir (`tanggal_lahir`), Angkatan (`angkatan`),
+dan Divisi pilihan (`divisi_pilihan_1`). Kelima kolom wajib dan tipe dasarnya
+tetap; admin mengisi pilihan angkatan berupa tahun empat digit, mengelola
+divisi, logo, kuota, lalu menambahkan maksimal 35 pertanyaan lain. Pilihan
+divisi publik dibuat dari ID divisi yang tersimpan, bukan dari label yang
+ditulis bebas. Perubahan form setelah ada pendaftar memerlukan kenaikan
+`schema_version`; divisi dengan pendaftar tetap tidak dapat diganti.
+
+Pilihan divisi tampil sebagai kartu berlogo. Logo lokal dalam
+`/images/divisi/*.webp` dan URL HTTP(S) didukung. Editor menggunakan ikon cek
+animasi dari komponen 21st.dev yang sudah ada dan transisi tahap yang
+diadaptasi dari React Bits Animated Content, dengan reduced-motion fallback.
+
+Alur tahap terbaru telah menggantikan tab editor ini. Jadwal, skema, dan
+penyimpanan jawaban tes sudah tersedia; penilaian tes masih perlu dibuat.
+Alur pencarian hasil pengumuman publik tetap mengikuti kontrak sebelumnya.
+
+## Alur tahap admin dan kartu publik — 25 September 2026
+
+Keputusan terbaru: `/admin/oprec` menampilkan daftar periode dan tahap. Tombol Tambah
+membuka satu popup untuk memilih Pendaftaran, Tes Tulis, atau Pengumuman. Admin mengisi
+headline, jadwal, deskripsi, dan poster terlebih dahulu. Pendaftaran membuat periode
+`draft`, kemudian membuka editor form dengan Nama, NIM, Tanggal lahir, Angkatan, dan
+Divisi pilihan. Tes tulis membuka editor soal setelah metadata tahap disimpan.
+Pengumuman memakai metadata tahap terpisah dan tetap menggunakan lookup hasil yang
+memeriksa NIM serta tanggal lahir. Pengumuman hanya dapat terbit setelah pendaftaran
+ditutup. Satu periode memiliki paling banyak satu tahap tes tulis dan satu tahap
+pengumuman.
+
+Kontrak baru Laravel: `POST /api/admin/oprec/upload-poster` menerima gambar maksimal
+5 MB; `POST /api/admin/oprec/{oprec}/stages` dan
+`PUT /api/admin/oprec/{oprec}/stages/{stage}` menyimpan metadata tahap;
+`PUT /api/admin/oprec/{oprec}/stages/{stage}/form` menyimpan soal tes dan status
+publikasinya; `GET|POST /api/user/oprec/stages/{stage}/test` hanya untuk peserta
+terdaftar dan memakai autentikasi sesi. GET menahan daftar soal sampai jadwal tes
+aktif. POST memvalidasi jawaban terhadap skema server, jadwal, dan unique constraint
+satu jawaban per peserta/tahap. Migrasi `oprec_stages` dan
+`oprec_test_submissions` diperlukan sebelum endpoint baru dipakai.
+
+Kartu publik mengikuti komposisi IFEST: konten lebar di kiri, poster pada panel
+biru di kanan, serta transisi kotak satu per satu saat hover masuk maupun keluar.
+Efek ini diadaptasi dari React Bits Pixel Transition. Ikon Calendar Plus dan Check
+berasal dari adaptasi komponen animated icons 21st.dev, dengan gerak path SVG,
+bukan transformasi seluruh ikon. Semua animasi mematuhi reduced motion.
+
+Verifikasi terakhir: production build Next.js dan suite Laravel (40 tes, 307
+assertion) lulus. Kedua migrasi OPREC sudah Ran pada database lokal (batch 19).
+Smoke test browser belum dijalankan. Penilaian tes dan tampilan jawaban admin
+belum dibuat.
+
+## Revisi ringkasan admin — 25 September 2026
+
+Halaman `/admin/oprec` sekarang memakai satu kartu ringkasan untuk pendaftaran
+beserta tahap lanjutannya. Judul utama kartu adalah Pendaftaran; headline,
+deskripsi, jadwal, jumlah berkas, dan divisi berada dalam kartu yang sama.
+Label teknis skema dan status mentah tidak tampil pada ringkasan admin.

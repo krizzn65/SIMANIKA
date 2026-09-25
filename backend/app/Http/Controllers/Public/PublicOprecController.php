@@ -6,12 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\OprecResource;
 use App\Models\Oprec;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PublicOprecController extends Controller
 {
+    public function poster(string $filename)
+    {
+        abort_unless(preg_match('/^[a-zA-Z0-9._-]+\.(jpe?g|png|webp)$/i', $filename), 404);
+        $path = 'oprec/posters/'.$filename;
+        abort_unless(Storage::disk('public')->exists($path), 404);
+        return response()->file(Storage::disk('public')->path($path), ['Cache-Control' => 'public, max-age=3600']);
+    }
+
     public function index(Request $request)
     {
-        $oprec = Oprec::with('divisions')->latest('created_at')->first();
+        $oprec = Oprec::with('divisions', 'stages')->where('status', '!=', 'draft')->latest('created_at')->first();
         return response()->json(['data' => $oprec ? (new OprecResource($oprec))->resolve($request) : null], 200, ['Cache-Control' => 'no-store']);
     }
 

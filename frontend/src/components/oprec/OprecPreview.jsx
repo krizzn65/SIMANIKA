@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { oprecDate, oprecState } from "@/lib/oprec";
 import { OprecEmptyState } from "./OprecEmptyState";
+import { PixelDissolve } from "./PixelDissolve";
+import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
 
 const previewStatus = {
   soon: "Segera Dibuka",
@@ -13,9 +15,10 @@ const previewStatus = {
   announcement: "Pengumuman Tersedia",
 };
 
-export function OprecPreview({ oprec, initialNow }) {
+export function OprecPreview({ oprec, initialNow, stage = null }) {
   const [now, setNow] = useState(initialNow);
   const [posterFailed, setPosterFailed] = useState(false);
+  const [active, setActive] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -30,13 +33,12 @@ export function OprecPreview({ oprec, initialNow }) {
   }, [oprec, router]);
 
   const state = oprecState(oprec, now);
-  if (state.key === "empty") {
+  if (!stage && state.key === "empty") {
     return <OprecEmptyState />;
   }
 
-  const dateLabel = state.key === "announcement" && oprec?.pengumuman.tanggal
-    ? `Pengumuman ${oprecDate(oprec.pengumuman.tanggal)}`
-    : oprec?.tanggalBuka ? `Mulai ${oprecDate(oprec.tanggalBuka)}` : "Jadwal menyusul";
+  const start = stage?.tanggalBuka || oprec?.tanggalBuka;
+  const dateLabel = start ? oprecDate(start) : "Jadwal menyusul";
 
   const description = {
     soon: "Rekrutmen berikutnya sudah dekat. Kenali jadwal dan siapkan langkah pertamamu.",
@@ -45,22 +47,24 @@ export function OprecPreview({ oprec, initialNow }) {
     announcement: "Hasil seleksi sudah tersedia. Cek hasilmu menggunakan NIM dan tanggal lahir.",
   }[state.key];
 
-  return <article className="oprec-preview" aria-labelledby="oprec-preview-title">
+  const title = stage?.headline || oprec?.headline || "Open recruitment.";
+  const image = stage?.poster || oprec?.poster;
+  const kind = stage?.type === "test_tulis" ? "Tes tulis" : stage?.type === "pengumuman" ? "Pengumuman" : "Pendaftaran";
+  return <article className="oprec-preview" onMouseEnter={() => setActive(true)} onMouseLeave={() => setActive(false)} onFocus={() => setActive(true)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setActive(false); }} aria-labelledby={`oprec-preview-title-${stage?.id || "registration"}`}>
     <div className="oprec-preview__content">
-      <span className={`oprec-preview__status oprec-preview__status--${state.key}`} aria-live="polite"><span aria-hidden="true" />{previewStatus[state.key]}</span>
-      <h3 id="oprec-preview-title">{oprec?.headline || "Open recruitment."}</h3>
-      <p className="oprec-preview__description">{description}</p>
+      <span className="oprec-preview__eyebrow">// {kind.toUpperCase()} · {oprec?.periode}</span>
+      <h3 id={`oprec-preview-title-${stage?.id || "registration"}`}>{title}</h3>
+      <div className="oprec-preview__facts"><span><CalendarPlusIcon size={19} loop={false} /> {dateLabel}</span><span className={`oprec-preview__status oprec-preview__status--${state.key}`} aria-live="polite"><span aria-hidden="true" />{stage ? kind : previewStatus[state.key]}</span></div>
+      <p className="oprec-preview__description">{stage?.deskripsi || oprec?.deskripsi || description}</p>
       <div className="oprec-preview__footer">
-        <div className="oprec-preview__meta"><span className="oprec-mono">{oprec ? `PERIODE ${oprec.periode}` : "PERIODE BERIKUTNYA"}</span><span>{dateLabel}</span></div>
-        <Link className="oprec-preview__button" href="/oprec/detail" prefetch={false}>Lihat detail <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg></Link>
+        <Link className="oprec-preview__button" href={stage ? `/oprec/detail?stage=${stage.type}` : "/oprec/detail"} prefetch={false}>Lihat detail <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg></Link>
       </div>
     </div>
     <div className="oprec-preview__art" aria-hidden="true">
-      <span className="oprec-preview__art-label oprec-mono">HIMANIKA / RECRUITMENT</span>
-      <div className="oprec-preview__sheet">
-        {oprec?.poster && !posterFailed ? <img src={oprec.poster} alt="" width="600" height="800" loading="lazy" decoding="async" onError={() => setPosterFailed(true)} /> : <div className="oprec-preview__placeholder"><span className="oprec-mono">HIMPUNAN MAHASISWA<br />MANAJEMEN INFORMATIKA</span><strong>OP<span>REC.</span></strong><span className="oprec-preview__poster-note">Ruang untuk tumbuh.<br />Tempat untuk berkontribusi.</span><span className="oprec-mono">{oprec?.periode || "COMING SOON"}</span></div>}
+      <div className={`oprec-preview__sheet ${!image || posterFailed ? "oprec-preview__sheet--empty" : ""}`}>
+        {image && !posterFailed ? <img src={image} alt="" width="600" height="800" loading="lazy" decoding="async" onError={() => setPosterFailed(true)} /> : <div className="oprec-preview__placeholder"><span className="oprec-mono">HIMPUNAN MAHASISWA<br />MANAJEMEN INFORMATIKA</span><strong>OP<span>REC.</span></strong><span className="oprec-preview__poster-note">Ruang untuk tumbuh.<br />Tempat untuk berkontribusi.</span><span className="oprec-mono">{oprec?.periode || "COMING SOON"}</span></div>}
       </div>
-      <svg className="oprec-preview__corner" width="32" height="32" viewBox="0 0 32 32" fill="currentColor"><path d="M0 0h12v4H4v8H0zm20 20h12v12H20z" /></svg>
+      <PixelDissolve active={active} />
     </div>
   </article>;
 }

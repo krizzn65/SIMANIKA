@@ -50,6 +50,7 @@ export function Oprec({ oprec }) {
     <section className="oprec-registration-section" id="pendaftaran" aria-labelledby="registration-heading"><div className="oprec-container">
       <div className="oprec-section-heading"><div><h2 id="registration-heading">Pendaftaran & pengumuman.</h2></div></div>
       <OprecPreview key={oprec?.poster || "no-poster"} oprec={oprec} initialNow={Date.now()} />
+      {oprec?.stages?.map((stage) => <OprecPreview key={stage.id} oprec={oprec} stage={stage} initialNow={Date.now()} />)}
     </div></section>
     <section className="oprec-faq-section oprec-container" id="faq-oprec" aria-labelledby="faq-heading"><div><h2 id="faq-heading">Masih penasaran?</h2><p>Hal-hal yang perlu kamu tahu<br />sebelum mengambil langkah pertama.</p></div><OprecFaq faq={faq} /></section>
   </>;
