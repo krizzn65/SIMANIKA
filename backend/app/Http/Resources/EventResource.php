@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Support\EventGuidebookSource;
+use App\Support\EventTimeline;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -24,6 +25,7 @@ class EventResource extends JsonResource
     public function toArray(Request $request): array
     {
         $team = $this->tipe_pendaftaran === 'tim';
+        [$registrationOpen, $registrationClose, $registrationBatch, $registrationBatchCount] = EventTimeline::registrationTimes($this->resource);
 
         return [
             'id' => $this->id, 'slug' => $this->slug, 'judul' => $this->judul,
@@ -33,8 +35,10 @@ class EventResource extends JsonResource
             'guidebookValue' => $this->guidebook_value,
             'guidebookUrl' => EventGuidebookSource::url($this->guidebook_type, $this->guidebook_value), 'tanggalMulai' => $this->tanggal_mulai?->format('Y-m-d'),
             'tanggalSelesai' => $this->tanggal_selesai?->format('Y-m-d'),
-            'bukaPendaftaran' => $this->buka_pendaftaran?->format('Y-m-d'),
-            'deadlinePendaftaran' => $this->deadline_pendaftaran?->format('Y-m-d'),
+            'bukaPendaftaran' => $registrationOpen?->format('Y-m-d'),
+            'deadlinePendaftaran' => $registrationClose?->format('Y-m-d'),
+            'registrationBatch' => $registrationBatch,
+            'registrationBatchCount' => $registrationBatchCount,
             'timeline' => $this->timeline ?? [],
             'lokasi' => $this->lokasi, 'tipe' => $this->tipe, 'status' => $this->status,
             'tipePendaftaran' => $this->tipe_pendaftaran,
@@ -44,8 +48,8 @@ class EventResource extends JsonResource
             'htm' => $this->payment_type === 'paid' ? $this->htm : null,
             'tanggal_mulai' => $this->tanggal_mulai?->format('Y-m-d'),
             'tanggal_selesai' => $this->tanggal_selesai?->format('Y-m-d'),
-            'buka_pendaftaran' => $this->buka_pendaftaran?->format('Y-m-d'),
-            'deadline_pendaftaran' => $this->deadline_pendaftaran?->format('Y-m-d'),
+            'buka_pendaftaran' => $registrationOpen?->format('Y-m-d'),
+            'deadline_pendaftaran' => $registrationClose?->format('Y-m-d'),
             'kode_prefix' => $this->kode_prefix,
             'min_anggota' => $this->min_anggota,
             'max_anggota' => $this->max_anggota,

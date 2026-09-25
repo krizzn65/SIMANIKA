@@ -69,8 +69,9 @@ class EventTimeline
         ];
     }
 
-    public static function registrationTimes(Event $event): array
+    public static function registrationTimes(Event $event, ?CarbonImmutable $at = null): array
     {
+        $at ??= CarbonImmutable::now('Asia/Jakarta');
         $pairs = [];
         foreach ($event->timeline ?? [] as $item) {
             if (in_array($item['type'] ?? null, ['registration_open', 'registration_close'], true) && is_numeric($item['batch'] ?? null)) {
@@ -79,24 +80,33 @@ class EventTimeline
         }
         if ($pairs) {
             ksort($pairs);
-            $latest = end($pairs);
-            if (isset($latest['registration_open'], $latest['registration_close'])) {
-                return [
-                    CarbonImmutable::parse($latest['registration_open']['tanggal'].' 00:00:00', 'Asia/Jakarta'),
-                    CarbonImmutable::parse($latest['registration_close']['tanggal'], 'Asia/Jakarta')->endOfDay(),
+            $lastComplete = null;
+            foreach ($pairs as $batchNumber => $pair) {
+                if (!isset($pair['registration_open']['tanggal'], $pair['registration_close']['tanggal'])) continue;
+                $window = [
+                    CarbonImmutable::parse($pair['registration_open']['tanggal'], 'Asia/Jakarta')->startOfDay(),
+                    CarbonImmutable::parse($pair['registration_close']['tanggal'], 'Asia/Jakarta')->endOfDay(),
                 ];
+                // Keep the current batch until its closing day ends; then advance.
+                $window[] = (int) $batchNumber;
+                $window[] = count($pairs);
+                if ($at->lte($window[1])) return $window;
+                $lastComplete = $window;
             }
+            if ($lastComplete) return $lastComplete;
         }
         return [
             $event->buka_pendaftaran ? CarbonImmutable::parse($event->buka_pendaftaran->format('Y-m-d').' 00:00', 'Asia/Jakarta') : null,
             $event->deadline_pendaftaran ? CarbonImmutable::parse($event->deadline_pendaftaran->format('Y-m-d'), 'Asia/Jakarta')->endOfDay() : null,
+            null,
+            0,
         ];
     }
 
-    public static function isOpen(Event $event): bool
+    public static function isOpen(Event $event, ?CarbonImmutable $at = null): bool
     {
-        [$open, $close] = self::registrationTimes($event);
-        $now = CarbonImmutable::now('Asia/Jakarta');
+        $now = $at ?? CarbonImmutable::now('Asia/Jakarta');
+        [$open, $close] = self::registrationTimes($event, $now);
         return $event->status === 'published'
             && (!$open || $now->gte($open))
             && (!$close || $now->lte($close))

@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const source = await readFile(new URL("../src/lib/events.js", import.meta.url), "utf8");
-const { eventFilters, eventListHref, safeEventUrl, normalizeEvent, registrationState, eventFeeLabel, eventDate, eventCategoryLabel } =
+const { eventFilters, eventListHref, safeEventUrl, normalizeEvent, registrationState, eventFeeLabel, eventDate, eventCategoryLabel, registrationDeadlineLabel } =
   await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
 
 const sample = {
@@ -76,6 +76,14 @@ test("latest batch dates gate registration for whole days and timeline follows d
   assert.equal(registrationState(event, Date.parse("2026-11-10T00:01:00+07:00")).key, "open");
   assert.equal(registrationState(event, Date.parse("2026-11-12T20:01:00+07:00")).key, "open");
   assert.equal(registrationState(event, Date.parse("2026-11-13T00:01:00+07:00")).key, "closed");
+});
+
+test("deadline label only names the batch when registration has multiple batches", () => {
+  assert.equal(registrationDeadlineLabel(normalizeEvent(sample)), "Batas daftar");
+  const first = normalizeEvent({ ...sample, registrationBatch: 1, registrationBatchCount: 2 });
+  const second = normalizeEvent({ ...sample, registrationBatch: 2, registrationBatchCount: 2 });
+  assert.equal(registrationDeadlineLabel(first), "Batas daftar Batch 1");
+  assert.equal(registrationDeadlineLabel(second), "Batas daftar Batch 2");
 });
 
 test("unsafe image and registration URLs are rejected", () => {
