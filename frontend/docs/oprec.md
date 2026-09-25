@@ -231,3 +231,10 @@ Verifikasi terakhir: production build Next.js dan suite Laravel (40 tes, 307
 assertion) lulus. Kedua migrasi OPREC sudah Ran pada database lokal (batch 19).
 Smoke test browser belum dijalankan. Penilaian tes dan tampilan jawaban admin
 belum dibuat.
+
+## Revisi ringkasan admin — 25 September 2026
+
+Halaman `/admin/oprec` sekarang memakai satu kartu ringkasan untuk pendaftaran
+beserta tahap lanjutannya. Judul utama kartu adalah Pendaftaran; headline,
+deskripsi, jadwal, jumlah berkas, dan divisi berada dalam kartu yang sama.
+Label teknis skema dan status mentah tidak tampil pada ringkasan admin.

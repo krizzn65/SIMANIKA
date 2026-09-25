@@ -632,3 +632,5 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 - [x] Migrasi `oprec_stages` dan `oprec_test_submissions` sudah Ran pada database lokal (batch 19); tes integrasi OPREC 1 tes/15 assertion dan suite backend 40 tes/307 assertion lulus.
 - [ ] Uji integrasi lengkap untuk pilihan divisi, unggah poster, publikasi pengumuman, dan hasil aktual.
 - [ ] Uji browser nyata pada mobile/desktop, keyboard, reduced motion, serta unggah poster. Penilaian tes dan tampilan jawaban untuk admin masih perlu ditentukan dan dibuat.
+
+| 2026-09-25 | Ringkasan admin OPREC | Dua kartu ringkasan digabung menjadi satu kartu Pendaftaran yang lebih ringkas. Label teknis `STATUS: OPEN` dan `Skema v1` dihilangkan dari tampilan; headline, deskripsi, jadwal, jumlah berkas, divisi, dan tahap berikutnya diberi hierarki serta kontras teks yang jelas. Build frontend lulus; pemeriksaan visual browser masih perlu. | AI |
