@@ -24,10 +24,6 @@ class EventResource extends JsonResource
     public function toArray(Request $request): array
     {
         $team = $this->tipe_pendaftaran === 'tim';
-        $canRegister = $this->status === 'published'
-            && (!$this->tanggal_selesai || $this->tanggal_selesai->endOfDay()->isFuture())
-            && (!$this->buka_pendaftaran || $this->buka_pendaftaran->startOfDay()->isPast() || $this->buka_pendaftaran->isToday())
-            && (!$this->deadline_pendaftaran || $this->deadline_pendaftaran->endOfDay()->isFuture());
 
         return [
             'id' => $this->id, 'slug' => $this->slug, 'judul' => $this->judul,
@@ -60,6 +56,15 @@ class EventResource extends JsonResource
             'syarat' => $this->whenLoaded('requirements', fn () => $this->requirements->pluck('label')->all(), []),
             'hadiah' => $this->whenLoaded('prizes', fn () => $this->prizes->pluck('label')->all(), []),
             'formFields' => $this->whenLoaded('formFields', fn () => $this->formFields->map(fn ($field) => ['name' => $field->name, 'label' => $field->label, 'type' => $field->type, 'required' => $field->required, 'options' => $field->options ?? [], 'help' => $field->help, 'placeholder' => $field->placeholder])->all(), []),
+            'formGroups' => $this->whenLoaded('formGroups', fn () => $this->formGroups->map(fn ($group) => [
+                'id' => $group->id, 'title' => $group->title, 'scope' => $group->scope,
+                'editRole' => $group->edit_role,
+                'fields' => $group->fields->map(fn ($field) => [
+                    'name' => $field->name, 'label' => $field->label, 'type' => $field->type,
+                    'required' => $field->required, 'options' => $field->options ?? [],
+                    'help' => $field->help, 'placeholder' => $field->placeholder,
+                ])->all(),
+            ])->all(), []),
         ];
     }
 }

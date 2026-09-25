@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Models\Event;
+use App\Support\EventTimeline;
 use Illuminate\Support\Facades\DB;
 
 class EventEnrollmentDashboard
@@ -16,11 +18,18 @@ class EventEnrollmentDashboard
             ->when($completedIds, fn ($query) => $query->whereNotIn('events.id', $completedIds))
             ->select('event_enrollments.id', 'event_enrollments.event_id', 'event_enrollments.created_at',
                 'events.slug', 'events.judul', 'events.kategori', 'events.tanggal_mulai',
-                'events.buka_pendaftaran', 'events.deadline_pendaftaran', 'events.status', 'events.tipe_pendaftaran',
+                'events.buka_pendaftaran', 'events.deadline_pendaftaran', 'events.tanggal_selesai', 'events.timeline', 'events.status', 'events.tipe_pendaftaran',
                 'events.payment_type', 'events.htm')
             ->latest('event_enrollments.created_at')
             ->get()
             ->map(function ($enrollment) {
+                $eventClock = new Event([
+                    'buka_pendaftaran' => $enrollment->buka_pendaftaran,
+                    'deadline_pendaftaran' => $enrollment->deadline_pendaftaran,
+                    'tanggal_selesai' => $enrollment->tanggal_selesai,
+                    'timeline' => is_string($enrollment->timeline) ? json_decode($enrollment->timeline, true) : $enrollment->timeline,
+                    'status' => $enrollment->status,
+                ]);
                 $fields = DB::table('event_form_fields')->where('event_id', $enrollment->event_id)
                     ->orderBy('sort_order')->get(['name', 'label', 'type', 'required', 'options', 'help', 'placeholder'])
                     ->map(fn ($field) => [
@@ -44,9 +53,7 @@ class EventEnrollmentDashboard
                     'registeredAt' => $enrollment->created_at,
                     'eventId' => $enrollment->event_id,
                     'actionRequired' => true,
-                    'canSubmit' => $enrollment->status === 'published'
-                        && (!$enrollment->buka_pendaftaran || $enrollment->buka_pendaftaran <= today()->toDateString())
-                        && (!$enrollment->deadline_pendaftaran || $enrollment->deadline_pendaftaran >= today()->toDateString()),
+                    'canSubmit' => EventTimeline::isOpen($eventClock),
                     'event' => [
                         'id' => $enrollment->event_id,
                         'judul' => $enrollment->judul,

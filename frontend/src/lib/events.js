@@ -73,7 +73,8 @@ export function normalizeEvent(raw) {
     timeline: Array.isArray(raw.timeline)
       ? raw.timeline
           .filter((t) => t && typeof t === "object" && text(t.judul) && date(t.tanggal))
-          .map((t) => ({ judul: text(t.judul), tanggal: date(t.tanggal) }))
+          .map((t) => ({ judul: text(t.judul), tanggal: date(t.tanggal), type: text(t.type), batch: Number(t.batch) || null }))
+          .sort((a, b) => a.tanggal.localeCompare(b.tanggal))
       : [],
   };
 }

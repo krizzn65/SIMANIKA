@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class EventFormField extends Model
 {
     public $timestamps = false;
-    protected $fillable = ['event_id', 'name', 'label', 'type', 'required', 'options', 'help', 'placeholder', 'sort_order'];
+    protected $fillable = ['event_id', 'group_id', 'name', 'label', 'type', 'required', 'options', 'help', 'placeholder', 'sort_order'];
     protected function casts(): array { return ['required' => 'boolean', 'options' => 'array']; }
     public function event() { return $this->belongsTo(Event::class); }
 }

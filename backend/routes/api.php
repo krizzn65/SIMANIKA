@@ -21,6 +21,7 @@ use App\Http\Controllers\User\CreateEventTeamController;
 use App\Http\Controllers\User\JoinEventTeamController;
 use App\Http\Controllers\User\DashboardController;
 use App\Http\Controllers\User\EventWorkspaceController;
+use App\Http\Controllers\User\EventGroupSubmissionController;
 use App\Http\Controllers\User\TeamMemberController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +46,8 @@ Route::prefix('public')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/dashboard', DashboardController::class);
     Route::get('/user/events/{event}/workspace', [EventWorkspaceController::class, 'show']);
+    Route::post('/user/events/{event}/groups/{group}/submit', [EventGroupSubmissionController::class, 'store'])->middleware('throttle:auth');
+    Route::get('/user/events/{event}/groups/{group}/files/{field}', [EventGroupSubmissionController::class, 'download'])->name('user.event-group-file');
     Route::get('/user/events/{event}/files/{field}', [EventWorkspaceController::class, 'download'])->name('user.event-file');
     Route::post('/user/events/{event}/teams/{team}/members/{member}', TeamMemberController::class)->whereNumber(['team', 'member'])->middleware('throttle:auth');
     Route::post('/auth/logout', [LoginController::class, 'destroy']);

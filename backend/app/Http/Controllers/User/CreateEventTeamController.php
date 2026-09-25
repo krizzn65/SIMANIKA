@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Support\EventTimeline;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,12 +29,25 @@ class CreateEventTeamController extends Controller
                     throw ValidationException::withMessages(['nama_tim' => ['Kamu sudah tergabung dalam tim competition ini.']]);
                 }
 
-                $number = $locked->last_team_number + 1;
+                $prefix = $locked->kode_prefix;
+                abort_unless(is_string($prefix) && preg_match('/^[A-Z]{1,6}$/', $prefix), 409, 'Prefix tim belum valid.');
+                DB::table('team_code_sequences')->insertOrIgnore(['prefix' => $prefix, 'last_number' => 0]);
+                $sequence = DB::table('team_code_sequences')->where('prefix', $prefix)->lockForUpdate()->first();
+                $number = max((int) $sequence->last_number, (int) $locked->last_team_number);
+                do {
+                    $number++;
+                    if ($number > 2147483647) {
+                        throw ValidationException::withMessages(['nama_tim' => ['Nomor kode tim untuk prefix ini sudah mencapai batas.']]);
+                    }
+                    $code = $prefix.str_pad((string) $number, 2, '0', STR_PAD_LEFT);
+                } while (DB::table('teams')->where('kode_unik', $code)->exists()
+                    || !DB::table('team_code_reservations')->insertOrIgnore(['code' => $code]));
+                DB::table('team_code_sequences')->where('prefix', $prefix)->update(['last_number' => $number]);
                 $locked->last_team_number = $number;
                 $locked->save();
 
                 $team = $locked->teams()->create([
-                    'kode_unik' => ($locked->kode_prefix ?: 'TEAM').str_pad((string) $number, 2, '0', STR_PAD_LEFT),
+                    'kode_unik' => $code,
                     'nama_tim' => trim($data['nama_tim']),
                     'ketua_id' => $request->user()->id,
                     'jumlah_anggota' => 1,
@@ -58,7 +72,11 @@ class CreateEventTeamController extends Controller
                 return $team;
             });
         } catch (UniqueConstraintViolationException $error) {
-            return response()->json(['message' => 'Kamu sudah tergabung dalam tim competition ini.'], 409);
+            $alreadyJoined = DB::table('team_members')->where('event_id', $event->id)
+                ->where('user_id', $request->user()->id)->exists();
+            return response()->json(['message' => $alreadyJoined
+                ? 'Kamu sudah tergabung dalam tim competition ini.'
+                : 'Kode tim sedang dibuat oleh peserta lain. Coba lagi.'], 409);
         }
 
         return response()->json(['data' => [
@@ -71,10 +89,7 @@ class CreateEventTeamController extends Controller
     private function ensureRegistrationIsAvailable(Event $event): void
     {
         if ($event->tipe_pendaftaran !== 'tim' ||
-            $event->status !== 'published' ||
-            ($event->buka_pendaftaran && today()->lt($event->buka_pendaftaran)) ||
-            ($event->deadline_pendaftaran && today()->gt($event->deadline_pendaftaran)) ||
-            ($event->tanggal_selesai && today()->gt($event->tanggal_selesai)) ||
+            !EventTimeline::isOpen($event) ||
             !$event->formFields()->exists()) {
             throw ValidationException::withMessages(['nama_tim' => ['Pendaftaran tim belum tersedia atau sudah ditutup.']]);
         }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
 use App\Support\EventGuidebookSource;
+use App\Support\EventTimeline;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -21,6 +22,7 @@ class EventController extends Controller
         $data['event']['status'] = 'draft';
         $userId = $request->user()?->id ?? auth()->id() ?? auth('sanctum')->id();
         $event = DB::transaction(function () use ($data, $userId) {
+            $this->reservePrefix($data['event']['kode_prefix'] ?? null);
             $event = Event::create(array_merge($data['event'], ['created_by' => $userId]));
             $this->syncDetails($event, $data);
             return $event;
@@ -31,25 +33,41 @@ class EventController extends Controller
     public function update(Request $request, Event $event)
     {
         $data = $this->validated($request, $event);
-        if ($data['event']['status'] === 'published' && !$event->formFields()->exists()) {
-            throw ValidationException::withMessages(['status' => ['Susun formulir pendaftaran sebelum mempublikasikan event.']]);
-        }
-        if ($event->tipe_pendaftaran !== $data['event']['tipe_pendaftaran'] && ($event->registrations()->exists() || $event->teams()->exists() || DB::table("event_enrollments")->where("event_id", $event->id)->exists())) {
-            throw ValidationException::withMessages(['tipe_pendaftaran' => ['Mode pendaftaran tidak dapat diubah setelah ada pendaftar atau tim.']]);
-        }
-
         DB::transaction(function () use ($event, $data) {
-            $event->update($data['event']);
-            $this->syncDetails($event, $data);
+            $locked = Event::whereKey($event->id)->lockForUpdate()->firstOrFail();
+            if ($data['event']['status'] === 'published' && !$locked->formFields()->exists()) {
+                throw ValidationException::withMessages(['status' => ['Susun formulir pendaftaran sebelum mempublikasikan event.']]);
+            }
+            $hasParticipants = $locked->registrations()->exists() || $locked->teams()->exists()
+                || DB::table('event_enrollments')->where('event_id', $locked->id)->exists();
+            if ($hasParticipants && $locked->tipe_pendaftaran !== $data['event']['tipe_pendaftaran']) {
+                throw ValidationException::withMessages(['tipe_pendaftaran' => ['Mode pendaftaran tidak dapat diubah setelah ada pendaftar atau tim.']]);
+            }
+            if ($hasParticipants && ($locked->kode_prefix !== ($data['event']['kode_prefix'] ?? null)
+                || (int) $locked->min_anggota !== (int) ($data['event']['min_anggota'] ?? 0)
+                || (int) $locked->max_anggota !== (int) ($data['event']['max_anggota'] ?? 0))) {
+                throw ValidationException::withMessages(['kode_prefix' => ['Pengaturan tim tidak dapat diubah setelah ada pendaftar atau tim.']]);
+            }
+            if ($locked->kode_prefix !== ($data['event']['kode_prefix'] ?? null)) {
+                $this->reservePrefix($data['event']['kode_prefix'] ?? null);
+            }
+            $locked->update($data['event']);
+            $this->syncDetails($locked, $data);
         });
         return new EventResource($event->fresh(['prizes', 'requirements', 'formFields']));
     }
 
     public function destroy(Event $event)
     {
-        if ($event->registrations()->exists() || $event->teams()->exists() || DB::table("event_enrollments")->where("event_id", $event->id)->exists()) return response()->json(['message' => 'Event dengan pendaftar tidak dapat dihapus. Tutup publikasinya.'], 409);
-        $event->delete();
-        return response()->noContent();
+        return DB::transaction(function () use ($event) {
+            $locked = Event::whereKey($event->id)->lockForUpdate()->firstOrFail();
+            if ($locked->registrations()->exists() || $locked->teams()->exists()
+                || DB::table('event_enrollments')->where('event_id', $locked->id)->exists()) {
+                return response()->json(['message' => 'Event dengan pendaftar tidak dapat dihapus. Tutup publikasinya.'], 409);
+            }
+            $locked->delete();
+            return response()->noContent();
+        });
     }
 
     public function uploadPoster(Request $request)
@@ -85,6 +103,11 @@ class EventController extends Controller
         if (!$request->filled('slug') && $request->filled('judul')) {
             $baseSlug = \Illuminate\Support\Str::slug($request->input('judul'));
             $request->merge(['slug' => $baseSlug ?: 'event-' . time()]);
+        }
+
+        // Typed timelines are authoritative: clients cannot override registration dates.
+        if (is_array($request->input('timeline')) && collect($request->input('timeline'))->contains(fn ($item) => is_array($item) && isset($item['type']))) {
+            $request->merge(EventTimeline::schedule($request->input('timeline')));
         }
 
         // Auto-derive dates from timeline if not explicitly provided
@@ -178,6 +201,8 @@ class EventController extends Controller
             'timeline' => ['nullable', 'array', 'max:50'],
             'timeline.*.judul' => ['required', 'string', 'max:150'],
             'timeline.*.tanggal' => ['required', 'string'],
+            'timeline.*.type' => ['nullable', Rule::in(EventTimeline::TYPES)],
+            'timeline.*.batch' => ['nullable', 'integer', 'min:1', 'max:25'],
             'lokasi' => ['nullable', 'string', 'max:200'], 'tipe' => ['required', Rule::in(['online', 'offline', 'hybrid'])],
             'status' => ['required', Rule::in(['draft', 'published', 'closed', 'selesai'])],
             'tipe_pendaftaran' => ['required', Rule::in(['individu', 'tim'])],
@@ -210,6 +235,11 @@ class EventController extends Controller
         if ($data['tipe_pendaftaran'] === 'tim' && (empty($data['kode_prefix']) || empty($data['min_anggota']) || empty($data['max_anggota']))) {
             throw ValidationException::withMessages(['teamSettings' => ['Pengaturan tim belum lengkap.']]);
         }
+        if ($data['tipe_pendaftaran'] !== 'tim') {
+            $data['kode_prefix'] = null;
+            $data['min_anggota'] = null;
+            $data['max_anggota'] = null;
+        }
         $details = [];
         if ($request->has('hadiah')) $details['hadiah'] = $data['hadiah'] ?? [];
         if ($request->has('syarat')) $details['syarat'] = $data['syarat'] ?? [];
@@ -231,6 +261,19 @@ class EventController extends Controller
         if (isset($data['form_fields'])) {
             $event->formFields()->delete();
             foreach ($data['form_fields'] as $index => $field) $event->formFields()->create(array_merge($field, ['sort_order' => $index]));
+        }
+    }
+
+    private function reservePrefix(?string $prefix): void
+    {
+        if (!$prefix) return;
+        // Keep the sequence (and issued codes) forever, but release the prefix
+        // when its event is deleted or changes prefix. The row lock serializes
+        // concurrent creates/updates requesting the same prefix.
+        DB::table('team_code_sequences')->insertOrIgnore(['prefix' => $prefix, 'last_number' => 0]);
+        DB::table('team_code_sequences')->where('prefix', $prefix)->lockForUpdate()->first();
+        if (Event::where('kode_prefix', $prefix)->exists()) {
+            throw ValidationException::withMessages(['kode_prefix' => ['Prefix sedang dipakai event lain. Pilih prefix lain atau hapus event lama terlebih dahulu.']]);
         }
     }
 }

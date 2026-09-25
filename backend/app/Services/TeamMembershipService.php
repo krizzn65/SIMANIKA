@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Event;
 use App\Models\Team;
+use App\Support\EventTimeline;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -12,10 +13,7 @@ class TeamMembershipService
     public function lockReason(Event $event, ?Team $team = null): ?string
     {
         if ($team?->review_status === 'accepted') return 'Tim sudah diterima penyelenggara. Susunan anggota dikunci.';
-        if ($event->status !== 'published' ||
-            ($event->buka_pendaftaran && today()->lt($event->buka_pendaftaran)) ||
-            ($event->deadline_pendaftaran && today()->gt($event->deadline_pendaftaran)) ||
-            ($event->tanggal_selesai && today()->gt($event->tanggal_selesai))) {
+        if (!EventTimeline::isOpen($event)) {
             return 'Periode pendaftaran tidak aktif. Perubahan tim dan formulir ditutup.';
         }
         return null;

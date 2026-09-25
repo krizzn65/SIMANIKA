@@ -45,6 +45,32 @@ const EVENT_CATEGORY_OPTIONS = [
 ];
 const EVENT_CATEGORY_KEYS = EVENT_CATEGORY_OPTIONS.map(([value]) => value);
 
+const TIMELINE_OPTIONS = [
+  ["registration", "Pendaftaran + penutupan"],
+  ["technical_meeting", "Technical Meeting"],
+  ["proposal", "Pengumpulan Proposal"],
+  ["preliminary", "Babak Penyisihan"],
+  ["finalists", "Pengumuman Finalis"],
+  ["grand_final", "Grand Final"],
+  ["awarding", "Awarding & Penutupan"],
+  ["custom", "Lainnya"],
+];
+const TIMELINE_LABELS = Object.fromEntries(TIMELINE_OPTIONS);
+const timelineStamp = (item) => item.tanggal || "9999-99-99";
+const timelineOrder = (items) => items.map((item, index) => ({ item, index })).sort((a, b) => timelineStamp(a.item).localeCompare(timelineStamp(b.item)) || a.index - b.index);
+const registrationTitle = (type, batch, total) => `${type === "registration_open" ? "Pendaftaran" : "Penutupan Pendaftaran"}${total > 1 ? ` Batch ${batch}` : ""}`;
+
+function hydrateTimeline(items) {
+  return items.map((item) => {
+    const title = String(item.judul || "");
+    let type = item.type;
+    if (!type) type = /buka pendaftaran|^pendaftaran(?: batch \d+)?$/i.test(title) ? "registration_open"
+      : /batas pendaftaran|penutupan pendaftaran/i.test(title) ? "registration_close" : "custom";
+    return { type, batch: type.startsWith("registration_") ? Number(item.batch || 1) : null,
+      judul: title || TIMELINE_LABELS[type] || "", tanggal: String(item.tanggal || "").slice(0, 10) };
+  });
+}
+
 function adminEventCategoryLabel(value) {
   const normalized = String(value || "").trim().toLowerCase();
   return EVENT_CATEGORY_OPTIONS.find(([key]) => key === normalized)?.[1] || value || "Lainnya";
@@ -88,15 +114,10 @@ export default function AdminEventsPage() {
     tipe_pendaftaran: "individu",
     payment_type: "free",
     htm: "",
-    timeline: [
-      { judul: "Buka Pendaftaran", tanggal: "" },
-      { judul: "Batas Pendaftaran", tanggal: "" },
-      { judul: "Pelaksanaan Event", tanggal: "" },
-      { judul: "Event Selesai", tanggal: "" },
-    ],
+    timeline: [],
     lokasi: "",
     // Team System Config (PRD 5.7)
-    kode_prefix: "HACK",
+    kode_prefix: "",
     min_anggota: 3,
     max_anggota: 5,
   });
@@ -150,14 +171,9 @@ export default function AdminEventsPage() {
       tipe_pendaftaran: "tim",
       payment_type: "free",
       htm: "",
-      timeline: [
-        { judul: "Buka Pendaftaran", tanggal: new Date().toISOString().slice(0, 10) },
-        { judul: "Batas Pendaftaran", tanggal: new Date(Date.now() + 86400000 * 6).toISOString().slice(0, 10) },
-        { judul: "Pelaksanaan Event", tanggal: new Date(Date.now() + 86400000 * 7).toISOString().slice(0, 10) },
-        { judul: "Event Selesai", tanggal: new Date(Date.now() + 86400000 * 8).toISOString().slice(0, 10) },
-      ],
+      timeline: [],
       lokasi: "Online via Zoom & Discord",
-      kode_prefix: "HACK",
+      kode_prefix: "",
       min_anggota: 3,
       max_anggota: 5,
     });
@@ -186,10 +202,7 @@ export default function AdminEventsPage() {
 
     let initialTimeline = [];
     if (Array.isArray(ev.timeline) && ev.timeline.length > 0) {
-      initialTimeline = ev.timeline.map((item) => ({
-        judul: item.judul || "",
-        tanggal: item.tanggal ? String(item.tanggal).slice(0, 10) : "",
-      }));
+      initialTimeline = hydrateTimeline(ev.timeline);
     } else {
       if (ev.buka_pendaftaran || ev.bukaPendaftaran) {
         initialTimeline.push({
@@ -215,12 +228,7 @@ export default function AdminEventsPage() {
           tanggal: String(ev.tanggal_selesai || ev.tanggalSelesai).slice(0, 10),
         });
       }
-      if (initialTimeline.length === 0) {
-        initialTimeline = [
-          { judul: "Buka Pendaftaran", tanggal: new Date().toISOString().slice(0, 10) },
-          { judul: "Pelaksanaan Event", tanggal: new Date().toISOString().slice(0, 10) },
-        ];
-      }
+      initialTimeline = hydrateTimeline(initialTimeline);
     }
 
     setFormData({
@@ -304,17 +312,18 @@ export default function AdminEventsPage() {
     setFormError("");
   };
 
-  const handleAddTimelineItem = (defaultJudul = "") => {
-    setFormData((prev) => ({
-      ...prev,
-      timeline: [
-        ...(prev.timeline || []),
-        {
-          judul: defaultJudul || "",
-          tanggal: new Date(Date.now() + 86400000 * ((prev.timeline?.length || 0) + 1)).toISOString().slice(0, 10),
-        },
-      ],
-    }));
+  const handleAddTimelineItem = (type) => {
+    setFormData((prev) => {
+      const timeline = [...prev.timeline];
+      if (type === "registration") {
+        const batch = Math.max(0, ...timeline.map((item) => Number(item.batch || 0))) + 1;
+        timeline.push({ type: "registration_open", batch, judul: "Pendaftaran", tanggal: "" });
+        timeline.push({ type: "registration_close", batch, judul: "Penutupan Pendaftaran", tanggal: "" });
+      } else {
+        timeline.push({ type, batch: null, judul: type === "custom" ? "" : TIMELINE_LABELS[type], tanggal: "" });
+      }
+      return { ...prev, timeline };
+    });
   };
 
   const handleUpdateTimelineItem = (index, field, value) => {
@@ -326,10 +335,13 @@ export default function AdminEventsPage() {
   };
 
   const handleRemoveTimelineItem = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      timeline: (prev.timeline || []).filter((_, i) => i !== index),
-    }));
+    setFormData((prev) => {
+      const target = prev.timeline[index];
+      let timeline = prev.timeline.filter((item, i) => i !== index && (!target.type.startsWith("registration_") || item.batch !== target.batch));
+      const batches = [...new Set(timeline.filter((item) => item.type.startsWith("registration_")).map((item) => item.batch))].sort((a, b) => a - b);
+      timeline = timeline.map((item) => item.type.startsWith("registration_") ? { ...item, batch: batches.indexOf(item.batch) + 1 } : item);
+      return { ...prev, timeline };
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -382,44 +394,34 @@ export default function AdminEventsPage() {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)+/g, "");
 
-      const validTimeline = (formData.timeline || [])
-        .filter((item) => item.judul && item.judul.trim() && item.tanggal)
-        .map((item) => ({
-          judul: item.judul.trim(),
-          tanggal: item.tanggal.slice(0, 10),
-        }));
-
-      if (validTimeline.length === 0) {
-        setFormError("Harap isi setidaknya satu jadwal / tanggal event pada timeline dinamis.");
-        setSubmitting(false);
+      const validTimeline = timelineOrder(formData.timeline).map(({ item }) => ({ ...item,
+        judul: item.type.startsWith("registration_") ? registrationTitle(item.type, item.batch, formData.timeline.filter((entry) => entry.type === "registration_open").length) : item.judul.trim(),
+      }));
+      if (!validTimeline.some((item) => item.type === "registration_open") || validTimeline.some((item) => !item.judul || !item.tanggal)) {
+        setFormError("Tambahkan pendaftaran dan isi nama serta tanggal semua agenda.");
         return;
       }
-
-      // Sort timeline chronologically by date
-      validTimeline.sort((a, b) => new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime());
-
-      const bukaItem = validTimeline.find((item) => /buka|awal|pembukaan/i.test(item.judul));
-      const deadlineItem = validTimeline.find((item) => /batas|deadline|tutup|selesai pendaftaran/i.test(item.judul));
-      
-      let mulaiItem = validTimeline.find((item) => /pelaksanaan|mulai|hari h|acara/i.test(item.judul));
-      if (!mulaiItem) {
-        mulaiItem = validTimeline.find((item) => !/buka|awal|pembukaan|batas|deadline|tutup/i.test(item.judul));
+      const batches = [...new Set(validTimeline.filter((item) => item.type === "registration_open").map((item) => item.batch))].sort((a, b) => a - b);
+      let previousClose = "";
+      for (const batch of batches) {
+        const open = validTimeline.find((item) => item.type === "registration_open" && item.batch === batch);
+        const close = validTimeline.find((item) => item.type === "registration_close" && item.batch === batch);
+        if (!close || timelineStamp(open) >= timelineStamp(close) || (previousClose && timelineStamp(open) <= previousClose)) {
+          setFormError("Setiap batch harus dibuka sebelum ditutup, dan batch berikutnya sesudah batch sebelumnya.");
+          return;
+        }
+        previousClose = timelineStamp(close);
       }
-      if (!mulaiItem) {
-        mulaiItem = validTimeline[0];
+      if (validTimeline.some((item) => item.type === "awarding" && item.tanggal <= previousClose.slice(0, 10))) {
+        setFormError("Awarding & Penutupan harus setelah tanggal penutupan pendaftaran terakhir.");
+        return;
       }
-
-      let selesaiItem = validTimeline.find((item) => /(event|acara)?\s*(selesai|penutupan)(?! pendaftaran)/i.test(item.judul));
-      if (!selesaiItem) {
-        selesaiItem = validTimeline[validTimeline.length - 1];
-      }
-
-      let derivedTanggalMulai = (mulaiItem ? mulaiItem.tanggal : validTimeline[0].tanggal).slice(0, 10);
-      let derivedTanggalSelesai = (selesaiItem ? selesaiItem.tanggal : validTimeline[validTimeline.length - 1].tanggal).slice(0, 10);
-
-      if (new Date(derivedTanggalSelesai).getTime() < new Date(derivedTanggalMulai).getTime()) {
-        derivedTanggalSelesai = derivedTanggalMulai;
-      }
+      const lastBatch = batches.at(-1);
+      const bukaItem = validTimeline.find((item) => item.type === "registration_open" && item.batch === lastBatch);
+      const deadlineItem = validTimeline.find((item) => item.type === "registration_close" && item.batch === lastBatch);
+      const program = validTimeline.filter((item) => !item.type.startsWith("registration_"));
+      const derivedTanggalMulai = (program[0] || validTimeline[0]).tanggal;
+      const derivedTanggalSelesai = validTimeline.at(-1).tanggal;
 
       const finalKategori = (isCustomKategori ? customKategori.trim() : formData.kategori) || "lainnya";
       if (isCustomKategori && !customKategori.trim()) {
@@ -512,8 +514,9 @@ export default function AdminEventsPage() {
   });
 
   // Prefix preview
-  const prefix = formData.kode_prefix || "TEAM";
-  const previewCodes = `${prefix}01, ${prefix}02, ${prefix}03, ${prefix}04...`;
+  const prefix = formData.kode_prefix;
+  const previewCodes = prefix ? `${prefix}01, ${prefix}02, ${prefix}03…` : "Isi prefix terlebih dahulu";
+  const prefixAlreadyUsed = prefix && events.some((event) => event.kode_prefix === prefix && event.id !== editingEventId);
 
   return (
     <div className="flex flex-col gap-6">
@@ -991,51 +994,44 @@ export default function AdminEventsPage() {
 
                 {/* Timeline & Agenda Tanggal Dinamis */}
                 <div className="md:col-span-2 p-4 rounded-xl border border-slate-200 bg-slate-50/70">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                  <div className="mb-3">
                     <div>
                       <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5 uppercase tracking-wider">
                         <Clock className="w-4 h-4 text-blue-600" />
-                        <span>Timeline & Agenda Tanggal Event</span>
+                        <span>Timeline Event</span>
                       </label>
                       <p className="text-[11px] text-slate-500 mt-0.5">
-                        Kelola tanggal dan agenda event secara dinamis (contoh: Selesai Pendaftaran, Babak Penyisihan, Technical Meeting, Grand Final, dll).
+                        Tambah agenda dari pilihan di bawah. Daftar otomatis diurutkan menurut tanggal; pendaftaran selalu ditambahkan bersama penutupannya.
                       </p>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleAddTimelineItem()}
-                      className="admin-btn admin-btn--secondary admin-btn--sm self-start sm:self-auto"
-                    >
-                      <Plus className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Tambah Tanggal</span>
-                    </button>
                   </div>
 
                   {/* List Agenda Tanggal */}
                   {formData.timeline && formData.timeline.length > 0 ? (
                     <div className="space-y-2.5">
-                      {formData.timeline.map((item, index) => (
+                      {timelineOrder(formData.timeline).map(({ item, index }, orderIndex) => (
                         <div
-                          key={index}
+                          key={`${item.type}-${item.batch || index}-${index}`}
                           className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2.5 bg-white rounded-xl border border-slate-200 shadow-2xs hover:border-slate-300 transition-all"
                         >
                           <div className="flex items-center gap-2 flex-1">
                             <span className="w-6 h-6 rounded-md bg-blue-50 text-blue-700 font-mono text-[11px] font-bold flex items-center justify-center shrink-0 border border-blue-100">
-                              {index + 1}
+                              {orderIndex + 1}
                             </span>
-                            <input
-                              type="text"
+                            {item.type === "custom" ? <input
+                              type="text" aria-label="Nama agenda lainnya" maxLength={150}
                               value={item.judul}
                               onChange={(e) => handleUpdateTimelineItem(index, "judul", e.target.value)}
-                              placeholder="Nama Agenda (cth: Selesai Pendaftaran / Babak Penyisihan)"
+                              placeholder="Nama agenda"
                               className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
-                            />
+                            /> : <span className="flex-1 text-xs font-semibold text-slate-800">{item.type.startsWith("registration_") ? registrationTitle(item.type, item.batch, formData.timeline.filter((entry) => entry.type === "registration_open").length) : item.judul}</span>}
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <input
                               type="date"
+                              aria-label={`Tanggal ${item.judul}`}
                               value={item.tanggal ? item.tanggal.slice(0, 10) : ""}
                               onChange={(e) => handleUpdateTimelineItem(index, "tanggal", e.target.value.slice(0, 10))}
                               className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500 bg-white"
@@ -1044,7 +1040,8 @@ export default function AdminEventsPage() {
                               type="button"
                               onClick={() => handleRemoveTimelineItem(index)}
                               className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                              title="Hapus Tanggal Ini"
+                              title={item.type.startsWith("registration_") ? "Hapus kedua tanggal batch ini" : "Hapus agenda ini"}
+                              aria-label={item.type.startsWith("registration_") ? `Hapus batch pendaftaran ${item.batch}` : `Hapus ${item.judul}`}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -1055,48 +1052,31 @@ export default function AdminEventsPage() {
                   ) : (
                     <div className="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl bg-white">
                       <Clock className="w-6 h-6 text-slate-300 mx-auto mb-1.5" />
-                      <p className="text-xs text-slate-500 font-medium">Belum ada agenda tanggal tambahan.</p>
-                      <button
-                        type="button"
-                        onClick={() => handleAddTimelineItem()}
-                        className="mt-2 text-xs font-semibold text-blue-600 hover:underline inline-flex items-center gap-1"
-                      >
-                        <Plus className="w-3.5 h-3.5" /> Tambah Tanggal Pertama
-                      </button>
+                      <p className="text-xs text-slate-500 font-medium">Timeline masih kosong. Mulai dari Pendaftaran.</p>
                     </div>
                   )}
 
-                  {/* Quick-add presets */}
+                  {/* Timeline actions */}
                   <div className="mt-3.5 pt-3 border-t border-slate-200/90 flex flex-col gap-2">
                     <div className="flex items-center gap-1.5">
                       <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider">
-                        Quick Preset:
+                        Timeline
                       </span>
                       <span className="text-[11px] text-slate-400">
-                        (Klik untuk menambahkan ke daftar agenda)
+                        · pilih tahap yang ingin ditambahkan
                       </span>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-1.5">
-                      {[
-                        "Buka Pendaftaran",
-                        "Batas Pendaftaran",
-                        "Technical Meeting",
-                        "Babak Penyisihan",
-                        "Pengumuman Finalis",
-                        "Pelaksanaan Event",
-                        "Grand Final",
-                        "Awarding & Penutupan",
-                        "Event Selesai",
-                      ].map((preset) => (
+                      {TIMELINE_OPTIONS.map(([type, label]) => (
                         <button
-                          key={preset}
+                          key={type}
                           type="button"
-                          onClick={() => handleAddTimelineItem(preset)}
+                          onClick={() => handleAddTimelineItem(type)}
                           className="admin-preset-chip group"
                         >
                           <Plus className="w-3 h-3 text-slate-400 group-hover:text-blue-600 transition-colors" />
-                          <span>{preset}</span>
+                          <span>{label}</span>
                         </button>
                       ))}
                     </div>
@@ -1191,8 +1171,10 @@ export default function AdminEventsPage() {
 
                     {/* Live Preview Box */}
                     <div className="p-2.5 rounded-lg bg-white border border-blue-200 text-xs">
-                      <span className="text-slate-500 font-medium">Live Preview Kode Tim: </span>
+                      <span className="text-slate-500 font-medium">Contoh format kode: </span>
                       <span className="font-mono font-bold text-blue-600">{previewCodes}</span>
+                      <p className="mt-1 text-slate-500">Nomor sebenarnya dibuat otomatis dan tidak diulang. Prefix boleh dipakai lagi setelah event lama dihapus.</p>
+                      {prefixAlreadyUsed && <p className="mt-1 text-red-600" role="alert">Prefix ini sudah dipakai event lain. Pilih prefix berbeda.</p>}
                     </div>
                   </div>
                 )}

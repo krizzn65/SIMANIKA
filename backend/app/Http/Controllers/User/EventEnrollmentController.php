@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Support\EventTimeline;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,10 +15,7 @@ class EventEnrollmentController extends Controller
         $created = DB::transaction(function () use ($request, $event) {
             $locked = Event::whereKey($event->id)->lockForUpdate()->firstOrFail();
             abort_unless($locked->status === 'published' && $locked->tipe_pendaftaran === 'individu', 404);
-            if (($locked->buka_pendaftaran && today()->lt($locked->buka_pendaftaran)) ||
-                ($locked->deadline_pendaftaran && today()->gt($locked->deadline_pendaftaran)) ||
-                ($locked->tanggal_selesai && today()->gt($locked->tanggal_selesai)) ||
-                !$locked->formFields()->exists()) {
+            if (!EventTimeline::isOpen($locked) || !$locked->formFields()->exists()) {
                 abort(409, 'Pendaftaran event tidak tersedia.');
             }
 

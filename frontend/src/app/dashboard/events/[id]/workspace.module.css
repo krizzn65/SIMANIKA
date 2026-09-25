@@ -10,6 +10,13 @@
 .heading h1 { font-size: clamp(24px, 3vw, 32px); line-height: 1.2; font-weight: 700; letter-spacing: -.035em; margin: 0 0 12px; overflow-wrap: anywhere; }
 .heading a, .answers a, .notice a { display: inline-flex; align-items: center; gap: 4px; color: #104bcc; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
 .columns { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 28px; align-items: start; }
+.groupStack { display: grid; gap: 18px; min-width: 0; }
+.groupScope { margin: 5px 0 0; color: var(--ws-muted); font-size: 12px; line-height: 1.5; }
+.groupActions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.groupToggle { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--ws-border); background: #fff; color: var(--ws-blue); cursor: pointer; }
+.groupToggle:focus-visible { outline: 2px solid var(--ws-blue); outline-offset: 2px; }
+.workspace :global(.event-group-submit) { display: flex; justify-content: flex-end; }
+.workspace :global(.event-group-submit .event-button) { width: auto; min-width: 132px; margin-top: 4px; }
 .sidebar { display: grid; gap: 22px; min-width: 0; }
 .panel { min-width: 0; padding: 24px; border: 1px dashed var(--ws-border); border-top: 3px solid var(--ws-blue); background: #ffffffed; box-shadow: 4px 4px 0 #e0e8fa; }
 .panel h2 { display: flex; align-items: center; gap: 9px; font-size: 16px; line-height: 1.4; font-weight: 700; letter-spacing: -.015em; margin: 0; }
