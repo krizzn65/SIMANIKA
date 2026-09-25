@@ -3,6 +3,7 @@ import { eventDate, eventCategoryLabel, eventFeeLabel, registrationDeadlineLabel
 import { EventCountdown } from "./EventCountdown";
 import { EventEnrollButton } from "./EventEnrollButton";
 import { EventPoster } from "./EventPoster";
+import { EventTimelineScroller } from "./EventTimelineScroller";
 
 export function EventDetailView({ event }) {
   const now = Date.now();
@@ -55,11 +56,7 @@ export function EventDetailView({ event }) {
             <p>Simpan tanggal pentingnya agar tidak melewatkan setiap tahap event.</p>
           </div>
         </header>
-        <ol className="event-showcase__timeline">
-          {timeline.map((item, index) => <li key={`${item.type || item.judul}-${item.batch || 0}-${index}`}>
-            <div><h3>{item.judul}</h3><time dateTime={item.tanggal}>{eventDate(item.tanggal)}</time></div>
-          </li>)}
-        </ol>
+        <EventTimelineScroller items={timeline} />
       </section>}
       {event.syarat.length > 0 && <section className="event-showcase__section">
         <div><h2>Sebelum ikut.</h2><ul className="event-detail__list">{event.syarat.map((item, index) => <li key={index}>{item}</li>)}</ul></div>

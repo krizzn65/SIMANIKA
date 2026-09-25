@@ -51,7 +51,7 @@ export function normalizeFields(fields = []) {
 
 export function normalizeOprec(raw) {
   if (raw === null) return null;
-  if (!raw || !["open", "closed"].includes(raw.status) || !text(raw.periode) || !/^[a-zA-Z0-9_-]{1,80}$/.test(String(raw.id ?? ""))) throw new Error("Invalid public OPREC data");
+  if (!raw || !["open", "closed", "draft"].includes(raw.status) || !text(raw.periode) || !/^[a-zA-Z0-9_-]{1,80}$/.test(String(raw.id ?? ""))) throw new Error("Invalid public OPREC data");
   const tanggalBuka = date(raw.tanggalBuka ?? raw.tanggal_buka);
   const tanggalTutup = date(raw.tanggalTutup ?? raw.tanggal_tutup);
   if (tanggalBuka && tanggalTutup && Date.parse(tanggalTutup) <= Date.parse(tanggalBuka)) throw new Error("Invalid OPREC date range");
@@ -70,12 +70,17 @@ export function normalizeOprec(raw) {
       return { id: String(item.id ?? index), nama: text(item.nama), namaLengkap: text(item.namaLengkap ?? item.nama_lengkap), deskripsi: text(item.deskripsi), logo: safePosterUrl(item.logo), kuota: count(item.kuota) };
     }),
     pengumuman: { published: announcement.published === true, tanggal: date(announcement.tanggal), pesan: text(announcement.pesan) },
+    stages: (Array.isArray(raw.stages) ? raw.stages : []).filter((stage) => stage && stage.published === true && ["test_tulis", "pengumuman"].includes(stage.type) && text(stage.headline)).map((stage) => ({
+      id: String(stage.id), type: stage.type, headline: text(stage.headline), deskripsi: text(stage.deskripsi),
+      poster: safePosterUrl(stage.poster), tanggalBuka: date(stage.tanggalBuka), tanggalTutup: date(stage.tanggalTutup), published: true,
+    })),
     faq: (Array.isArray(raw.faq) ? raw.faq : []).filter((item) => item && text(item.pertanyaan) && text(item.jawaban)).map((item) => ({ pertanyaan: text(item.pertanyaan), jawaban: text(item.jawaban) })),
   };
 }
 
 export function oprecState(oprec, now = Date.now()) {
   if (!oprec) return { key: "empty", label: "BELUM DIBUKA", title: "Kesempatan baru akan datang.", message: "Belum ada periode rekrutmen yang dibuka. Pantau halaman ini untuk informasi OPREC berikutnya." };
+  if (oprec.status === "draft") return { key: "empty", label: "BELUM DIBUKA", title: "Informasi sedang disiapkan.", message: "Periode rekrutmen belum dipublikasikan." };
   const closed = oprec.status === "closed" || (oprec.tanggalTutup && now >= Date.parse(oprec.tanggalTutup));
   if (closed) {
     const announcement = oprec.pengumuman;

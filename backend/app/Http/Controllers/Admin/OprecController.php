@@ -7,11 +7,20 @@ use App\Http\Requests\Oprec\SaveOprecRequest;
 use App\Http\Resources\OprecResource;
 use App\Models\Oprec;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class OprecController extends Controller
 {
-    public function index() { return OprecResource::collection(Oprec::with('divisions')->latest()->paginate(20)); }
+    public function index() { return OprecResource::collection(Oprec::with('divisions', 'stages')->latest()->paginate(20)); }
+    public function show(Oprec $oprec) { return new OprecResource($oprec->load('divisions', 'stages')); }
+
+    public function uploadPoster(Request $request)
+    {
+        $request->validate(['poster' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120']]);
+        $path = $request->file('poster')->store('oprec/posters', 'public');
+        return response()->json(['url' => route('public.oprec-poster', ['filename' => basename($path)])]);
+    }
 
     public function store(SaveOprecRequest $request)
     {
@@ -27,13 +36,23 @@ class OprecController extends Controller
     public function update(SaveOprecRequest $request, Oprec $oprec)
     {
         $data = $request->validated();
+        $currentDivisions = $oprec->divisions()->get()->map(fn ($division) => [
+            'nama' => $division->nama, 'nama_lengkap' => $division->nama_lengkap,
+            'deskripsi' => $division->deskripsi, 'logo' => $division->logo, 'kuota' => $division->kuota,
+        ])->all();
+        $incomingDivisions = collect($data['divisi_tersedia'] ?? [])->map(fn ($division) => [
+            'nama' => $division['nama'], 'nama_lengkap' => $division['nama_lengkap'] ?? null,
+            'deskripsi' => $division['deskripsi'] ?? null, 'logo' => $division['logo'] ?? null,
+            'kuota' => $division['kuota'] ?? null,
+        ])->all();
+        $divisionsChanged = array_key_exists('divisi_tersedia', $data) && $incomingDivisions !== $currentDivisions;
         if ($oprec->registrations()->exists()) {
             if ($oprec->schema_version === $data['schema_version'] && $oprec->form_fields !== $data['form_fields']) throw ValidationException::withMessages(['schema_version' => ['Naikkan versi skema saat mengubah kolom.']]);
-            if (array_key_exists('divisi_tersedia', $data)) throw ValidationException::withMessages(['divisi_tersedia' => ['Divisi tidak boleh diubah setelah ada pendaftar.']]);
+            if ($divisionsChanged) throw ValidationException::withMessages(['divisi_tersedia' => ['Divisi tidak boleh diubah setelah ada pendaftar.']]);
         }
-        DB::transaction(function () use ($oprec, $data) {
+        DB::transaction(function () use ($oprec, $data, $divisionsChanged) {
             $oprec->update($this->attributes($data));
-            if (array_key_exists('divisi_tersedia', $data)) $this->syncDivisions($oprec, $data['divisi_tersedia']);
+            if ($divisionsChanged) $this->syncDivisions($oprec, $data['divisi_tersedia']);
         });
         return new OprecResource($oprec->fresh('divisions'));
     }

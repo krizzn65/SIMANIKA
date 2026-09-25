@@ -2,20 +2,24 @@
 import { useRef, useState } from "react";
 import { validateOprecForm } from "@/lib/oprec";
 
-function Field({ field, error }) {
+function Field({ field, error, divisions = [] }) {
   const id = `oprec-field-${field.name}`;
   const description = [field.help && `${id}-help`, field.type === "file" && `${id}-file`, error && `${id}-error`].filter(Boolean).join(" ") || undefined;
   const common = { id, name: field.name, required: field.required, "aria-invalid": Boolean(error), "aria-describedby": description };
   const label = <>{field.label}{field.required && <span aria-hidden="true"> *</span>}</>;
   let control;
   if (field.type === "textarea") control = <textarea {...common} rows={4} maxLength={field.maxLength} placeholder={field.placeholder} />;
+  else if (field.name === "divisi_pilihan_1") control = <div className="oprec-division-choices">{field.options.map((option) => {
+    const division = divisions.find((item) => item.id === option.value);
+    return <label className="oprec-division-choice" key={option.value}><input {...common} id={`${id}-${option.value}`} type="radio" value={option.value} /><span className="oprec-division-choice__content">{division?.logo ? <img src={division.logo} alt="" width="48" height="48" /> : <span className="oprec-division-choice__fallback" aria-hidden="true">//</span>}<span><strong>{division?.namaLengkap || option.label}</strong><small>{division?.deskripsi || option.label}</small></span></span></label>;
+  })}</div>;
   else if (field.type === "select") control = <select {...common} defaultValue=""><option value="" disabled={field.required}>Pilih {field.label.toLowerCase()}</option>{field.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>;
   else if (field.type === "radio") control = <div className="oprec-choice-list">{field.options.map((option, index) => <label key={option.value} className="oprec-choice"><input {...common} id={`${id}-${index}`} type="radio" value={option.value} /><span>{option.label}</span></label>)}</div>;
   else if (field.type === "checkbox") control = <label className="oprec-choice"><input {...common} type="checkbox" /><span>{label}</span></label>;
   else if (field.type === "file") control = <><input {...common} type="file" accept={field.accept.join(",")} /><small id={`${id}-file`}>{field.accept.join(", ")} · maksimal {field.maxSizeMB} MB</small></>;
   else control = <input {...common} type={field.type} maxLength={field.maxLength} placeholder={field.placeholder} min={field.type === "number" ? field.min ?? undefined : field.name === "tanggal_lahir" ? "1900-01-01" : undefined} max={field.type === "number" ? field.max ?? undefined : undefined} step={field.type === "number" ? "any" : undefined} autoComplete={field.name === "tanggal_lahir" ? "bday" : field.type === "email" ? "email" : field.type === "tel" ? "tel" : undefined} />;
-  return <fieldset className={`oprec-field ${["textarea", "radio", "checkbox", "file"].includes(field.type) ? "oprec-field--wide" : ""}`}>
-    {field.type === "radio" ? <legend>{label}</legend> : field.type !== "checkbox" && <label htmlFor={id}>{label}</label>}
+  return <fieldset className={`oprec-field ${(["textarea", "radio", "checkbox", "file"].includes(field.type) || field.name === "divisi_pilihan_1") ? "oprec-field--wide" : ""}`}>
+    {(field.type === "radio" || field.name === "divisi_pilihan_1") ? <legend>{label}</legend> : field.type !== "checkbox" && <label htmlFor={id}>{label}</label>}
     {field.help && <small id={`${id}-help`}>{field.help}</small>}{control}
     {error && <p className="oprec-field-error" id={`${id}-error`}>{error}</p>}
   </fieldset>;
@@ -57,8 +61,8 @@ export function OprecForm({ oprec }) {
   if (!oprec.formFields.length) return <div className="oprec-inline-note"><h3>Formulir sedang disiapkan.</h3><p>Form pendaftaran akan tampil di sini setelah tersedia.</p></div>;
   return <form className="oprec-form" onSubmit={submit} noValidate aria-busy={pending}>
     <p className="oprec-form__intro">{oprec.formIntro || "Isi data dengan teliti. Kolom bertanda * wajib diisi."}</p>
-    {message && <div ref={feedback} tabIndex={-1} className="oprec-feedback oprec-feedback--error" role="alert"><p>{message}</p>{Object.keys(errors).length > 0 && <ul>{oprec.formFields.filter((field) => errors[field.name]).map((field) => <li key={field.name}><a href={`#oprec-field-${field.name}${field.type === "radio" ? "-0" : ""}`}>{field.label}: {errors[field.name]}</a></li>)}</ul>}</div>}
-    <fieldset disabled={pending} className="oprec-form__fields"><legend className="oprec-sr-only">Formulir pendaftaran OPREC</legend>{oprec.formFields.map((field) => <Field key={field.name} field={field} error={errors[field.name]} />)}</fieldset>
+    {message && <div ref={feedback} tabIndex={-1} className="oprec-feedback oprec-feedback--error" role="alert"><p>{message}</p>{Object.keys(errors).length > 0 && <ul>{oprec.formFields.filter((field) => errors[field.name]).map((field) => <li key={field.name}><a href={`#oprec-field-${field.name}${(field.type === "radio" ? "-0" : field.name === "divisi_pilihan_1" ? `-${field.options[0]?.value || ""}` : "")}`}>{field.label}: {errors[field.name]}</a></li>)}</ul>}</div>}
+    <fieldset disabled={pending} className="oprec-form__fields"><legend className="oprec-sr-only">Formulir pendaftaran OPREC</legend>{oprec.formFields.map((field) => <Field key={field.name} field={field} error={errors[field.name]} divisions={oprec.divisiTersedia} />)}</fieldset>
     <button className="oprec-button" type="submit" disabled={pending}>{pending ? "Mengirim pendaftaran…" : "Kirim pendaftaran"}<span aria-hidden="true">↗</span></button>
     <p className="oprec-form__foot">Simpan NIM dan tanggal lahir yang kamu gunakan untuk mengecek pengumuman.</p>
   </form>;
