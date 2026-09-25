@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Services\TeamMembershipService;
+use App\Support\EventTimeline;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,9 +18,7 @@ class EventRegistrationController extends Controller
     public function store(Request $request, Event $event)
     {
         abort_unless($event->status === 'published', 404);
-        if (($event->buka_pendaftaran && today()->lt($event->buka_pendaftaran)) ||
-            ($event->deadline_pendaftaran && today()->gt($event->deadline_pendaftaran)) ||
-            ($event->tanggal_selesai && today()->gt($event->tanggal_selesai))) {
+        if (!EventTimeline::isOpen($event)) {
             return response()->json(['message' => 'Pendaftaran event belum dibuka atau sudah ditutup.'], 409);
         }
         if ($event->tipe_pendaftaran === 'tim') {
@@ -55,10 +54,7 @@ class EventRegistrationController extends Controller
         try {
             DB::transaction(function () use ($request, $event, $data, $fields, &$stored) {
                 $locked = Event::whereKey($event->id)->lockForUpdate()->firstOrFail();
-                if ($locked->status !== 'published' ||
-                    ($locked->buka_pendaftaran && today()->lt($locked->buka_pendaftaran)) ||
-                    ($locked->deadline_pendaftaran && today()->gt($locked->deadline_pendaftaran)) ||
-                    ($locked->tanggal_selesai && today()->gt($locked->tanggal_selesai))) {
+                if (!EventTimeline::isOpen($locked)) {
                     throw ValidationException::withMessages(['event' => ['Pendaftaran sudah berubah. Muat ulang halaman.']]);
                 }
                 $team = null;

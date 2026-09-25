@@ -108,6 +108,13 @@ properti majemuk, misalnya `tanggal_mulai`, `tipe_pendaftaran`, `team_settings`.
 
 ## Detail pendaftaran dashboard — 24 September 2026
 
+### Timeline event — 25 September 2026
+
+- Event baru membuka editor timeline dalam keadaan kosong. Admin menambah pasangan Pendaftaran/Penutupan Pendaftaran sekaligus, atau memilih Technical Meeting, Pengumpulan Proposal, Babak Penyisihan, Pengumuman Finalis, Grand Final, Awarding & Penutupan, dan Lainnya (judul bebas). Setiap agenda hanya memiliki tanggal; tidak ada input jam.
+- Baris editor dan timeline publik selalu diurutkan berdasarkan tanggal; agenda proposal boleh tampil sebelum pembukaan pendaftaran bila tanggalnya lebih awal. Baris pendaftaran satu batch dihapus bersama. Bila ada beberapa batch, judulnya menjadi Batch 1, Batch 2, dan seterusnya.
+- Tanggal buka/tutup yang mengendalikan status pendaftaran dan hitung mundur publik berasal dari batch terakhir. Pendaftaran aktif sejak awal tanggal buka hingga akhir tanggal tutup WIB. Server menurunkannya ulang dari timeline bertipe; nilai tanggal turunan yang dikirim browser tidak dipercaya. Event lama tanpa tipe agenda tetap dibaca melalui tanggal warisan.
+- Server menolak pasangan batch yang tidak lengkap/terbalik/bertumpuk, tanggal tidak valid, dan Awarding & Penutupan pada atau sebelum hari penutupan pendaftaran terakhir. Tes browser lintas viewport masih diperlukan sebelum rilis.
+
 ### Formulir per grup — 25 September 2026
 
 - Editor `/admin/events/{id}` sekarang menyusun maksimal 20 grup dan 40 pertanyaan total. Setiap grup punya nama, urutan, aturan akses, pertanyaan, dan kontrol lipat/buka. Simpan memakai `PUT /api/admin/events/{id}/form` dengan `form_groups: [{ title, scope, edit_role, fields }]`. Skema terkunci setelah ada pendaftar/tim/enrolment.

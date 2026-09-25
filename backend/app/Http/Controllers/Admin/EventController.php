@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
 use App\Support\EventGuidebookSource;
+use App\Support\EventTimeline;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -104,6 +105,11 @@ class EventController extends Controller
             $request->merge(['slug' => $baseSlug ?: 'event-' . time()]);
         }
 
+        // Typed timelines are authoritative: clients cannot override registration dates.
+        if (is_array($request->input('timeline')) && collect($request->input('timeline'))->contains(fn ($item) => is_array($item) && isset($item['type']))) {
+            $request->merge(EventTimeline::schedule($request->input('timeline')));
+        }
+
         // Auto-derive dates from timeline if not explicitly provided
         if ($request->has('timeline') && is_array($request->input('timeline'))) {
             $rawTimeline = $request->input('timeline');
@@ -195,6 +201,8 @@ class EventController extends Controller
             'timeline' => ['nullable', 'array', 'max:50'],
             'timeline.*.judul' => ['required', 'string', 'max:150'],
             'timeline.*.tanggal' => ['required', 'string'],
+            'timeline.*.type' => ['nullable', Rule::in(EventTimeline::TYPES)],
+            'timeline.*.batch' => ['nullable', 'integer', 'min:1', 'max:25'],
             'lokasi' => ['nullable', 'string', 'max:200'], 'tipe' => ['required', Rule::in(['online', 'offline', 'hybrid'])],
             'status' => ['required', Rule::in(['draft', 'published', 'closed', 'selesai'])],
             'tipe_pendaftaran' => ['required', Rule::in(['individu', 'tim'])],

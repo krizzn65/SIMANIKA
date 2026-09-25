@@ -24,10 +24,6 @@ class EventResource extends JsonResource
     public function toArray(Request $request): array
     {
         $team = $this->tipe_pendaftaran === 'tim';
-        $canRegister = $this->status === 'published'
-            && (!$this->tanggal_selesai || $this->tanggal_selesai->endOfDay()->isFuture())
-            && (!$this->buka_pendaftaran || $this->buka_pendaftaran->startOfDay()->isPast() || $this->buka_pendaftaran->isToday())
-            && (!$this->deadline_pendaftaran || $this->deadline_pendaftaran->endOfDay()->isFuture());
 
         return [
             'id' => $this->id, 'slug' => $this->slug, 'judul' => $this->judul,

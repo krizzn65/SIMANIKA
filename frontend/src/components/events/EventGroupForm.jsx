@@ -56,6 +56,6 @@ export function EventGroupForm({ eventId, group, onSuccess }) {
         </div>;
       })}
     </fieldset>
-    <div className="event-group-submit"><button className="event-button" type="submit" disabled={pending}>{pending ? "Mengirim…" : group.submitted ? "Simpan perubahan" : "Kirim grup"}</button></div>
+    <div className="event-group-submit"><button className="event-button" type="submit" disabled={pending}>{pending ? "Mengirim…" : group.submitted ? "Simpan perubahan" : "Kirim"}</button></div>
   </form>;
 }

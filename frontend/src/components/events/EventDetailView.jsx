@@ -57,7 +57,7 @@ export function EventDetailView({ event }) {
           </div>
         </header>
         <ol className="event-showcase__timeline">
-          {timeline.map((item, index) => <li key={item.judul + item.tanggal}>
+          {timeline.map((item, index) => <li key={`${item.type || item.judul}-${item.batch || 0}-${index}`}>
             <div><h3>{item.judul}</h3><time dateTime={item.tanggal}>{eventDate(item.tanggal)}</time></div>
           </li>)}
         </ol>

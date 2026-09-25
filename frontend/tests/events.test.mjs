@@ -61,6 +61,23 @@ test("registration gates handle closed, ended, upcoming, deadline boundary and o
   assert.equal(registrationState({ ...event, bukaPendaftaran: "2026-11-02T00:00:00+07:00" }, now).key, "soon");
 });
 
+test("latest batch dates gate registration for whole days and timeline follows date", () => {
+  const event = normalizeEvent({ ...sample,
+    bukaPendaftaran: "2026-11-10",
+    deadlinePendaftaran: "2026-11-12",
+    timeline: [
+      { type: "registration_open", batch: 1, judul: "Pendaftaran", tanggal: "2026-11-10" },
+      { type: "proposal", judul: "Pengumpulan Proposal", tanggal: "2026-11-09" },
+      { type: "registration_close", batch: 1, judul: "Penutupan Pendaftaran", tanggal: "2026-11-12" },
+    ],
+  });
+  assert.equal(event.timeline[0].type, "proposal");
+  assert.equal(registrationState(event, Date.parse("2026-11-09T23:59:00+07:00")).key, "soon");
+  assert.equal(registrationState(event, Date.parse("2026-11-10T00:01:00+07:00")).key, "open");
+  assert.equal(registrationState(event, Date.parse("2026-11-12T20:01:00+07:00")).key, "open");
+  assert.equal(registrationState(event, Date.parse("2026-11-13T00:01:00+07:00")).key, "closed");
+});
+
 test("unsafe image and registration URLs are rejected", () => {
   for (const url of ["javascript:alert(1)", "data:text/html,test", "//evil.example", "/\\evil.example", "https://user:secret@example.com"]) assert.equal(safeEventUrl(url), null);
   assert.equal(safeEventUrl("https://example.com/poster.webp"), "https://example.com/poster.webp");

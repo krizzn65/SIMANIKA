@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Support\EventTimeline;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -88,10 +89,7 @@ class CreateEventTeamController extends Controller
     private function ensureRegistrationIsAvailable(Event $event): void
     {
         if ($event->tipe_pendaftaran !== 'tim' ||
-            $event->status !== 'published' ||
-            ($event->buka_pendaftaran && today()->lt($event->buka_pendaftaran)) ||
-            ($event->deadline_pendaftaran && today()->gt($event->deadline_pendaftaran)) ||
-            ($event->tanggal_selesai && today()->gt($event->tanggal_selesai)) ||
+            !EventTimeline::isOpen($event) ||
             !$event->formFields()->exists()) {
             throw ValidationException::withMessages(['nama_tim' => ['Pendaftaran tim belum tersedia atau sudah ditutup.']]);
         }
