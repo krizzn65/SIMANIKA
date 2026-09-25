@@ -61,6 +61,8 @@ export function normalizeEvent(raw) {
     tanggalSelesai: date(raw.tanggalSelesai ?? raw.tanggal_selesai),
     deadlinePendaftaran: date(raw.deadlinePendaftaran ?? raw.deadline_pendaftaran),
     bukaPendaftaran: date(raw.bukaPendaftaran ?? raw.buka_pendaftaran),
+    registrationBatch: count(raw.registrationBatch),
+    registrationBatchCount: count(raw.registrationBatchCount),
     lokasi: text(raw.lokasi) || "Lokasi akan diumumkan",
     tipe: ["online", "offline", "hybrid"].includes(raw.tipe) ? raw.tipe : null,
     tipePendaftaran: isTeam ? "tim" : "individu",
@@ -110,6 +112,12 @@ export function eventFeeLabel(event) {
   const amount = Number(event?.htm);
   if (!Number.isSafeInteger(amount) || amount <= 0) return "HTM belum ditentukan";
   return `HTM · ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount)}`;
+}
+
+export function registrationDeadlineLabel(event) {
+  return event?.registrationBatchCount > 1 && event?.registrationBatch > 0
+    ? `Batas daftar Batch ${event.registrationBatch}`
+    : "Batas daftar";
 }
 
 export function eventDate(value) {

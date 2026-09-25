@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { eventDate, eventCategoryLabel, eventFeeLabel, registrationState } from "@/lib/events";
+import { eventDate, eventCategoryLabel, eventFeeLabel, registrationDeadlineLabel, registrationState } from "@/lib/events";
 import { EventCountdown } from "./EventCountdown";
 import { EventEnrollButton } from "./EventEnrollButton";
 import { EventPoster } from "./EventPoster";
@@ -30,11 +30,10 @@ export function EventDetailView({ event }) {
           {event.guidebookUrl && <a className="event-showcase__guidebook" href={event.guidebookUrl} target="_blank" rel="noopener noreferrer">Guidebook <span aria-hidden="true">↗</span></a>}
         </div>
         <dl className="event-showcase__facts">
-          <div><dt>Pelaksanaan</dt><dd>{eventDate(event.tanggalMulai)}</dd></div>
           <div><dt>Tempat</dt><dd>{event.lokasi}</dd></div>
           <div><dt>Peserta</dt><dd>{event.tipePendaftaran === "tim" ? "Tim" + (event.minAnggota && event.maxAnggota ? " · " + event.minAnggota + "–" + event.maxAnggota + " anggota" : "") : "Individu"}</dd></div>
           <div><dt>HTM</dt><dd>{eventFeeLabel(event)}</dd></div>
-          {event.deadlinePendaftaran && <div><dt>Batas daftar</dt><dd>{eventDate(event.deadlinePendaftaran)}</dd></div>}
+          {event.deadlinePendaftaran && <div><dt>{registrationDeadlineLabel(event)}</dt><dd>{eventDate(event.deadlinePendaftaran)}</dd></div>}
         </dl>
         {state.key === "open" && event.deadlinePendaftaran && <EventCountdown deadline={event.deadlinePendaftaran} initialNow={now} />}
       </div>
