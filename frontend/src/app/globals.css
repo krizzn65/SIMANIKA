@@ -415,7 +415,7 @@ svg {
 .nav-subgrid {
   position: absolute;
   top: calc(100% + 0.65rem);
-  left: 50%;
+  left: calc(50% + 150px);
   transform: translateX(-50%) translateY(-8px) scale(0.98);
   width: 44rem;
   max-width: calc(100vw - 3rem);
@@ -448,7 +448,7 @@ svg {
   content: "";
   position: absolute;
   top: -0.85rem;
-  left: calc(50% - 3.5rem);
+  left: calc(50% - 150px - 3.5rem);
   width: 7rem;
   height: 0.85rem;
 }
@@ -458,7 +458,7 @@ svg {
   content: "";
   position: absolute;
   top: -5px;
-  left: 50%;
+  left: calc(50% - 150px);
   transform: translateX(-50%) rotate(45deg);
   width: 10px;
   height: 10px;
@@ -544,17 +544,26 @@ svg {
 }
 
 .nav-subgrid__badge {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
-  font-size: 0.66rem;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.95rem;
+  height: 1.95rem;
+  min-width: 1.95rem;
   color: var(--blue);
-  background: #ffffff;
-  border: 1px solid rgba(21, 94, 239, 0.2);
-  padding: 0.12rem 0.35rem;
-  border-radius: 0.32rem;
-  line-height: 1.2;
+  background: rgba(21, 94, 239, 0.08);
+  border: 1px solid rgba(21, 94, 239, 0.18);
+  border-radius: 0.45rem;
   flex-shrink: 0;
-  transition: all 150ms ease;
+  transition: all 180ms ease;
+}
+
+.subnav-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  stroke-width: 1.85;
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), color 180ms ease;
+  display: block;
 }
 
 .nav-subgrid__item:hover .nav-subgrid__badge,
@@ -562,6 +571,13 @@ svg {
   background: var(--blue);
   color: #ffffff;
   border-color: var(--blue);
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px -2px rgba(21, 94, 239, 0.35);
+}
+
+.nav-subgrid__item:hover .subnav-icon,
+.nav-subgrid__item--active .subnav-icon {
+  transform: scale(1.08);
 }
 
 .nav-subgrid__body {
@@ -2090,25 +2106,7 @@ svg {
   }
 }
 
-@keyframes nav-link-first {
-  0%,
-  100% {
-    transform: translate(0);
-  }
-  50% {
-    transform: translate(-1.4px, 1.4px);
-  }
-}
 
-@keyframes nav-link-second {
-  0%,
-  100% {
-    transform: translate(0);
-  }
-  50% {
-    transform: translate(1.4px, -1.4px);
-  }
-}
 
 @keyframes login-user-head {
   0%,
@@ -2674,53 +2672,49 @@ svg {
 
   .desktop-nav,
   .login-link,
-  .nav-account,
-  .site-header__inner,
-  .nav-capsule {
+  .nav-account {
     display: none;
   }
 
-  /* Sleek circular menu button at top-right corner */
+  /* Mobile menu button (icon only, no circular frame) */
   .menu-toggle {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.35rem;
-    height: 2.35rem;
-    min-width: 2.35rem;
-    min-height: 2.35rem;
-    border-radius: 999px;
-    border: 1px solid rgba(10, 16, 32, 0.1);
-    background: rgba(255, 255, 255, 0.94);
-    box-shadow: 0 2px 8px rgba(7, 17, 31, 0.06);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    width: 2.25rem;
+    height: 2.25rem;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
     color: var(--ink);
     cursor: pointer;
     pointer-events: auto;
     transition:
-      transform 180ms ease,
-      background-color 180ms ease,
-      border-color 180ms ease,
-      box-shadow 180ms ease;
+      color 180ms ease,
+      transform 180ms ease;
   }
 
   .menu-toggle:hover,
   .menu-toggle:focus-visible {
-    background: #ffffff;
-    border-color: var(--blue);
-    box-shadow: 0 4px 14px rgba(21, 94, 239, 0.14);
-    transform: scale(1.05);
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: var(--blue);
+    transform: scale(1.08);
     outline: none;
   }
 
   .menu-toggle:active {
-    transform: scale(0.95);
+    transform: scale(0.92);
   }
 
   .menu-toggle svg {
-    width: 1.35rem;
-    height: 1.35rem;
+    width: 1.45rem;
+    height: 1.45rem;
   }
 
   /* ── Mobile Side Drawer (Half-Screen Slide-in from Right) ── */
@@ -3008,15 +3002,30 @@ svg {
   }
 
   .mobile-drawer__sub-badge {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: 0.65rem;
-    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    min-width: 1.75rem;
     color: var(--blue);
-    background: var(--surface-subtle);
-    border: 1px solid rgba(21, 94, 239, 0.15);
-    padding: 0.08rem 0.3rem;
-    border-radius: 0.25rem;
+    background: rgba(21, 94, 239, 0.08);
+    border: 1px solid rgba(21, 94, 239, 0.16);
+    border-radius: 0.4rem;
     flex-shrink: 0;
+    transition: all 150ms ease;
+  }
+
+  .mobile-drawer__sub-badge .subnav-icon {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .mobile-drawer__sub-item:hover .mobile-drawer__sub-badge,
+  .mobile-drawer__sub-item:active .mobile-drawer__sub-badge {
+    background: var(--blue);
+    color: #ffffff;
+    border-color: var(--blue);
   }
 
   .mobile-drawer__sub-title {
@@ -5255,227 +5264,7 @@ svg {
   color: var(--ink);
 }
 
-/* ── Stagger Testimonials Carousel ── */
 
-.stagger-testimonials {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  outline: none;
-}
-
-.stagger-testimonials__stage {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  max-width: 100%;
-  height: clamp(26rem, 38vw, 32rem);
-  margin-top: 1.5rem;
-}
-
-/* ── Dog-Eared Stagger Cards ── */
-
-.stagger-card {
-  position: absolute;
-  width: clamp(17rem, 24vw, 24rem);
-  min-height: clamp(18rem, 25vw, 22rem);
-  padding: clamp(1.5rem, 2.2vw, 2.25rem);
-  background: #181d28;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 0.75rem 0 0.75rem 0.75rem;
-  clip-path: polygon(0 0, calc(100% - 2.2rem) 0, 100% 2.2rem, 100% 100%, 0 100%);
-  color: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 16px 36px rgba(10, 16, 32, 0.25);
-  cursor: pointer;
-  user-select: none;
-  transform-origin: center bottom;
-  opacity: 0;
-  transition: border-color 300ms ease, box-shadow 300ms ease;
-}
-
-.stagger-card:hover:not(.stagger-card--active) {
-  border-color: rgba(21, 94, 239, 0.5);
-  box-shadow: 0 20px 42px rgba(10, 16, 32, 0.35);
-}
-
-.stagger-card__dogear {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 2.2rem;
-  height: 2.2rem;
-  background: rgba(0, 0, 0, 0.28);
-  clip-path: polygon(0 0, 0 100%, 100% 100%);
-  pointer-events: none;
-}
-
-/* ── Active Center Card (White Highlight) ── */
-
-.stagger-card--active {
-  background: #ffffff !important;
-  color: #0b111e !important;
-  border: 1.5px solid rgba(10, 16, 32, 0.12) !important;
-  box-shadow:
-    0 25px 60px -10px rgba(10, 16, 32, 0.18),
-    0 10px 25px -5px rgba(10, 16, 32, 0.08),
-    0 0 0 1px rgba(255, 255, 255, 0.8) inset !important;
-  cursor: default !important;
-}
-
-.stagger-card--active .stagger-card__dogear {
-  background: #e2e8f0;
-  border-bottom: 1px solid rgba(10, 16, 32, 0.08);
-  border-left: 1px solid rgba(10, 16, 32, 0.08);
-}
-
-.stagger-card--active .stagger-card__quote {
-  color: #0b111e;
-  font-weight: 500;
-}
-
-.stagger-card--active .stagger-card__name {
-  color: #0b111e;
-}
-
-.stagger-card--active .stagger-card__role {
-  color: #64748b;
-}
-
-/* ── Card Content Layout ── */
-
-.stagger-card__content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  justify-content: space-between;
-}
-
-.stagger-card__avatar-wrap {
-  width: 2.85rem;
-  height: 2.85rem;
-  border-radius: 0.5rem;
-  overflow: hidden;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
-  margin-bottom: 1.25rem;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.stagger-card--active .stagger-card__avatar-wrap {
-  border-color: rgba(12, 18, 30, 0.18);
-}
-
-.stagger-card__avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.stagger-card__avatar-fallback {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--blue);
-  color: #fff;
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.stagger-card__quote {
-  margin: 0 0 1.5rem;
-  padding: 0;
-  font-size: clamp(0.95rem, 1.25vw, 1.12rem);
-  line-height: 1.55;
-  letter-spacing: -0.015em;
-  font-style: normal;
-  color: rgba(255, 255, 255, 0.88);
-}
-
-.stagger-card__footer {
-  margin-top: auto;
-}
-
-.stagger-card__name {
-  display: block;
-  font-style: normal;
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.9);
-  letter-spacing: -0.01em;
-}
-
-.stagger-card__role {
-  color: rgba(255, 255, 255, 0.52);
-  font-weight: 400;
-}
-
-/* ── Segmented Navigation Buttons ── */
-
-.stagger-nav {
-  display: inline-flex;
-  align-items: center;
-  margin-top: 2rem;
-  padding: 0.35rem;
-  border-radius: 0.65rem;
-  background: rgba(18, 24, 36, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  z-index: 20;
-}
-
-.stagger-nav__btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 0.45rem;
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-  transition: all 200ms ease;
-  outline: none;
-}
-
-.stagger-nav__btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-}
-
-.stagger-nav__btn:active {
-  transform: scale(0.93);
-}
-
-.stagger-nav__btn svg {
-  width: 1.15rem;
-  height: 1.15rem;
-}
-
-.stagger-nav__divider {
-  width: 1px;
-  height: 1.5rem;
-  background: rgba(255, 255, 255, 0.12);
-  margin: 0 0.2rem;
-}
-
-/* ── Responsive Testimonials ── */
-
-@media (max-width: 1023px) {
-  .stagger-testimonials__stage {
-    height: 28rem;
-  }
-
-  .stagger-card {
-    width: clamp(16rem, 30vw, 21rem);
-    min-height: clamp(17rem, 30vw, 20rem);
-  }
-}
 
 @media (max-width: 639px) {
   .testimonials-shell {
@@ -5509,41 +5298,7 @@ svg {
     max-width: 26rem;
   }
 
-  .stagger-testimonials__stage {
-    height: 21rem;
-    margin-top: 1rem;
-  }
 
-  .stagger-card {
-    width: clamp(14.5rem, 78vw, 18.5rem);
-    min-height: 16rem;
-    padding: 1.25rem;
-  }
-
-  .stagger-card__quote {
-    font-size: 0.88rem;
-    line-height: 1.45;
-    margin-bottom: 1rem;
-  }
-
-  .stagger-card__name {
-    font-size: 0.76rem;
-  }
-
-  .stagger-card__avatar-wrap {
-    width: 2.35rem;
-    height: 2.35rem;
-    margin-bottom: 0.85rem;
-  }
-
-  .stagger-nav {
-    margin-top: 1.25rem;
-  }
-
-  .stagger-nav__btn {
-    width: 2.35rem;
-    height: 2.35rem;
-  }
 }
 
 /* ==========================================================================
