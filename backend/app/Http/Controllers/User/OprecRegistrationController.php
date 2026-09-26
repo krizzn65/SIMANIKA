@@ -93,6 +93,7 @@ class OprecRegistrationController extends Controller
                     'divisi_pilihan_1' => $divisionId,
                     'divisi_pilihan_2' => !empty($answers['divisi_pilihan_2']) ? (int) $answers['divisi_pilihan_2'] : null,
                 ]);
+                DB::table('oprec_enrollments')->where('oprec_id', $oprec->id)->where('user_id', $request->user()->id)->delete();
             });
         } catch (UniqueConstraintViolationException $error) {
             Storage::disk('local')->delete($stored);

@@ -1,0 +1,88 @@
+<?php
+
+namespace App\Http\Controllers\User;
+
+use App\Http\Controllers\Controller;
+use App\Models\Oprec;
+use App\Models\OprecRegistration;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class OprecWorkspaceController extends Controller
+{
+    public function show(Request $request)
+    {
+        $userId = $request->user()->getKey();
+        $oprec = Oprec::with('divisions')->where('status', 'open')->latest()->first()
+            ?: Oprec::with('divisions')->latest()->first();
+
+        abort_unless($oprec, 404, 'OPREC tidak ditemukan.');
+
+        $registration = OprecRegistration::where('oprec_id', $oprec->id)
+            ->where('user_id', $userId)
+            ->first();
+
+        $enrolled = DB::table('oprec_enrollments')
+            ->where('oprec_id', $oprec->id)
+            ->where('user_id', $userId)
+            ->exists();
+
+        $announced = (bool) ($oprec->pengumuman_published
+            && (!$oprec->pengumuman_tanggal || $oprec->pengumuman_tanggal->isPast()));
+
+        $acceptedDivision = null;
+        if ($registration && $registration->accepted_division_id) {
+            $acceptedDivision = $oprec->divisions->firstWhere('id', $registration->accepted_division_id)?->nama;
+        }
+
+        return response()->json([
+            'data' => [
+                'oprec' => [
+                    'id' => $oprec->id,
+                    'periode' => $oprec->periode,
+                    'status' => $oprec->status,
+                    'headline' => $oprec->headline,
+                    'deskripsi' => $oprec->deskripsi,
+                    'poster' => $oprec->poster ? url('api/public/oprec/posters/' . basename($oprec->poster)) : null,
+                    'tanggalBuka' => $oprec->tanggal_buka?->toIso8601String(),
+                    'tanggalTutup' => $oprec->tanggal_tutup?->toIso8601String(),
+                    'schemaVersion' => $oprec->schema_version,
+                    'formFields' => $oprec->form_fields ?? [],
+                    'formIntro' => $oprec->form_intro ?? null,
+                    'divisiTersedia' => $oprec->divisions->map(fn ($d) => [
+                        'id' => (string) $d->id,
+                        'nama' => $d->nama,
+                        'namaLengkap' => $d->nama_lengkap,
+                        'deskripsi' => $d->deskripsi,
+                        'kuota' => $d->kuota,
+                    ])->values()->all(),
+                    'divisions' => $oprec->divisions->map(fn ($d) => [
+                        'id' => $d->id,
+                        'nama' => $d->nama,
+                        'namaLengkap' => $d->nama_lengkap,
+                        'deskripsi' => $d->deskripsi,
+                        'kuota' => $d->kuota,
+                    ])->values()->all(),
+                    'pengumuman' => [
+                        'published' => (bool) $oprec->pengumuman_published,
+                        'tanggal' => $oprec->pengumuman_tanggal?->toIso8601String(),
+                    ],
+                ],
+                'enrolled' => $enrolled,
+                'registration' => $registration ? [
+                    'id' => $registration->id,
+                    'nim' => $registration->nim,
+                    'tanggalLahir' => $registration->tanggal_lahir?->format('Y-m-d'),
+                    'divisiPilihan1' => $registration->divisi_pilihan_1,
+                    'divisiPilihan2' => $registration->divisi_pilihan_2,
+                    'formData' => $registration->form_data,
+                    'status' => $announced ? $registration->status : 'pending',
+                    'catatan' => $announced ? $registration->catatan : null,
+                    'acceptedDivision' => $announced && $registration->status === 'accepted' ? $acceptedDivision : null,
+                    'registeredAt' => $registration->created_at?->toIso8601String(),
+                ] : null,
+                'announced' => $announced,
+            ],
+        ]);
+    }
+}

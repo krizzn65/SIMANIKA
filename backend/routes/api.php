@@ -17,6 +17,8 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Public\PublicEventController;
 use App\Http\Controllers\Public\PublicOprecController;
 use App\Http\Controllers\User\OprecRegistrationController;
+use App\Http\Controllers\User\OprecEnrollmentController;
+use App\Http\Controllers\User\OprecWorkspaceController;
 use App\Http\Controllers\User\OprecTestController;
 use App\Http\Controllers\User\EventRegistrationController;
 use App\Http\Controllers\User\EventEnrollmentController;
@@ -59,6 +61,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/auth/profile', [ProfileController::class, 'update']);
     Route::post('/auth/change-password', [PasswordController::class, 'change'])->middleware('throttle:password');
     Route::post('/user/oprec/register', [OprecRegistrationController::class, 'store'])->middleware('throttle:auth');
+    Route::post('/user/oprec/enroll', OprecEnrollmentController::class)->middleware('throttle:auth');
+    Route::get('/user/oprec/workspace', [OprecWorkspaceController::class, 'show']);
     Route::get('/user/oprec/stages/{stage}/test', [OprecTestController::class, 'show']);
     Route::post('/user/oprec/stages/{stage}/test', [OprecTestController::class, 'store'])->middleware('throttle:auth');
     Route::post('/user/events/{event}/register', [EventRegistrationController::class, 'store'])->middleware('throttle:auth');

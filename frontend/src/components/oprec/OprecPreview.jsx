@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { oprecState } from "@/lib/oprec";
 import { OprecEmptyState } from "./OprecEmptyState";
+import { OprecDetailModal } from "./OprecDetailModal";
 
 function formatOprecDate(value) {
   if (!value) return null;
@@ -92,6 +93,7 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
   const [now, setNow] = useState(initialNow);
   const [posterFailed, setPosterFailed] = useState(false);
   const [active, setActive] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -141,7 +143,8 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
   const kategori = stage ? (stage.type === "test_tulis" ? "Ujian Seleksi Daring" : stage.type === "pengumuman" ? "Hasil Seleksi" : "Tahap Pendaftaran") : "Rekrutmen Anggota Baru";
 
   return (
-    <article
+    <>
+      <article
       className={`oprec-preview ${active ? "oprec-preview--active" : ""}`}
       onMouseEnter={() => setActive(true)}
       onMouseLeave={() => setActive(false)}
@@ -187,14 +190,14 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
         </p>
 
         <div className="oprec-preview__footer">
-          <Link
+          <button
+            type="button"
             className="oprec-preview__button"
-            href={stage ? `/oprec/detail?stage=${stage.type}` : "/oprec/detail"}
-            prefetch={false}
+            onClick={() => setModalOpen(true)}
           >
             <span>Lihat detail</span>
             <ArrowRightIcon size={14} />
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -247,5 +250,12 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
         </div>
       </div>
     </article>
-  );
+    <OprecDetailModal
+      isOpen={modalOpen}
+      onClose={() => setModalOpen(false)}
+      oprec={oprec}
+      stage={stage}
+    />
+  </>
+);
 }

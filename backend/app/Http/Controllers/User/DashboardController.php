@@ -8,6 +8,7 @@ use App\Models\OprecRegistration;
 use App\Models\Team;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -73,6 +74,30 @@ class DashboardController extends Controller
 
         $completedIds = $events->pluck("eventId")->concat($teams->pluck("eventId"))->all();
         $enrollments = EventEnrollmentDashboard::items($userId, $completedIds);
+        $completedOprecIds = OprecRegistration::where('user_id', $userId)->pluck('oprec_id')->all();
+        $oprecEnrollments = DB::table('oprec_enrollments')
+            ->join('oprecs', 'oprecs.id', '=', 'oprec_enrollments.oprec_id')
+            ->where('oprec_enrollments.user_id', $userId)
+            ->where('oprecs.status', 'open')
+            ->whereDate('oprecs.tanggal_tutup', '>=', today())
+            ->when($completedOprecIds, fn ($query) => $query->whereNotIn('oprecs.id', $completedOprecIds))
+            ->select('oprec_enrollments.id', 'oprec_enrollments.oprec_id', 'oprec_enrollments.created_at',
+                'oprecs.headline', 'oprecs.periode', 'oprecs.tanggal_buka', 'oprecs.tanggal_tutup')
+            ->latest('oprec_enrollments.created_at')
+            ->get()
+            ->map(fn ($enrollment) => [
+                'key' => 'oprec-enrollment-'.$enrollment->id,
+                'kind' => 'oprec',
+                'title' => $enrollment->headline ?: 'Open Recruitment HIMANIKA',
+                'subtitle' => 'Periode '.$enrollment->periode,
+                'status' => 'incomplete',
+                'href' => '/dashboard/oprec',
+                'date' => null,
+                'registeredAt' => $enrollment->created_at,
+                'actionRequired' => true,
+                'canSubmit' => true,
+            ]);
+
         $oprecs = OprecRegistration::query()
             ->where('user_id', $userId)
             ->with('oprec:id,periode,headline,pengumuman_published,pengumuman_tanggal')
@@ -90,13 +115,13 @@ class DashboardController extends Controller
                     'title' => $oprec->headline ?: 'Open Recruitment HIMANIKA',
                     'subtitle' => 'Periode '.$oprec->periode,
                     'status' => $announced ? $registration->status : 'pending',
-                    'href' => '/oprec/detail',
+                    'href' => '/dashboard/oprec',
                     'date' => $announced ? $oprec->pengumuman_tanggal?->toIso8601String() : null,
                     'registeredAt' => $registration->created_at?->toIso8601String(),
                 ];
             });
 
-        $items = $events->concat($teams)->concat($enrollments)->concat($oprecs)
+        $items = $events->concat($teams)->concat($enrollments)->concat($oprecEnrollments)->concat($oprecs)
             ->sortByDesc('registeredAt')
             ->values();
 
