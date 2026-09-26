@@ -54,10 +54,10 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
     <div className="oprec-preview__content">
       <span className="oprec-preview__eyebrow">// {kind.toUpperCase()} · {oprec?.periode}</span>
       <h3 id={`oprec-preview-title-${stage?.id || "registration"}`}>{title}</h3>
-      <div className="oprec-preview__facts"><span><CalendarPlusIcon size={19} loop={false} /> {dateLabel}</span><span className={`oprec-preview__status oprec-preview__status--${state.key}`} aria-live="polite"><span aria-hidden="true" />{stage ? kind : previewStatus[state.key]}</span></div>
+      <div className="oprec-preview__facts"><span><CalendarPlusIcon size={16} loop={false} /> {dateLabel}</span><span className={`oprec-preview__status oprec-preview__status--${state.key}`} aria-live="polite"><span aria-hidden="true" />{stage ? kind : previewStatus[state.key]}</span></div>
       <p className="oprec-preview__description">{stage?.deskripsi || oprec?.deskripsi || description}</p>
       <div className="oprec-preview__footer">
-        <Link className="oprec-preview__button" href={stage ? `/oprec/detail?stage=${stage.type}` : "/oprec/detail"} prefetch={false}>Lihat detail <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg></Link>
+        <Link className="oprec-preview__button" href={stage ? `/oprec/detail?stage=${stage.type}` : "/oprec/detail"} prefetch={false}>Lihat detail <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg></Link>
       </div>
     </div>
     <div className="oprec-preview__art" aria-hidden="true">

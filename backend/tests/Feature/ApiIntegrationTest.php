@@ -55,6 +55,14 @@ class ApiIntegrationTest extends TestCase
         $this->getJson('/api/public/events?kategori=lainnya')->assertOk()
             ->assertJsonPath('meta.total', 1)
             ->assertJsonPath('data.0.slug', 'uji-event');
+        $this->getJson('/api/public/events?search=HI-FEST')->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.slug', 'hi-fest-2026');
+        $this->getJson('/api/public/events?search=uji')->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.slug', 'uji-event');
+        $this->getJson('/api/public/events?search=tidakada')->assertOk()
+            ->assertJsonPath('meta.total', 0);
     }
 
     public function test_password_reset_request_does_not_reveal_if_email_exists(): void
