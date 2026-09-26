@@ -1,0 +1,569 @@
+.workspace {
+  --ws-blue: #155eef;
+  --ws-blue-dark: #0f48c2;
+  --ws-border: #b5c6df;
+  --ws-muted: #536278;
+  --ws-ink: #101b2d;
+  --ws-red: #b42318;
+  --ws-green: #087443;
+  --ws-amber: #b54708;
+  min-height: 100vh;
+  color: var(--ws-ink);
+  background-color: #f5f8fc;
+  background-image: linear-gradient(#dde5ef60 1px, transparent 1px), linear-gradient(90deg, #dde5ef60 1px, transparent 1px);
+  background-size: 72px 72px;
+  padding: 124px 28px 72px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.container {
+  max-width: 1180px;
+  margin: auto;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px dashed var(--ws-border);
+  background: #fff;
+  color: var(--ws-ink);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .18s, border-color .18s;
+}
+
+.button:hover {
+  background: #edf4ff;
+  border-color: var(--ws-blue);
+}
+
+.heading {
+  position: relative;
+  margin-bottom: 28px;
+}
+
+.eyebrow {
+  color: var(--ws-blue);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  margin: 0 0 8px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+.heading h1 {
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -.035em;
+  margin: 0 0 8px;
+}
+
+.heading a, .answers a, .notice a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #104bcc;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.heading p {
+  color: var(--ws-muted);
+  margin: 0;
+  font-size: 15px;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.sidebar {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+
+.panel {
+  min-width: 0;
+  padding: 24px;
+  border: 1px dashed var(--ws-border);
+  border-top: 3px solid var(--ws-blue);
+  background: #ffffffed;
+  box-shadow: 4px 4px 0 #e0e8fa;
+}
+
+.panel h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 700;
+  letter-spacing: -.015em;
+  margin: 0 0 16px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px dashed var(--ws-border);
+}
+
+.panelHeader h2 {
+  margin: 0;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 8px;
+}
+
+.neutral {
+  background: #edf2f8;
+  color: #526075;
+}
+
+.amber {
+  background: #fffaeb;
+  color: var(--ws-amber);
+  border: 1px solid #fedf89;
+}
+
+.success {
+  background: #e4f7ed;
+  color: var(--ws-green);
+  border: 1px solid #abdbc3;
+}
+
+.danger {
+  background: #fff5f3;
+  color: var(--ws-red);
+  border: 1px solid #e9bbb5;
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #f3f7fd;
+  border: 1px dashed #b8cef2;
+  padding: 18px;
+  color: var(--ws-muted);
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+.notice svg {
+  flex-shrink: 0;
+  color: var(--ws-blue);
+  margin-top: 2px;
+}
+
+.notice h3 {
+  color: var(--ws-ink);
+  font-size: 14px;
+  margin: 0 0 5px;
+  font-weight: 600;
+}
+
+.notice p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.answers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 24px;
+  margin: 0;
+}
+
+.answers dt {
+  font-size: 12px;
+  color: var(--ws-muted);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.answers dd {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ws-ink);
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.metaList {
+  display: grid;
+  gap: 14px;
+}
+
+.metaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metaItem span:first-child {
+  font-size: 12px;
+  color: var(--ws-muted);
+}
+
+.metaItem span:last-child {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.loading, .error {
+  border: 1px dashed var(--ws-border);
+  padding: 48px 24px;
+  background: #fff;
+  text-align: center;
+  color: var(--ws-muted);
+}
+
+.error {
+  border-color: #e9bbb5;
+  background: #fff5f3;
+  color: var(--ws-red);
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Dynamic Form System (matching Event Workspace) */
+.workspace :global(.event-dynamic-form) {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  margin: 0;
+}
+
+.workspace :global(.event-dynamic-form) > p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ws-muted);
+  margin: 0 0 22px;
+}
+
+.workspace :global(.event-dynamic-form) > fieldset {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.workspace :global(.event-dynamic-field) {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.workspace :global(.event-dynamic-field--wide),
+.workspace :global(.event-dynamic-field):has(textarea, input[type="file"], input[type="radio"], input[type="checkbox"]) {
+  grid-column: 1 / -1;
+}
+
+.workspace :global(.event-dynamic-field) label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ws-ink);
+}
+
+.workspace :global(.event-dynamic-field) b {
+  color: var(--ws-red);
+}
+
+.workspace :global(.event-dynamic-field) :is(input, textarea, select) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ws-ink);
+  border: 1px solid var(--ws-border);
+  border-radius: 0;
+  background: #fff;
+  transition: border-color .15s, outline .15s;
+}
+
+.workspace :global(.event-dynamic-field) :is(input, textarea, select):focus-visible {
+  outline: 2px solid var(--ws-blue);
+  outline-offset: 2px;
+  border-color: var(--ws-blue);
+}
+
+.workspace :global(.event-dynamic-field) textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.workspace :global(.event-dynamic-field) input[type="file"] {
+  padding: 10px;
+  font-size: 12px;
+  border-style: dashed;
+  background: #f7faff;
+}
+
+.workspace :global(.event-dynamic-field) input::file-selector-button {
+  margin-right: 10px;
+  padding: 7px 10px;
+  font: inherit;
+  border: 1px solid var(--ws-border);
+  background: #fff;
+  color: var(--ws-ink);
+  cursor: pointer;
+}
+
+.workspace :global(.event-dynamic-field) :is(input[type="radio"], input[type="checkbox"]) {
+  width: 16px;
+  min-height: 16px;
+  height: 16px;
+  margin: 0 5px 0 0;
+  accent-color: var(--ws-blue);
+}
+
+.workspace :global(.event-dynamic-choices) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.workspace :global(.event-dynamic-choices) label,
+.workspace :global(.event-dynamic-check) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 400;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.workspace :global(.event-dynamic-field) small {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ws-muted);
+}
+
+.workspace :global(.event-dynamic-field) :global(.event-dynamic-error) {
+  color: var(--ws-red);
+  font-weight: 500;
+}
+
+.workspace :global(.event-group-submit) {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.workspace :global(.event-dynamic-form) {
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace :global(.event-button) {
+  width: auto;
+  min-width: 132px;
+  min-height: 44px;
+  margin-top: 4px;
+  margin-left: auto;
+  padding: 10px 24px;
+  border: 1px solid var(--ws-blue);
+  border-radius: 0;
+  background: var(--ws-blue);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .18s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.workspace :global(.event-button):hover {
+  background: #104bcc;
+}
+
+.workspace :global(.event-button):disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.workspace :global(.event-form-feedback) {
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  background: #fff4f2;
+  color: var(--ws-red);
+  border: 1px solid #e9bbb5;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.workspace :global(.event-form-feedback) ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.workspace :global(.event-form-feedback) a {
+  color: var(--ws-red);
+  text-decoration: underline;
+}
+
+.workspace :global(.event-form-sr-only) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Division choice tiles */
+.workspace :global(.oprec-division-choices) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.workspace :global(.oprec-division-choice) {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px dashed var(--ws-border);
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+
+.workspace :global(.oprec-division-choice:hover) {
+  background: #edf4ff;
+  border-color: var(--ws-blue);
+}
+
+.workspace :global(.oprec-division-choice:has(input:checked)) {
+  background: #edf4ff;
+  border-color: var(--ws-blue);
+  border-style: solid;
+}
+
+.workspace :global(.oprec-division-choice input) {
+  margin-top: 3px;
+  accent-color: var(--ws-blue);
+}
+
+.workspace :global(.oprec-division-choice__content) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.workspace :global(.oprec-division-choice__content img) {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.workspace :global(.oprec-division-choice__fallback) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #eef3fb;
+  color: var(--ws-blue);
+  font-weight: 700;
+  font-size: 13px;
+  font-family: monospace;
+}
+
+.workspace :global(.oprec-division-choice__content strong) {
+  display: block;
+  font-size: 13px;
+  color: var(--ws-ink);
+  line-height: 1.3;
+}
+
+.workspace :global(.oprec-division-choice__content small) {
+  display: block;
+  font-size: 11px;
+  color: var(--ws-muted);
+  line-height: 1.3;
+  margin-top: 2px;
+}
+
+@media (max-width: 900px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+  .answers,
+  .workspace :global(.event-dynamic-form) > fieldset {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .workspace {
+    padding: 100px 16px 48px;
+  }
+  .workspace :global(.event-dynamic-field) :is(input, textarea, select) {
+    font-size: 16px;
+  }
+  .workspace :global(.event-dynamic-field) input[type="file"] {
+    font-size: 13px;
+  }
+}

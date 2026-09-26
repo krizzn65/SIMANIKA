@@ -28,7 +28,9 @@ export function JoinEventTeamForm({ event, onSuccess }) {
       <label htmlFor={"join-team-code-" + event.id}>Kode tim</label>
       <input id={"join-team-code-" + event.id} value={code} onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 16))} required maxLength={16} placeholder="Contoh: HACK01" />
       {message && <p role="alert" className="event-form-feedback">{message}</p>}
-      <button className="event-button" type="submit" disabled={pending}>{pending ? "Memproses…" : "Kirim permintaan"}</button>
+      <div className="event-group-submit">
+        <button className="event-button" type="submit" disabled={pending}>{pending ? "Memproses…" : "Kirim"}</button>
+      </div>
     </>}
   </form>;
 }

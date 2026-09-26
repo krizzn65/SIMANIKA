@@ -94,7 +94,7 @@ export function oprecState(oprec, now = Date.now()) {
 }
 
 export function oprecDate(value) {
-  return value ? new Intl.DateTimeFormat("id-ID", { dateStyle: "long", timeStyle: "short", timeZone: "Asia/Jakarta" }).format(new Date(value)) + " WIB" : "Belum diumumkan";
+  return value ? new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" }).format(new Date(value)) : "Belum diumumkan";
 }
 
 export function validBirthDate(value, now = Date.now()) {

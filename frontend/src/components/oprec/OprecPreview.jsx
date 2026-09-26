@@ -3,9 +3,48 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { oprecDate, oprecState } from "@/lib/oprec";
+import { oprecState } from "@/lib/oprec";
 import { OprecEmptyState } from "./OprecEmptyState";
-import { PixelDissolve } from "./PixelDissolve";
+import { OprecDetailModal } from "./OprecDetailModal";
+
+function formatOprecDate(value) {
+  if (!value) return null;
+  const dateObj = new Date(value);
+  if (isNaN(dateObj.getTime())) return null;
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Jakarta",
+  }).format(dateObj);
+}
+
+// IFEST-style curtain grid: 20 columns x 9 rows.
+// Left (cols 0-3: 0%, 5%, 10%, 15%) and Right (cols 16-19: 80%, 85%, 90%, 95%) have solid blue blocks.
+// Center (cols 4-15: 20% to 80%) remains open to showcase the poster.
+// On hover, blocks fade out sequentially like a curtain per row & column.
+const CURTAIN_BLOCKS = (() => {
+  const blocks = [];
+  let key = 0;
+  for (let row = 0; row < 9; row++) {
+    for (let col = 0; col < 20; col++) {
+      if (col >= 4 && col < 16) continue;
+      const distFromInner = col < 4 ? 3 - col : col - 16;
+      // Stagger: distinct row-by-row cascade (75ms per row) + inner-to-outer flow (55ms per col)
+      // Provides a smooth, luxurious, highly visible curtain blinds dissolve effect
+      const delay = Number((row * 0.075 + distFromInner * 0.055).toFixed(3));
+      blocks.push({
+        key: key++,
+        top: (row / 9) * 100,
+        left: (col / 20) * 100,
+        width: 5,
+        height: 100 / 9,
+        delay,
+      });
+    }
+  }
+  return blocks;
+})();
 
 const previewStatus = {
   soon: "Segera Dibuka",
@@ -54,6 +93,7 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
   const [now, setNow] = useState(initialNow);
   const [posterFailed, setPosterFailed] = useState(false);
   const [active, setActive] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -73,7 +113,21 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
   }
 
   const start = stage?.tanggalBuka || oprec?.tanggalBuka;
-  const dateLabel = start ? oprecDate(start) : "Jadwal menyusul";
+  const deadline = stage?.tanggalTutup || oprec?.tanggalTutup;
+
+  const startFormatted = formatOprecDate(start);
+  const deadlineFormatted = formatOprecDate(deadline);
+
+  let dateLabel = "Jadwal menyusul";
+  if (startFormatted && deadlineFormatted) {
+    dateLabel = startFormatted === deadlineFormatted
+      ? startFormatted
+      : `${startFormatted} - ${deadlineFormatted}`;
+  } else if (startFormatted) {
+    dateLabel = startFormatted;
+  } else if (deadlineFormatted) {
+    dateLabel = deadlineFormatted;
+  }
 
   const description = {
     soon: "Rekrutmen berikutnya sudah dekat. Kenali jadwal dan siapkan langkah pertamamu.",
@@ -89,7 +143,8 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
   const kategori = stage ? (stage.type === "test_tulis" ? "Ujian Seleksi Daring" : stage.type === "pengumuman" ? "Hasil Seleksi" : "Tahap Pendaftaran") : "Rekrutmen Anggota Baru";
 
   return (
-    <article
+    <>
+      <article
       className={`oprec-preview ${active ? "oprec-preview--active" : ""}`}
       onMouseEnter={() => setActive(true)}
       onMouseLeave={() => setActive(false)}
@@ -104,7 +159,6 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
 
       {/* LEFT: Information & actions */}
       <div className="oprec-preview__content">
-        <span className="oprec-preview__eyebrow">// {kind.toUpperCase()} · {oprec?.periode}</span>
         <h3 id={`oprec-preview-title-${stage?.id || "registration"}`}>{title}</h3>
 
         {/* Facts with 3 icons matching IFEST */}
@@ -136,14 +190,14 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
         </p>
 
         <div className="oprec-preview__footer">
-          <Link
+          <button
+            type="button"
             className="oprec-preview__button"
-            href={stage ? `/oprec/detail?stage=${stage.type}` : "/oprec/detail"}
-            prefetch={false}
+            onClick={() => setModalOpen(true)}
           >
             <span>Lihat detail</span>
             <ArrowRightIcon size={14} />
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -173,15 +227,35 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
         <div className="oprec-preview__art-vignette" aria-hidden="true" />
         <div className="oprec-preview__art-glow" aria-hidden="true" />
 
-        {/* Pixel Dissolve Blocks (React Bits style) */}
-        <PixelDissolve active={active} />
+        {/* IFEST-style Curtain Grid (left & right blue blocks that fade on hover) */}
+        <div className="oprec-preview__curtain" aria-hidden="true">
+          {CURTAIN_BLOCKS.map((block) => (
+            <div
+              key={block.key}
+              className="oprec-curtain-block"
+              style={{
+                top: `${block.top}%`,
+                left: `${block.left}%`,
+                width: `${block.width}%`,
+                height: `${block.height}%`,
+                transitionDelay: active ? `${block.delay}s` : `${Number((block.delay * 0.25).toFixed(3))}s`,
+              }}
+            />
+          ))}
+        </div>
 
         {/* Text appears on hover over the poster (like IFEST) */}
         <div className="oprec-preview__art-overlay" aria-hidden="true">
-          <span className="oprec-preview__art-kicker">// {kind.toUpperCase()}</span>
           <h4 className="oprec-preview__art-title">{title}</h4>
         </div>
       </div>
     </article>
-  );
+    <OprecDetailModal
+      isOpen={modalOpen}
+      onClose={() => setModalOpen(false)}
+      oprec={oprec}
+      stage={stage}
+    />
+  </>
+);
 }
