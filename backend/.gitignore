@@ -8,6 +8,7 @@
 /storage/framework/cache/*
 /storage/framework/sessions/*
 /storage/framework/views/*
+/storage/framework/testing/*
 /storage/logs/*
 !/storage/app/private/.gitignore
 !/storage/app/public/.gitignore
@@ -15,6 +16,7 @@
 !/storage/framework/cache/data/.gitignore
 !/storage/framework/sessions/.gitignore
 !/storage/framework/views/.gitignore
+!/storage/framework/testing/.gitignore
 !/storage/logs/.gitignore
 /.phpunit.cache
 /.phpunit.result.cache

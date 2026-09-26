@@ -28,6 +28,19 @@ test("registration forwards only approved schema fields and confirms persisted s
   assert.match(response.headers.get("cache-control"), /no-store/);
   assert.deepEqual((await response.json()).data, { submitted: true });
 });
+test("registration forwards exactly three ranked division choices", async () => {
+  const divisionPeriod = lib.normalizeOprec({ id: 2, periode: "Three", status: "open", tanggalBuka: "2000-01-01T00:00:00Z", tanggalTutup: "2099-01-01T00:00:00Z", schemaVersion: "1", divisiTersedia: [{ id: 1, nama: "BPH" }, { id: 2, nama: "Humas" }, { id: 3, nama: "PSDM" }], formFields: [...period.formFields, { name: "divisi_pilihan_1", type: "select", label: "Divisi pilihan", required: true }] });
+  const submit = handlers(divisionPeriod, async (_url, options) => {
+    assert.deepEqual([1, 2, 3].map((rank) => options.body.get(`divisi_pilihan_${rank}`)), ["1", "2", "3"]);
+    return Response.json({ data: { submitted: true } });
+  }).registerOprec;
+  const form = new FormData();
+  for (const [key, value] of Object.entries({ oprec_id: "2", schema_version: "1", nim: "E12345", tanggal_lahir: "2004-02-29", divisi_pilihan_1: "1", divisi_pilihan_2: "2" })) form.set(key, value);
+  const request = () => new Request("https://site.test/api/oprec/register", { method: "POST", body: form });
+  assert.equal((await submit(request())).status, 422);
+  form.set("divisi_pilihan_3", "3");
+  assert.equal((await submit(request())).status, 201);
+});
 test("closed period and stale schema reject before forwarding", async () => {
   const upstream = async () => { throw new Error("must not forward"); };
   assert.equal((await handlers({ ...period, status: "closed" }, upstream).registerOprec(registration())).status, 409);

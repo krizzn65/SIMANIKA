@@ -50,7 +50,7 @@ class SaveOprecRequest extends FormRequest
             }
             if (count(array_intersect($names, ['oprec_id', 'schema_version', '__proto__', 'constructor', 'prototype']))) $validator->errors()->add('form_fields', 'Nama kolom terlarang.');
             foreach ($fields as $index => $field) {
-                if ($this->input('status') !== 'draft' && in_array($field['type'] ?? '', ['select', 'radio'], true) && empty($field['options']) && ($field['name'] ?? '') !== 'divisi_pilihan_1') $validator->errors()->add("form_fields.{$index}.options", 'Pilihan wajib diisi.');
+                if ($this->input('status') !== 'draft' && in_array($field['type'] ?? '', ['select', 'radio'], true) && empty($field['options']) && !in_array($field['name'] ?? '', ['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'], true)) $validator->errors()->add("form_fields.{$index}.options", 'Pilihan wajib diisi.');
                 if (in_array($field['type'] ?? '', ['select', 'radio'], true)) {
                     $values = array_column($field['options'] ?? [], 'value');
                     if (count($values) !== count(array_unique($values))) $validator->errors()->add("form_fields.{$index}.options", 'Nilai pilihan harus unik.');
@@ -62,6 +62,7 @@ class SaveOprecRequest extends FormRequest
                 if (!preg_match('/^(19|20)\d{2}$/', (string) ($option['value'] ?? ''))) $validator->errors()->add('form_fields', 'Pilihan angkatan harus berupa tahun empat digit.');
             }
             if ($this->input('status') !== 'draft' && !count($this->input('divisi_tersedia', []))) $validator->errors()->add('divisi_tersedia', 'Tambahkan minimal satu divisi.');
+            if ($this->input('status') === 'open' && count($this->input('divisi_tersedia', [])) < 3) $validator->errors()->add('divisi_tersedia', 'Tambahkan minimal tiga divisi agar peserta dapat memilih tiga divisi berbeda.');
             if ($this->boolean('pengumuman.published') && $this->input('status') !== 'closed') $validator->errors()->add('pengumuman.published', 'Tutup pendaftaran sebelum menerbitkan pengumuman.');
         });
     }

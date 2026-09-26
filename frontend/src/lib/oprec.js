@@ -55,15 +55,29 @@ export function normalizeOprec(raw) {
   const tanggalBuka = date(raw.tanggalBuka ?? raw.tanggal_buka);
   const tanggalTutup = date(raw.tanggalTutup ?? raw.tanggal_tutup);
   if (tanggalBuka && tanggalTutup && Date.parse(tanggalTutup) <= Date.parse(tanggalBuka)) throw new Error("Invalid OPREC date range");
-  const divisions = raw.divisiTersedia ?? raw.divisi_tersedia ?? [];
+  const divisions = raw.divisiTersedia ?? raw.divisi_tersedia ?? raw.divisions ?? [];
   if (!Array.isArray(divisions)) throw new Error("Invalid OPREC divisions");
+  const rawFields = Array.isArray(raw.formFields ?? raw.form_fields)
+    ? (raw.formFields ?? raw.form_fields).map((field) => {
+        if (field && ["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name) && (!field.options || !field.options.length)) {
+          return {
+            ...field,
+            options: divisions.map((d, index) => ({
+              value: String(d.id ?? index),
+              label: text(d.nama) || text(d.namaLengkap ?? d.nama_lengkap) || `Divisi #${d.id ?? index}`,
+            })),
+          };
+        }
+        return field;
+      })
+    : [];
   const announcement = raw.pengumuman ?? {};
   return {
     id: String(raw.id), periode: text(raw.periode), status: raw.status, tanggalBuka, tanggalTutup,
     headline: text(raw.headline), deskripsi: text(raw.deskripsi), poster: safePosterUrl(raw.poster),
     posterAlt: text(raw.posterAlt ?? raw.poster_alt) || `Poster OPREC ${text(raw.periode)}`,
     schemaVersion: String(raw.schemaVersion ?? raw.schema_version ?? "1"),
-    formFields: normalizeFields(raw.formFields ?? raw.form_fields ?? []),
+    formFields: normalizeFields(rawFields),
     formIntro: text(raw.formIntro ?? raw.form_intro),
     divisiTersedia: divisions.map((item, index) => {
       if (!item || !text(item.nama)) throw new Error("Invalid OPREC division");
@@ -105,6 +119,15 @@ export function validBirthDate(value, now = Date.now()) {
 
 export function validateOprecForm(fields, form, now = Date.now()) {
   const errors = {};
+  const choices = [1, 2, 3].map((rank) => form.get(`divisi_pilihan_${rank}`));
+  const divisionOptions = fields.find((field) => field.name === "divisi_pilihan_1")?.options || [];
+  if (divisionOptions.length && (choices.some((value) => !value) || new Set(choices).size !== 3 || choices.some((value) => !divisionOptions.some((option) => option.value === value)))) {
+    errors.divisi_pilihan_1 = "Pilih tepat 3 divisi berbeda dari daftar yang tersedia.";
+  }
+  for (let index = 1; index < choices.length; index++) {
+    if (choices[index] && choices.slice(0, index).includes(choices[index])) errors[`divisi_pilihan_${index + 1}`] = "Pilih divisi yang berbeda untuk setiap prioritas.";
+    if (choices[index] && !choices[index - 1]) errors[`divisi_pilihan_${index + 1}`] = "Isi pilihan sebelumnya terlebih dahulu.";
+  }
   for (const field of fields) {
     const values = form.getAll(field.name);
     const value = values[0];

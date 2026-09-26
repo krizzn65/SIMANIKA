@@ -17,7 +17,7 @@ class OprecResource extends JsonResource
             'tanggalTutup' => $this->tanggal_tutup?->toIso8601String(),
             'schemaVersion' => $this->schema_version, 'formIntro' => $this->form_intro ?? '',
             'formFields' => collect($this->form_fields ?? [])->map(function ($field) {
-                if (($field['name'] ?? '') === 'divisi_pilihan_1') {
+                if (in_array($field['name'] ?? '', ['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'], true)) {
                     $field['options'] = $this->divisions->map(fn ($division) => ['value' => (string) $division->id, 'label' => $division->nama])->all();
                 }
                 return $field;

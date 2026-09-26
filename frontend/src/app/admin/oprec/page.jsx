@@ -269,6 +269,7 @@ export default function AdminOprecPage() {
                 filteredRegistrants.map((r) => {
                   const div1 = selectedOprec?.divisiTersedia?.find((d) => d.id === r.divisiPilihan1)?.nama || `Divisi #${r.divisiPilihan1}`;
                   const div2 = r.divisiPilihan2 ? selectedOprec?.divisiTersedia?.find((d) => d.id === r.divisiPilihan2)?.nama || `Divisi #${r.divisiPilihan2}` : null;
+                  const div3 = r.divisiPilihan3 ? selectedOprec?.divisiTersedia?.find((d) => d.id === r.divisiPilihan3)?.nama || `Divisi #${r.divisiPilihan3}` : null;
                   const acceptedDiv = r.acceptedDivisionId ? selectedOprec?.divisiTersedia?.find((d) => d.id === r.acceptedDivisionId)?.nama : null;
 
                   return (
@@ -291,6 +292,7 @@ export default function AdminOprecPage() {
                             2. {div2}
                           </div>
                         )}
+                        {div3 && <div className="text-[11px] text-slate-500">3. {div3}</div>}
                         {acceptedDiv && (
                           <div className="mt-1 text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block">
                             Diterima di: {acceptedDiv}

@@ -47,7 +47,15 @@ class OprecWorkspaceController extends Controller
                     'tanggalBuka' => $oprec->tanggal_buka?->toIso8601String(),
                     'tanggalTutup' => $oprec->tanggal_tutup?->toIso8601String(),
                     'schemaVersion' => $oprec->schema_version,
-                    'formFields' => $oprec->form_fields ?? [],
+                    'formFields' => collect($oprec->form_fields ?? [])->map(function ($field) use ($oprec) {
+                        if (in_array($field['name'] ?? '', ['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'], true)) {
+                            $field['options'] = $oprec->divisions->map(fn ($division) => [
+                                'value' => (string) $division->id,
+                                'label' => $division->nama,
+                            ])->all();
+                        }
+                        return $field;
+                    })->all(),
                     'formIntro' => $oprec->form_intro ?? null,
                     'divisiTersedia' => $oprec->divisions->map(fn ($d) => [
                         'id' => (string) $d->id,
@@ -55,6 +63,7 @@ class OprecWorkspaceController extends Controller
                         'namaLengkap' => $d->nama_lengkap,
                         'deskripsi' => $d->deskripsi,
                         'kuota' => $d->kuota,
+                        'logo' => $d->logo,
                     ])->values()->all(),
                     'divisions' => $oprec->divisions->map(fn ($d) => [
                         'id' => $d->id,
@@ -62,6 +71,7 @@ class OprecWorkspaceController extends Controller
                         'namaLengkap' => $d->nama_lengkap,
                         'deskripsi' => $d->deskripsi,
                         'kuota' => $d->kuota,
+                        'logo' => $d->logo,
                     ])->values()->all(),
                     'pengumuman' => [
                         'published' => (bool) $oprec->pengumuman_published,
@@ -75,6 +85,7 @@ class OprecWorkspaceController extends Controller
                     'tanggalLahir' => $registration->tanggal_lahir?->format('Y-m-d'),
                     'divisiPilihan1' => $registration->divisi_pilihan_1,
                     'divisiPilihan2' => $registration->divisi_pilihan_2,
+                    'divisiPilihan3' => $registration->divisi_pilihan_3,
                     'formData' => $registration->form_data,
                     'status' => $announced ? $registration->status : 'pending',
                     'catatan' => $announced ? $registration->catatan : null,

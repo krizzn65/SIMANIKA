@@ -49,18 +49,22 @@ class OprecRegistrationController extends Controller
                     if (isset($field['max'])) $rules[$name][] = 'max:'.$field['max'];
                 }
                 if ($type === 'tel') $rules[$name][] = 'regex:/^[0-9+() .-]{5,30}$/';
-                if (in_array($type, ['select', 'radio'], true)) $rules[$name][] = Rule::in($name === 'divisi_pilihan_1' ? $oprec->divisions->pluck('id')->map(fn ($id) => (string) $id)->all() : array_column($field['options'] ?? [], 'value'));
+                if (in_array($type, ['select', 'radio'], true)) $rules[$name][] = Rule::in(in_array($name, ['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'], true) ? $oprec->divisions->pluck('id')->map(fn ($id) => (string) $id)->all() : array_column($field['options'] ?? [], 'value'));
             }
         }
         if (!isset($rules['nim'], $rules['tanggal_lahir'])) return response()->json(['message' => 'Skema identitas tidak tersedia.'], 503);
+        $divisionIds = $oprec->divisions->pluck('id')->map(fn ($id) => (string) $id)->all();
+        foreach (['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'] as $key) {
+            $rules[$key] = ['required', 'string', Rule::in($divisionIds)];
+        }
         $rules['nim'][] = 'regex:/^[a-zA-Z0-9.\-]{3,32}$/';
         $rules['tanggal_lahir'][] = 'before_or_equal:today';
         $data = Validator::make($request->all(), $rules)->validate();
 
-        foreach (['divisi_pilihan_1', 'divisi_pilihan_2'] as $key) {
+        foreach (['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'] as $key) {
             if (!empty($data[$key]) && !$oprec->divisions->contains('id', (int) $data[$key])) throw ValidationException::withMessages([$key => ['Divisi tidak tersedia pada periode ini.']]);
         }
-        if (!empty($data['divisi_pilihan_2']) && $data['divisi_pilihan_1'] === $data['divisi_pilihan_2']) throw ValidationException::withMessages(['divisi_pilihan_2' => ['Pilihan kedua harus berbeda.']]);
+        if (count(array_unique(array_intersect_key($data, array_flip(['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'])))) !== 3) throw ValidationException::withMessages(['divisi_pilihan_1' => ['Pilih tepat 3 divisi yang berbeda.']]);
 
         $stored = [];
         try {
@@ -92,6 +96,7 @@ class OprecRegistrationController extends Controller
                     'form_data' => $answers, 'file_uploads' => $filePaths,
                     'divisi_pilihan_1' => $divisionId,
                     'divisi_pilihan_2' => !empty($answers['divisi_pilihan_2']) ? (int) $answers['divisi_pilihan_2'] : null,
+                    'divisi_pilihan_3' => (int) $answers['divisi_pilihan_3'],
                 ]);
                 DB::table('oprec_enrollments')->where('oprec_id', $oprec->id)->where('user_id', $request->user()->id)->delete();
             });

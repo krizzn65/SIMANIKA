@@ -17,7 +17,7 @@ class OprecRegistrantController extends Controller
         return response()->json($oprec->registrations()->with('user:id,email,name')->latest()->paginate(20)->through(fn ($item) => [
             'id' => $item->id, 'user' => $item->user, 'nim' => $item->nim,
             'formData' => $item->form_data, 'status' => $item->status,
-            'divisiPilihan1' => $item->divisi_pilihan_1, 'divisiPilihan2' => $item->divisi_pilihan_2,
+            'divisiPilihan1' => $item->divisi_pilihan_1, 'divisiPilihan2' => $item->divisi_pilihan_2, 'divisiPilihan3' => $item->divisi_pilihan_3,
             'acceptedDivisionId' => $item->accepted_division_id, 'catatan' => $item->catatan,
             'createdAt' => $item->created_at?->toIso8601String(),
         ]));
@@ -33,6 +33,9 @@ class OprecRegistrantController extends Controller
         ]);
         if ($data['status'] === 'accepted' && (empty($data['accepted_division_id']) || !$oprec->divisions()->whereKey($data['accepted_division_id'])->exists())) {
             throw ValidationException::withMessages(['accepted_division_id' => ['Pilih divisi yang tersedia.']]);
+        }
+        if ($data['status'] === 'accepted' && !in_array((int) $data['accepted_division_id'], array_filter([(int) $registration->divisi_pilihan_1, (int) $registration->divisi_pilihan_2, (int) $registration->divisi_pilihan_3]), true)) {
+            throw ValidationException::withMessages(['accepted_division_id' => ['Divisi penerimaan harus termasuk pilihan peserta.']]);
         }
         $registration->update([
             'status' => $data['status'],

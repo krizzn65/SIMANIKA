@@ -86,6 +86,10 @@ export async function registerOprec(request) {
       const value = form.get(field.name);
       if (value !== null && !(field.type === "file" && !value.size)) body.set(field.name, typeof value === "string" ? value.trim() : value);
     }
+    for (const rank of [2, 3]) {
+      const value = form.get(`divisi_pilihan_${rank}`);
+      if (value !== null) body.set(`divisi_pilihan_${rank}`, value);
+    }
     const response = await forward(oprec, "register", body, request);
     if (!response.ok) return await upstreamError(response, oprec);
     const result = await response.json();
