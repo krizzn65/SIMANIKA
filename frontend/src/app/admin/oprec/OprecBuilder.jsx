@@ -126,6 +126,8 @@ export default function OprecBuilder({ oprecId }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [uploadingPoster, setUploadingPoster] = useState(false);
   const [dragOverPoster, setDragOverPoster] = useState(false);
+  const [uploadingLogoIndex, setUploadingLogoIndex] = useState(null);
+  const [dragOverLogoIndex, setDragOverLogoIndex] = useState(null);
   const posterInputRef = useRef(null);
 
   useEffect(() => {
@@ -243,6 +245,42 @@ export default function OprecBuilder({ oprecId }) {
     const file = event.dataTransfer?.files?.[0];
     if (file) {
       handlePosterFile(file);
+    }
+  };
+
+  const handleDivisionLogoUpload = async (index, file) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Ukuran logo maksimal 5 MB.");
+      return;
+    }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setError("Format logo harus berupa JPG, PNG, atau WebP.");
+      return;
+    }
+
+    setUploadingLogoIndex(index);
+    setError("");
+
+    try {
+      const body = new FormData();
+      body.append("logo", file);
+      const res = await api.post("/admin/oprec/upload-logo", body, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const url = res.data?.url;
+      if (!url) throw new Error("Gagal mengunggah logo divisi.");
+      setDivision(index, { logo: url });
+    } catch (err) {
+      const msg =
+        err.response?.data?.errors?.logo?.[0] ||
+        err.response?.data?.errors?.poster?.[0] ||
+        err.response?.data?.message ||
+        err.message ||
+        "Gagal mengunggah logo divisi.";
+      setError(msg);
+    } finally {
+      setUploadingLogoIndex(null);
     }
   };
 
@@ -649,8 +687,10 @@ export default function OprecBuilder({ oprecId }) {
                       ) : (
                         <>
                           <UploadCloud size={28} className="text-slate-400" />
-                          <span>Pilih atau Seret Berkas Poster ke Sini</span>
-                          <small>JPG, PNG, atau WebP · Maksimal 5 MB</small>
+                          <span className="oprec-builder__poster-pick-btn">
+                            Pilih Berkas Poster
+                          </span>
+                          <small>atau seret gambar ke sini · JPG, PNG, WebP maks. 5 MB</small>
                         </>
                       )}
                     </label>
@@ -767,17 +807,118 @@ export default function OprecBuilder({ oprecId }) {
                         />
                       </label>
 
-                      <label>
-                        URL Logo / Ikon
-                        <input
-                          type="text"
-                          value={division.logo}
-                          onChange={(e) =>
-                            setDivision(index, { logo: e.target.value })
-                          }
-                          placeholder="/images/divisi/bph.webp"
-                        />
-                      </label>
+                      <div className="oprec-builder__division-logo-zone">
+                        <span className="oprec-builder__label">Logo / Ikon Divisi</span>
+                        {division.logo ? (
+                          <div className="oprec-builder__logo-preview-card">
+                            <div className="oprec-builder__logo-thumb-wrapper">
+                              <img
+                                src={division.logo}
+                                alt={`Logo ${division.nama || "divisi"}`}
+                                className="oprec-builder__logo-thumb"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                }}
+                              />
+                            </div>
+                            <div className="oprec-builder__logo-meta">
+                              <span
+                                className="oprec-builder__logo-name truncate"
+                                title={division.logo}
+                              >
+                                {division.logo.startsWith("/images/divisi/")
+                                  ? division.logo.split("/").pop()
+                                  : "Logo Terpasang"}
+                              </span>
+                              <div className="oprec-builder__logo-actions">
+                                <label
+                                  className="oprec-btn oprec-btn--secondary oprec-builder__logo-btn"
+                                  title="Ganti logo divisi"
+                                >
+                                  <RefreshCw
+                                    size={12}
+                                    className={
+                                      uploadingLogoIndex === index ? "animate-spin" : ""
+                                    }
+                                  />
+                                  <span>
+                                    {uploadingLogoIndex === index ? "Mengunggah..." : "Ganti"}
+                                  </span>
+                                  <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    className="hidden"
+                                    disabled={uploadingLogoIndex === index}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) handleDivisionLogoUpload(index, file);
+                                      e.target.value = "";
+                                    }}
+                                  />
+                                </label>
+                                <button
+                                  type="button"
+                                  className="oprec-btn oprec-btn--danger oprec-builder__logo-btn"
+                                  onClick={() => setDivision(index, { logo: "" })}
+                                  disabled={uploadingLogoIndex === index}
+                                  title="Hapus logo divisi"
+                                >
+                                  <Trash2 size={12} />
+                                  <span>Hapus</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <label
+                            className={`oprec-builder__logo-drop ${
+                              dragOverLogoIndex === index ? "is-dragging" : ""
+                            }`}
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              setDragOverLogoIndex(index);
+                            }}
+                            onDragLeave={() => setDragOverLogoIndex(null)}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              setDragOverLogoIndex(null);
+                              const file = e.dataTransfer?.files?.[0];
+                              if (file) handleDivisionLogoUpload(index, file);
+                            }}
+                          >
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleDivisionLogoUpload(index, file);
+                                e.target.value = "";
+                              }}
+                              disabled={uploadingLogoIndex === index}
+                            />
+                            {uploadingLogoIndex === index ? (
+                              <div className="flex items-center justify-center gap-1.5 py-1 text-blue-600 font-mono text-xs w-full">
+                                <RefreshCw size={13} className="animate-spin" />
+                                <span>Mengunggah logo...</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2.5 text-slate-500 w-full min-w-0">
+                                <span className="oprec-builder__logo-pick-btn">
+                                  <UploadCloud size={13} />
+                                  <span>Pilih Berkas</span>
+                                </span>
+                                <span className="text-xs text-slate-500 font-normal truncate">
+                                  atau seret ke sini
+                                </span>
+                                <small className="text-[10px] text-slate-400 font-mono ml-auto shrink-0 hidden sm:inline">
+                                  Maks 5 MB
+                                </small>
+                              </div>
+                            )}
+                          </label>
+                        )}
+                      </div>
 
                       <label className="wide">
                         Deskripsi Singkat Divisi
