@@ -13,6 +13,9 @@ import {
   Calendar,
   Users,
   UserCheck,
+  ChevronDown,
+  ClipboardList,
+  ListChecks,
   ShoppingBag,
   Settings,
   LogOut,
@@ -58,6 +61,7 @@ const adminLinks = [
 
 export default function AdminLayout({ children }) {
   const [open, setOpen] = useState(false);
+  const [oprecMenuOpen, setOprecMenuOpen] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -109,6 +113,20 @@ export default function AdminLayout({ children }) {
               <div className="mt-8 flex flex-col gap-1.5">
                 {adminLinks.map((link) => {
                   const isActive = pathname === link.href || (link.href !== "/admin" && pathname.startsWith(link.href));
+                  if (link.href === "/admin/oprec") return <div key={link.href} className="admin-oprec-nav">
+                    <button type="button" className={cn("admin-oprec-nav__trigger", isActive && "admin-oprec-nav__trigger--active")}
+                      aria-expanded={open && oprecMenuOpen}
+                      onClick={() => { setOpen(true); setOprecMenuOpen((value) => !value); }}>
+                      <UserCheck aria-hidden="true" className="h-5 w-5 flex-shrink-0" />
+                      {open && <><span>Kelola OPREC</span><ChevronDown aria-hidden="true" className={cn("h-4 w-4 ml-auto transition-transform", oprecMenuOpen && "rotate-180")} /></>}
+                    </button>
+                    {open && oprecMenuOpen && <div className="admin-oprec-nav__submenu">
+                      <Link href="/admin/oprec" aria-current={pathname === "/admin/oprec" ? "page" : undefined} onClick={() => { if (window.innerWidth < 768) setOpen(false); }}><ClipboardList aria-hidden="true" className="h-4 w-4" /> Pendaftaran</Link>
+                      <Link href="/admin/oprec/test" aria-current={pathname === "/admin/oprec/test" ? "page" : undefined} onClick={() => { if (window.innerWidth < 768) setOpen(false); }}>Tes tulis</Link>
+                      <Link href="/admin/oprec/announcement" aria-current={pathname === "/admin/oprec/announcement" ? "page" : undefined} onClick={() => { if (window.innerWidth < 768) setOpen(false); }}>Pengumuman</Link>
+                      <Link href="/admin/oprec/answers" aria-current={pathname === "/admin/oprec/answers" ? "page" : undefined} onClick={() => { if (window.innerWidth < 768) setOpen(false); }}><ListChecks aria-hidden="true" className="h-4 w-4" /> Jawaban tes tulis</Link>
+                    </div>}
+                  </div>;
                   return (
                     <SidebarLink
                       key={link.href}

@@ -229,8 +229,13 @@ bukan transformasi seluruh ikon. Semua animasi mematuhi reduced motion.
 
 Verifikasi terakhir: production build Next.js dan suite Laravel (40 tes, 307
 assertion) lulus. Kedua migrasi OPREC sudah Ran pada database lokal (batch 19).
-Smoke test browser belum dijalankan. Penilaian tes dan tampilan jawaban admin
-belum dibuat.
+Smoke test browser belum dijalankan.
+
+### Penilaian tes tulis admin — 25 September 2026
+
+- Sidebar Kelola OPREC mempunyai subhalaman Pendaftaran, Tes tulis, Pengumuman, dan Jawaban tes tulis. Halaman jawaban menampilkan kolom sesuai `form_fields`, filter divisi pilihan pertama, dan pagination 20 jawaban per halaman. Jawaban serta NIM hanya lewat API privat admin.
+- `GET /api/admin/oprec/{oprec}/stages/{stage}/answers` menerima `division_id`/`page`; `PUT /api/admin/oprec/{oprec}/stages/{stage}/answers/{submission}/score` menerima `score` 0–100 (maksimal dua desimal) dan `note` opsional. Satu penilai memiliki satu skor per jawaban; update mengubah nilai miliknya.
+- `oprec_test_scores` menyimpan `reviewer_id` dan timestamps. Rata-rata dibulatkan dua desimal; peringkat dihitung per divisi pilihan pertama sebelum pagination. Nilai sama berbagi peringkat dan jawaban tanpa nilai tidak diperingkatkan. API penilaian kini khusus admin resmi. Akun/role penilai khusus masih pekerjaan selanjutnya.
 
 ## Revisi ringkasan admin — 25 September 2026
 

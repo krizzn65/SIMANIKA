@@ -383,9 +383,9 @@ export function Navbar() {
 
   return (
     <header className="site-header">
-      <div className="site-header__inner">
-        {/* Desktop Navbar Capsule (hidden on mobile) */}
-        <div className="nav-capsule">
+      <div className="site-header__container">
+        {/* Left: Brand / Logo */}
+        <div className="site-header__left">
           <Link
             className="brand-mark"
             href="/"
@@ -400,276 +400,280 @@ export function Navbar() {
             }}
           >
             <Image
-              alt=""
+              alt="Logo SIMANIKA"
               className="brand-mark__logo"
-              height={44}
+              height={36}
               priority
-              sizes="44px"
+              sizes="36px"
               src="/images/logos/Logo-MIF-2020-nav.webp"
-              width={44}
+              width={36}
             />
+            <span className="brand-mark__name">SIMANIKA</span>
           </Link>
-
-          <nav className="desktop-nav" aria-label="Navigasi utama">
-            {links.map((link) => {
-              const isHome = link.href === "/";
-              const active = isActiveLink(link.href);
-
-              if (isHome) {
-                return (
-                  <div
-                    key={link.href}
-                    className={`nav-dropdown ${isHomeMenuOpen ? "nav-dropdown--open" : ""}`}
-                    ref={homeDropdownRef}
-                    onMouseEnter={handleHomeMouseEnter}
-                    onMouseLeave={handleHomeMouseLeave}
-                  >
-                    <Link
-                      aria-current={active ? "page" : undefined}
-                      className={active ? "nav-link nav-link--active" : "nav-link"}
-                      href={link.href}
-                      onClick={handleHomeClick}
-                      aria-expanded={isHomeMenuOpen}
-                      aria-haspopup="true"
-                    >
-                      <AnimatedNavIcon name={link.icon} />
-                      <span>{link.label}</span>
-                      <span className="nav-dropdown__chevron" aria-hidden="true">
-                        <svg viewBox="0 0 12 12" fill="none" width="9" height="9">
-                          <path
-                            d="M2.5 4.5L6 8L9.5 4.5"
-                            stroke="currentColor"
-                            strokeWidth="1.6"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </span>
-                    </Link>
-                  </div>
-                );
-              }
-
-              return (
-                <Link
-                  aria-current={active ? "page" : undefined}
-                  className={active ? "nav-link nav-link--active" : "nav-link"}
-                  href={link.href}
-                  key={link.href}
-                  onClick={() => {
-                    if (pathname !== link.href) {
-                      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-                    }
-                  }}
-                >
-                  <AnimatedNavIcon name={link.icon} />
-                  <span>{link.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Desktop Multi-Column Sub-Navbar Grid */}
-          <div
-            className={`nav-subgrid ${isHomeMenuOpen ? "nav-subgrid--open" : ""}`}
-            ref={subbarRef}
-            onMouseEnter={handleHomeMouseEnter}
-            onMouseLeave={handleHomeMouseLeave}
-            role="menu"
-            aria-label="Sub navigasi landing page"
-          >
-            <div className="nav-subgrid__header">
-              <span className="nav-subgrid__tag">BAGIAN LANDING PAGE</span>
-              <span className="nav-subgrid__hint">PILIH BAGIAN</span>
-            </div>
-            <div className="nav-subgrid__list">
-              {landingSections.map((sec) => (
-                <Link
-                  key={sec.id}
-                  href={sec.href}
-                  className={`nav-subgrid__item ${activeSection === sec.id ? "nav-subgrid__item--active" : ""}`}
-                  onClick={(e) => handleSectionClick(e, sec.id)}
-                  role="menuitem"
-                >
-                  <span className="nav-subgrid__badge">{sec.badge}</span>
-                  <div className="nav-subgrid__body">
-                    <span className="nav-subgrid__title">{sec.title}</span>
-                    <span className="nav-subgrid__desc">{sec.desc}</span>
-                  </div>
-                  <span className="nav-subgrid__arrow" aria-hidden="true">
-                    →
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </div>
         </div>
 
-        {/* Desktop Login / Account with Sub-Navbar */}
-        {!checked ? (
-          <span className="login-link login-link--pending" role="status" aria-label="Memeriksa sesi akun" aria-busy="true">
-            <span className="login-link__tile" aria-hidden="true"><AnimatedUserIcon /></span>
-            <span>Memuat...</span>
-          </span>
-        ) : checkError ? (
-          <button type="button" className="login-link" onClick={retryCheck} aria-label="Coba lagi periksa sesi akun">
-            <span className="login-link__tile" aria-hidden="true"><AnimatedUserIcon /></span>
-            <span>Coba lagi</span>
-          </button>
-        ) : !account ? (
-          <Link className="login-link" href="/login">
-            <span className="login-link__tile" aria-hidden="true">
-              <AnimatedUserIcon />
-            </span>
-            <span>Login</span>
-          </Link>
-        ) : (
-          <div
-            className="nav-account"
-            ref={accountMenuRef}
-            onMouseEnter={handleAccountMouseEnter}
-            onMouseLeave={handleAccountMouseLeave}
-          >
-            <button
-              type="button"
-              className={`login-link login-link--account ${isAccountMenuOpen ? "login-link--open" : ""}`}
-              onClick={handleAccountToggle}
-              aria-expanded={isAccountMenuOpen}
-              aria-haspopup="true"
-              aria-label={`Menu akun ${displayName}`}
-            >
-              <span className="login-link__tile login-link__tile--avatar" aria-hidden="true">
-                <UserAvatar
-                  src={account.fotoProfil}
-                  name={displayName}
-                  email={account.email}
-                  fontSize="0.95rem"
-                />
-              </span>
-              <span className="login-link__name" title={displayName}>
-                {displayName}
-              </span>
-              <span className="login-link__chevron" aria-hidden="true">
-                <svg viewBox="0 0 12 12" fill="none" width="9" height="9">
-                  <path
-                    d="M2.5 4.5L6 8L9.5 4.5"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-            </button>
+        {/* Center: Halaman-halaman Navigasi */}
+        <nav className="site-header__center desktop-nav" aria-label="Navigasi utama">
+          {links.map((link) => {
+            const isHome = link.href === "/";
+            const active = isActiveLink(link.href);
 
-            {/* Desktop Sub-Navbar Dashboard Floating Menu */}
-            <div
-              className={`nav-account-menu ${isAccountMenuOpen ? "nav-account-menu--open" : ""}`}
-              role="menu"
-              aria-label="Sub navigasi dashboard akun"
-            >
-              <div className="nav-account-menu__header">
-                <div className="nav-account-menu__user">
-                  <div className="nav-account-menu__avatar" aria-hidden="true">
-                    <UserAvatar
-                      src={account.fotoProfil}
-                  name={displayName}
-                      email={account.email}
-                      fontSize="1rem"
-                    />
-                  </div>
-                  <div className="nav-account-menu__info">
-                    <span className="nav-account-menu__name">{displayName}</span>
-                    <span className="nav-account-menu__email">{account.email}</span>
+            if (isHome) {
+              return (
+                <div
+                  key={link.href}
+                  className={`nav-dropdown ${isHomeMenuOpen ? "nav-dropdown--open" : ""}`}
+                  ref={homeDropdownRef}
+                  onMouseEnter={handleHomeMouseEnter}
+                  onMouseLeave={handleHomeMouseLeave}
+                >
+                  <Link
+                    aria-current={active ? "page" : undefined}
+                    className={active ? "nav-link nav-link--active" : "nav-link"}
+                    href={link.href}
+                    onClick={handleHomeClick}
+                    aria-expanded={isHomeMenuOpen}
+                    aria-haspopup="true"
+                  >
+                    <AnimatedNavIcon name={link.icon} />
+                    <span>{link.label}</span>
+                    <span className="nav-dropdown__chevron" aria-hidden="true">
+                      <svg viewBox="0 0 12 12" fill="none" width="9" height="9">
+                        <path
+                          d="M2.5 4.5L6 8L9.5 4.5"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </span>
+                  </Link>
+
+                  {/* Desktop Multi-Column Sub-Navbar Grid */}
+                  <div
+                    className={`nav-subgrid ${isHomeMenuOpen ? "nav-subgrid--open" : ""}`}
+                    ref={subbarRef}
+                    onMouseEnter={handleHomeMouseEnter}
+                    onMouseLeave={handleHomeMouseLeave}
+                    role="menu"
+                    aria-label="Sub navigasi landing page"
+                  >
+                    <div className="nav-subgrid__header">
+                      <span className="nav-subgrid__tag">BAGIAN LANDING PAGE</span>
+                      <span className="nav-subgrid__hint">PILIH BAGIAN</span>
+                    </div>
+                    <div className="nav-subgrid__list">
+                      {landingSections.map((sec) => (
+                        <Link
+                          key={sec.id}
+                          href={sec.href}
+                          className={`nav-subgrid__item ${activeSection === sec.id ? "nav-subgrid__item--active" : ""}`}
+                          onClick={(e) => handleSectionClick(e, sec.id)}
+                          role="menuitem"
+                        >
+                          <span className="nav-subgrid__badge">{sec.badge}</span>
+                          <div className="nav-subgrid__body">
+                            <span className="nav-subgrid__title">{sec.title}</span>
+                            <span className="nav-subgrid__desc">{sec.desc}</span>
+                          </div>
+                          <span className="nav-subgrid__arrow" aria-hidden="true">
+                            →
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              );
+            }
 
-              <div className="nav-account-menu__divider" role="separator" />
+            return (
+              <Link
+                aria-current={active ? "page" : undefined}
+                className={active ? "nav-link nav-link--active" : "nav-link"}
+                href={link.href}
+                key={link.href}
+                onClick={() => {
+                  if (pathname !== link.href) {
+                    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+                  }
+                }}
+              >
+                <AnimatedNavIcon name={link.icon} />
+                <span>{link.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
 
-              <div className="nav-account-menu__list">
-                {account.role === "admin" ? (
-                  <Link
-                    href="/admin"
-                    className={`nav-account-menu__item nav-account-menu__item--admin ${pathname.startsWith("/admin") ? "nav-account-menu__item--active" : ""}`}
-                    onClick={() => setIsAccountMenuOpen(false)}
-                    role="menuitem"
-                  >
-                    <span className="nav-account-menu__icon-wrap" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                      </svg>
-                    </span>
-                    <div className="nav-account-menu__item-text">
-                      <div className="nav-account-menu__title-row">
-                        <span className="nav-account-menu__item-title">Admin Console</span>
-                        <span className="nav-account-menu__admin-pill">Admin</span>
+        {/* Right: Login / Account Menu & Mobile Toggle */}
+        <div className="site-header__right">
+          {!checked ? (
+            <span className="login-link login-link--pending" role="status" aria-label="Memeriksa sesi akun" aria-busy="true">
+              <span className="login-link__tile" aria-hidden="true"><AnimatedUserIcon /></span>
+              <span>Memuat...</span>
+            </span>
+          ) : checkError ? (
+            <button type="button" className="login-link" onClick={retryCheck} aria-label="Coba lagi periksa sesi akun">
+              <span className="login-link__tile" aria-hidden="true"><AnimatedUserIcon /></span>
+              <span>Coba lagi</span>
+            </button>
+          ) : !account ? (
+            <Link className="login-link" href="/login">
+              <span className="login-link__tile" aria-hidden="true">
+                <AnimatedUserIcon />
+              </span>
+              <span>Login</span>
+            </Link>
+          ) : (
+            <div
+              className="nav-account"
+              ref={accountMenuRef}
+              onMouseEnter={handleAccountMouseEnter}
+              onMouseLeave={handleAccountMouseLeave}
+            >
+              <button
+                type="button"
+                className={`login-link login-link--account ${isAccountMenuOpen ? "login-link--open" : ""}`}
+                onClick={handleAccountToggle}
+                aria-expanded={isAccountMenuOpen}
+                aria-haspopup="true"
+                aria-label={`Menu akun ${displayName}`}
+              >
+                <span className="login-link__tile login-link__tile--avatar" aria-hidden="true">
+                  <UserAvatar
+                    src={account.fotoProfil}
+                    name={displayName}
+                    email={account.email}
+                    fontSize="0.95rem"
+                  />
+                </span>
+                <span className="login-link__name" title={displayName}>
+                  {displayName}
+                </span>
+                <span className="login-link__chevron" aria-hidden="true">
+                  <svg viewBox="0 0 12 12" fill="none" width="9" height="9">
+                    <path
+                      d="M2.5 4.5L6 8L9.5 4.5"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+              </button>
+
+              {/* Desktop Sub-Navbar Dashboard Floating Menu */}
+              <div
+                className={`nav-account-menu ${isAccountMenuOpen ? "nav-account-menu--open" : ""}`}
+                role="menu"
+                aria-label="Sub navigasi dashboard akun"
+              >
+                <div className="nav-account-menu__header">
+                  <div className="nav-account-menu__user">
+                    <div className="nav-account-menu__avatar" aria-hidden="true">
+                      <UserAvatar
+                        src={account.fotoProfil}
+                        name={displayName}
+                        email={account.email}
+                        fontSize="1rem"
+                      />
+                    </div>
+                    <div className="nav-account-menu__info">
+                      <span className="nav-account-menu__name">{displayName}</span>
+                      <span className="nav-account-menu__email">{account.email}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="nav-account-menu__divider" role="separator" />
+
+                <div className="nav-account-menu__list">
+                  {account.role === "admin" ? (
+                    <Link
+                      href="/admin"
+                      className={`nav-account-menu__item nav-account-menu__item--admin ${pathname.startsWith("/admin") ? "nav-account-menu__item--active" : ""}`}
+                      onClick={() => setIsAccountMenuOpen(false)}
+                      role="menuitem"
+                    >
+                      <span className="nav-account-menu__icon-wrap" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                      </span>
+                      <div className="nav-account-menu__item-text">
+                        <div className="nav-account-menu__title-row">
+                          <span className="nav-account-menu__item-title">Admin Console</span>
+                          <span className="nav-account-menu__admin-pill">Admin</span>
+                        </div>
+                        <span className="nav-account-menu__item-desc">Kelola event, OPREC & sistem</span>
                       </div>
-                      <span className="nav-account-menu__item-desc">Kelola event, OPREC & sistem</span>
-                    </div>
-                    <span className="nav-account-menu__arrow" aria-hidden="true">→</span>
-                  </Link>
-                ) : (
-                  <Link
-                    href="/dashboard"
-                    className={`nav-account-menu__item ${pathname === "/dashboard" ? "nav-account-menu__item--active" : ""}`}
-                    onClick={() => setIsAccountMenuOpen(false)}
+                      <span className="nav-account-menu__arrow" aria-hidden="true">→</span>
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/dashboard"
+                      className={`nav-account-menu__item ${pathname === "/dashboard" ? "nav-account-menu__item--active" : ""}`}
+                      onClick={() => setIsAccountMenuOpen(false)}
+                      role="menuitem"
+                    >
+                      <span className="nav-account-menu__icon-wrap" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                          <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                        </svg>
+                      </span>
+                      <div className="nav-account-menu__item-text">
+                        <span className="nav-account-menu__item-title">Dashboard</span>
+                        <span className="nav-account-menu__item-desc">Halaman utama & ringkasan</span>
+                      </div>
+                      <span className="nav-account-menu__arrow" aria-hidden="true">→</span>
+                    </Link>
+                  )}
+                </div>
+
+                <div className="nav-account-menu__divider" role="separator" />
+
+                <div className="nav-account-menu__footer">
+                  {accountError && <p className="nav-account-menu__error" role="alert">{accountError}</p>}
+                  <button
+                    type="button"
+                    className="nav-account-menu__logout-btn"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
                     role="menuitem"
                   >
-                    <span className="nav-account-menu__icon-wrap" aria-hidden="true">
+                    <span className="nav-account-menu__logout-icon" aria-hidden="true">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                        <rect x="14" y="3" width="7" height="7" rx="1.5" />
-                        <rect x="14" y="14" width="7" height="7" rx="1.5" />
-                        <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
                       </svg>
                     </span>
-                    <div className="nav-account-menu__item-text">
-                      <span className="nav-account-menu__item-title">Dashboard</span>
-                      <span className="nav-account-menu__item-desc">Halaman utama & ringkasan</span>
-                    </div>
-                    <span className="nav-account-menu__arrow" aria-hidden="true">→</span>
-                  </Link>
-                )}
-              </div>
-
-              <div className="nav-account-menu__divider" role="separator" />
-
-              <div className="nav-account-menu__footer">
-                {accountError && <p className="nav-account-menu__error" role="alert">{accountError}</p>}
-                <button
-                  type="button"
-                  className="nav-account-menu__logout-btn"
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                  role="menuitem"
-                >
-                  <span className="nav-account-menu__logout-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                      <polyline points="16 17 21 12 16 7" />
-                      <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                  </span>
-                  <span>{isLoggingOut ? "Sedang keluar..." : "Keluar dari Akun"}</span>
-                </button>
+                    <span>{isLoggingOut ? "Sedang keluar..." : "Keluar dari Akun"}</span>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Mobile Circular Menu Button (visible on mobile only, placed top-right) */}
-        <button
-          aria-controls={open ? "mobile-navigation" : undefined}
-          aria-expanded={open}
-          aria-label={open ? "Tutup menu navigasi" : "Buka menu navigasi"}
-          className="menu-toggle"
-          onClick={handleToggle}
-          ref={menuButtonRef}
-          type="button"
-        >
-          <MenuIcon open={open} />
-        </button>
+          {/* Mobile Circular Menu Button */}
+          <button
+            aria-controls={open ? "mobile-navigation" : undefined}
+            aria-expanded={open}
+            aria-label={open ? "Tutup menu navigasi" : "Buka menu navigasi"}
+            className="menu-toggle"
+            onClick={handleToggle}
+            ref={menuButtonRef}
+            type="button"
+          >
+            <MenuIcon open={open} />
+          </button>
+        </div>
       </div>
 
       {/* Mobile Drawer (Half-Screen Slide-in from Right) */}

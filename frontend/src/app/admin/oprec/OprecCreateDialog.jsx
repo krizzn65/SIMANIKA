@@ -28,7 +28,7 @@ function TestIcon({ active = false }) {
   </motion.svg>;
 }
 
-export default function OprecCreateDialog({ open, onClose, onCreated, selectedOprec, editingStage = null }) {
+export default function OprecCreateDialog({ open, onClose, onCreated, selectedOprec, editingStage = null, initialType = "" }) {
   const router = useRouter();
   const [data, setData] = useState(initial);
   const [posterFile, setPosterFile] = useState(null);
@@ -44,9 +44,9 @@ export default function OprecCreateDialog({ open, onClose, onCreated, selectedOp
       tanggal_buka: stage.tanggalBuka ? new Date(stage.tanggalBuka).toLocaleString("sv-SE", { timeZone: "Asia/Jakarta" }).replace(" ", "T").slice(0, 16) : "",
       tanggal_tutup: stage.tanggalTutup ? new Date(stage.tanggalTutup).toLocaleString("sv-SE", { timeZone: "Asia/Jakarta" }).replace(" ", "T").slice(0, 16) : "",
       poster: stage.poster || "", published: Boolean(stage.published),
-    } : initial);
+    } : { ...initial, type: initialType });
     setPosterFile(null); setPosterPreview(""); setError("");
-  }, [open, editingStage, selectedOprec]);
+  }, [open, editingStage, selectedOprec, initialType]);
   useEffect(() => () => { if (posterPreview) URL.revokeObjectURL(posterPreview); }, [posterPreview]);
   useEffect(() => {
     if (!open) return;

@@ -32,7 +32,8 @@ test("announcement publication and schedule gate result lookup", () => {
 });
 test("reject malformed periods and dates without timezones", () => {
   assert.equal(normalizeOprec(null), null);
-  for (const data of [undefined, {}, { ...raw, id: "../admin" }, { ...raw, status: "draft" }, { ...raw, tanggalBuka: "2026-10-01T08:00:00" }, { ...raw, tanggalTutup: raw.tanggalBuka }]) assert.throws(() => normalizeOprec(data));
+  assert.equal(oprecState(normalizeOprec({ ...raw, status: "draft" }), start).key, "empty");
+  for (const data of [undefined, {}, { ...raw, id: "../admin" }, { ...raw, status: "unknown" }, { ...raw, tanggalBuka: "2026-10-01T08:00:00" }, { ...raw, tanggalTutup: raw.tanggalBuka }]) assert.throws(() => normalizeOprec(data));
 });
 test("field schema requires identity, unique safe keys and supported types", () => {
   assert.equal(normalizeFields(identity).length, 2);
