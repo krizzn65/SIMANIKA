@@ -47,7 +47,15 @@ class OprecWorkspaceController extends Controller
                     'tanggalBuka' => $oprec->tanggal_buka?->toIso8601String(),
                     'tanggalTutup' => $oprec->tanggal_tutup?->toIso8601String(),
                     'schemaVersion' => $oprec->schema_version,
-                    'formFields' => $oprec->form_fields ?? [],
+                    'formFields' => collect($oprec->form_fields ?? [])->map(function ($field) use ($oprec) {
+                        if (in_array($field['name'] ?? '', ['divisi_pilihan_1', 'divisi_pilihan_2'], true)) {
+                            $field['options'] = $oprec->divisions->map(fn ($division) => [
+                                'value' => (string) $division->id,
+                                'label' => $division->nama,
+                            ])->all();
+                        }
+                        return $field;
+                    })->all(),
                     'formIntro' => $oprec->form_intro ?? null,
                     'divisiTersedia' => $oprec->divisions->map(fn ($d) => [
                         'id' => (string) $d->id,
@@ -55,6 +63,7 @@ class OprecWorkspaceController extends Controller
                         'namaLengkap' => $d->nama_lengkap,
                         'deskripsi' => $d->deskripsi,
                         'kuota' => $d->kuota,
+                        'logo' => $d->logo,
                     ])->values()->all(),
                     'divisions' => $oprec->divisions->map(fn ($d) => [
                         'id' => $d->id,
@@ -62,6 +71,7 @@ class OprecWorkspaceController extends Controller
                         'namaLengkap' => $d->nama_lengkap,
                         'deskripsi' => $d->deskripsi,
                         'kuota' => $d->kuota,
+                        'logo' => $d->logo,
                     ])->values()->all(),
                     'pengumuman' => [
                         'published' => (bool) $oprec->pengumuman_published,

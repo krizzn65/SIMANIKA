@@ -55,15 +55,29 @@ export function normalizeOprec(raw) {
   const tanggalBuka = date(raw.tanggalBuka ?? raw.tanggal_buka);
   const tanggalTutup = date(raw.tanggalTutup ?? raw.tanggal_tutup);
   if (tanggalBuka && tanggalTutup && Date.parse(tanggalTutup) <= Date.parse(tanggalBuka)) throw new Error("Invalid OPREC date range");
-  const divisions = raw.divisiTersedia ?? raw.divisi_tersedia ?? [];
+  const divisions = raw.divisiTersedia ?? raw.divisi_tersedia ?? raw.divisions ?? [];
   if (!Array.isArray(divisions)) throw new Error("Invalid OPREC divisions");
+  const rawFields = Array.isArray(raw.formFields ?? raw.form_fields)
+    ? (raw.formFields ?? raw.form_fields).map((field) => {
+        if (field && ["divisi_pilihan_1", "divisi_pilihan_2"].includes(field.name) && (!field.options || !field.options.length)) {
+          return {
+            ...field,
+            options: divisions.map((d, index) => ({
+              value: String(d.id ?? index),
+              label: text(d.nama) || text(d.namaLengkap ?? d.nama_lengkap) || `Divisi #${d.id ?? index}`,
+            })),
+          };
+        }
+        return field;
+      })
+    : [];
   const announcement = raw.pengumuman ?? {};
   return {
     id: String(raw.id), periode: text(raw.periode), status: raw.status, tanggalBuka, tanggalTutup,
     headline: text(raw.headline), deskripsi: text(raw.deskripsi), poster: safePosterUrl(raw.poster),
     posterAlt: text(raw.posterAlt ?? raw.poster_alt) || `Poster OPREC ${text(raw.periode)}`,
     schemaVersion: String(raw.schemaVersion ?? raw.schema_version ?? "1"),
-    formFields: normalizeFields(raw.formFields ?? raw.form_fields ?? []),
+    formFields: normalizeFields(rawFields),
     formIntro: text(raw.formIntro ?? raw.form_intro),
     divisiTersedia: divisions.map((item, index) => {
       if (!item || !text(item.nama)) throw new Error("Invalid OPREC division");

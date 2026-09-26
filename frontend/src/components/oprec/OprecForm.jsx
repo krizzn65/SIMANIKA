@@ -3,6 +3,46 @@
 import { useRef, useState } from "react";
 import { validateOprecForm } from "@/lib/oprec";
 
+const DEFAULT_DIVISION_LOGOS = {
+  bph: "/images/divisi/bph.webp",
+  humas: "/images/divisi/humas.webp",
+  psdm: "/images/divisi/psdm.webp",
+  kominfo: "/images/divisi/kominfo.webp",
+  kwu: "/images/divisi/kwu.webp",
+};
+
+function DivisionChoiceItem({ option, division, common, id }) {
+  const [imgError, setImgError] = useState(false);
+  const name = division?.nama || option.label;
+  const fullName = division?.namaLengkap;
+  const key = name?.toLowerCase()?.trim();
+  const logoSrc = (!imgError && (division?.logo || DEFAULT_DIVISION_LOGOS[key])) || null;
+
+  return (
+    <label className="oprec-division-choice" key={option.value}>
+      <input {...common} id={`${id}-${option.value}`} type="radio" value={option.value} />
+      {logoSrc ? (
+        <img
+          src={logoSrc}
+          alt=""
+          width="26"
+          height="26"
+          className="oprec-division-choice__logo"
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <span className="oprec-division-choice__fallback" aria-hidden="true">
+          {name.slice(0, 2).toUpperCase()}
+        </span>
+      )}
+      <span className="oprec-division-choice__text">
+        <strong>{name}</strong>
+        {fullName && fullName !== name && <small>{fullName}</small>}
+      </span>
+    </label>
+  );
+}
+
 function Field({ field, error, divisions = [] }) {
   const id = `oprec-field-${field.name}`;
   const isWide =
@@ -42,25 +82,27 @@ function Field({ field, error, divisions = [] }) {
       />
     );
   } else if (field.name === "divisi_pilihan_1" || field.name === "divisi_pilihan_2") {
+    const availableOptions = (field.options && field.options.length > 0)
+      ? field.options
+      : divisions.map((item, idx) => ({
+          value: String(item.id ?? idx),
+          label: item.nama || item.namaLengkap || `Divisi #${item.id ?? idx}`,
+        }));
+
     control = (
       <div className="oprec-division-choices">
-        {field.options.map((option) => {
-          const division = divisions.find((item) => item.id === option.value);
+        {availableOptions.map((option) => {
+          const division = divisions.find(
+            (item) => String(item.id) === String(option.value) || item.nama?.toLowerCase() === option.label?.toLowerCase()
+          );
           return (
-            <label className="oprec-division-choice" key={option.value}>
-              <input {...common} id={`${id}-${option.value}`} type="radio" value={option.value} />
-              <span className="oprec-division-choice__content">
-                {division?.logo ? (
-                  <img src={division.logo} alt="" width="36" height="36" />
-                ) : (
-                  <span className="oprec-division-choice__fallback" aria-hidden="true">//</span>
-                )}
-                <span>
-                  <strong>{division?.namaLengkap || option.label}</strong>
-                  <small>{division?.deskripsi || option.label}</small>
-                </span>
-              </span>
-            </label>
+            <DivisionChoiceItem
+              key={option.value}
+              option={option}
+              division={division}
+              common={common}
+              id={id}
+            />
           );
         })}
       </div>

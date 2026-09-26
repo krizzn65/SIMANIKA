@@ -71,10 +71,14 @@ function WorkspaceContent() {
 
   let normalizedOprec = null;
   if (data?.oprec) {
+    const rawOprec = {
+      ...data.oprec,
+      divisiTersedia: data.oprec.divisiTersedia || data.oprec.divisions || [],
+    };
     try {
-      normalizedOprec = normalizeOprec(data.oprec);
-    } catch (e) {
-      normalizedOprec = data.oprec;
+      normalizedOprec = normalizeOprec(rawOprec);
+    } catch {
+      normalizedOprec = rawOprec;
     }
   }
 
