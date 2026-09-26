@@ -17,9 +17,15 @@ class OprecController extends Controller
 
     public function uploadPoster(Request $request)
     {
-        $request->validate(['poster' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120']]);
-        $path = $request->file('poster')->store('oprec/posters', 'public');
+        $field = $request->hasFile('logo') ? 'logo' : 'poster';
+        $request->validate([$field => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120']]);
+        $path = $request->file($field)->store('oprec/posters', 'public');
         return response()->json(['url' => route('public.oprec-poster', ['filename' => basename($path)])]);
+    }
+
+    public function uploadLogo(Request $request)
+    {
+        return $this->uploadPoster($request);
     }
 
     public function store(SaveOprecRequest $request)

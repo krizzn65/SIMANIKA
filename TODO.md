@@ -6,6 +6,14 @@
 
 ## Audit kesesuaian `architecture.md` (22 September 2026)
 
+### Integrasi Divisi OPREC ke Tab Kelola Divisi & Pembersihan Dead Code (27 September 2026)
+
+- [x] Rombak total arsitektur form divisi: Bagian divisi murni terintegrasi langsung dengan tab "Kelola Divisi". Kartu pertanyaan sistem `05 Divisi pilihan` dikembalikan tetap berada di **form bagian bawah** (setelah pertanyaan identitas/kustom), tanpa input tipe/label yang membingungkan (screenshot 2), melainkan memuat box pemberitahuan integrasi otomatis dan tombol pintas konfigurasi ke tab "Kelola Divisi".
+- [x] Pembersihan total dead code backend (BE): Menghapus kewajiban `divisi_pilihan_1` pada `SaveOprecRequest.php`, memfilter legacy `divisi_pilihan_*` pada `OprecResource.php` dan `OprecWorkspaceController.php`, membersihkan Rule::in check pada `OprecRegistrationController.php`, dan memperbarui `OprecThreeDivisionChoicesTest.php`.
+- [x] Tombol "Konfigurasi di Formulir" (`Sliders`) terpasang pada header tab "Kelola Divisi" di `OprecBuilder.jsx`, lengkap dengan panel konfigurasi integrasi interaktif Neo-Arcade Editorial, status integrasi sistem, validasi kuota, ringkasan divisi aktif, dan shortcut navigasi.
+- [x] Formulir publik (`OprecForm.jsx`) & Live Preview: Pilihan 3 kartu divisi konsisten dirender di **bagian bawah formulir** setelah data diri/pertanyaan formulir, langsung dari `divisiTersedia`.
+- [x] Seluruh 41 tes backend (322 assertions) lulus 100%, 20 tes unit frontend lulus 100%, dan build produksi Next.js (`npm run build`) lulus dengan 0 error.
+
 ### OPREC: pilih tiga divisi dalam satu grid kartu (26 September 2026)
 
 - [x] Form peserta memilih tepat tiga divisi berbeda melalui kartu yang sudah ada; urutan klik menjadi prioritas. Adapter Next dan Laravel menolak pilihan kurang/duplikat/ID luar periode. Kolom pilihan ketiga dan rekap admin/user ditambahkan. Tes frontend 16 lulus, backend 42 tes/343 assertion lulus, dan build frontend lulus.
@@ -669,4 +677,6 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 | 2026-09-25 | Ringkasan admin OPREC | Dua kartu ringkasan digabung menjadi satu kartu Pendaftaran yang lebih ringkas. Label teknis `STATUS: OPEN` dan `Skema v1` dihilangkan dari tampilan; headline, deskripsi, jadwal, jumlah berkas, divisi, dan tahap berikutnya diberi hierarki serta kontras teks yang jelas. Build frontend lulus; pemeriksaan visual browser masih perlu. | AI |
 | 2026-09-25 | Penilaian tes OPREC | Subhalaman OPREC dan API penilaian privat ditambahkan; skor per penilai, rata-rata dan peringkat divisi dihitung server. Tabel `oprec_test_scores` bermigrasi pada DB lokal; tes backend 41/328 dan build frontend lulus. Akun penilai khusus serta smoke test browser masih tertunda. | AI |
 | 2026-09-27 | Warna merah tanda wajib (*) formulir OPREC | Seluruh simbol asterisk (*) penanda kolom wajib diisi pada form builder OPREC (OprecBuilder) dan dialog tambah tahap OPREC (OprecCreateDialog) diberi warna merah tegas (#ef4444 / rose-500) melalui class scoped .oprec-builder__required dan .oprec-dialog__required. Verifikasi lulus: tes frontend 20/20 lulus dan Next.js production build lulus 26/26 routes. | AI |
+| 2026-09-27 | Upload gambar/logo divisi OPREC | Input teks URL logo divisi (/images/divisi/...) di OprecBuilder diganti total dengan komponen upload gambar interaktif: dilengkapi tombol upload eksplisit "Pilih Berkas" (.oprec-builder__logo-pick-btn), drag-and-drop & file picker, batas 5MB, format JPG/PNG/WebP, endpoint backend POST /api/admin/oprec/upload-logo, thumbnail pratinjau 32x32px, nama logo mono, tombol Ganti & Hapus, serta rendering dinamis di Live Preview. Dropzone poster juga dilengkapi tombol "Pilih Berkas Poster". Verifikasi lulus: tes frontend 20/20, backend Oprec 4 test/32 assertions, dan Next.js production build 26/26 routes. | AI |
+
 

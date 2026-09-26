@@ -800,6 +800,32 @@
   margin-top: 6px;
 }
 
+.oprec-builder__poster-pick-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  height: 32px !important;
+  padding: 0 14px !important;
+  background: #ffffff !important;
+  border: 1px solid #cad5e5 !important;
+  border-radius: 0 !important;
+  color: #0f172a !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.15s ease !important;
+  margin-top: 8px !important;
+  margin-bottom: 2px !important;
+}
+
+.oprec-builder__poster-drop:hover .oprec-builder__poster-pick-btn {
+  background: #eff6ff !important;
+  border-color: #155eef !important;
+  color: #155eef !important;
+  box-shadow: 2px 2px 0 rgba(21, 94, 239, 0.1) !important;
+}
+
 .oprec-builder__poster-drop small {
   font-size: 11px;
   color: #64748b;
@@ -918,6 +944,350 @@
   height: 140px;
   object-fit: cover;
   display: block;
+}
+
+/* Division Logo Upload Component */
+.oprec-builder__division-logo-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.oprec-builder__logo-drop {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 42px;
+  height: 42px;
+  background: #f8fafd;
+  border: 1px dashed #cad5e5;
+  border-radius: 0;
+  padding: 0 8px 0 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+.oprec-builder__logo-drop:hover {
+  border-color: #155eef;
+  background: #eff6ff;
+}
+
+.oprec-builder__logo-drop.is-dragging {
+  border-color: #155eef;
+  background: #eff6ff;
+  border-style: solid;
+}
+
+.oprec-builder__logo-pick-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  height: 28px !important;
+  padding: 0 10px !important;
+  background: #ffffff !important;
+  border: 1px solid #cad5e5 !important;
+  border-radius: 0 !important;
+  color: #0f172a !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.15s ease !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+}
+
+.oprec-builder__logo-drop:hover .oprec-builder__logo-pick-btn {
+  background: #eff6ff !important;
+  border-color: #155eef !important;
+  color: #155eef !important;
+  box-shadow: 2px 2px 0 rgba(21, 94, 239, 0.1) !important;
+}
+
+.oprec-builder__logo-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 42px;
+  height: 42px;
+  background: #ffffff;
+  border: 1px solid #cad5e5;
+  border-radius: 0;
+  padding: 4px 10px;
+  box-sizing: border-box;
+}
+
+.oprec-builder__logo-thumb-wrapper {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.oprec-builder__logo-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.oprec-builder__logo-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  min-width: 0;
+  gap: 8px;
+}
+
+.oprec-builder__logo-name {
+  font: 500 11px/1.3 "IBM Plex Mono", ui-monospace, monospace;
+  color: #475569;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.oprec-builder__logo-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+
+.oprec-builder__logo-btn {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  padding: 0 8px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  border-radius: 0 !important;
+  cursor: pointer !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+}
+
+.oprec-builder__logo-actions .oprec-btn--secondary {
+  background: #ffffff !important;
+  color: #1e293b !important;
+  border: 1px solid #cad5e5 !important;
+}
+
+.oprec-builder__logo-actions .oprec-btn--secondary:hover:not(:disabled) {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+.oprec-builder__logo-actions .oprec-btn--danger {
+  background: #ffffff !important;
+  color: #dc2626 !important;
+  border: 1px solid #fecaca !important;
+}
+
+.oprec-builder__logo-actions .oprec-btn--danger:hover:not(:disabled) {
+  background: #fef2f2 !important;
+  border-color: #dc2626 !important;
+}
+
+/* ==========================================================================
+   Division Configuration Panel & Integration Notice (Tab Divisi & Formulir)
+   ========================================================================== */
+
+.oprec-builder__division-config-panel {
+  background: #f8fafc;
+  border: 1px solid #94a3b8;
+  border-radius: 0 !important;
+  margin-bottom: 20px;
+  animation: oprecFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.oprec-builder__division-config-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #cad5e5;
+  flex-wrap: wrap;
+}
+
+.oprec-builder__division-config-header h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0a1020;
+  margin: 0;
+}
+
+.oprec-builder__badge-active {
+  font: 600 11px/1 "IBM Plex Mono", ui-monospace, monospace;
+  padding: 4px 8px;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  border-radius: 0 !important;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.oprec-builder__division-config-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.oprec-builder__division-config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.oprec-builder__division-config-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 12px 14px;
+  border-radius: 0 !important;
+}
+
+.oprec-builder__config-label {
+  display: block;
+  font: 600 11px/1.3 "IBM Plex Mono", monospace;
+  text-transform: uppercase;
+  color: #155eef;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.oprec-builder__config-desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #475569;
+  margin: 0;
+}
+
+.oprec-builder__config-desc b {
+  color: #0f172a;
+}
+
+.oprec-builder__division-config-summary {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 12px 14px;
+  border-radius: 0 !important;
+}
+
+.oprec-builder__division-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.oprec-builder__division-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  font-size: 12px;
+  color: #1e293b;
+  border-radius: 0 !important;
+}
+
+.oprec-builder__division-chip strong {
+  font-weight: 600;
+}
+
+.oprec-builder__chip-quota {
+  font: 500 10px/1 "IBM Plex Mono", monospace;
+  padding: 2px 5px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.oprec-builder__chip-unlimited {
+  font: 500 10px/1 "IBM Plex Mono", monospace;
+  padding: 2px 5px;
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.oprec-builder__division-config-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+/* Card Divisi Pilihan (Sistem & Terintegrasi di Form Bagian Bawah) */
+.oprec-builder__field--division {
+  border-left: 3px solid #2563eb !important;
+  background: #ffffff;
+}
+
+.oprec-builder__division-integrated-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.oprec-builder__division-integrated-details {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 0 !important;
+}
+
+.oprec-builder__division-integrated-details p {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #475569;
+  margin: 0;
+}
+
+.oprec-builder__division-integrated-details p b {
+  color: #0f172a;
+}
+
+.oprec-builder__division-integrated-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+  flex-wrap: wrap;
 }
 
 /* Responsive adjustments */

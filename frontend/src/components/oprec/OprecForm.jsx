@@ -222,7 +222,7 @@ export function OprecForm({ oprec, onSuccess }) {
     const form = event.currentTarget;
     const body = new FormData(form);
     selectedDivisions.forEach((value, index) => body.set(`divisi_pilihan_${index + 1}`, value));
-    const nextErrors = validateOprecForm(oprec.formFields, body);
+    const nextErrors = validateOprecForm(oprec.formFields, body, Date.now(), oprec.divisiTersedia);
     if (Object.keys(nextErrors).length) {
       showErrors(nextErrors, "Periksa kolom yang ditandai sebelum mengirim.");
       return;
@@ -273,7 +273,7 @@ export function OprecForm({ oprec, onSuccess }) {
     );
   }
 
-  if (!oprec.formFields.length) {
+  if (!oprec.formFields.length && (!oprec.divisiTersedia || !oprec.divisiTersedia.length)) {
     return (
       <div className="event-form-feedback" role="status">
         <h3 style={{ margin: "0 0 6px", fontSize: "14px", fontWeight: 700 }}>Formulir sedang disiapkan.</h3>
@@ -290,7 +290,15 @@ export function OprecForm({ oprec, onSuccess }) {
           <p>{message}</p>
           {Object.keys(errors).length > 0 && (
             <ul>
-              {oprec.formFields.filter((field) => !["divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name))
+              {errors.divisi_pilihan_1 && (
+                <li>
+                  <a href="#oprec-field-divisi_pilihan_1">
+                    Divisi Pilihan: {errors.divisi_pilihan_1}
+                  </a>
+                </li>
+              )}
+              {oprec.formFields
+                .filter((field) => !["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name))
                 .filter((field) => errors[field.name])
                 .map((field) => (
                   <li key={field.name}>
@@ -305,16 +313,68 @@ export function OprecForm({ oprec, onSuccess }) {
       )}
       <fieldset disabled={pending}>
         <legend className="event-form-sr-only">Formulir pendaftaran OPREC</legend>
-        {oprec.formFields.filter((field) => !["divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name)).map((field) => (
-          <Field
-            key={field.name}
-            field={field}
-            error={errors[field.name]}
-            divisions={oprec.divisiTersedia}
-            selectedDivisions={selectedDivisions}
-            onToggleDivision={toggleDivision}
-          />
-        ))}
+
+        {oprec.formFields
+          .filter((field) => !["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name))
+          .map((field) => (
+            <Field
+              key={field.name}
+              field={field}
+              error={errors[field.name]}
+              divisions={oprec.divisiTersedia}
+              selectedDivisions={selectedDivisions}
+              onToggleDivision={toggleDivision}
+            />
+          ))}
+
+        {/* Bagian Pilihan Divisi di Form Bagian Bawah */}
+        {oprec.divisiTersedia && oprec.divisiTersedia.length > 0 && (
+          <div className="event-dynamic-field event-dynamic-field--wide oprec-division-section" id="oprec-field-divisi_pilihan_1">
+            <label htmlFor="oprec-division-choices-list">
+              Divisi Pilihan <b aria-label="wajib"> *</b>
+            </label>
+            <small>Pilih tepat 3 divisi. Urutan klik menentukan prioritas (Pilihan 1, 2, dan 3).</small>
+            <div className="oprec-division-choices" id="oprec-division-choices-list">
+              {oprec.divisiTersedia.map((item, idx) => {
+                const val = String(item.id ?? idx);
+                const option = {
+                  value: val,
+                  label: item.nama || item.namaLengkap || `Divisi #${val}`,
+                };
+                return (
+                  <DivisionChoiceItem
+                    key={val}
+                    option={option}
+                    division={item}
+                    common={{}}
+                    id="oprec-divisi"
+                    selected={selectedDivisions.indexOf(val) + 1}
+                    onToggle={toggleDivision}
+                  />
+                );
+              })}
+            </div>
+            <div className="flex items-center justify-between mt-1">
+              <small aria-live="polite" className="font-mono text-xs text-slate-500">
+                {selectedDivisions.length}/3 divisi dipilih
+              </small>
+              {selectedDivisions.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedDivisions([])}
+                  className="text-xs text-red-600 hover:underline font-mono"
+                >
+                  Reset Pilihan
+                </button>
+              )}
+            </div>
+            {errors.divisi_pilihan_1 && (
+              <small className="event-dynamic-error" id="oprec-divisi-error">
+                {errors.divisi_pilihan_1}
+              </small>
+            )}
+          </div>
+        )}
       </fieldset>
       <div className="event-group-submit">
         <button className="event-button" type="submit" disabled={pending || selectedDivisions.length !== 3}>

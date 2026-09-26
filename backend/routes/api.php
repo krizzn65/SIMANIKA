@@ -90,6 +90,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/oprec/{oprec}', [AdminOprecController::class, 'show']);
         Route::post('/oprec', [AdminOprecController::class, 'store']);
         Route::post('/oprec/upload-poster', [AdminOprecController::class, 'uploadPoster']);
+        Route::post('/oprec/upload-logo', [AdminOprecController::class, 'uploadLogo']);
         Route::put('/oprec/{oprec}', [AdminOprecController::class, 'update']);
         Route::post('/oprec/{oprec}/stages', [OprecStageController::class, 'store']);
         Route::put('/oprec/{oprec}/stages/{stage}', [OprecStageController::class, 'update']);

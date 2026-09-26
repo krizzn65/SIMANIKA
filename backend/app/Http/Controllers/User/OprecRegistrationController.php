@@ -49,7 +49,7 @@ class OprecRegistrationController extends Controller
                     if (isset($field['max'])) $rules[$name][] = 'max:'.$field['max'];
                 }
                 if ($type === 'tel') $rules[$name][] = 'regex:/^[0-9+() .-]{5,30}$/';
-                if (in_array($type, ['select', 'radio'], true)) $rules[$name][] = Rule::in(in_array($name, ['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'], true) ? $oprec->divisions->pluck('id')->map(fn ($id) => (string) $id)->all() : array_column($field['options'] ?? [], 'value'));
+                if (in_array($type, ['select', 'radio'], true)) $rules[$name][] = Rule::in(array_column($field['options'] ?? [], 'value'));
             }
         }
         if (!isset($rules['nim'], $rules['tanggal_lahir'])) return response()->json(['message' => 'Skema identitas tidak tersedia.'], 503);

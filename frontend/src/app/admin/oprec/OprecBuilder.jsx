@@ -18,6 +18,7 @@ import {
   ChevronUp,
   UploadCloud,
   RefreshCw,
+  Sliders,
 } from "lucide-react";
 import { api } from "@/services/api";
 import { divisionPreview } from "@/components/oprec/divisionPreview";
@@ -30,7 +31,6 @@ const fixed = [
   { name: "nim", type: "text", label: "NIM", required: true, maxLength: 32 },
   { name: "tanggal_lahir", type: "date", label: "Tanggal lahir", required: true },
   { name: "angkatan", type: "select", label: "Angkatan", required: true, options: [] },
-  { name: "divisi_pilihan_1", type: "select", label: "Divisi pilihan", required: true, options: [] },
 ];
 
 const fieldTypes = [
@@ -124,8 +124,11 @@ export default function OprecBuilder({ oprecId }) {
   const [activeTab, setActiveTab] = useState("info");
   const [showPreview, setShowPreview] = useState(true);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showDivisionConfig, setShowDivisionConfig] = useState(false);
   const [uploadingPoster, setUploadingPoster] = useState(false);
   const [dragOverPoster, setDragOverPoster] = useState(false);
+  const [uploadingLogoIndex, setUploadingLogoIndex] = useState(null);
+  const [dragOverLogoIndex, setDragOverLogoIndex] = useState(null);
   const posterInputRef = useRef(null);
 
   useEffect(() => {
@@ -154,7 +157,9 @@ export default function OprecBuilder({ oprecId }) {
               ...(item.formFields || []).find((field) => field.name === template.name),
             })),
             ...(item.formFields || []).filter(
-              (field) => !fixed.some((template) => template.name === field.name)
+              (field) =>
+                !fixed.some((template) => template.name === field.name) &&
+                !["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name)
             ),
           ],
           divisi_tersedia: (item.divisiTersedia || []).map((division) => ({
@@ -246,6 +251,42 @@ export default function OprecBuilder({ oprecId }) {
     }
   };
 
+  const handleDivisionLogoUpload = async (index, file) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Ukuran logo maksimal 5 MB.");
+      return;
+    }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setError("Format logo harus berupa JPG, PNG, atau WebP.");
+      return;
+    }
+
+    setUploadingLogoIndex(index);
+    setError("");
+
+    try {
+      const body = new FormData();
+      body.append("logo", file);
+      const res = await api.post("/admin/oprec/upload-logo", body, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const url = res.data?.url;
+      if (!url) throw new Error("Gagal mengunggah logo divisi.");
+      setDivision(index, { logo: url });
+    } catch (err) {
+      const msg =
+        err.response?.data?.errors?.logo?.[0] ||
+        err.response?.data?.errors?.poster?.[0] ||
+        err.response?.data?.message ||
+        err.message ||
+        "Gagal mengunggah logo divisi.";
+      setError(msg);
+    } finally {
+      setUploadingLogoIndex(null);
+    }
+  };
+
   const removeField = (index) =>
     set(
       "form_fields",
@@ -290,7 +331,6 @@ export default function OprecBuilder({ oprecId }) {
       names.add(field.name);
       if (
         ["select", "radio"].includes(field.type) &&
-        field.name !== "divisi_pilihan_1" &&
         !field.options?.length
       )
         return `Isi pilihan untuk ${field.label}.`;
@@ -327,7 +367,7 @@ export default function OprecBuilder({ oprecId }) {
         help: field.help || null,
         placeholder: field.placeholder || null,
         ...(["select", "radio"].includes(field.type)
-          ? { options: field.name === "divisi_pilihan_1" ? [] : field.options || [] }
+          ? { options: field.options || [] }
           : {}),
         ...(field.type === "file"
           ? {
@@ -649,8 +689,10 @@ export default function OprecBuilder({ oprecId }) {
                       ) : (
                         <>
                           <UploadCloud size={28} className="text-slate-400" />
-                          <span>Pilih atau Seret Berkas Poster ke Sini</span>
-                          <small>JPG, PNG, atau WebP · Maksimal 5 MB</small>
+                          <span className="oprec-builder__poster-pick-btn">
+                            Pilih Berkas Poster
+                          </span>
+                          <small>atau seret gambar ke sini · JPG, PNG, WebP maks. 5 MB</small>
                         </>
                       )}
                     </label>
@@ -698,7 +740,110 @@ export default function OprecBuilder({ oprecId }) {
                     Kelola divisi yang dapat dipilih oleh calon anggota beserta kuotanya.
                   </p>
                 </div>
+                <div className="oprec-builder__section-actions">
+                  <button
+                    type="button"
+                    className={`oprec-btn ${showDivisionConfig ? "oprec-btn--primary" : "oprec-btn--secondary"}`}
+                    onClick={() => setShowDivisionConfig((prev) => !prev)}
+                    title="Pengaturan dan status integrasi divisi di formulir pendaftaran"
+                  >
+                    <Sliders size={14} />
+                    <span>Konfigurasi di Formulir</span>
+                  </button>
+                </div>
               </div>
+
+              {showDivisionConfig && (
+                <div className="oprec-builder__division-config-panel">
+                  <div className="oprec-builder__division-config-header">
+                    <div className="flex items-center gap-2">
+                      <Sliders size={16} className="text-blue-600" />
+                      <h3>Konfigurasi Integrasi Divisi di Formulir</h3>
+                    </div>
+                    <span className="oprec-builder__badge-active">
+                      ● Terintegrasi Otomatis
+                    </span>
+                  </div>
+
+                  <div className="oprec-builder__division-config-body">
+                    <div className="oprec-builder__division-config-grid">
+                      <div className="oprec-builder__division-config-item">
+                        <span className="oprec-builder__config-label">Mekanisme Pemilihan Prioritas</span>
+                        <p className="oprec-builder__config-desc">
+                          Formulir pendaftaran mewajibkan setiap pendaftar memilih tepat <b>3 divisi berbeda</b>. Urutan klik pendaftar pada kartu divisi otomatis menentukan <b>Prioritas 1, 2, dan 3</b>.
+                        </p>
+                      </div>
+
+                      <div className="oprec-builder__division-config-item">
+                        <span className="oprec-builder__config-label">Aturan & Validasi Kuota</span>
+                        <p className="oprec-builder__config-desc">
+                          Sistem otomatis membatasi pendaftaran jika kuota pilihan prioritas 1 divisi tersebut telah terpenuhi. Divisi dengan kuota dikosongkan menerima pendaftar tanpa batas.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="oprec-builder__division-config-summary">
+                      <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                        <span className="text-xs font-mono uppercase tracking-wider text-slate-600 font-semibold">
+                          Divisi Aktif di Formulir ({data.divisi_tersedia.filter((d) => d.nama?.trim()).length})
+                        </span>
+                        {data.divisi_tersedia.filter((d) => d.nama?.trim()).length < 3 ? (
+                          <span className="text-xs text-amber-700 font-mono font-medium">
+                            ⚠️ Perlu minimal 3 divisi agar formulir pendaftaran valid
+                          </span>
+                        ) : (
+                          <span className="text-xs text-emerald-700 font-mono font-medium">
+                            ✓ Syarat minimal 3 divisi terpenuhi
+                          </span>
+                        )}
+                      </div>
+                      <div className="oprec-builder__division-pills">
+                        {data.divisi_tersedia.filter((d) => d.nama?.trim()).length > 0 ? (
+                          data.divisi_tersedia
+                            .filter((d) => d.nama?.trim())
+                            .map((d, i) => (
+                              <div key={i} className="oprec-builder__division-chip">
+                                <span className="font-mono text-blue-600 font-bold">#{i + 1}</span>
+                                <strong>{d.nama}</strong>
+                                {d.kuota ? (
+                                  <span className="oprec-builder__chip-quota">Kuota: {d.kuota}</span>
+                                ) : (
+                                  <span className="oprec-builder__chip-unlimited">Tanpa Batas</span>
+                                )}
+                              </div>
+                            ))
+                        ) : (
+                          <div className="text-xs text-slate-500 italic py-1">
+                            Belum ada divisi yang dibuat. Tambahkan divisi pada form di bawah.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="oprec-builder__division-config-footer">
+                      <span className="text-xs text-slate-500">
+                        Sinkronisasi langsung: Setiap penambahan, penghapusan, atau perubahan divisi di bawah otomatis tercermin di formulir pendaftaran.
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          className="oprec-btn oprec-btn--secondary oprec-btn--sm"
+                          onClick={() => setActiveTab("fields")}
+                        >
+                          Lihat Tab Formulir
+                        </button>
+                        <button
+                          type="button"
+                          className="oprec-btn oprec-btn--secondary oprec-btn--sm"
+                          onClick={() => setShowDivisionConfig(false)}
+                        >
+                          Tutup Panel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="oprec-builder__divisions">
                 {data.divisi_tersedia.map((division, index) => (
@@ -767,17 +912,118 @@ export default function OprecBuilder({ oprecId }) {
                         />
                       </label>
 
-                      <label>
-                        URL Logo / Ikon
-                        <input
-                          type="text"
-                          value={division.logo}
-                          onChange={(e) =>
-                            setDivision(index, { logo: e.target.value })
-                          }
-                          placeholder="/images/divisi/bph.webp"
-                        />
-                      </label>
+                      <div className="oprec-builder__division-logo-zone">
+                        <span className="oprec-builder__label">Logo / Ikon Divisi</span>
+                        {division.logo ? (
+                          <div className="oprec-builder__logo-preview-card">
+                            <div className="oprec-builder__logo-thumb-wrapper">
+                              <img
+                                src={division.logo}
+                                alt={`Logo ${division.nama || "divisi"}`}
+                                className="oprec-builder__logo-thumb"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                }}
+                              />
+                            </div>
+                            <div className="oprec-builder__logo-meta">
+                              <span
+                                className="oprec-builder__logo-name truncate"
+                                title={division.logo}
+                              >
+                                {division.logo.startsWith("/images/divisi/")
+                                  ? division.logo.split("/").pop()
+                                  : "Logo Terpasang"}
+                              </span>
+                              <div className="oprec-builder__logo-actions">
+                                <label
+                                  className="oprec-btn oprec-btn--secondary oprec-builder__logo-btn"
+                                  title="Ganti logo divisi"
+                                >
+                                  <RefreshCw
+                                    size={12}
+                                    className={
+                                      uploadingLogoIndex === index ? "animate-spin" : ""
+                                    }
+                                  />
+                                  <span>
+                                    {uploadingLogoIndex === index ? "Mengunggah..." : "Ganti"}
+                                  </span>
+                                  <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    className="hidden"
+                                    disabled={uploadingLogoIndex === index}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) handleDivisionLogoUpload(index, file);
+                                      e.target.value = "";
+                                    }}
+                                  />
+                                </label>
+                                <button
+                                  type="button"
+                                  className="oprec-btn oprec-btn--danger oprec-builder__logo-btn"
+                                  onClick={() => setDivision(index, { logo: "" })}
+                                  disabled={uploadingLogoIndex === index}
+                                  title="Hapus logo divisi"
+                                >
+                                  <Trash2 size={12} />
+                                  <span>Hapus</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <label
+                            className={`oprec-builder__logo-drop ${
+                              dragOverLogoIndex === index ? "is-dragging" : ""
+                            }`}
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              setDragOverLogoIndex(index);
+                            }}
+                            onDragLeave={() => setDragOverLogoIndex(null)}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              setDragOverLogoIndex(null);
+                              const file = e.dataTransfer?.files?.[0];
+                              if (file) handleDivisionLogoUpload(index, file);
+                            }}
+                          >
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleDivisionLogoUpload(index, file);
+                                e.target.value = "";
+                              }}
+                              disabled={uploadingLogoIndex === index}
+                            />
+                            {uploadingLogoIndex === index ? (
+                              <div className="flex items-center justify-center gap-1.5 py-1 text-blue-600 font-mono text-xs w-full">
+                                <RefreshCw size={13} className="animate-spin" />
+                                <span>Mengunggah logo...</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2.5 text-slate-500 w-full min-w-0">
+                                <span className="oprec-builder__logo-pick-btn">
+                                  <UploadCloud size={13} />
+                                  <span>Pilih Berkas</span>
+                                </span>
+                                <span className="text-xs text-slate-500 font-normal truncate">
+                                  atau seret ke sini
+                                </span>
+                                <small className="text-[10px] text-slate-400 font-mono ml-auto shrink-0 hidden sm:inline">
+                                  Maks 5 MB
+                                </small>
+                              </div>
+                            )}
+                          </label>
+                        )}
+                      </div>
 
                       <label className="wide">
                         Deskripsi Singkat Divisi
@@ -815,8 +1061,7 @@ export default function OprecBuilder({ oprecId }) {
                 <div>
                   <h2>Pertanyaan Formulir</h2>
                   <p>
-                    Lima pertanyaan awal adalah standar sistem. Anda dapat menambahkan
-                    pertanyaan kustom di bawahnya.
+                    Empat pertanyaan awal adalah identitas wajib sistem. Divisi terintegrasi otomatis dari tab Kelola Divisi.
                   </p>
                 </div>
               </div>
@@ -952,8 +1197,7 @@ export default function OprecBuilder({ oprecId }) {
                         )}
 
                         {["select", "radio"].includes(field.type) &&
-                          field.name !== "angkatan" &&
-                          field.name !== "divisi_pilihan_1" && (
+                          field.name !== "angkatan" && (
                             <label className="wide">
                               Opsi Pilihan (Satu opsi per baris)
                               <textarea
@@ -966,12 +1210,6 @@ export default function OprecBuilder({ oprecId }) {
                               />
                             </label>
                           )}
-
-                        {field.name === "divisi_pilihan_1" && (
-                          <p className="oprec-builder__hint wide">
-                            Pilihan divisi otomatis diambil dari tab "Kelola Divisi" di atas.
-                          </p>
-                        )}
 
                         <label className="wide">
                           Petunjuk / Teks Bantuan (Opsional)
@@ -1001,6 +1239,43 @@ export default function OprecBuilder({ oprecId }) {
                     </div>
                   );
                 })}
+
+                {/* Card Divisi Pilihan (Sistem & Terintegrasi di Form Bagian Bawah) */}
+                <div className="oprec-builder__field oprec-builder__field--fixed oprec-builder__field--division">
+                  <div className="oprec-builder__field-head">
+                    <span className="oprec-builder__field-index">
+                      {String(data.form_fields.length + 1).padStart(2, "0")}
+                    </span>
+                    <strong>Divisi pilihan</strong>
+                    <span className="oprec-builder__field-tag oprec-builder__field-tag--fixed">
+                      WAJIB · SISTEM
+                    </span>
+                  </div>
+
+                  <div className="oprec-builder__division-integrated-card">
+                    <p className="oprec-builder__hint wide" style={{ margin: 0 }}>
+                      Pilihan divisi otomatis diambil dari tab "Kelola Divisi" di atas.
+                    </p>
+                    <div className="oprec-builder__division-integrated-details">
+                      <p>
+                        Calon anggota akan memilih tepat 3 divisi berbeda (Prioritas 1, 2, dan 3) langsung dari daftar divisi yang Anda aktifkan pada tab <b>Kelola Divisi</b>.
+                      </p>
+                      <div className="oprec-builder__division-integrated-actions">
+                        <span className="text-xs font-mono text-slate-500">
+                          Divisi aktif: <b>{data.divisi_tersedia.filter((d) => d.nama?.trim()).length} divisi</b>
+                        </span>
+                        <button
+                          type="button"
+                          className="oprec-btn oprec-btn--secondary oprec-btn--sm"
+                          onClick={() => setActiveTab("divisions")}
+                        >
+                          <Sliders size={13} />
+                          <span>Konfigurasi di Kelola Divisi</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <button
@@ -1044,27 +1319,6 @@ export default function OprecBuilder({ oprecId }) {
                   </p>
                 </div>
 
-                {/* Divisi choices preview */}
-                <div>
-                  <span className="text-[11px] font-mono text-slate-600 uppercase tracking-wide block mb-1">
-                    Pilihan Divisi ({data.divisi_tersedia.length} Tersedia)
-                  </span>
-                  <div className="oprec-builder__preview-divisions">
-                    {data.divisi_tersedia.map((d, i) => (
-                      <div className="oprec-builder__preview-division" key={i}>
-                        {d.logo ? (
-                          <img src={d.logo} alt="" />
-                        ) : (
-                          <span className="font-mono text-[10px] text-blue-600">
-                            {d.nama?.slice(0, 2) || "//"}
-                          </span>
-                        )}
-                        <span className="truncate">{d.nama || `Divisi ${i + 1}`}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Form inputs preview */}
                 <div className="flex flex-col gap-2 mt-2">
                   <span className="text-[11px] font-mono text-slate-600 uppercase tracking-wide block">
@@ -1089,6 +1343,27 @@ export default function OprecBuilder({ oprecId }) {
                       {f.help && <small className="text-slate-400 text-[10px]">{f.help}</small>}
                     </div>
                   ))}
+                </div>
+
+                {/* Divisi choices preview di bagian bawah form */}
+                <div className="mt-2 pt-2 border-t border-slate-200">
+                  <span className="text-[11px] font-mono text-slate-600 uppercase tracking-wide block mb-1">
+                    Pilihan Divisi ({data.divisi_tersedia.length} Tersedia)
+                  </span>
+                  <div className="oprec-builder__preview-divisions">
+                    {data.divisi_tersedia.map((d, i) => (
+                      <div className="oprec-builder__preview-division" key={i}>
+                        {d.logo ? (
+                          <img src={d.logo} alt="" />
+                        ) : (
+                          <span className="font-mono text-[10px] text-blue-600">
+                            {d.nama?.slice(0, 2) || "//"}
+                          </span>
+                        )}
+                        <span className="truncate">{d.nama || `Divisi ${i + 1}`}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="pt-2">

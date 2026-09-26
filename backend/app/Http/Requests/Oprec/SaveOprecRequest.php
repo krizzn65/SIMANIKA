@@ -45,12 +45,12 @@ class SaveOprecRequest extends FormRequest
             if (!is_array($fields)) return;
             $names = array_column($fields, 'name');
             if (count($names) !== count(array_unique($names))) $validator->errors()->add('form_fields', 'Nama kolom harus unik.');
-            foreach (['nama' => 'text', 'nim' => 'text', 'tanggal_lahir' => 'date', 'angkatan' => 'select', 'divisi_pilihan_1' => 'select'] as $name => $type) {
+            foreach (['nama' => 'text', 'nim' => 'text', 'tanggal_lahir' => 'date', 'angkatan' => 'select'] as $name => $type) {
                 if (!collect($fields)->contains(fn ($field) => ($field['name'] ?? null) === $name && ($field['type'] ?? null) === $type && ($field['required'] ?? false))) $validator->errors()->add('form_fields', "Kolom {$name} wajib tersedia.");
             }
             if (count(array_intersect($names, ['oprec_id', 'schema_version', '__proto__', 'constructor', 'prototype']))) $validator->errors()->add('form_fields', 'Nama kolom terlarang.');
             foreach ($fields as $index => $field) {
-                if ($this->input('status') !== 'draft' && in_array($field['type'] ?? '', ['select', 'radio'], true) && empty($field['options']) && !in_array($field['name'] ?? '', ['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'], true)) $validator->errors()->add("form_fields.{$index}.options", 'Pilihan wajib diisi.');
+                if ($this->input('status') !== 'draft' && in_array($field['type'] ?? '', ['select', 'radio'], true) && empty($field['options'])) $validator->errors()->add("form_fields.{$index}.options", 'Pilihan wajib diisi.');
                 if (in_array($field['type'] ?? '', ['select', 'radio'], true)) {
                     $values = array_column($field['options'] ?? [], 'value');
                     if (count($values) !== count(array_unique($values))) $validator->errors()->add("form_fields.{$index}.options", 'Nilai pilihan harus unik.');
