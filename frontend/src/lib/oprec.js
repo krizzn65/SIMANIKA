@@ -59,7 +59,7 @@ export function normalizeOprec(raw) {
   if (!Array.isArray(divisions)) throw new Error("Invalid OPREC divisions");
   const rawFields = Array.isArray(raw.formFields ?? raw.form_fields)
     ? (raw.formFields ?? raw.form_fields).map((field) => {
-        if (field && ["divisi_pilihan_1", "divisi_pilihan_2"].includes(field.name) && (!field.options || !field.options.length)) {
+        if (field && ["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name) && (!field.options || !field.options.length)) {
           return {
             ...field,
             options: divisions.map((d, index) => ({
@@ -119,6 +119,15 @@ export function validBirthDate(value, now = Date.now()) {
 
 export function validateOprecForm(fields, form, now = Date.now()) {
   const errors = {};
+  const choices = [1, 2, 3].map((rank) => form.get(`divisi_pilihan_${rank}`));
+  const divisionOptions = fields.find((field) => field.name === "divisi_pilihan_1")?.options || [];
+  if (divisionOptions.length && (choices.some((value) => !value) || new Set(choices).size !== 3 || choices.some((value) => !divisionOptions.some((option) => option.value === value)))) {
+    errors.divisi_pilihan_1 = "Pilih tepat 3 divisi berbeda dari daftar yang tersedia.";
+  }
+  for (let index = 1; index < choices.length; index++) {
+    if (choices[index] && choices.slice(0, index).includes(choices[index])) errors[`divisi_pilihan_${index + 1}`] = "Pilih divisi yang berbeda untuk setiap prioritas.";
+    if (choices[index] && !choices[index - 1]) errors[`divisi_pilihan_${index + 1}`] = "Isi pilihan sebelumnya terlebih dahulu.";
+  }
   for (const field of fields) {
     const values = form.getAll(field.name);
     const value = values[0];

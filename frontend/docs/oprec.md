@@ -180,6 +180,18 @@ build Next, dan browser belum dijalankan karena runtime npm menolak WSL 1.
 
 ## Revisi pendaftaran — 25 September 2026
 
+### Pilihan divisi — 26 September 2026
+
+Pada satu grid kartu divisi, peserta wajib memilih tepat tiga divisi berbeda.
+Urutan klik menetapkan prioritas 1–3; klik ulang membatalkan pilihan. Tombol Kirim
+baru aktif setelah tiga pilihan lengkap. Browser/adapter Next dan Laravel sama-sama
+memvalidasi ketiga ID terhadap divisi periode, keunikan, dan jumlahnya. Payload
+`divisi_pilihan_1`, `divisi_pilihan_2`, `divisi_pilihan_3` tetap dikirim terpisah
+agar prioritas tidak hilang; pilihan ketiga disimpan di kolom baru. Form admin tetap
+memiliki satu field "Divisi pilihan", bukan tiga form terpisah. Admin hanya dapat
+menerima peserta ke salah satu divisi pilihannya. Migrasi
+`2026_09_26_000002_add_third_oprec_division_choice` wajib dijalankan sebelum rilis.
+
 Admin kini membuat atau mengedit periode dari `/admin/oprec/create` dan
 `/admin/oprec/{id}/edit`. Form pendaftaran selalu dimulai dengan Nama lengkap
 (`nama`), NIM (`nim`), Tanggal lahir (`tanggal_lahir`), Angkatan (`angkatan`),

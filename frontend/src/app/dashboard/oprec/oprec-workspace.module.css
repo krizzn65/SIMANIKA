@@ -504,14 +504,18 @@
   box-shadow: 2px 2px 0 rgba(21, 94, 239, 0.2);
 }
 
-.workspace :global(.oprec-division-choice input[type="radio"]) {
+.workspace :global(.oprec-division-choice input[type="checkbox"]) {
+  appearance: none;
   width: 15px;
   height: 15px;
   min-height: 15px;
   margin: 0;
-  accent-color: var(--ws-blue);
+  border: 1px solid #64748b;
+  border-radius: 50%;
   flex-shrink: 0;
 }
+.workspace :global(.oprec-division-choice input[type="checkbox"]:checked) { border: 4px solid var(--ws-blue); }
+.workspace :global(.oprec-division-choice input[type="checkbox"]:focus-visible) { outline: 2px solid var(--ws-blue); outline-offset: 2px; }
 
 .workspace :global(.oprec-division-choice__logo),
 .workspace :global(.oprec-division-choice img) {

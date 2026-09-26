@@ -130,19 +130,9 @@ function WorkspaceContent() {
                   <h2><User size={18} aria-hidden="true" /> Data Akun</h2>
                   <div className={styles.metaList}>
                     <div className={styles.metaItem}>
-                      <span>Nama Lengkap</span>
-                      <span>{user?.namaLengkap || user?.name || "—"}</span>
-                    </div>
-                    <div className={styles.metaItem}>
                       <span>Email</span>
                       <span>{user?.email || "—"}</span>
                     </div>
-                    {registration?.nim && (
-                      <div className={styles.metaItem}>
-                        <span>NIM Terdaftar</span>
-                        <span>{registration.nim}</span>
-                      </div>
-                    )}
                   </div>
                 </section>
 
@@ -246,8 +236,14 @@ function WorkspaceContent() {
                           <dd>{divisionMap.get(Number(registration.divisiPilihan2)) || `Divisi #${registration.divisiPilihan2}`}</dd>
                         </div>
                       )}
+                      {registration.divisiPilihan3 && (
+                        <div>
+                          <dt>Divisi Pilihan 3</dt>
+                          <dd>{divisionMap.get(Number(registration.divisiPilihan3)) || `Divisi #${registration.divisiPilihan3}`}</dd>
+                        </div>
+                      )}
                       {registration.formData && Object.entries(registration.formData).map(([key, val]) => {
-                        if (["nim", "tanggal_lahir", "divisi_pilihan_1", "divisi_pilihan_2"].includes(key)) return null;
+                        if (["nim", "tanggal_lahir", "divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(key)) return null;
                         const fieldMeta = normalizedOprec?.formFields?.find((f) => f.name === key);
                         const label = fieldMeta?.label || key;
                         return (

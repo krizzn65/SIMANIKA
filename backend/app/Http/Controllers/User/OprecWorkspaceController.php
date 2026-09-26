@@ -48,7 +48,7 @@ class OprecWorkspaceController extends Controller
                     'tanggalTutup' => $oprec->tanggal_tutup?->toIso8601String(),
                     'schemaVersion' => $oprec->schema_version,
                     'formFields' => collect($oprec->form_fields ?? [])->map(function ($field) use ($oprec) {
-                        if (in_array($field['name'] ?? '', ['divisi_pilihan_1', 'divisi_pilihan_2'], true)) {
+                        if (in_array($field['name'] ?? '', ['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'], true)) {
                             $field['options'] = $oprec->divisions->map(fn ($division) => [
                                 'value' => (string) $division->id,
                                 'label' => $division->nama,
@@ -85,6 +85,7 @@ class OprecWorkspaceController extends Controller
                     'tanggalLahir' => $registration->tanggal_lahir?->format('Y-m-d'),
                     'divisiPilihan1' => $registration->divisi_pilihan_1,
                     'divisiPilihan2' => $registration->divisi_pilihan_2,
+                    'divisiPilihan3' => $registration->divisi_pilihan_3,
                     'formData' => $registration->form_data,
                     'status' => $announced ? $registration->status : 'pending',
                     'catatan' => $announced ? $registration->catatan : null,

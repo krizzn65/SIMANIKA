@@ -6,6 +6,12 @@
 
 ## Audit kesesuaian `architecture.md` (22 September 2026)
 
+### OPREC: pilih tiga divisi dalam satu grid kartu (26 September 2026)
+
+- [x] Form peserta memilih tepat tiga divisi berbeda melalui kartu yang sudah ada; urutan klik menjadi prioritas. Adapter Next dan Laravel menolak pilihan kurang/duplikat/ID luar periode. Kolom pilihan ketiga dan rekap admin/user ditambahkan. Tes frontend 16 lulus, backend 42 tes/343 assertion lulus, dan build frontend lulus.
+- [x] Migrasi `2026_09_26_000002_add_third_oprec_division_choice` dijalankan pada database lokal.
+- [ ] Jalankan migrasi yang sama pada database deployment dan smoke test browser dengan sesi sungguhan. Tes SQLite/build belum menggantikan pengujian browser.
+
 ### Formulir event per grup (25 September 2026)
 
 - [x] Editor admin: grup dinamis, nama/urutan, pertanyaan, aturan pribadi atau bersama, hak edit ketua/semua anggota, lipat/buka, dan pratinjau.

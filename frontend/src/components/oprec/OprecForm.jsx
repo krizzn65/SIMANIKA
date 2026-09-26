@@ -11,7 +11,7 @@ const DEFAULT_DIVISION_LOGOS = {
   kwu: "/images/divisi/kwu.webp",
 };
 
-function DivisionChoiceItem({ option, division, common, id }) {
+function DivisionChoiceItem({ option, division, common, id, selected, onToggle }) {
   const [imgError, setImgError] = useState(false);
   const name = division?.nama || option.label;
   const fullName = division?.namaLengkap;
@@ -20,7 +20,7 @@ function DivisionChoiceItem({ option, division, common, id }) {
 
   return (
     <label className="oprec-division-choice" key={option.value}>
-      <input {...common} id={`${id}-${option.value}`} type="radio" value={option.value} />
+      <input {...common} id={`${id}-${option.value}`} name={undefined} type="checkbox" checked={selected > 0} onChange={() => onToggle(option.value)} />
       {logoSrc ? (
         <img
           src={logoSrc}
@@ -39,16 +39,18 @@ function DivisionChoiceItem({ option, division, common, id }) {
         <strong>{name}</strong>
         {fullName && fullName !== name && <small>{fullName}</small>}
       </span>
+      {selected > 0 && <span className="oprec-division-choice__rank" aria-hidden="true">{selected}</span>}
     </label>
   );
 }
 
-function Field({ field, error, divisions = [] }) {
+function Field({ field, error, divisions = [], selectedDivisions = [], onToggleDivision }) {
   const id = `oprec-field-${field.name}`;
   const isWide =
     ["textarea", "radio", "checkbox", "file"].includes(field.type) ||
     field.name === "divisi_pilihan_1" ||
-    field.name === "divisi_pilihan_2";
+    field.name === "divisi_pilihan_2" ||
+    field.name === "divisi_pilihan_3";
 
   const description = [
     field.help && `${id}-help`,
@@ -81,7 +83,7 @@ function Field({ field, error, divisions = [] }) {
         placeholder={field.placeholder || ""}
       />
     );
-  } else if (field.name === "divisi_pilihan_1" || field.name === "divisi_pilihan_2") {
+  } else if (["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name)) {
     const availableOptions = (field.options && field.options.length > 0)
       ? field.options
       : divisions.map((item, idx) => ({
@@ -90,7 +92,7 @@ function Field({ field, error, divisions = [] }) {
         }));
 
     control = (
-      <div className="oprec-division-choices">
+      <><small>Pilih tepat 3 divisi. Urutan klik menentukan prioritas.</small><div className="oprec-division-choices">
         {availableOptions.map((option) => {
           const division = divisions.find(
             (item) => String(item.id) === String(option.value) || item.nama?.toLowerCase() === option.label?.toLowerCase()
@@ -102,10 +104,12 @@ function Field({ field, error, divisions = [] }) {
               division={division}
               common={common}
               id={id}
+              selected={selectedDivisions.indexOf(String(option.value)) + 1}
+              onToggle={onToggleDivision}
             />
           );
         })}
-      </div>
+      </div><small aria-live="polite">{selectedDivisions.length}/3 divisi dipilih</small></>
     );
   } else if (field.type === "select") {
     control = (
@@ -184,8 +188,14 @@ export function OprecForm({ oprec, onSuccess }) {
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
+  const [selectedDivisions, setSelectedDivisions] = useState([]);
   const feedback = useRef(null);
   const submitting = useRef(false);
+  function toggleDivision(value) {
+    setSelectedDivisions((current) => current.includes(String(value))
+      ? current.filter((item) => item !== String(value))
+      : current.length < 3 ? [...current, String(value)] : current);
+  }
 
   function showErrors(nextErrors, note) {
     setErrors(nextErrors);
@@ -198,6 +208,7 @@ export function OprecForm({ oprec, onSuccess }) {
     if (submitting.current) return;
     const form = event.currentTarget;
     const body = new FormData(form);
+    selectedDivisions.forEach((value, index) => body.set(`divisi_pilihan_${index + 1}`, value));
     const nextErrors = validateOprecForm(oprec.formFields, body);
     if (Object.keys(nextErrors).length) {
       showErrors(nextErrors, "Periksa kolom yang ditandai sebelum mengirim.");
@@ -266,7 +277,7 @@ export function OprecForm({ oprec, onSuccess }) {
           <p>{message}</p>
           {Object.keys(errors).length > 0 && (
             <ul>
-              {oprec.formFields
+              {oprec.formFields.filter((field) => !["divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name))
                 .filter((field) => errors[field.name])
                 .map((field) => (
                   <li key={field.name}>
@@ -281,17 +292,19 @@ export function OprecForm({ oprec, onSuccess }) {
       )}
       <fieldset disabled={pending}>
         <legend className="event-form-sr-only">Formulir pendaftaran OPREC</legend>
-        {oprec.formFields.map((field) => (
+        {oprec.formFields.filter((field) => !["divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name)).map((field) => (
           <Field
             key={field.name}
             field={field}
             error={errors[field.name]}
             divisions={oprec.divisiTersedia}
+            selectedDivisions={selectedDivisions}
+            onToggleDivision={toggleDivision}
           />
         ))}
       </fieldset>
       <div className="event-group-submit">
-        <button className="event-button" type="submit" disabled={pending}>
+        <button className="event-button" type="submit" disabled={pending || selectedDivisions.length !== 3}>
           {pending ? "Mengirim…" : "Kirim"}
         </button>
       </div>

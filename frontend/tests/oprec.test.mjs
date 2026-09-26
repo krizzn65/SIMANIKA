@@ -56,6 +56,19 @@ test("validates required fields, choices, checkbox, email and number ranges", ()
   form.append("nim", "E99999");
   assert.ok(validateOprecForm(fields, form).nim);
 });
+test("three division cards must be distinct and selected before submit", () => {
+  const fields = normalizeFields([...identity, { name: "divisi_pilihan_1", type: "select", label: "Divisi pilihan", required: true, options: ["1", "2", "3", "4"] }]);
+  const form = new FormData();
+  form.set("nim", "E12345"); form.set("tanggal_lahir", "2004-01-01");
+  form.set("divisi_pilihan_1", "1"); form.set("divisi_pilihan_2", "2");
+  assert.ok(validateOprecForm(fields, form).divisi_pilihan_1);
+  form.set("divisi_pilihan_3", "2");
+  assert.ok(validateOprecForm(fields, form).divisi_pilihan_1);
+  form.set("divisi_pilihan_3", "999");
+  assert.ok(validateOprecForm(fields, form).divisi_pilihan_1);
+  form.set("divisi_pilihan_3", "3");
+  assert.deepEqual(validateOprecForm(fields, form), {});
+});
 test("birth date handles leap days, impossible dates and future dates", () => {
   assert.equal(validBirthDate("2004-02-29", start), true);
   for (const value of ["2005-02-29", "2026-02-31", "2100-01-01", "1899-12-31", "not-a-date"]) assert.equal(validBirthDate(value, start), false);
