@@ -299,6 +299,23 @@ export function OprecForm({ oprec, onSuccess }) {
               )}
               {oprec.formFields
                 .filter((field) => !["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name))
+                .slice(0, 4)
+                .filter((field) => errors[field.name])
+                .map((field) => (
+                  <li key={field.name}>
+                    <a href={`#oprec-field-${field.name}`}>
+                      {field.label}: {errors[field.name]}
+                    </a>
+                  </li>
+                ))}
+              {errors.divisi_pilihan_1 && (
+                <li>
+                  <a href="#oprec-field-divisi_pilihan_1">Divisi Pilihan: {errors.divisi_pilihan_1}</a>
+                </li>
+              )}
+              {oprec.formFields
+                .filter((field) => !["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name))
+                .slice(4)
                 .filter((field) => errors[field.name])
                 .map((field) => (
                   <li key={field.name}>
@@ -314,8 +331,10 @@ export function OprecForm({ oprec, onSuccess }) {
       <fieldset disabled={pending}>
         <legend className="event-form-sr-only">Formulir pendaftaran OPREC</legend>
 
+        {/* 1. Pertanyaan Sistem (01 s/d 04: identitas wajib) */}
         {oprec.formFields
           .filter((field) => !["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name))
+          .slice(0, 4)
           .map((field) => (
             <Field
               key={field.name}
@@ -327,7 +346,7 @@ export function OprecForm({ oprec, onSuccess }) {
             />
           ))}
 
-        {/* Bagian Pilihan Divisi di Form Bagian Bawah */}
+        {/* 2. Bagian Pilihan Divisi di Form (Pertanyaan No 05) */}
         {oprec.divisiTersedia && oprec.divisiTersedia.length > 0 && (
           <div className="event-dynamic-field event-dynamic-field--wide oprec-division-section" id="oprec-field-divisi_pilihan_1">
             <label htmlFor="oprec-division-choices-list">
@@ -375,6 +394,21 @@ export function OprecForm({ oprec, onSuccess }) {
             )}
           </div>
         )}
+
+        {/* 3. Pertanyaan Tambahan Admin (No 06 dst, berada di bawah divisi) */}
+        {oprec.formFields
+          .filter((field) => !["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name))
+          .slice(4)
+          .map((field) => (
+            <Field
+              key={field.name}
+              field={field}
+              error={errors[field.name]}
+              divisions={oprec.divisiTersedia}
+              selectedDivisions={selectedDivisions}
+              onToggleDivision={toggleDivision}
+            />
+          ))}
       </fieldset>
       <div className="event-group-submit">
         <button className="event-button" type="submit" disabled={pending || selectedDivisions.length !== 3}>
