@@ -62,6 +62,8 @@ export function EventRegistrationForm({ event, onSuccess, compact = false }) {
         </div>;
       })}
     </fieldset>
-    <button className="event-button" type="submit" disabled={pending}>{pending ? "Mengirim…" : event.tipePendaftaran === "tim" ? "Kirim formulir tim" : "Kirim pendaftaran"}</button>
+    <div className="event-group-submit">
+      <button className="event-button" type="submit" disabled={pending}>{pending ? "Mengirim…" : "Kirim"}</button>
+    </div>
   </form>;
 }

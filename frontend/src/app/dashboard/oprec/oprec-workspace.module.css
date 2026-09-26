@@ -75,6 +75,16 @@
   margin: 0 0 8px;
 }
 
+.heading a, .answers a, .notice a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #104bcc;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .heading p {
   color: var(--ws-muted);
   margin: 0;
@@ -256,11 +266,292 @@
   to { transform: rotate(360deg); }
 }
 
+/* Dynamic Form System (matching Event Workspace) */
+.workspace :global(.event-dynamic-form) {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  margin: 0;
+}
+
+.workspace :global(.event-dynamic-form) > p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ws-muted);
+  margin: 0 0 22px;
+}
+
+.workspace :global(.event-dynamic-form) > fieldset {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.workspace :global(.event-dynamic-field) {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.workspace :global(.event-dynamic-field--wide),
+.workspace :global(.event-dynamic-field):has(textarea, input[type="file"], input[type="radio"], input[type="checkbox"]) {
+  grid-column: 1 / -1;
+}
+
+.workspace :global(.event-dynamic-field) label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ws-ink);
+}
+
+.workspace :global(.event-dynamic-field) b {
+  color: var(--ws-red);
+}
+
+.workspace :global(.event-dynamic-field) :is(input, textarea, select) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ws-ink);
+  border: 1px solid var(--ws-border);
+  border-radius: 0;
+  background: #fff;
+  transition: border-color .15s, outline .15s;
+}
+
+.workspace :global(.event-dynamic-field) :is(input, textarea, select):focus-visible {
+  outline: 2px solid var(--ws-blue);
+  outline-offset: 2px;
+  border-color: var(--ws-blue);
+}
+
+.workspace :global(.event-dynamic-field) textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.workspace :global(.event-dynamic-field) input[type="file"] {
+  padding: 10px;
+  font-size: 12px;
+  border-style: dashed;
+  background: #f7faff;
+}
+
+.workspace :global(.event-dynamic-field) input::file-selector-button {
+  margin-right: 10px;
+  padding: 7px 10px;
+  font: inherit;
+  border: 1px solid var(--ws-border);
+  background: #fff;
+  color: var(--ws-ink);
+  cursor: pointer;
+}
+
+.workspace :global(.event-dynamic-field) :is(input[type="radio"], input[type="checkbox"]) {
+  width: 16px;
+  min-height: 16px;
+  height: 16px;
+  margin: 0 5px 0 0;
+  accent-color: var(--ws-blue);
+}
+
+.workspace :global(.event-dynamic-choices) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.workspace :global(.event-dynamic-choices) label,
+.workspace :global(.event-dynamic-check) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 400;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.workspace :global(.event-dynamic-field) small {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ws-muted);
+}
+
+.workspace :global(.event-dynamic-field) :global(.event-dynamic-error) {
+  color: var(--ws-red);
+  font-weight: 500;
+}
+
+.workspace :global(.event-group-submit) {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.workspace :global(.event-dynamic-form) {
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace :global(.event-button) {
+  width: auto;
+  min-width: 132px;
+  min-height: 44px;
+  margin-top: 4px;
+  margin-left: auto;
+  padding: 10px 24px;
+  border: 1px solid var(--ws-blue);
+  border-radius: 0;
+  background: var(--ws-blue);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .18s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.workspace :global(.event-button):hover {
+  background: #104bcc;
+}
+
+.workspace :global(.event-button):disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.workspace :global(.event-form-feedback) {
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  background: #fff4f2;
+  color: var(--ws-red);
+  border: 1px solid #e9bbb5;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.workspace :global(.event-form-feedback) ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.workspace :global(.event-form-feedback) a {
+  color: var(--ws-red);
+  text-decoration: underline;
+}
+
+.workspace :global(.event-form-sr-only) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Division choice tiles */
+.workspace :global(.oprec-division-choices) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.workspace :global(.oprec-division-choice) {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px dashed var(--ws-border);
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+
+.workspace :global(.oprec-division-choice:hover) {
+  background: #edf4ff;
+  border-color: var(--ws-blue);
+}
+
+.workspace :global(.oprec-division-choice:has(input:checked)) {
+  background: #edf4ff;
+  border-color: var(--ws-blue);
+  border-style: solid;
+}
+
+.workspace :global(.oprec-division-choice input) {
+  margin-top: 3px;
+  accent-color: var(--ws-blue);
+}
+
+.workspace :global(.oprec-division-choice__content) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.workspace :global(.oprec-division-choice__content img) {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.workspace :global(.oprec-division-choice__fallback) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #eef3fb;
+  color: var(--ws-blue);
+  font-weight: 700;
+  font-size: 13px;
+  font-family: monospace;
+}
+
+.workspace :global(.oprec-division-choice__content strong) {
+  display: block;
+  font-size: 13px;
+  color: var(--ws-ink);
+  line-height: 1.3;
+}
+
+.workspace :global(.oprec-division-choice__content small) {
+  display: block;
+  font-size: 11px;
+  color: var(--ws-muted);
+  line-height: 1.3;
+  margin-top: 2px;
+}
+
 @media (max-width: 900px) {
   .columns {
     grid-template-columns: 1fr;
   }
-  .answers {
+  .answers,
+  .workspace :global(.event-dynamic-form) > fieldset {
     grid-template-columns: 1fr;
   }
 }
@@ -268,5 +559,11 @@
 @media (max-width: 700px) {
   .workspace {
     padding: 100px 16px 48px;
+  }
+  .workspace :global(.event-dynamic-field) :is(input, textarea, select) {
+    font-size: 16px;
+  }
+  .workspace :global(.event-dynamic-field) input[type="file"] {
+    font-size: 13px;
   }
 }

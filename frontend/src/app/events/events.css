@@ -226,5 +226,6 @@
 .event-dynamic-error { color: #c42b3a !important; }
 .event-dynamic-form > input { width: 100%; min-height: 48px; border: 1px solid #aebccf; border-radius: 9px; padding: .75rem .9rem; font: inherit; }
 .event-dynamic-form + .event-dynamic-form { margin-top: 1.2rem; }
-.event-dynamic-form > .event-button { border: 0; cursor: pointer; }
+.event-group-submit { display: flex; justify-content: flex-end; margin-top: 1.25rem; }
+.event-dynamic-form > .event-button { border: 0; cursor: pointer; align-self: flex-end; margin-left: auto; width: auto; min-width: 132px; }
 .event-form-feedback { padding: 1rem; border-radius: 9px; background: #eff6ff; color: #0b2559; }

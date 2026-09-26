@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, RefreshCw, User, CheckCircle2, Clock3, FileText, Sparkles, AlertCircle } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, RefreshCw, User, CheckCircle2, FileText, Calendar, AlertCircle, Clock3 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { OprecForm } from "@/components/oprec/OprecForm";
@@ -12,20 +12,6 @@ import { api } from "@/services/api";
 import { normalizeOprec } from "@/lib/oprec";
 import styles from "./oprec-workspace.module.css";
 import "../../oprec/oprec.css";
-
-function formatDateTime(value) {
-  if (!value) return null;
-  const d = new Date(value);
-  if (isNaN(d.getTime())) return null;
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Asia/Jakarta",
-  }).format(d) + " WIB";
-}
 
 function formatDate(value) {
   if (!value) return null;
@@ -109,7 +95,7 @@ function WorkspaceContent() {
       <div className={styles.container}>
         <nav className={styles.toolbar} aria-label="Navigasi workspace OPREC">
           <Link className={styles.button} href="/dashboard">
-            <ArrowLeft size={16} aria-hidden="true" /> Kembali ke Dashboard
+            <ArrowLeft size={16} aria-hidden="true" /> Dashboard
           </Link>
           <button className={styles.button} type="button" onClick={load} disabled={refreshing}>
             <RefreshCw size={15} aria-hidden="true" className={refreshing ? styles.spinning : ""} /> Perbarui
@@ -127,7 +113,9 @@ function WorkspaceContent() {
             <header className={styles.heading}>
               <p className={styles.eyebrow}>HIMANIKA / OPEN RECRUITMENT</p>
               <h1>{oprecInfo?.headline || "Open Recruitment HIMANIKA"}</h1>
-              <p>Periode {oprecInfo?.periode || "2026/2027"} · {oprecInfo?.deskripsi}</p>
+              <Link href="/oprec">
+                Informasi OPREC <ArrowUpRight size={14} aria-hidden="true" />
+              </Link>
             </header>
 
             <div className={styles.columns}>
@@ -191,20 +179,20 @@ function WorkspaceContent() {
 
                 {/* Timeline Card */}
                 <section className={styles.panel}>
-                  <h2><Sparkles size={18} aria-hidden="true" /> Jadwal Kegiatan</h2>
+                  <h2><Calendar size={18} aria-hidden="true" /> Jadwal Kegiatan</h2>
                   <div className={styles.metaList}>
                     <div className={styles.metaItem}>
                       <span>Buka Pendaftaran</span>
-                      <span>{formatDateTime(oprecInfo?.tanggalBuka) || "—"}</span>
+                      <span>{formatDate(oprecInfo?.tanggalBuka) || "—"}</span>
                     </div>
                     <div className={styles.metaItem}>
                       <span>Batas Pendaftaran</span>
-                      <span>{formatDateTime(oprecInfo?.tanggalTutup) || "—"}</span>
+                      <span>{formatDate(oprecInfo?.tanggalTutup) || "—"}</span>
                     </div>
                     {oprecInfo?.pengumuman?.tanggal && (
                       <div className={styles.metaItem}>
                         <span>Pengumuman Hasil</span>
-                        <span>{formatDateTime(oprecInfo.pengumuman.tanggal)}</span>
+                        <span>{formatDate(oprecInfo.pengumuman.tanggal)}</span>
                       </div>
                     )}
                   </div>
@@ -215,11 +203,10 @@ function WorkspaceContent() {
               <section className={styles.panel} aria-labelledby="form-section-title">
                 <header className={styles.panelHeader}>
                   <h2 id="form-section-title">
-                    <FileText size={19} aria-hidden="true" />
-                    {isSubmitted ? "Formulir Pendaftaranmu" : "Lengkapi Formulir Pendaftaran"}
+                    <FileText size={19} aria-hidden="true" /> Data & administrasi
                   </h2>
-                  <span className={`${styles.badge} ${isSubmitted ? styles.success : styles.amber}`}>
-                    {isSubmitted ? "Terkirim" : "Perlu diisi"}
+                  <span className={`${styles.badge} ${isSubmitted ? styles.success : styles.neutral}`}>
+                    {isSubmitted ? "Terkirim" : "Belum dikirim"}
                   </span>
                 </header>
 
@@ -230,7 +217,7 @@ function WorkspaceContent() {
                       <div>
                         <h3>Pendaftaran Berhasil Dikirim</h3>
                         <p>
-                          Data pendaftaranmu telah kami terima pada {formatDateTime(registration.registeredAt)}.
+                          Data pendaftaranmu telah kami terima pada {formatDate(registration.registeredAt)}.
                           Kamu dapat memantau status seleksi dan pengumuman divisi melalui halaman ini.
                         </p>
                       </div>
@@ -269,22 +256,9 @@ function WorkspaceContent() {
                     </dl>
                   </div>
                 ) : (
-                  <div>
-                    <div className={styles.notice}>
-                      <AlertCircle size={20} aria-hidden="true" />
-                      <div>
-                        <h3>Langkah Terakhir Pendaftaran</h3>
-                        <p>
-                          Isi data dan pertanyaan di bawah ini dengan teliti. Pastikan NIM dan tanggal lahir sesuai
-                          karena akan digunakan untuk verifikasi hasil seleksi.
-                        </p>
-                      </div>
-                    </div>
-
-                    {normalizedOprec && (
-                      <OprecForm oprec={normalizedOprec} />
-                    )}
-                  </div>
+                  normalizedOprec && (
+                    <OprecForm oprec={normalizedOprec} onSuccess={load} />
+                  )
                 )}
               </section>
             </div>
