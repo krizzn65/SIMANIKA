@@ -19,12 +19,26 @@ import {
   UploadCloud,
   RefreshCw,
   Sliders,
+  ExternalLink,
+  ArrowRight,
+  Globe,
+  FileText,
+  MapPin,
+  Ticket,
 } from "lucide-react";
 import { api } from "@/services/api";
 import { divisionPreview } from "@/components/oprec/divisionPreview";
 import { OprecPeriodPicker } from "./OprecPeriodPicker";
 import "./oprec-create-dialog.css";
 import "./oprec-builder.css";
+
+const DEFAULT_DIVISION_LOGOS = {
+  bph: "/images/divisi/bph.webp",
+  humas: "/images/divisi/humas.webp",
+  psdm: "/images/divisi/psdm.webp",
+  kominfo: "/images/divisi/kominfo.webp",
+  kwu: "/images/divisi/kwu.webp",
+};
 
 const fixed = [
   { name: "nama", type: "text", label: "Nama lengkap", required: true, maxLength: 150 },
@@ -114,6 +128,18 @@ const toOptions = (value) =>
 
 const fromOptions = (options) => (options || []).map((item) => item.label).join("\n");
 
+const formatDisplayDate = (val) => {
+  if (!val) return null;
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return null;
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Asia/Jakarta",
+  }).format(d);
+};
+
 export default function OprecBuilder({ oprecId }) {
   const router = useRouter();
   const [data, setData] = useState(initial);
@@ -125,11 +151,102 @@ export default function OprecBuilder({ oprecId }) {
   const [showPreview, setShowPreview] = useState(true);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showDivisionConfig, setShowDivisionConfig] = useState(false);
+  const [previewMode, setPreviewMode] = useState("page"); // "page" | "form"
+  const [previewSelectedDivisions, setPreviewSelectedDivisions] = useState([]);
+  const togglePreviewDivision = (val) => {
+    setPreviewSelectedDivisions((current) => {
+      const strVal = String(val);
+      if (current.includes(strVal)) {
+        return current.filter((item) => item !== strVal);
+      }
+      if (current.length < 3) {
+        return [...current, strVal];
+      }
+      return current;
+    });
+  };
   const [uploadingPoster, setUploadingPoster] = useState(false);
   const [dragOverPoster, setDragOverPoster] = useState(false);
   const [uploadingLogoIndex, setUploadingLogoIndex] = useState(null);
   const [dragOverLogoIndex, setDragOverLogoIndex] = useState(null);
   const posterInputRef = useRef(null);
+  const containerRef = useRef(null);
+  const [previewWidth, setPreviewWidth] = useState(540);
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("simanika_oprec_preview_width");
+      if (saved) {
+        const val = Number(saved);
+        if (!isNaN(val) && val >= 320 && val <= 850) {
+          setPreviewWidth(val);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handlePointerDown = (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    setIsDragging(true);
+
+    const onPointerMove = (moveEvent) => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const newWidth = Math.round(rect.right - moveEvent.clientX);
+      const minW = 320;
+      const maxW = Math.max(minW, Math.floor(rect.width - 420));
+      const clamped = Math.min(Math.max(newWidth, minW), maxW);
+      setPreviewWidth(clamped);
+    };
+
+    const onPointerUp = () => {
+      setIsDragging(false);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      try {
+        setPreviewWidth((current) => {
+          localStorage.setItem("simanika_oprec_preview_width", String(current));
+          return current;
+        });
+      } catch {
+        // ignore
+      }
+    };
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+  };
+
+  const handleResetWidth = () => {
+    setPreviewWidth(420);
+    try {
+      localStorage.setItem("simanika_oprec_preview_width", "420");
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      setPreviewWidth((w) => {
+        const max = containerRef.current
+          ? Math.max(320, containerRef.current.getBoundingClientRect().width - 420)
+          : 800;
+        return Math.min(w + 24, max);
+      });
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      setPreviewWidth((w) => Math.max(w - 24, 320));
+    } else if (e.key === "Home" || e.key === "Escape") {
+      e.preventDefault();
+      handleResetWidth();
+    }
+  };
 
   useEffect(() => {
     if (!oprecId) return;
@@ -521,9 +638,17 @@ export default function OprecBuilder({ oprecId }) {
 
       {/* Main Layout (Editor + Live Preview) */}
       <div
+        ref={containerRef}
         className={`oprec-builder__layout ${
           !showPreview ? "oprec-builder__layout--full" : ""
-        }`}
+        } ${isDragging ? "oprec-builder__layout--dragging" : ""}`}
+        style={
+          showPreview
+            ? {
+                gridTemplateColumns: `minmax(0, 1fr) 14px ${previewWidth}px`,
+              }
+            : undefined
+        }
       >
         <div className="oprec-builder__main">
           {/* TAB 1: INFORMASI & JADWAL */}
@@ -1293,88 +1418,472 @@ export default function OprecBuilder({ oprecId }) {
           )}
         </div>
 
-        {/* ASIDE: Live Preview Panel */}
+        {/* ASIDE: Pratinjau Halaman User (Neo-Arcade Browser Frame) */}
         {showPreview && (
-          <aside className="oprec-builder__aside">
-            <div className="oprec-builder__preview">
-              <div className="oprec-builder__preview-head">
-                <span>// PRATINJAU REAL-TIME</span>
-                <span className="font-mono text-xs text-slate-500">Form Calon Anggota</span>
+          <>
+            {/* Split Resizer Divider */}
+            <div
+              className={`oprec-builder__resizer ${
+                isDragging ? "oprec-builder__resizer--active" : ""
+              }`}
+              onPointerDown={handlePointerDown}
+              onDoubleClick={handleResetWidth}
+              onKeyDown={handleKeyDown}
+              tabIndex={0}
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Pengatur ukuran kartu form dan pratinjau"
+              aria-valuenow={previewWidth}
+              aria-valuemin={320}
+              title="Tarik ke kiri: Lebarkan Pratinjau · Tarik ke kanan: Lebarkan Form (Klik 2x untuk reset)"
+            >
+              <div className="oprec-builder__resizer-rail" />
+              <div className="oprec-builder__resizer-knob">
+                <span className="oprec-builder__resizer-arrow">◀</span>
+                <span className="oprec-builder__resizer-dots">⋮</span>
+                <span className="oprec-builder__resizer-arrow">▶</span>
               </div>
 
-              <div className="oprec-builder__preview-body">
-                {data.poster && (
-                  <div className="oprec-builder__preview-poster">
-                    <img src={data.poster} alt="Poster OPREC" />
+              {isDragging && (
+                <div className="oprec-builder__resizer-indicator">
+                  <span>Pratinjau: {previewWidth}px</span>
+                </div>
+              )}
+            </div>
+
+            <aside className="oprec-builder__aside">
+            <div className="oprec-user-preview">
+              {/* Browser Chrome Header */}
+              <div className="oprec-user-preview__chrome">
+                <div className="oprec-user-preview__dots" aria-hidden="true">
+                  <span className="oprec-user-preview__dot oprec-user-preview__dot--red" />
+                  <span className="oprec-user-preview__dot oprec-user-preview__dot--yellow" />
+                  <span className="oprec-user-preview__dot oprec-user-preview__dot--green" />
+                </div>
+
+                <div className="oprec-user-preview__url-pill">
+                  <span className="text-[10px]" aria-hidden="true">🔒</span>
+                  <span className="oprec-user-preview__url-text">
+                    simanika.id/oprec{previewMode === "form" ? "#formulir" : ""}
+                  </span>
+                </div>
+
+                <a
+                  href="/oprec"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="oprec-user-preview__external-link"
+                  title="Buka halaman publik /oprec di tab baru"
+                >
+                  <ExternalLink size={13} aria-hidden="true" />
+                  <span className="sr-only">Buka di tab baru</span>
+                </a>
+              </div>
+
+              {/* Mode Switcher Tabs */}
+              <div className="oprec-user-preview__tabs">
+                <button
+                  type="button"
+                  className={`oprec-user-preview__tab-btn ${
+                    previewMode === "page" ? "oprec-user-preview__tab-btn--active" : ""
+                  }`}
+                  onClick={() => setPreviewMode("page")}
+                >
+                  <Globe size={13} aria-hidden="true" />
+                  <span>Halaman /oprec</span>
+                </button>
+                <button
+                  type="button"
+                  className={`oprec-user-preview__tab-btn ${
+                    previewMode === "form" ? "oprec-user-preview__tab-btn--active" : ""
+                  }`}
+                  onClick={() => setPreviewMode("form")}
+                >
+                  <FileText size={13} aria-hidden="true" />
+                  <span>Form Pendaftaran</span>
+                </button>
+              </div>
+
+              {/* Scrollable Preview Body */}
+              <div className="oprec-user-preview__body">
+                {previewMode === "page" ? (
+                  /* ======================================================== */
+                  /* MODE 1: HALAMAN PUBLIK /oprec                           */
+                  /* ======================================================== */
+                  <div className="oprec-user-preview__page-view">
+                    {/* Hero Section */}
+                    <div className="oprec-user-preview__hero">
+                      <div className="oprec-user-preview__eyebrow">
+                        <span aria-hidden="true" />
+                        <span>HIMANIKA / OPEN RECRUITMENT</span>
+                      </div>
+                      <h3 className="oprec-user-preview__headline">
+                        {data.headline || "Ambil peran.\nMulai ceritamu."}
+                      </h3>
+                      <p className="oprec-user-preview__deskripsi">
+                        {data.deskripsi ||
+                          "Ada tempat untuk idemu, ruang untuk belajar, dan teman untuk melangkah bersama. Temukan peranmu di HIMANIKA."}
+                      </p>
+                    </div>
+
+                    {/* Registration Card (IFEST style) */}
+                    <div className="oprec-user-preview__card">
+                      <div className="oprec-user-preview__card-accent" />
+                      {data.poster && (
+                        <div className="oprec-user-preview__card-poster">
+                          <img src={data.poster} alt={data.poster_alt || "Poster OPREC"} />
+                        </div>
+                      )}
+                      <div className="oprec-user-preview__card-inner">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="oprec-user-preview__card-title">
+                            {data.headline || `OPREC HIMANIKA ${data.periode || ""}`}
+                          </h4>
+                          <span
+                            className={`oprec-user-preview__badge oprec-user-preview__badge--${
+                              data.status === "open"
+                                ? "open"
+                                : data.status === "closed"
+                                ? "closed"
+                                : "soon"
+                            }`}
+                          >
+                            <span className="oprec-user-preview__badge-dot" />
+                            {data.status === "open"
+                              ? "Pendaftaran Dibuka"
+                              : data.status === "closed"
+                              ? "Pendaftaran Ditutup"
+                              : "Segera Dibuka"}
+                          </span>
+                        </div>
+
+                        {/* Facts list */}
+                        <div className="oprec-user-preview__facts">
+                          <div className="oprec-user-preview__fact">
+                            <Calendar size={13} aria-hidden="true" />
+                            <span>
+                              {data.tanggal_buka && data.tanggal_tutup
+                                ? `${formatDisplayDate(data.tanggal_buka)} – ${formatDisplayDate(
+                                    data.tanggal_tutup
+                                  )}`
+                                : formatDisplayDate(data.tanggal_buka) ||
+                                  formatDisplayDate(data.tanggal_tutup) ||
+                                  "Jadwal menyusul"}
+                            </span>
+                          </div>
+                          <div className="oprec-user-preview__fact">
+                            <MapPin size={13} aria-hidden="true" />
+                            <span>Online (SIMANIKA Portal)</span>
+                          </div>
+                          <div className="oprec-user-preview__fact">
+                            <Ticket size={13} aria-hidden="true" />
+                            <span>Pendaftaran Calon Anggota</span>
+                          </div>
+                        </div>
+
+                        <p className="oprec-user-preview__card-desc">
+                          {data.status === "open"
+                            ? "Saatnya ambil bagian. Lengkapi formulir pendaftaran dan tentukan divisi impianmu."
+                            : data.status === "closed"
+                            ? "Pendaftaran periode ini sudah selesai. Pantau hasil seleksi pada portal SIMANIKA."
+                            : "Rekrutmen calon anggota baru akan segera dibuka. Siapkan dirimu sekarang."}
+                        </p>
+
+                        <button
+                          type="button"
+                          className="oprec-user-preview__cta-btn"
+                          onClick={() => setPreviewMode("form")}
+                        >
+                          <span>Daftar Sekarang</span>
+                          <ArrowRight size={13} aria-hidden="true" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Divisi Section */}
+                    <div className="oprec-user-preview__divisions-sec">
+                      <div className="oprec-user-preview__sec-head">
+                        <h4>Temukan Tempatmu</h4>
+                        <span>
+                          {data.divisi_tersedia.length} Divisi dibuka pada periode OPREC ini
+                        </span>
+                      </div>
+
+                      <div className="oprec-user-preview__div-grid">
+                        {data.divisi_tersedia.map((d, i) => (
+                          <div className="oprec-user-preview__div-card" key={d.nama + i}>
+                            <div className="oprec-user-preview__div-top">
+                              <div className="oprec-user-preview__div-logo">
+                                {d.logo ? (
+                                  <img src={d.logo} alt={d.nama} />
+                                ) : (
+                                  <span className="font-mono text-[10px] font-bold text-blue-600">
+                                    {d.nama ? d.nama.slice(0, 2).toUpperCase() : "//"}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="font-mono text-[10px] text-slate-400">
+                                {String(i + 1).padStart(2, "0")}
+                              </span>
+                            </div>
+                            <div>
+                              <h5 className="oprec-user-preview__div-name">
+                                {d.nama || `Divisi ${i + 1}`}
+                              </h5>
+                              {d.nama_lengkap && (
+                                <span className="oprec-user-preview__div-full">
+                                  {d.nama_lengkap}
+                                </span>
+                              )}
+                            </div>
+                            <p className="oprec-user-preview__div-desc">
+                              {d.deskripsi || "Informasi fokus dan peran divisi."}
+                            </p>
+                            <span className="oprec-user-preview__div-quota">
+                              {d.kuota !== null && d.kuota !== "" && Number(d.kuota) > 0
+                                ? `Kuota ${d.kuota} anggota`
+                                : d.kuota === 0
+                                ? "Tidak buka kuota"
+                                : "Kuota umum"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* ======================================================== */
+                  /* MODE 2: FORMULIR PENDAFTARAN CALON ANGGOTA             */
+                  /* ======================================================== */
+                  <div className="oprec-user-preview__form-view">
+                    <button
+                      type="button"
+                      className="oprec-user-preview__back-link"
+                      onClick={() => setPreviewMode("page")}
+                    >
+                      <ArrowLeft size={12} aria-hidden="true" />
+                      <span>Kembali ke Halaman Oprec</span>
+                    </button>
+
+                    <div className="oprec-user-preview__form-header">
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-blue-600 font-semibold">
+                        // OPREC {data.periode || "2026/2027"}
+                      </span>
+                      <h3 className="text-base font-bold text-slate-900 leading-tight">
+                        {data.headline || "Formulir Pendaftaran Calon Anggota"}
+                      </h3>
+                      <p className="oprec-user-preview__form-intro">
+                        {data.form_intro ||
+                          "Kolom bertanda * wajib diisi. Isilah sesuai petunjuk penyelenggara."}
+                      </p>
+                    </div>
+
+                    {/* Question Fields Grid (Textfield Kiri & Kanan) */}
+                    <div className="oprec-user-preview__fields-grid">
+                      {data.form_fields.map((f, i) => {
+                        const isWide = [
+                          "textarea",
+                          "file",
+                          "radio",
+                          "checkbox",
+                        ].includes(f.type);
+                        return (
+                          <div
+                            className={`oprec-user-preview__field-item ${
+                              isWide ? "oprec-user-preview__field-item--wide" : ""
+                            }`}
+                            key={f.name + i}
+                          >
+                            <label className="oprec-user-preview__field-label">
+                              {f.label || `Pertanyaan ${i + 1}`}
+                              {f.required && <b aria-label="wajib"> *</b>}
+                            </label>
+
+                            {f.type === "textarea" ? (
+                              <textarea
+                                className="oprec-user-preview__field-textarea"
+                                rows={3}
+                                placeholder={f.placeholder || "Jawaban calon anggota..."}
+                                readOnly
+                              />
+                            ) : f.type === "select" ? (
+                              <select
+                                className="oprec-user-preview__field-select"
+                                defaultValue=""
+                              >
+                                <option value="" disabled>
+                                  Pilih {f.label?.toLowerCase() || "jawaban"}
+                                </option>
+                                {f.options?.map((opt, optIdx) => (
+                                  <option key={optIdx} value={opt.value}>
+                                    {opt.label}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : f.type === "file" ? (
+                              <div className="oprec-user-preview__field-file">
+                                <UploadCloud
+                                  size={16}
+                                  className="text-blue-600 flex-shrink-0"
+                                />
+                                <div className="flex flex-col min-w-0">
+                                  <span className="text-xs font-medium text-slate-700">
+                                    Pilih atau seret berkas pendaftaran
+                                  </span>
+                                  <span className="text-[10px] text-slate-400">
+                                    PDF, JPG, PNG · maksimal 5 MB
+                                  </span>
+                                </div>
+                              </div>
+                            ) : (
+                              <input
+                                type={
+                                  f.type === "date"
+                                    ? "date"
+                                    : f.type === "number"
+                                    ? "number"
+                                    : "text"
+                                }
+                                className="oprec-user-preview__field-input"
+                                placeholder={
+                                  f.type === "date"
+                                    ? "HH / BB / TTTT"
+                                    : f.placeholder || "Jawaban calon anggota..."
+                                }
+                                readOnly
+                              />
+                            )}
+
+                            {f.help && (
+                              <small className="oprec-user-preview__field-help">
+                                {f.help}
+                              </small>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {/* Divisi Choice Tiles (Bukan Dropdown - Sama Persis dengan Punya User) */}
+                      {data.divisi_tersedia && data.divisi_tersedia.length > 0 && (
+                        <div className="oprec-user-preview__field-item oprec-user-preview__field-item--wide oprec-user-preview__division-section">
+                          <label className="oprec-user-preview__field-label">
+                            Divisi Pilihan <b aria-label="wajib"> *</b>
+                          </label>
+                          <small className="oprec-user-preview__field-help">
+                            Pilih tepat 3 divisi. Urutan klik menentukan prioritas (Pilihan 1, 2, dan 3).
+                          </small>
+
+                          <div className="oprec-division-choices">
+                            {data.divisi_tersedia.map((d, idx) => {
+                              const val = d.nama || `divisi_${idx}`;
+                              const selected =
+                                previewSelectedDivisions.indexOf(val) + 1;
+                              const key = d.nama?.toLowerCase()?.trim();
+                              const logoSrc =
+                                d.logo || DEFAULT_DIVISION_LOGOS[key] || null;
+
+                              return (
+                                <div
+                                  key={val}
+                                  className={`oprec-division-choice ${
+                                    selected > 0
+                                      ? "oprec-division-choice--selected"
+                                      : ""
+                                  }`}
+                                  onClick={() => togglePreviewDivision(val)}
+                                  role="button"
+                                  tabIndex={0}
+                                >
+                                  <span
+                                    className={`oprec-division-choice__indicator ${
+                                      selected > 0
+                                        ? "oprec-division-choice__indicator--selected"
+                                        : ""
+                                    }`}
+                                    aria-hidden="true"
+                                  >
+                                    {selected > 0 ? selected : null}
+                                  </span>
+
+                                  {logoSrc ? (
+                                    <img
+                                      src={logoSrc}
+                                      alt=""
+                                      width="26"
+                                      height="26"
+                                      className="oprec-division-choice__logo"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = "none";
+                                      }}
+                                    />
+                                  ) : (
+                                    <span
+                                      className="oprec-division-choice__fallback"
+                                      aria-hidden="true"
+                                    >
+                                      {d.nama
+                                        ? d.nama.slice(0, 2).toUpperCase()
+                                        : "//"}
+                                    </span>
+                                  )}
+
+                                  <span className="oprec-division-choice__text">
+                                    <strong>
+                                      {d.nama || `Divisi #${idx + 1}`}
+                                    </strong>
+                                    {d.nama_lengkap &&
+                                      d.nama_lengkap !== d.nama && (
+                                        <small>{d.nama_lengkap}</small>
+                                      )}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="flex items-center justify-between mt-1.5">
+                            <small className="font-mono text-xs text-slate-500">
+                              {previewSelectedDivisions.length}/3 divisi dipilih
+                            </small>
+                            {previewSelectedDivisions.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setPreviewSelectedDivisions([])}
+                                className="text-xs text-red-600 hover:underline font-mono"
+                              >
+                                Reset Pilihan
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Submit Button di Sebelah Kanan (Sesuai Layout User) */}
+                    <div className="oprec-user-preview__form-submit-row">
+                      <small className="text-[11px] text-slate-400 font-mono">
+                        [ Mode Pratinjau · Input simulasi ]
+                      </small>
+                      <button
+                        type="button"
+                        className="oprec-user-preview__submit-btn"
+                        disabled={previewSelectedDivisions.length !== 3}
+                        title={
+                          previewSelectedDivisions.length !== 3
+                            ? "Pilih tepat 3 divisi terlebih dahulu"
+                            : "Simulasi Kirim Pendaftaran"
+                        }
+                      >
+                        Kirim Pendaftaran
+                      </button>
+                    </div>
                   </div>
                 )}
-                <div>
-                  <span className="font-mono text-[10px] text-blue-600 uppercase tracking-wider block">
-                    OPREC {data.periode}
-                  </span>
-                  <h3>{data.headline || "Pendaftaran Calon Anggota HIMANIKA"}</h3>
-                  <p className="oprec-builder__preview-intro mt-1">
-                    {data.form_intro ||
-                      "Isi data diri dengan teliti. Kolom bertanda * wajib diisi."}
-                  </p>
-                </div>
-
-                {/* Form inputs preview */}
-                <div className="flex flex-col gap-2 mt-2">
-                  <span className="text-[11px] font-mono text-slate-600 uppercase tracking-wide block">
-                    Kolom Pertanyaan ({data.form_fields.length})
-                  </span>
-
-                  {data.form_fields.map((f, i) => (
-                    <div className="oprec-builder__preview-field" key={f.name + i}>
-                      <label>
-                        {f.label || "Pertanyaan"}
-                        {f.required && <span className="text-rose-500"> *</span>}
-                      </label>
-                      <div className="oprec-builder__preview-input">
-                        {f.type === "select"
-                          ? "-- Pilih jawaban --"
-                          : f.type === "file"
-                          ? "Unggah berkas (PDF / Gambar)..."
-                          : f.type === "date"
-                          ? "HH / BB / TTTT"
-                          : f.placeholder || "Jawaban calon anggota..."}
-                      </div>
-                      {f.help && <small className="text-slate-400 text-[10px]">{f.help}</small>}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Divisi choices preview di bagian bawah form */}
-                <div className="mt-2 pt-2 border-t border-slate-200">
-                  <span className="text-[11px] font-mono text-slate-600 uppercase tracking-wide block mb-1">
-                    Pilihan Divisi ({data.divisi_tersedia.length} Tersedia)
-                  </span>
-                  <div className="oprec-builder__preview-divisions">
-                    {data.divisi_tersedia.map((d, i) => (
-                      <div className="oprec-builder__preview-division" key={i}>
-                        {d.logo ? (
-                          <img src={d.logo} alt="" />
-                        ) : (
-                          <span className="font-mono text-[10px] text-blue-600">
-                            {d.nama?.slice(0, 2) || "//"}
-                          </span>
-                        )}
-                        <span className="truncate">{d.nama || `Divisi ${i + 1}`}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="pt-2">
-                  <div className="w-full py-2 bg-blue-600 text-white text-center text-xs font-medium cursor-not-allowed opacity-80">
-                    Kirim Pendaftaran
-                  </div>
-                </div>
               </div>
             </div>
           </aside>
-        )}
+        </>
+      )}
       </div>
     </div>
   );
