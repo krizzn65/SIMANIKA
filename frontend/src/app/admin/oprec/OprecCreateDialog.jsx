@@ -16,7 +16,6 @@ const firstFields = [
   { name: "nim", label: "NIM", type: "text", required: true, maxLength: 32 },
   { name: "tanggal_lahir", label: "Tanggal lahir", type: "date", required: true },
   { name: "angkatan", label: "Angkatan", type: "select", required: true, options: [] },
-  { name: "divisi_pilihan_1", label: "Divisi pilihan", type: "select", required: true, options: [] },
 ];
 const initial = { type: "", periode: "", headline: "", deskripsi: "", tanggal_buka: "", tanggal_tutup: "", poster: "", published: false };
 const toDateOnly = (value) => value ? new Date(value).toLocaleDateString("sv-SE", { timeZone: "Asia/Jakarta" }) : "";

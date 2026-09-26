@@ -6,6 +6,14 @@
 
 ## Audit kesesuaian `architecture.md` (22 September 2026)
 
+### Integrasi Divisi OPREC ke Tab Kelola Divisi & Pembersihan Dead Code (27 September 2026)
+
+- [x] Rombak total arsitektur form divisi: Bagian divisi murni terintegrasi langsung dengan tab "Kelola Divisi". Kartu pertanyaan sistem `05 Divisi pilihan` dikembalikan tetap berada di **form bagian bawah** (setelah pertanyaan identitas/kustom), tanpa input tipe/label yang membingungkan (screenshot 2), melainkan memuat box pemberitahuan integrasi otomatis dan tombol pintas konfigurasi ke tab "Kelola Divisi".
+- [x] Pembersihan total dead code backend (BE): Menghapus kewajiban `divisi_pilihan_1` pada `SaveOprecRequest.php`, memfilter legacy `divisi_pilihan_*` pada `OprecResource.php` dan `OprecWorkspaceController.php`, membersihkan Rule::in check pada `OprecRegistrationController.php`, dan memperbarui `OprecThreeDivisionChoicesTest.php`.
+- [x] Tombol "Konfigurasi di Formulir" (`Sliders`) terpasang pada header tab "Kelola Divisi" di `OprecBuilder.jsx`, lengkap dengan panel konfigurasi integrasi interaktif Neo-Arcade Editorial, status integrasi sistem, validasi kuota, ringkasan divisi aktif, dan shortcut navigasi.
+- [x] Formulir publik (`OprecForm.jsx`) & Live Preview: Pilihan 3 kartu divisi konsisten dirender di **bagian bawah formulir** setelah data diri/pertanyaan formulir, langsung dari `divisiTersedia`.
+- [x] Seluruh 41 tes backend (322 assertions) lulus 100%, 20 tes unit frontend lulus 100%, dan build produksi Next.js (`npm run build`) lulus dengan 0 error.
+
 ### OPREC: pilih tiga divisi dalam satu grid kartu (26 September 2026)
 
 - [x] Form peserta memilih tepat tiga divisi berbeda melalui kartu yang sudah ada; urutan klik menjadi prioritas. Adapter Next dan Laravel menolak pilihan kurang/duplikat/ID luar periode. Kolom pilihan ketiga dan rekap admin/user ditambahkan. Tes frontend 16 lulus, backend 42 tes/343 assertion lulus, dan build frontend lulus.

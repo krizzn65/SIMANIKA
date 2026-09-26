@@ -20,7 +20,6 @@ class OprecThreeDivisionChoicesTest extends TestCase
             'form_fields' => [
                 ['name' => 'nim', 'label' => 'NIM', 'type' => 'text', 'required' => true],
                 ['name' => 'tanggal_lahir', 'label' => 'Tanggal lahir', 'type' => 'date', 'required' => true],
-                ['name' => 'divisi_pilihan_1', 'label' => 'Divisi pilihan', 'type' => 'select', 'required' => true],
             ],
         ]);
         $ids = collect(['BPH', 'Humas', 'PSDM'])->map(fn ($name, $index) => $oprec->divisions()->create(['nama' => $name, 'sort_order' => $index])->id)->all();
