@@ -15,7 +15,8 @@ import {
   UserCheck,
   ChevronDown,
   ClipboardList,
-  ListChecks,
+  FileText,
+  Megaphone,
   ShoppingBag,
   Settings,
   LogOut,
@@ -122,9 +123,8 @@ export default function AdminLayout({ children }) {
                     </button>
                     {open && oprecMenuOpen && <div className="admin-oprec-nav__submenu">
                       <Link href="/admin/oprec" aria-current={pathname === "/admin/oprec" ? "page" : undefined} onClick={() => { if (window.innerWidth < 768) setOpen(false); }}><ClipboardList aria-hidden="true" className="h-4 w-4" /> Pendaftaran</Link>
-                      <Link href="/admin/oprec/test" aria-current={pathname === "/admin/oprec/test" ? "page" : undefined} onClick={() => { if (window.innerWidth < 768) setOpen(false); }}>Tes tulis</Link>
-                      <Link href="/admin/oprec/announcement" aria-current={pathname === "/admin/oprec/announcement" ? "page" : undefined} onClick={() => { if (window.innerWidth < 768) setOpen(false); }}>Pengumuman</Link>
-                      <Link href="/admin/oprec/answers" aria-current={pathname === "/admin/oprec/answers" ? "page" : undefined} onClick={() => { if (window.innerWidth < 768) setOpen(false); }}><ListChecks aria-hidden="true" className="h-4 w-4" /> Jawaban tes tulis</Link>
+                      <Link href="/admin/oprec/test" aria-current={pathname === "/admin/oprec/test" ? "page" : undefined} onClick={() => { if (window.innerWidth < 768) setOpen(false); }}><FileText aria-hidden="true" className="h-4 w-4" /> Tes tulis</Link>
+                      <Link href="/admin/oprec/announcement" aria-current={pathname === "/admin/oprec/announcement" ? "page" : undefined} onClick={() => { if (window.innerWidth < 768) setOpen(false); }}><Megaphone aria-hidden="true" className="h-4 w-4" /> Pengumuman</Link>
                     </div>}
                   </div>;
                   return (

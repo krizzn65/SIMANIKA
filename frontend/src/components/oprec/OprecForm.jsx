@@ -19,8 +19,22 @@ function DivisionChoiceItem({ option, division, common, id, selected, onToggle }
   const logoSrc = (!imgError && (division?.logo || DEFAULT_DIVISION_LOGOS[key])) || null;
 
   return (
-    <label className="oprec-division-choice" key={option.value}>
-      <input {...common} id={`${id}-${option.value}`} name={undefined} type="checkbox" checked={selected > 0} onChange={() => onToggle(option.value)} />
+    <label className={`oprec-division-choice ${selected > 0 ? "oprec-division-choice--selected" : ""}`} key={option.value}>
+      <input
+        {...common}
+        id={`${id}-${option.value}`}
+        name={undefined}
+        type="checkbox"
+        className="oprec-division-choice__input"
+        checked={selected > 0}
+        onChange={() => onToggle(option.value)}
+      />
+      <span
+        className={`oprec-division-choice__indicator ${selected > 0 ? "oprec-division-choice__indicator--selected" : ""}`}
+        aria-hidden="true"
+      >
+        {selected > 0 ? selected : null}
+      </span>
       {logoSrc ? (
         <img
           src={logoSrc}
@@ -39,7 +53,6 @@ function DivisionChoiceItem({ option, division, common, id, selected, onToggle }
         <strong>{name}</strong>
         {fullName && fullName !== name && <small>{fullName}</small>}
       </span>
-      {selected > 0 && <span className="oprec-division-choice__rank" aria-hidden="true">{selected}</span>}
     </label>
   );
 }
