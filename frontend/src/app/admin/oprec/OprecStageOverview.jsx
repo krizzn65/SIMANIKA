@@ -13,7 +13,7 @@ const labels = {
 };
 
 function date(value) {
-  return value ? new Date(value).toLocaleString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" }) + " WIB" : "Belum diatur";
+  return value ? new Date(value).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" }) : "Belum diatur";
 }
 
 export default function OprecStageOverview({ type }) {

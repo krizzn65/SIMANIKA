@@ -258,4 +258,5 @@ Halaman `/admin/oprec` telah dirombak total menyelaraskan bahasa desain **Neo-Ar
 - Filter toolbar kini dilengkapi dropdown filter divisi (mengaktifkan state `divisionFilter`).
 - Status badges dan tabel verifikasi calon anggota ditata minimalis kotak dengan indikator mono.
 - Pembersihan dead code: 10 import ikon mati di `page.jsx` dan 2 import mati di `OprecCreateDialog.jsx` telah dihapus total.
+- Halaman penyusun formulir (`/admin/oprec/[id]/edit`) dirombak total menggunakan layout 3-tab terstruktur (1. Informasi & Jadwal, 2. Kelola Divisi, 3. Pertanyaan Formulir) serta panel pratinjau formulir interaktif real-time yang dapat di-toggle.
 
