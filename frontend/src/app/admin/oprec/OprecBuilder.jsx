@@ -527,6 +527,85 @@ export default function OprecBuilder({ oprecId }) {
 
   if (loading) return <div className="oprec-builder__loading">Memuat formulir OPREC…</div>;
 
+  const renderPreviewField = (f, i) => {
+    const isWide = ["textarea", "file", "radio", "checkbox"].includes(f.type);
+    const questionNumber = i >= fixed.length ? i + 2 : i + 1;
+    return (
+      <div
+        className={`oprec-user-preview__field-item ${
+          isWide ? "oprec-user-preview__field-item--wide" : ""
+        }`}
+        key={f.name + i}
+      >
+        <label className="oprec-user-preview__field-label">
+          {f.label || `Pertanyaan ${questionNumber}`}
+          {f.required && <b aria-label="wajib"> *</b>}
+        </label>
+
+        {f.type === "textarea" ? (
+          <textarea
+            className="oprec-user-preview__field-textarea"
+            rows={3}
+            placeholder={f.placeholder || "Jawaban calon anggota..."}
+            readOnly
+          />
+        ) : f.type === "select" ? (
+          <select
+            className="oprec-user-preview__field-select"
+            defaultValue=""
+          >
+            <option value="" disabled>
+              Pilih {f.label?.toLowerCase() || "jawaban"}
+            </option>
+            {f.options?.map((opt, optIdx) => (
+              <option key={optIdx} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        ) : f.type === "file" ? (
+          <div className="oprec-user-preview__field-file">
+            <UploadCloud
+              size={16}
+              className="text-blue-600 flex-shrink-0"
+            />
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs font-medium text-slate-700">
+                Pilih atau seret berkas pendaftaran
+              </span>
+              <span className="text-[10px] text-slate-400">
+                PDF, JPG, PNG · maksimal 5 MB
+              </span>
+            </div>
+          </div>
+        ) : (
+          <input
+            type={
+              f.type === "date"
+                ? "date"
+                : f.type === "number"
+                ? "number"
+                : "text"
+            }
+            className="oprec-user-preview__field-input"
+            placeholder={
+              f.type === "date"
+                ? "HH / BB / TTTT"
+                : f.placeholder || "Jawaban calon anggota..."
+            }
+            readOnly
+          />
+        )}
+
+        {f.help && (
+          <small className="oprec-user-preview__field-help">
+            {f.help}
+          </small>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="oprec-builder">
       {/* Back navigation */}
@@ -632,7 +711,7 @@ export default function OprecBuilder({ oprecId }) {
         >
           <ListChecks size={15} />
           <span>3. Pertanyaan Formulir</span>
-          <span className="oprec-builder__tab-badge">{data.form_fields.length}</span>
+          <span className="oprec-builder__tab-badge">{data.form_fields.length + 1}</span>
         </button>
       </nav>
 
@@ -1192,56 +1271,21 @@ export default function OprecBuilder({ oprecId }) {
               </div>
 
               <div className="oprec-builder__fields">
-                {data.form_fields.map((field, index) => {
-                  const isFixed = index < fixed.length;
+                {/* 1. Pertanyaan Sistem (01 s/d 04) */}
+                {data.form_fields.slice(0, fixed.length).map((field, index) => {
                   return (
                     <div
                       key={field.name + index}
-                      className={`oprec-builder__field ${
-                        isFixed ? "oprec-builder__field--fixed" : ""
-                      }`}
+                      className="oprec-builder__field oprec-builder__field--fixed"
                     >
                       <div className="oprec-builder__field-head">
                         <span className="oprec-builder__field-index">
                           {String(index + 1).padStart(2, "0")}
                         </span>
                         <strong>{field.label || "Pertanyaan Baru"}</strong>
-                        <span
-                          className={`oprec-builder__field-tag ${
-                            isFixed ? "oprec-builder__field-tag--fixed" : ""
-                          }`}
-                        >
-                          {isFixed ? "WAJIB · SISTEM" : "TAMBAHAN"}
+                        <span className="oprec-builder__field-tag oprec-builder__field-tag--fixed">
+                          WAJIB · SISTEM
                         </span>
-
-                        {!isFixed && (
-                          <div className="oprec-builder__field-actions">
-                            <button
-                              type="button"
-                              title="Pindahkan ke atas"
-                              aria-label={`Naikkan ${field.label}`}
-                              onClick={() => moveField(index, -1)}
-                            >
-                              ↑
-                            </button>
-                            <button
-                              type="button"
-                              title="Pindahkan ke bawah"
-                              aria-label={`Turunkan ${field.label}`}
-                              onClick={() => moveField(index, 1)}
-                            >
-                              ↓
-                            </button>
-                            <button
-                              type="button"
-                              title="Hapus pertanyaan"
-                              aria-label={`Hapus ${field.label}`}
-                              onClick={() => removeField(index)}
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        )}
                       </div>
 
                       <div className="oprec-builder__grid">
@@ -1256,56 +1300,16 @@ export default function OprecBuilder({ oprecId }) {
                           />
                         </label>
 
-                        {!isFixed ? (
-                          <label>
-                            Tipe Input
-                            <select
-                              value={field.type}
-                              onChange={(e) =>
-                                setField(index, {
-                                  type: e.target.value,
-                                  options: ["select", "radio"].includes(e.target.value)
-                                    ? []
-                                    : undefined,
-                                })
-                              }
-                            >
-                              {fieldTypes.map(([val, lbl]) => (
-                                <option key={val} value={val}>
-                                  {lbl}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                        ) : (
-                          <label>
-                            Tipe Input
-                            <input
-                              value={
-                                fieldTypes.find(([type]) => type === field.type)?.[1] ||
-                                field.type
-                              }
-                              disabled
-                            />
-                          </label>
-                        )}
-
-                        {!isFixed && (
-                          <label>
-                            Kode Kolom (Unik)
-                            <input
-                              value={field.name}
-                              onChange={(e) =>
-                                setField(index, {
-                                  name: e.target.value
-                                    .toLowerCase()
-                                    .replace(/[^a-z0-9_]/g, "_"),
-                                })
-                              }
-                              maxLength={50}
-                            />
-                          </label>
-                        )}
+                        <label>
+                          Tipe Input
+                          <input
+                            value={
+                              fieldTypes.find(([type]) => type === field.type)?.[1] ||
+                              field.type
+                            }
+                            disabled
+                          />
+                        </label>
 
                         {field.name === "angkatan" && (
                           <label className="wide">
@@ -1321,21 +1325,6 @@ export default function OprecBuilder({ oprecId }) {
                           </label>
                         )}
 
-                        {["select", "radio"].includes(field.type) &&
-                          field.name !== "angkatan" && (
-                            <label className="wide">
-                              Opsi Pilihan (Satu opsi per baris)
-                              <textarea
-                                rows={3}
-                                value={fromOptions(field.options)}
-                                onChange={(e) =>
-                                  setField(index, { options: toOptions(e.target.value) })
-                                }
-                                placeholder={"Pilihan A\nPilihan B\nPilihan C"}
-                              />
-                            </label>
-                          )}
-
                         <label className="wide">
                           Petunjuk / Teks Bantuan (Opsional)
                           <input
@@ -1347,29 +1336,16 @@ export default function OprecBuilder({ oprecId }) {
                             maxLength={500}
                           />
                         </label>
-
-                        {!isFixed && (
-                          <label className="oprec-builder__check">
-                            <input
-                              type="checkbox"
-                              checked={Boolean(field.required)}
-                              onChange={(e) =>
-                                setField(index, { required: e.target.checked })
-                              }
-                            />
-                            <span>Wajib diisi oleh pendaftar</span>
-                          </label>
-                        )}
                       </div>
                     </div>
                   );
                 })}
 
-                {/* Card Divisi Pilihan (Sistem & Terintegrasi di Form Bagian Bawah) */}
+                {/* 2. Card Divisi Pilihan (Permanen Pertanyaan No 05 · WAJIB · SISTEM) */}
                 <div className="oprec-builder__field oprec-builder__field--fixed oprec-builder__field--division">
                   <div className="oprec-builder__field-head">
                     <span className="oprec-builder__field-index">
-                      {String(data.form_fields.length + 1).padStart(2, "0")}
+                      05
                     </span>
                     <strong>Divisi pilihan</strong>
                     <span className="oprec-builder__field-tag oprec-builder__field-tag--fixed">
@@ -1401,6 +1377,143 @@ export default function OprecBuilder({ oprecId }) {
                     </div>
                   </div>
                 </div>
+
+                {/* 3. Pertanyaan Tambahan Admin (Mulai dari No 06 dst, berada di bawah divisi) */}
+                {data.form_fields.slice(fixed.length).map((field, customIdx) => {
+                  const actualIndex = fixed.length + customIdx;
+                  const displayIndex = actualIndex + 2; // 4 + 2 = 6 ("06"), 5 + 2 = 7 ("07"), dst.
+                  return (
+                    <div
+                      key={field.name + actualIndex}
+                      className="oprec-builder__field"
+                    >
+                      <div className="oprec-builder__field-head">
+                        <span className="oprec-builder__field-index">
+                          {String(displayIndex).padStart(2, "0")}
+                        </span>
+                        <strong>{field.label || "Pertanyaan Baru"}</strong>
+                        <span className="oprec-builder__field-tag">
+                          TAMBAHAN
+                        </span>
+
+                        <div className="oprec-builder__field-actions">
+                          <button
+                            type="button"
+                            title="Pindahkan ke atas"
+                            aria-label={`Naikkan ${field.label}`}
+                            disabled={actualIndex === fixed.length}
+                            onClick={() => moveField(actualIndex, -1)}
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            title="Pindahkan ke bawah"
+                            aria-label={`Turunkan ${field.label}`}
+                            disabled={actualIndex === data.form_fields.length - 1}
+                            onClick={() => moveField(actualIndex, 1)}
+                          >
+                            ↓
+                          </button>
+                          <button
+                            type="button"
+                            title="Hapus pertanyaan"
+                            aria-label={`Hapus ${field.label}`}
+                            onClick={() => removeField(actualIndex)}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="oprec-builder__grid">
+                        <label>
+                          <span>Label Pertanyaan <span className="oprec-builder__required">*</span></span>
+                          <input
+                            value={field.label}
+                            onChange={(e) =>
+                              setField(actualIndex, { label: e.target.value })
+                            }
+                            maxLength={200}
+                          />
+                        </label>
+
+                        <label>
+                          Tipe Input
+                          <select
+                            value={field.type}
+                            onChange={(e) =>
+                              setField(actualIndex, {
+                                type: e.target.value,
+                                options: ["select", "radio"].includes(e.target.value)
+                                  ? []
+                                  : undefined,
+                              })
+                            }
+                          >
+                            {fieldTypes.map(([val, lbl]) => (
+                              <option key={val} value={val}>
+                                {lbl}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+
+                        <label>
+                          Kode Kolom (Unik)
+                          <input
+                            value={field.name}
+                            onChange={(e) =>
+                              setField(actualIndex, {
+                                name: e.target.value
+                                  .toLowerCase()
+                                  .replace(/[^a-z0-9_]/g, "_"),
+                              })
+                            }
+                            maxLength={50}
+                          />
+                        </label>
+
+                        {["select", "radio"].includes(field.type) && (
+                          <label className="wide">
+                            Opsi Pilihan (Satu opsi per baris)
+                            <textarea
+                              rows={3}
+                              value={fromOptions(field.options)}
+                              onChange={(e) =>
+                                setField(actualIndex, { options: toOptions(e.target.value) })
+                              }
+                              placeholder={"Pilihan A\nPilihan B\nPilihan C"}
+                            />
+                          </label>
+                        )}
+
+                        <label className="wide">
+                          Petunjuk / Teks Bantuan (Opsional)
+                          <input
+                            value={field.help || ""}
+                            onChange={(e) =>
+                              setField(actualIndex, { help: e.target.value })
+                            }
+                            placeholder="Contoh: Lampirkan berkas dalam format PDF..."
+                            maxLength={500}
+                          />
+                        </label>
+
+                        <label className="oprec-builder__check">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(field.required)}
+                            onChange={(e) =>
+                              setField(actualIndex, { required: e.target.checked })
+                            }
+                          />
+                          <span>Wajib diisi oleh pendaftar</span>
+                        </label>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               <button
@@ -1680,90 +1793,12 @@ export default function OprecBuilder({ oprecId }) {
 
                     {/* Question Fields Grid (Textfield Kiri & Kanan) */}
                     <div className="oprec-user-preview__fields-grid">
-                      {data.form_fields.map((f, i) => {
-                        const isWide = [
-                          "textarea",
-                          "file",
-                          "radio",
-                          "checkbox",
-                        ].includes(f.type);
-                        return (
-                          <div
-                            className={`oprec-user-preview__field-item ${
-                              isWide ? "oprec-user-preview__field-item--wide" : ""
-                            }`}
-                            key={f.name + i}
-                          >
-                            <label className="oprec-user-preview__field-label">
-                              {f.label || `Pertanyaan ${i + 1}`}
-                              {f.required && <b aria-label="wajib"> *</b>}
-                            </label>
+                      {/* 1. Empat Field Sistem Awal (Identitas Diri: 01 s/d 04) */}
+                      {data.form_fields.slice(0, fixed.length).map((f, i) =>
+                        renderPreviewField(f, i)
+                      )}
 
-                            {f.type === "textarea" ? (
-                              <textarea
-                                className="oprec-user-preview__field-textarea"
-                                rows={3}
-                                placeholder={f.placeholder || "Jawaban calon anggota..."}
-                                readOnly
-                              />
-                            ) : f.type === "select" ? (
-                              <select
-                                className="oprec-user-preview__field-select"
-                                defaultValue=""
-                              >
-                                <option value="" disabled>
-                                  Pilih {f.label?.toLowerCase() || "jawaban"}
-                                </option>
-                                {f.options?.map((opt, optIdx) => (
-                                  <option key={optIdx} value={opt.value}>
-                                    {opt.label}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : f.type === "file" ? (
-                              <div className="oprec-user-preview__field-file">
-                                <UploadCloud
-                                  size={16}
-                                  className="text-blue-600 flex-shrink-0"
-                                />
-                                <div className="flex flex-col min-w-0">
-                                  <span className="text-xs font-medium text-slate-700">
-                                    Pilih atau seret berkas pendaftaran
-                                  </span>
-                                  <span className="text-[10px] text-slate-400">
-                                    PDF, JPG, PNG · maksimal 5 MB
-                                  </span>
-                                </div>
-                              </div>
-                            ) : (
-                              <input
-                                type={
-                                  f.type === "date"
-                                    ? "date"
-                                    : f.type === "number"
-                                    ? "number"
-                                    : "text"
-                                }
-                                className="oprec-user-preview__field-input"
-                                placeholder={
-                                  f.type === "date"
-                                    ? "HH / BB / TTTT"
-                                    : f.placeholder || "Jawaban calon anggota..."
-                                }
-                                readOnly
-                              />
-                            )}
-
-                            {f.help && (
-                              <small className="oprec-user-preview__field-help">
-                                {f.help}
-                              </small>
-                            )}
-                          </div>
-                        );
-                      })}
-
-                      {/* Divisi Choice Tiles (Bukan Dropdown - Sama Persis dengan Punya User) */}
+                      {/* 2. Divisi Choice Tiles (Pertanyaan no 05) */}
                       {data.divisi_tersedia && data.divisi_tersedia.length > 0 && (
                         <div className="oprec-user-preview__field-item oprec-user-preview__field-item--wide oprec-user-preview__division-section">
                           <label className="oprec-user-preview__field-label">
@@ -1857,6 +1892,12 @@ export default function OprecBuilder({ oprecId }) {
                           </div>
                         </div>
                       )}
+
+                      {/* 3. Pertanyaan Tambahan Admin (No 06 dst, berada di bawah divisi) */}
+                      {data.form_fields.slice(fixed.length).map((f, customIdx) => {
+                        const actualIndex = fixed.length + customIdx;
+                        return renderPreviewField(f, actualIndex);
+                      })}
                     </div>
 
                     {/* Submit Button di Sebelah Kanan (Sesuai Layout User) */}
