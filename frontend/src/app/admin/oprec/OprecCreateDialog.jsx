@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { X, ClipboardList, Megaphone, UploadCloud } from "lucide-react";
+import { X, UploadCloud } from "lucide-react";
 import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
 import { AnimatedCheckIcon } from "@/components/ui/AnimatedCheckIcon";
 import { api } from "@/services/api";
