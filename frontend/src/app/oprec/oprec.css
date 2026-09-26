@@ -355,14 +355,6 @@
   z-index: 2;
 }
 
-.oprec-preview__eyebrow {
-  color: #155eef;
-  font: 700 11px/1.2 "IBM Plex Mono", ui-monospace, monospace;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-
 .oprec-preview h3 {
   max-width: 18ch;
   margin: 6px 0 16px;
@@ -582,7 +574,7 @@
   background: #214afe;
   opacity: 1;
   pointer-events: none;
-  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.52s cubic-bezier(0.35, 0, 0.25, 1);
 }
 
 .oprec-preview:hover .oprec-curtain-block,
@@ -603,13 +595,14 @@
   background: linear-gradient(to top, rgba(3, 7, 24, 0.92) 0%, rgba(3, 7, 24, 0.45) 50%, transparent 100%);
   opacity: 0;
   transform: translateY(12px);
-  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .oprec-preview:hover .oprec-preview__art-overlay,
 .oprec-preview--active .oprec-preview__art-overlay {
   opacity: 1;
   transform: translateY(0);
+  transition: opacity 0.45s ease 0.35s, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.35s;
 }
 
 .oprec-preview__art-title {

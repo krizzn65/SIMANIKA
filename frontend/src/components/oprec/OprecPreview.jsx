@@ -3,8 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { oprecDate, oprecState } from "@/lib/oprec";
+import { oprecState } from "@/lib/oprec";
 import { OprecEmptyState } from "./OprecEmptyState";
+
+function formatOprecDate(value) {
+  if (!value) return null;
+  const dateObj = new Date(value);
+  if (isNaN(dateObj.getTime())) return null;
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Jakarta",
+  }).format(dateObj);
+}
 
 // IFEST-style curtain grid: 20 columns x 9 rows.
 // Left (cols 0-3: 0%, 5%, 10%, 15%) and Right (cols 16-19: 80%, 85%, 90%, 95%) have solid blue blocks.
@@ -17,8 +29,9 @@ const CURTAIN_BLOCKS = (() => {
     for (let col = 0; col < 20; col++) {
       if (col >= 4 && col < 16) continue;
       const distFromInner = col < 4 ? 3 - col : col - 16;
-      // Stagger: inner-most blocks fade first, cascading outwards with a row-by-row wave
-      const delay = distFromInner * 0.045 + row * 0.032;
+      // Stagger: distinct row-by-row cascade (75ms per row) + inner-to-outer flow (55ms per col)
+      // Provides a smooth, luxurious, highly visible curtain blinds dissolve effect
+      const delay = Number((row * 0.075 + distFromInner * 0.055).toFixed(3));
       blocks.push({
         key: key++,
         top: (row / 9) * 100,
@@ -98,7 +111,21 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
   }
 
   const start = stage?.tanggalBuka || oprec?.tanggalBuka;
-  const dateLabel = start ? oprecDate(start) : "Jadwal menyusul";
+  const deadline = stage?.tanggalTutup || oprec?.tanggalTutup;
+
+  const startFormatted = formatOprecDate(start);
+  const deadlineFormatted = formatOprecDate(deadline);
+
+  let dateLabel = "Jadwal menyusul";
+  if (startFormatted && deadlineFormatted) {
+    dateLabel = startFormatted === deadlineFormatted
+      ? startFormatted
+      : `${startFormatted} - ${deadlineFormatted}`;
+  } else if (startFormatted) {
+    dateLabel = startFormatted;
+  } else if (deadlineFormatted) {
+    dateLabel = deadlineFormatted;
+  }
 
   const description = {
     soon: "Rekrutmen berikutnya sudah dekat. Kenali jadwal dan siapkan langkah pertamamu.",
@@ -129,7 +156,6 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
 
       {/* LEFT: Information & actions */}
       <div className="oprec-preview__content">
-        <span className="oprec-preview__eyebrow">// {kind.toUpperCase()} · {oprec?.periode}</span>
         <h3 id={`oprec-preview-title-${stage?.id || "registration"}`}>{title}</h3>
 
         {/* Facts with 3 icons matching IFEST */}
@@ -209,7 +235,7 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
                 left: `${block.left}%`,
                 width: `${block.width}%`,
                 height: `${block.height}%`,
-                transitionDelay: active ? `${block.delay}s` : `${block.delay * 0.3}s`,
+                transitionDelay: active ? `${block.delay}s` : `${Number((block.delay * 0.25).toFixed(3))}s`,
               }}
             />
           ))}
