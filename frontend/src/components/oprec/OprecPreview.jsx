@@ -5,7 +5,32 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { oprecDate, oprecState } from "@/lib/oprec";
 import { OprecEmptyState } from "./OprecEmptyState";
-import { PixelDissolve } from "./PixelDissolve";
+
+// IFEST-style curtain grid: 20 columns x 9 rows.
+// Left (cols 0-3: 0%, 5%, 10%, 15%) and Right (cols 16-19: 80%, 85%, 90%, 95%) have solid blue blocks.
+// Center (cols 4-15: 20% to 80%) remains open to showcase the poster.
+// On hover, blocks fade out sequentially like a curtain per row & column.
+const CURTAIN_BLOCKS = (() => {
+  const blocks = [];
+  let key = 0;
+  for (let row = 0; row < 9; row++) {
+    for (let col = 0; col < 20; col++) {
+      if (col >= 4 && col < 16) continue;
+      const distFromInner = col < 4 ? 3 - col : col - 16;
+      // Stagger: inner-most blocks fade first, cascading outwards with a row-by-row wave
+      const delay = distFromInner * 0.045 + row * 0.032;
+      blocks.push({
+        key: key++,
+        top: (row / 9) * 100,
+        left: (col / 20) * 100,
+        width: 5,
+        height: 100 / 9,
+        delay,
+      });
+    }
+  }
+  return blocks;
+})();
 
 const previewStatus = {
   soon: "Segera Dibuka",
@@ -173,12 +198,25 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
         <div className="oprec-preview__art-vignette" aria-hidden="true" />
         <div className="oprec-preview__art-glow" aria-hidden="true" />
 
-        {/* Pixel Dissolve Blocks (React Bits style) */}
-        <PixelDissolve active={active} />
+        {/* IFEST-style Curtain Grid (left & right blue blocks that fade on hover) */}
+        <div className="oprec-preview__curtain" aria-hidden="true">
+          {CURTAIN_BLOCKS.map((block) => (
+            <div
+              key={block.key}
+              className="oprec-curtain-block"
+              style={{
+                top: `${block.top}%`,
+                left: `${block.left}%`,
+                width: `${block.width}%`,
+                height: `${block.height}%`,
+                transitionDelay: active ? `${block.delay}s` : `${block.delay * 0.3}s`,
+              }}
+            />
+          ))}
+        </div>
 
         {/* Text appears on hover over the poster (like IFEST) */}
         <div className="oprec-preview__art-overlay" aria-hidden="true">
-          <span className="oprec-preview__art-kicker">// {kind.toUpperCase()}</span>
           <h4 className="oprec-preview__art-title">{title}</h4>
         </div>
       </div>

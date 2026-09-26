@@ -568,21 +568,26 @@
   opacity: 0.85;
 }
 
-/* Pixel Dissolve Blocks (React Bits style, on top of image, z-index 8) */
-.oprec-pixel-dissolve {
+/* IFEST-style Curtain Grid (left & right blue blocks that fade on hover) */
+.oprec-preview__curtain {
   position: absolute;
   inset: 0;
-  z-index: 8;
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  grid-template-rows: repeat(8, 1fr);
+  z-index: 10;
   pointer-events: none;
+  overflow: hidden;
 }
 
-.oprec-pixel-dissolve span {
-  display: block;
+.oprec-curtain-block {
+  position: absolute;
   background: #214afe;
-  transition: opacity 0.3s ease;
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.oprec-preview:hover .oprec-curtain-block,
+.oprec-preview--active .oprec-curtain-block {
+  opacity: 0;
 }
 
 /* On-hover text overlay on poster (IFEST style) */
@@ -605,17 +610,6 @@
 .oprec-preview--active .oprec-preview__art-overlay {
   opacity: 1;
   transform: translateY(0);
-}
-
-.oprec-preview__art-kicker {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 700;
-  color: #60a5fa;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
 .oprec-preview__art-title {
@@ -662,7 +656,7 @@
   .oprec-preview,
   .oprec-preview__poster-img,
   .oprec-preview__art-overlay,
-  .oprec-pixel-dissolve span {
+  .oprec-curtain-block {
     transition: none !important;
   }
 }
