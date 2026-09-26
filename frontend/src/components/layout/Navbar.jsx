@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatedNavIcon } from "@/components/ui/AnimatedNavIcon";
 import { CloseSmallIcon } from "@/components/ui/CloseSmallIcon";
+import { SubNavIcon } from "@/components/ui/SubNavIcon";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -233,13 +234,14 @@ export function Navbar() {
   };
 
   const handleHomeClick = (e) => {
-    setIsHomeMenuOpen(false);
     if (pathname !== "/") {
+      setIsHomeMenuOpen(false);
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       return;
     }
-    // If already on "/", smoothly scroll to top
+    // If already on "/", toggle dropdown and scroll smoothly to top
     e.preventDefault();
+    setIsHomeMenuOpen((prev) => !prev);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -472,7 +474,9 @@ export function Navbar() {
                           onClick={(e) => handleSectionClick(e, sec.id)}
                           role="menuitem"
                         >
-                          <span className="nav-subgrid__badge">{sec.badge}</span>
+                          <span className="nav-subgrid__badge" aria-hidden="true">
+                            <SubNavIcon name={sec.id} />
+                          </span>
                           <div className="nav-subgrid__body">
                             <span className="nav-subgrid__title">{sec.title}</span>
                             <span className="nav-subgrid__desc">{sec.desc}</span>
@@ -785,8 +789,8 @@ export function Navbar() {
                                   handleClose();
                                 }}
                               >
-                                <span className="mobile-drawer__sub-badge">
-                                  {sec.badge}
+                                <span className="mobile-drawer__sub-badge" aria-hidden="true">
+                                  <SubNavIcon name={sec.id} />
                                 </span>
                                 <span className="mobile-drawer__sub-title">
                                   {sec.title}
