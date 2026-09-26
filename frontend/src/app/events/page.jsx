@@ -19,7 +19,7 @@ export default async function EventsPage({ searchParams }) {
             <span aria-hidden="true" />HIMANIKA / EVENTS
           </span>
         </header>
-        <EventFilters key={JSON.stringify(filters)} filters={filters} />
+        <EventFilters filters={filters} />
         <EventList result={result} filters={filters} />
       </div>
       <aside className="event-bottom-note event-container"><span className="event-mono">SETIAP PERTEMUAN, ADA CERITA.</span><p>Datang dengan rasa ingin tahu.<br /><strong>Pulang dengan sesuatu yang baru.</strong></p><a href="/#gallery">Kenali kegiatan HIMANIKA <span aria-hidden="true">↗</span></a></aside>

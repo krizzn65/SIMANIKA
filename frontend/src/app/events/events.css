@@ -30,7 +30,23 @@
 .event-filter-form { display: flex; align-items: end; gap: 1rem; }
 .event-search { flex: 1; min-width: 0; }
 .event-filter-form label, .event-filter-sheet label { display: flex; flex-direction: column; gap: .55rem; font-size: .85rem; font-weight: 500; }
-.event-filter-form input, .event-filter-form select, .event-filter-sheet select { width: 100%; height: 48px; min-width: 0; padding: .75rem; color: var(--ink); background: var(--surface); border: 1px solid #aebccf; border-radius: 8px; font-size: 1rem; }
+.event-filter-form input, .event-filter-form select, .event-filter-sheet select { width: 100%; height: 48px; min-width: 0; padding: .75rem; color: var(--ink); background: var(--surface); border: 1px solid #aebccf; border-radius: 8px; font-size: 1rem; transition: border-color 160ms, box-shadow 160ms; }
+.event-filter-form input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(21, 94, 239, 0.15); outline: none; }
+.event-search__input-wrapper { position: relative; display: flex; align-items: center; width: 100%; }
+.event-search__input-wrapper input { padding-right: 2.75rem; }
+.event-search__input-wrapper input::-webkit-search-decoration,
+.event-search__input-wrapper input::-webkit-search-cancel-button,
+.event-search__input-wrapper input::-webkit-search-results-button,
+.event-search__input-wrapper input::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+.event-search__clear-btn { position: absolute; right: 0.85rem; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; border: none; background: rgba(10, 16, 32, 0.08); color: var(--ink-muted); cursor: pointer; transition: all 160ms ease; padding: 0; }
+.event-search__clear-btn:hover { background: rgba(10, 16, 32, 0.16); color: var(--ink); transform: translateY(-50%) scale(1.08); }
+.event-spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255, 255, 255, 0.35); border-top-color: #ffffff; border-radius: 50%; animation: event-spin 600ms linear infinite; }
+@keyframes event-spin { to { transform: rotate(360deg); } }
+.event-button--searching { opacity: 0.85; pointer-events: none; }
 .event-desktop-filters { display: flex; gap: 1rem; }
 .event-desktop-filters select { min-width: 155px; }
 .event-mobile-filter { display: none; }

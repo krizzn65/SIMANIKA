@@ -31,7 +31,15 @@ class PublicEventController extends Controller
         $now = now();
         $query = Event::query()->whereIn('status', ['published', 'closed', 'selesai'])
             ->with('formFields')->withCount(['registrations' => fn ($q) => $q->whereIn('status', ['pending', 'accepted']), 'teams' => fn ($q) => $q->where('review_status', '!=', 'rejected')]);
-        if (!empty($filters['search'])) $query->whereRaw('LOWER(judul) LIKE ?', ['%'.mb_strtolower(str_replace(['%', '_'], ['\\%', '\\_'], $filters['search'])).'%']);
+        if (!empty($filters['search'])) {
+            $term = '%'.mb_strtolower(str_replace(['%', '_'], ['\\%', '\\_'], $filters['search'])).'%';
+            $query->where(function ($q) use ($term) {
+                $q->whereRaw('LOWER(judul) LIKE ?', [$term])
+                  ->orWhereRaw('LOWER(COALESCE(deskripsi, \'\')) LIKE ?', [$term])
+                  ->orWhereRaw('LOWER(COALESCE(kategori, \'\')) LIKE ?', [$term])
+                  ->orWhereRaw('LOWER(COALESCE(lokasi, \'\')) LIKE ?', [$term]);
+            });
+        }
         if (!empty($filters['kategori'])) {
             if ($filters['kategori'] === 'lainnya') {
                 $query->where(fn ($q) => $q->where('kategori', 'lainnya')->orWhereNotIn('kategori', ['hi-fest', 'mic', 'imce']));
