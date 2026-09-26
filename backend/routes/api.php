@@ -8,7 +8,6 @@ use App\Http\Controllers\Admin\EventRegistrantController;
 use App\Http\Controllers\Admin\OprecController as AdminOprecController;
 use App\Http\Controllers\Admin\OprecStageController;
 use App\Http\Controllers\Admin\OprecRegistrantController;
-use App\Http\Controllers\Admin\OprecTestReviewController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
@@ -95,8 +94,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/oprec/{oprec}/stages', [OprecStageController::class, 'store']);
         Route::put('/oprec/{oprec}/stages/{stage}', [OprecStageController::class, 'update']);
         Route::put('/oprec/{oprec}/stages/{stage}/form', [OprecStageController::class, 'saveForm']);
-        Route::get('/oprec/{oprec}/stages/{stage}/answers', [OprecTestReviewController::class, 'index']);
-        Route::put('/oprec/{oprec}/stages/{stage}/answers/{submission}/score', [OprecTestReviewController::class, 'score'])->whereNumber('submission')->middleware('throttle:auth');
         Route::get('/oprec/{oprec}/registrants', [OprecRegistrantController::class, 'index']);
         Route::put('/oprec/{oprec}/registrants/{registration}', [OprecRegistrantController::class, 'update']);
         Route::get('/oprec/{oprec}/registrants/{registration}/files/{field}', [OprecRegistrantController::class, 'download']);

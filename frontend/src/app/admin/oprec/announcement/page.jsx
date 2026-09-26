@@ -1,5 +1,5 @@
 import OprecStageOverview from "../OprecStageOverview";
-import "../answers/answers.css";
+import "../oprec-review.css";
 
 export default function OprecAnnouncementPage() {
   return <OprecStageOverview type="pengumuman" />;
