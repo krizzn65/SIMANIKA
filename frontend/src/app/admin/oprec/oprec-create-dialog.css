@@ -1,170 +1,929 @@
-.oprec-dialog__overlay{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:rgba(7,17,31,.65);backdrop-filter:blur(7px)}.oprec-dialog{width:min(100%,720px);max-height:min(90vh,900px);overflow:auto;background:#fff;border:1px solid #cad5e5;border-radius:18px;box-shadow:0 30px 90px rgba(7,17,31,.28);color:#0a1020}.oprec-dialog__header{display:flex;justify-content:space-between;align-items:start;gap:20px;padding:26px 30px;border-bottom:1px solid #dbe4ef}.oprec-dialog__header span{font:700 11px ui-monospace,monospace;letter-spacing:.13em;color:#155eef}.oprec-dialog__header h2{font-size:clamp(25px,3vw,34px);line-height:1.08;letter-spacing:-.045em;font-weight:750;margin:8px 0}.oprec-dialog__header p{color:#526176;font-size:15px;line-height:1.5;max-width:52ch}.oprec-dialog__header>button{flex:none;width:44px;height:44px;border-radius:9px;display:grid;place-items:center;color:#526176}.oprec-dialog__header>button:hover{background:#eff6ff;color:#155eef}.oprec-dialog__types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:28px 30px 32px}.oprec-dialog__types button{min-height:186px;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:10px;border:1px solid #cad5e5;border-radius:14px;padding:20px;background:#f9fbfe;transition:border-color .2s,background .2s,box-shadow .2s}.oprec-dialog__types button:hover,.oprec-dialog__types button:focus-visible{border-color:#155eef;background:#eff6ff;box-shadow:4px 4px 0 #155eef}.oprec-dialog__type-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:10px;background:#dbeafe;color:#155eef}.oprec-dialog__types strong{font-size:18px;letter-spacing:-.025em}.oprec-dialog__types small{font-size:13px;line-height:1.45;color:#526176}.oprec-dialog__form{padding:26px 30px 30px;display:grid;gap:18px}.oprec-dialog__form label{display:grid;gap:7px;font-size:14px;font-weight:650;color:#29364a}.oprec-dialog__form input:not([type=file]),.oprec-dialog__form textarea{width:100%;min-height:48px;background:white;border:1px solid #aebccf;border-radius:9px;padding:11px 13px;color:#0a1020;font-size:16px;outline:none}.oprec-dialog__form :is(input,textarea):focus-visible{border:2px solid #2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.18)}.oprec-dialog__form textarea{min-height:116px;resize:vertical}.oprec-dialog__dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.oprec-dialog__context{padding:13px 15px;background:#eff6ff;border-radius:9px;color:#526176;font-size:14px}.oprec-dialog__context strong{color:#0a1020}.oprec-dialog__poster .oprec-dialog__upload{display:flex;align-items:center;gap:16px;min-height:100px;padding:14px;border:1px dashed #9aafd0;border-radius:11px;background:#f9fbfe;color:#155eef;cursor:pointer}.oprec-dialog__upload img{width:56px;height:72px;object-fit:contain;background:#e6edf8;border-radius:5px}.oprec-dialog__upload span{display:grid;gap:4px}.oprec-dialog__upload small{font-size:12px;font-weight:400;color:#526176}.oprec-dialog__poster input[type=file]{max-width:100%;font-size:13px;font-weight:400}.oprec-dialog__error{background:#fff0f0;color:#a41e31;border:1px solid #efa6ae;border-radius:8px;padding:12px 15px;font-size:14px}.oprec-dialog__form footer{display:flex;justify-content:flex-end;gap:10px;border-top:1px solid #dbe4ef;padding-top:20px}.oprec-dialog__form footer button{min-height:48px;border-radius:9px;padding:0 20px;font-weight:700}.oprec-dialog__form footer button:first-child{border:1px solid #cad5e5}.oprec-dialog__form footer button:last-child{background:#155eef;color:white}.oprec-dialog__form footer button:disabled{opacity:.55}@media(max-width:640px){.oprec-dialog__overlay{padding:10px}.oprec-dialog__header,.oprec-dialog__form{padding:20px}.oprec-dialog__types{grid-template-columns:1fr;padding:20px}.oprec-dialog__types button{min-height:110px;display:grid;grid-template-columns:48px 1fr;column-gap:15px;align-items:center}.oprec-dialog__types strong,.oprec-dialog__types small{grid-column:2}.oprec-dialog__type-icon{grid-row:1/3}.oprec-dialog__dates{grid-template-columns:1fr}.oprec-dialog__form footer{flex-direction:column-reverse}.oprec-dialog__form footer button{width:100%}}@media(prefers-reduced-motion:reduce){.oprec-dialog__types button{transition:none}}
-.oprec-dialog__form .oprec-dialog__publish{display:flex;flex-direction:row;align-items:center;gap:10px;padding:14px;border-radius:9px;background:#eff6ff;color:#0f4bcb}.oprec-dialog__publish input{width:19px;height:19px;accent-color:#155eef;flex:none}
-.oprec-admin-period{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:650;color:#526176}.oprec-admin-period select{min-height:44px;padding:8px 12px;border:1px solid #aebccf;border-radius:9px;background:white;color:#0a1020;font-size:14px}
-.oprec-dialog__types button:disabled{opacity:.48;cursor:not-allowed}.oprec-dialog__types button:disabled:hover{border-color:#cad5e5;background:#f9fbfe;box-shadow:none}
+/* ==========================================================================
+   SIMANIKA Admin OPREC - Neo-Arcade Editorial / Minimalist Boxy Stylesheet
+   Geometri: Kotak tegas (border-radius: 0), hairline borders, tipografi seimbang
+   ========================================================================== */
+
+/* Dialog & Overlay */
+.oprec-dialog__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(7, 17, 31, 0.65);
+  backdrop-filter: blur(4px);
+}
+
+.oprec-dialog {
+  width: min(100%, 720px);
+  max-height: min(90vh, 900px);
+  overflow: auto;
+  background: #ffffff;
+  border: 1px solid #cad5e5;
+  border-radius: 0;
+  box-shadow: 4px 4px 0 rgba(7, 17, 31, 0.18);
+  color: #0a1020;
+}
+
+.oprec-dialog__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 20px;
+  padding: 20px 24px;
+  border-bottom: 1px solid #cad5e5;
+}
+
+.oprec-dialog__header span {
+  font: 500 11px/1.4 "IBM Plex Mono", ui-monospace, monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #155eef;
+}
+
+.oprec-dialog__header h2 {
+  font-size: clamp(20px, 2.5vw, 24px);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  font-weight: 600;
+  margin: 6px 0;
+  color: #0a1020;
+}
+
+.oprec-dialog__header p {
+  color: #526176;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  max-width: 54ch;
+  margin: 0;
+}
+
+.oprec-dialog__header > button {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #cad5e5;
+  border-radius: 0;
+  background: #ffffff;
+  display: grid;
+  place-items: center;
+  color: #526176;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.oprec-dialog__header > button:hover {
+  background: #eff6ff;
+  border-color: #155eef;
+  color: #155eef;
+}
+
+/* Stage Type Selection Cards */
+.oprec-dialog__types {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 24px;
+}
+
+.oprec-dialog__types button {
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 10px;
+  border: 1px solid #cad5e5;
+  border-radius: 0;
+  padding: 16px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.oprec-dialog__types button:hover:not(:disabled),
+.oprec-dialog__types button:focus-visible:not(:disabled) {
+  border-color: #155eef;
+  background: #eff6ff;
+  box-shadow: 2px 2px 0 #155eef;
+}
+
+.oprec-dialog__types button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #f8fafc;
+}
+
+.oprec-dialog__type-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #bfdbfe;
+  border-radius: 0;
+  background: #eff6ff;
+  color: #155eef;
+}
+
+.oprec-dialog__types strong {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: #0a1020;
+}
+
+.oprec-dialog__types small {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #526176;
+  font-weight: 400;
+}
+
+/* Dialog Form */
+.oprec-dialog__form {
+  padding: 20px 24px 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.oprec-dialog__form label,
+.oprec-dialog__form .oprec-dialog__field-group {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.oprec-dialog__field-group .oprec-dialog__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.oprec-dialog__required {
+  color: #ef4444 !important;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+.oprec-dialog__form input:not([type="file"]),
+.oprec-dialog__form textarea {
+  width: 100%;
+  min-height: 42px;
+  background: #ffffff;
+  border: 1px solid #cad5e5;
+  border-radius: 0;
+  padding: 8px 12px;
+  color: #0a1020;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.oprec-dialog__form :is(input, textarea):focus-visible {
+  border-color: #155eef;
+  box-shadow: 0 0 0 1px #155eef;
+}
+
+.oprec-dialog__form textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.oprec-dialog__dates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.oprec-dialog__context {
+  padding: 12px 14px;
+  background: #f8fafd;
+  border: 1px solid #cad5e5;
+  border-radius: 0;
+  color: #526176;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.oprec-dialog__context strong {
+  color: #0a1020;
+  font-weight: 600;
+}
+
+.oprec-dialog__poster .oprec-dialog__upload {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 88px;
+  padding: 12px;
+  border: 1px dashed #94a3b8;
+  border-radius: 0;
+  background: #f8fafd;
+  color: #155eef;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.oprec-dialog__poster .oprec-dialog__upload:hover {
+  border-color: #155eef;
+  background: #eff6ff;
+}
+
+.oprec-dialog__upload img {
+  width: 52px;
+  height: 68px;
+  object-fit: contain;
+  background: #e2e8f0;
+  border-radius: 0;
+}
+
+.oprec-dialog__upload span {
+  display: grid;
+  gap: 3px;
+}
+
+.oprec-dialog__upload small {
+  font-size: 11px;
+  font-weight: 400;
+  color: #64748b;
+}
+
+.oprec-dialog__poster input[type="file"] {
+  max-width: 100%;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.oprec-dialog__form .oprec-dialog__publish {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 0;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 13px;
+}
+
+.oprec-dialog__publish input {
+  width: 16px;
+  height: 16px;
+  accent-color: #155eef;
+  flex: none;
+}
+
+.oprec-dialog__error {
+  background: #fff1f2;
+  color: #9f1239;
+  border: 1px solid #fecdd3;
+  border-radius: 0;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+.oprec-dialog__form footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #cad5e5;
+  padding-top: 16px;
+}
+
+.oprec-dialog__form footer button {
+  min-height: 40px;
+  border-radius: 0;
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.oprec-dialog__form footer button:first-child {
+  border: 1px solid #cad5e5;
+  background: #ffffff;
+  color: #334155;
+}
+
+.oprec-dialog__form footer button:first-child:hover {
+  background: #f8fafc;
+}
+
+.oprec-dialog__form footer button:last-child {
+  border: 1px solid #155eef;
+  background: #155eef;
+  color: #ffffff;
+}
+
+.oprec-dialog__form footer button:last-child:hover {
+  background: #0f4bcb;
+}
+
+.oprec-dialog__form footer button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Period Selector (Header) */
+.oprec-admin-period {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 11px/1.4 "IBM Plex Mono", ui-monospace, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #475569;
+}
+
+.oprec-admin-period select {
+  min-height: 38px;
+  padding: 6px 10px;
+  border: 1px solid #cad5e5;
+  border-radius: 0;
+  background: #ffffff;
+  color: #0a1020;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.oprec-admin-period select:focus-visible {
+  border-color: #155eef;
+}
+
+/* Action Buttons on Admin OPREC (Definitive Button Shape: border, background, boxy) */
+.oprec-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 38px;
+  padding: 0.45rem 0.95rem;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  border-radius: 0 !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.oprec-btn--primary {
+  background: #155eef !important;
+  color: #ffffff !important;
+  border: 1px solid #155eef !important;
+  box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.08);
+}
+
+.oprec-btn--primary:hover:not(:disabled) {
+  background: #0f4bcb !important;
+  border-color: #0f4bcb !important;
+  box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.16);
+}
+
+.oprec-btn--secondary {
+  background: #ffffff !important;
+  color: #1e293b !important;
+  border: 1px solid #cad5e5 !important;
+  box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.04);
+}
+
+.oprec-btn--secondary:hover:not(:disabled) {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+  box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.1);
+}
+
+.oprec-btn:focus-visible {
+  outline: 2px solid #155eef !important;
+  outline-offset: 2px !important;
+}
+
+.oprec-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Table verification buttons */
+.oprec-table-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 0 !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.oprec-table-btn--accept {
+  background: #ecfdf5 !important;
+  color: #065f46 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+.oprec-table-btn--accept:hover:not(:disabled) {
+  background: #d1fae5 !important;
+  border-color: #6ee7b7 !important;
+}
+
+.oprec-table-btn--reject {
+  background: #fff1f2 !important;
+  color: #9f1239 !important;
+  border: 1px solid #fecdd3 !important;
+}
+
+.oprec-table-btn--reject:hover:not(:disabled) {
+  background: #ffe4e6 !important;
+  border-color: #fda4af !important;
+}
+
+.oprec-table-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   OPREC Admin Overview Section (Minimalist, Boxy, Editorial)
+   ========================================================================== */
 .oprec-admin-overview {
   overflow: hidden;
-  border: 1px solid #cbd7e8;
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 3px 12px rgba(15, 36, 70, .035);
-  color: #17243a;
+  border: 1px solid #cad5e5;
+  border-radius: 0;
+  background: #ffffff;
+  color: #0a1020;
 }
+
 .oprec-admin-overview__top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 24px;
-  padding: 22px 28px 18px;
+  gap: 20px;
+  padding: 20px 24px 18px;
 }
+
 .oprec-admin-overview__eyebrow,
 .oprec-admin-overview__step {
+  font: 500 11px/1.4 "IBM Plex Mono", ui-monospace, monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: #155eef;
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: .1em;
 }
+
 .oprec-admin-overview__top h2 {
-  margin: 4px 0 3px;
-  color: #101b2e;
-  font-size: clamp(24px, 2vw, 30px);
-  font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: -.035em;
+  margin: 4px 0 2px;
+  color: #0a1020;
+  font-size: clamp(20px, 2vw, 24px);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
 }
+
 .oprec-admin-overview__top p {
   color: #475569;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
+  font-weight: 400;
+  margin: 0;
 }
+
 .oprec-admin-overview__count {
   flex: none;
   display: grid;
-  min-width: 136px;
+  min-width: 120px;
   gap: 2px;
-  padding: 11px 17px;
-  border: 1px solid #dce6f4;
-  border-radius: 10px;
-  background: #f5f8fe;
+  padding: 10px 14px;
+  border: 1px solid #cad5e5;
+  border-radius: 0;
+  background: #f8fafd;
 }
+
 .oprec-admin-overview__count strong {
-  color: #0e3faf;
-  font-size: 27px;
-  font-weight: 800;
-  line-height: 1;
+  font: 600 24px/1 "IBM Plex Mono", monospace;
+  color: #0b2559;
 }
-.oprec-admin-overview__count span { color: #3b4a61; font-size: 14px; font-weight: 650; }
+
+.oprec-admin-overview__count span {
+  font: 500 10px/1.2 "IBM Plex Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
 .oprec-admin-overview__registration {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 20px;
-  margin: 0 28px;
-  padding: 18px 0;
-  border-top: 1px solid #e1e8f2;
+  margin: 0;
+  padding: 18px 24px;
+  border-top: 1px solid #e2e8f0;
 }
-.oprec-admin-overview__registration-main { min-width: 0; }
+
+.oprec-admin-overview__registration-main {
+  min-width: 0;
+}
+
 .oprec-admin-overview__registration h3 {
-  margin: 5px 0 4px;
-  color: #111c30;
-  font-size: clamp(18px, 1.6vw, 22px);
-  font-weight: 750;
-  line-height: 1.27;
-  letter-spacing: -.025em;
+  margin: 6px 0 4px;
+  color: #0a1020;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
 }
+
 .oprec-admin-overview__registration p {
-  max-width: 76ch;
-  color: #3d4b61;
-  font-size: 14px;
-  line-height: 1.55;
+  max-width: 74ch;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.6;
+  font-weight: 400;
+  margin: 0;
 }
+
 .oprec-admin-overview__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px 18px;
-  margin-top: 13px;
-  color: #475569;
-  font-size: 14px;
-  font-weight: 600;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 12px;
 }
-.oprec-admin-overview__meta span:first-child { color: #0d47b7; }
+
+.oprec-admin-overview__meta span:first-child {
+  font: 500 11px/1 "IBM Plex Mono", monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.oprec-admin-overview__meta span:not(:first-child) {
+  font: 400 12px/1 "IBM Plex Mono", monospace;
+  color: #64748b;
+}
+
 .oprec-admin-overview__edit,
 .oprec-admin-overview__stage-actions :is(a, button) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 6px;
   flex: none;
-  min-height: 38px;
-  padding: 8px 12px;
-  border: 1px solid #b9cdf0;
-  border-radius: 8px;
-  background: #eff5ff;
-  color: #1349b6;
-  font-size: 14px;
-  font-weight: 750;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid #cad5e5;
+  border-radius: 0;
+  background: #ffffff;
+  color: #0b2559;
+  font-size: 12px;
+  font-weight: 500;
   text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
+
 .oprec-admin-overview__edit:hover,
-.oprec-admin-overview__stage-actions :is(a, button):hover { background: #dceaff; border-color: #155eef; }
-.oprec-admin-overview :is(a, button):focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; }
+.oprec-admin-overview__stage-actions :is(a, button):hover {
+  background: #eff6ff;
+  border-color: #155eef;
+  color: #155eef;
+}
+
+.oprec-admin-overview :is(a, button):focus-visible {
+  outline: 2px solid #155eef;
+  outline-offset: 1px;
+}
+
 .oprec-admin-overview__divisions {
   display: flex;
   align-items: flex-start;
-  gap: 15px;
-  padding: 13px 28px;
-  border-top: 1px solid #e1e8f2;
-  background: #f8faff;
+  gap: 14px;
+  padding: 12px 24px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafd;
 }
+
 .oprec-admin-overview__divisions > strong {
   flex: none;
-  padding-top: 5px;
-  color: #293951;
-  font-size: 14px;
-  font-weight: 750;
+  padding-top: 3px;
+  font: 500 11px/1.4 "IBM Plex Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #475569;
 }
-.oprec-admin-overview__divisions > div { display: flex; flex-wrap: wrap; gap: 7px; }
+
+.oprec-admin-overview__divisions > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .oprec-admin-overview__divisions span {
   display: inline-flex;
-  padding: 4px 9px;
-  border: 1px solid #cfdbef;
-  border-radius: 6px;
-  background: #fff;
-  color: #263b5d;
-  font-size: 14px;
-  font-weight: 700;
+  padding: 3px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 0;
+  background: #ffffff;
+  color: #1e293b;
+  font: 500 11px/1 "IBM Plex Mono", monospace;
 }
-.oprec-admin-overview__next { border-top: 1px solid #dce5f2; padding: 17px 28px 21px; }
-.oprec-admin-overview__next h3 { margin-bottom: 12px; color: #14233a; font-size: 15px; font-weight: 800; }
-.oprec-admin-overview__stage-list { display: grid; gap: 8px; }
+
+.oprec-admin-overview__next {
+  border-top: 1px solid #e2e8f0;
+  padding: 16px 24px 20px;
+}
+
+.oprec-admin-overview__next h3 {
+  margin: 0 0 10px;
+  font: 500 11px/1.4 "IBM Plex Mono", monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.oprec-admin-overview__stage-list {
+  display: grid;
+  gap: 8px;
+}
+
 .oprec-admin-overview__stage {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 10px 12px;
-  border: 1px solid #d9e3f1;
-  border-radius: 9px;
-  background: #fbfcff;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 0;
+  background: #ffffff;
+  transition: border-color 0.15s ease;
 }
-.oprec-admin-overview__stage-number { color: #155eef; font-size: 14px; font-weight: 800; }
-.oprec-admin-overview__stage > div:nth-child(2) { flex: 1; min-width: 0; }
-.oprec-admin-overview__stage strong { color: #16243b; font-size: 14px; font-weight: 750; }
-.oprec-admin-overview__stage p { overflow: hidden; color: #526176; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
-.oprec-admin-overview__stage-state { color: #285490; font-size: 14px; font-weight: 700; }
-.oprec-admin-overview__stage-actions { display: flex; flex-wrap: wrap; gap: 7px; }
-.oprec-admin-overview__stage-actions :is(a, button) { min-height: 32px; padding: 5px 9px; font-size: 14px; }
+
+.oprec-admin-overview__stage:hover {
+  border-color: #cbd5e1;
+}
+
+.oprec-admin-overview__stage-number {
+  font: 600 12px/1 "IBM Plex Mono", monospace;
+  color: #155eef;
+}
+
+.oprec-admin-overview__stage > div:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+
+.oprec-admin-overview__stage strong {
+  color: #0a1020;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.oprec-admin-overview__stage p {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 2px 0 0;
+}
+
+.oprec-admin-overview__stage-state {
+  font: 500 10px/1 "IBM Plex Mono", monospace;
+  text-transform: uppercase;
+  padding: 3px 6px;
+  border: 1px solid #cbd5e1;
+  border-radius: 0;
+  background: #f8fafc;
+  color: #475569;
+}
+
+.oprec-admin-overview__stage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.oprec-admin-overview__stage-actions :is(a, button) {
+  min-height: 30px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* Responsive adjustments */
 @media (max-width: 800px) {
-  .oprec-admin-overview__stage { flex-wrap: wrap; }
-  .oprec-admin-overview__stage-actions { width: 100%; margin-left: 31px; }
+  .oprec-admin-overview__stage {
+    flex-wrap: wrap;
+  }
+  .oprec-admin-overview__stage-actions {
+    width: 100%;
+    margin-left: 28px;
+  }
 }
-@media (max-width: 620px) {
-  .oprec-admin-overview__top { padding: 20px; align-items: flex-start; }
-  .oprec-admin-overview__count { min-width: 100px; padding: 9px 11px; }
-  .oprec-admin-overview__registration { margin: 0 20px; flex-direction: column; }
-  .oprec-admin-overview__divisions { padding: 13px 20px; flex-direction: column; gap: 8px; }
-  .oprec-admin-overview__next { padding: 17px 20px 20px; }
+
+@media (max-width: 640px) {
+  .oprec-dialog__overlay {
+    padding: 10px;
+  }
+  .oprec-dialog__header,
+  .oprec-dialog__form {
+    padding: 16px;
+  }
+  .oprec-dialog__types {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+  .oprec-dialog__dates {
+    grid-template-columns: 1fr;
+  }
+  .oprec-dialog__form footer {
+    flex-direction: column-reverse;
+  }
+  .oprec-dialog__form footer button {
+    width: 100%;
+  }
+
+  .oprec-admin-overview__top {
+    padding: 16px;
+    align-items: flex-start;
+  }
+  .oprec-admin-overview__count {
+    min-width: 90px;
+    padding: 8px 10px;
+  }
+  .oprec-admin-overview__registration {
+    padding: 16px;
+    flex-direction: column;
+  }
+  .oprec-admin-overview__divisions {
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .oprec-admin-overview__next {
+    padding: 14px 16px 16px;
+  }
 }
+
 @media (max-width: 430px) {
-  .oprec-admin-overview__top { flex-direction: column; gap: 12px; }
-  .oprec-admin-overview__count { display: flex; align-items: baseline; gap: 8px; width: 100%; }
+  .oprec-admin-overview__top {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .oprec-admin-overview__count {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    width: 100%;
+  }
+}
+
+/* Dual Year Period Picker */
+.oprec-dialog__form .oprec-period-picker {
+  display: block;
+  width: 100%;
+}
+
+.oprec-dialog__form .oprec-period-picker__body {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 42px;
+  background: #ffffff;
+  border: 1px solid #cad5e5;
+  border-radius: 0 !important;
+  padding: 2px 6px 2px 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.oprec-dialog__form .oprec-period-picker__body:focus-within {
+  border-color: #155eef;
+  box-shadow: 0 0 0 1px #155eef;
+}
+
+.oprec-dialog__form .oprec-period-picker__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  margin-right: 6px;
+  flex: none;
+}
+
+.oprec-dialog__form .oprec-period-picker__field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.oprec-dialog__form .oprec-period-picker select {
+  width: 100% !important;
+  min-height: 38px !important;
+  height: 38px !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #0a1020 !important;
+  font: 500 13px/1.4 inherit !important;
+  padding: 4px 6px !important;
+  cursor: pointer;
+  border-radius: 0 !important;
+  outline: none !important;
+  transition: background-color 0.15s ease;
+}
+
+.oprec-dialog__form .oprec-period-picker select:focus {
+  background: #eff6ff !important;
+  color: #155eef !important;
+}
+
+.oprec-dialog__form .oprec-period-picker__slash {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: #94a3b8;
+  padding: 0 6px;
+  user-select: none;
+  flex: none;
+}
+
+.oprec-dialog__form .oprec-period-picker__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding-left: 6px;
+  flex: none;
+}
+
+.oprec-dialog__form .oprec-period-picker__badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #155eef;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 2px 7px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.oprec-dialog__form .oprec-period-picker__hint {
+  font-size: 11px;
+  color: #94a3b8;
+  padding: 2px 4px;
+}
+
+.oprec-dialog__form .oprec-period-picker__clear {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 22px !important;
+  height: 22px !important;
+  padding: 0 !important;
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 0 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.oprec-dialog__form .oprec-period-picker__clear:hover {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+  border-color: #fca5a5 !important;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .oprec-dialog__types button,
+  .oprec-dialog__header > button,
+  .oprec-admin-overview :is(a, button) {
+    transition: none;
+  }
 }

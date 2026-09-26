@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { X, ClipboardList, Megaphone, UploadCloud } from "lucide-react";
+import { X, UploadCloud } from "lucide-react";
 import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
 import { AnimatedCheckIcon } from "@/components/ui/AnimatedCheckIcon";
 import { api } from "@/services/api";
 import { divisionPreview } from "@/components/oprec/divisionPreview";
+import { OprecPeriodPicker } from "./OprecPeriodPicker";
 import "./oprec-create-dialog.css";
 
 const firstFields = [
@@ -18,7 +19,9 @@ const firstFields = [
   { name: "divisi_pilihan_1", label: "Divisi pilihan", type: "select", required: true, options: [] },
 ];
 const initial = { type: "", periode: "", headline: "", deskripsi: "", tanggal_buka: "", tanggal_tutup: "", poster: "", published: false };
-const dateTime = (value) => value ? new Date(`${value}:00+07:00`).toISOString() : null;
+const toDateOnly = (value) => value ? new Date(value).toLocaleDateString("sv-SE", { timeZone: "Asia/Jakarta" }) : "";
+const apiDateStart = (value) => value ? (value.includes("T") ? new Date(value).toISOString() : new Date(`${value}T00:00:00+07:00`).toISOString()) : null;
+const apiDateEnd = (value) => value ? (value.includes("T") ? new Date(value).toISOString() : new Date(`${value}T23:59:59+07:00`).toISOString()) : null;
 
 function TestIcon({ active = false }) {
   const reduced = useReducedMotion();
@@ -41,8 +44,8 @@ export default function OprecCreateDialog({ open, onClose, onCreated, selectedOp
     const stage = editingStage;
     setData(stage ? {
       type: stage.type, periode: selectedOprec?.periode || "", headline: stage.headline || "", deskripsi: stage.deskripsi || "",
-      tanggal_buka: stage.tanggalBuka ? new Date(stage.tanggalBuka).toLocaleString("sv-SE", { timeZone: "Asia/Jakarta" }).replace(" ", "T").slice(0, 16) : "",
-      tanggal_tutup: stage.tanggalTutup ? new Date(stage.tanggalTutup).toLocaleString("sv-SE", { timeZone: "Asia/Jakarta" }).replace(" ", "T").slice(0, 16) : "",
+      tanggal_buka: toDateOnly(stage.tanggalBuka),
+      tanggal_tutup: toDateOnly(stage.tanggalTutup),
       poster: stage.poster || "", published: Boolean(stage.published),
     } : { ...initial, type: initialType });
     setPosterFile(null); setPosterPreview(""); setError("");
@@ -61,8 +64,8 @@ export default function OprecCreateDialog({ open, onClose, onCreated, selectedOp
     if (!data.type) { setError("Pilih jenis tahap terlebih dahulu."); return; }
     if (data.type !== "pendaftaran" && !selectedOprec) { setError("Buat pendaftaran periode terlebih dahulu sebelum menambah tahap berikutnya."); return; }
     if (!data.headline.trim() || !data.tanggal_buka) { setError("Isi headline dan tanggal tahap."); return; }
-    if (data.type !== "pengumuman" && (!data.tanggal_tutup || Date.parse(data.tanggal_tutup) <= Date.parse(data.tanggal_buka))) { setError("Tanggal selesai harus setelah tanggal mulai."); return; }
-    if (data.type === "pendaftaran" && !data.periode.trim()) { setError("Isi periode kepengurusan."); return; }
+    if (data.type !== "pengumuman" && (!data.tanggal_tutup || data.tanggal_tutup < data.tanggal_buka)) { setError("Tanggal selesai tidak boleh sebelum tanggal mulai."); return; }
+    if (data.type === "pendaftaran" && (!data.periode.trim() || data.periode.startsWith("/") || data.periode.endsWith("/"))) { setError("Pilih tahun awal dan tahun akhir periode kepengurusan."); return; }
     setBusy(true); setError("");
     try {
       let poster = data.poster.trim() || null;
@@ -75,7 +78,7 @@ export default function OprecCreateDialog({ open, onClose, onCreated, selectedOp
       if (data.type === "pendaftaran") {
         const response = await api.post("/admin/oprec", {
           periode: data.periode.trim(), status: "draft", headline: data.headline.trim(), deskripsi: data.deskripsi.trim(), poster,
-          tanggal_buka: dateTime(data.tanggal_buka), tanggal_tutup: dateTime(data.tanggal_tutup),
+          tanggal_buka: apiDateStart(data.tanggal_buka), tanggal_tutup: apiDateEnd(data.tanggal_tutup),
           schema_version: "1", form_intro: "", form_fields: firstFields,
           divisi_tersedia: divisionPreview.map((item) => ({ nama: item.nama, nama_lengkap: item.namaLengkap, deskripsi: item.deskripsi, logo: item.logo || null, kuota: null })),
           faq: [], pengumuman: { published: false, tanggal: null, pesan: "" },
@@ -83,7 +86,7 @@ export default function OprecCreateDialog({ open, onClose, onCreated, selectedOp
         onClose(); router.push(`/admin/oprec/${response.data.data.id}/edit`);
       } else {
         const payload = { type: data.type, headline: data.headline.trim(), deskripsi: data.deskripsi.trim(), poster,
-          tanggal_buka: dateTime(data.tanggal_buka), tanggal_tutup: dateTime(data.tanggal_tutup), published: data.type === "pengumuman" ? Boolean(data.published) : Boolean(editingStage?.published) };
+          tanggal_buka: apiDateStart(data.tanggal_buka), tanggal_tutup: apiDateEnd(data.tanggal_tutup), published: data.type === "pengumuman" ? Boolean(data.published) : Boolean(editingStage?.published) };
         const response = editingStage
           ? await api.put(`/admin/oprec/${selectedOprec.id}/stages/${editingStage.id}`, payload)
           : await api.post(`/admin/oprec/${selectedOprec.id}/stages`, payload);
@@ -105,9 +108,9 @@ export default function OprecCreateDialog({ open, onClose, onCreated, selectedOp
       </div> : <form onSubmit={submit} className="oprec-dialog__form">
         {error && <div className="oprec-dialog__error" role="alert">{error}</div>}
         {data.type !== "pendaftaran" && <p className="oprec-dialog__context">Periode: <strong>{selectedOprec?.periode || "Belum ada pendaftaran"}</strong></p>}
-        {data.type === "pendaftaran" && <label>Periode kepengurusan <input autoFocus required value={data.periode} onChange={(event) => set("periode", event.target.value)} placeholder="2026/2027" maxLength={40} /></label>}
-        <label>Headline <input autoFocus={data.type !== "pendaftaran"} required value={data.headline} onChange={(event) => set("headline", event.target.value)} placeholder={data.type === "pendaftaran" ? "Saatnya menjadi bagian dari HIMANIKA" : "Judul tahap yang akan tampil di kartu"} maxLength={300} /></label>
-        <div className="oprec-dialog__dates"><label>{data.type === "pengumuman" ? "Tanggal pengumuman" : "Tanggal mulai"}<input required type="datetime-local" value={data.tanggal_buka} onChange={(event) => set("tanggal_buka", event.target.value)} /></label>{data.type !== "pengumuman" && <label>Tanggal selesai<input required type="datetime-local" value={data.tanggal_tutup} onChange={(event) => set("tanggal_tutup", event.target.value)} /></label>}</div>
+        {data.type === "pendaftaran" && <div className="oprec-dialog__field-group"><span className="oprec-dialog__label">Periode kepengurusan <span className="oprec-dialog__required">*</span></span><OprecPeriodPicker value={data.periode} onChange={(val) => set("periode", val)} /></div>}
+        <label>Headline <span className="oprec-dialog__required">*</span><input autoFocus={data.type !== "pendaftaran"} required value={data.headline} onChange={(event) => set("headline", event.target.value)} placeholder={data.type === "pendaftaran" ? "Saatnya menjadi bagian dari HIMANIKA" : "Judul tahap yang akan tampil di kartu"} maxLength={300} /></label>
+        <div className="oprec-dialog__dates"><label>{data.type === "pengumuman" ? "Tanggal pengumuman" : "Tanggal mulai"} <span className="oprec-dialog__required">*</span><input required type="date" value={data.tanggal_buka} onChange={(event) => set("tanggal_buka", event.target.value)} /></label>{data.type !== "pengumuman" && <label>Tanggal selesai <span className="oprec-dialog__required">*</span><input required type="date" value={data.tanggal_tutup} onChange={(event) => set("tanggal_tutup", event.target.value)} /></label>}</div>
         <label>Deskripsi <textarea rows={4} value={data.deskripsi} onChange={(event) => set("deskripsi", event.target.value)} placeholder="Ceritakan tahap ini dengan singkat dan jelas." maxLength={5000} /></label>
         {data.type === "pengumuman" && <label className="oprec-dialog__publish"><input type="checkbox" checked={Boolean(data.published)} onChange={(event) => set("published", event.target.checked)} /> Terbitkan pengumuman sesuai tanggal yang dipilih</label>}
         <label className="oprec-dialog__poster">Poster / pamflet <span className="oprec-dialog__upload">{posterPreview || data.poster ? <img src={posterPreview || data.poster} alt="Pratinjau poster" /> : <UploadCloud size={30} aria-hidden="true" />}<span><strong>{posterFile ? posterFile.name : data.poster ? "Ganti poster" : "Pilih poster"}</strong><small>JPG, PNG, atau WebP · maksimal 5 MB</small></span></span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; if (file.size > 5 * 1024 * 1024 || !["image/jpeg", "image/png", "image/webp"].includes(file.type)) { setError("Poster harus JPG, PNG, atau WebP maksimal 5 MB."); return; } setPosterFile(file); setPosterPreview(URL.createObjectURL(file)); setError(""); }} /></label>

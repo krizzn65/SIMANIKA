@@ -249,3 +249,14 @@ Halaman `/admin/oprec` sekarang memakai satu kartu ringkasan untuk pendaftaran
 beserta tahap lanjutannya. Judul utama kartu adalah Pendaftaran; headline,
 deskripsi, jadwal, jumlah berkas, dan divisi berada dalam kartu yang sama.
 Label teknis skema dan status mentah tidak tampil pada ringkasan admin.
+
+## Revisi UI Admin OPREC (Minimalis Kotak) — 27 September 2026
+
+Halaman `/admin/oprec` telah dirombak total menyelaraskan bahasa desain **Neo-Arcade Editorial** dan formulir peserta:
+- Geometri seragam bergaris tajam (`border-radius: 0`), tanpa sudut rounded melengkung atau tebal.
+- Tipografi proporsional: heading menggunakan `font-semibold` / `font-medium`, eyebrow teknikal mono (`// KELOLA OPREC`, `// DATA CALON ANGGOTA`), serta menghapus teks gemuk berbobot 800/750.
+- Filter toolbar kini dilengkapi dropdown filter divisi (mengaktifkan state `divisionFilter`).
+- Status badges dan tabel verifikasi calon anggota ditata minimalis kotak dengan indikator mono.
+- Pembersihan dead code: 10 import ikon mati di `page.jsx` dan 2 import mati di `OprecCreateDialog.jsx` telah dihapus total.
+- Halaman penyusun formulir (`/admin/oprec/[id]/edit`) dirombak total menggunakan layout 3-tab terstruktur (1. Informasi & Jadwal, 2. Kelola Divisi, 3. Pertanyaan Formulir) serta panel pratinjau formulir interaktif real-time yang dapat di-toggle.
+
