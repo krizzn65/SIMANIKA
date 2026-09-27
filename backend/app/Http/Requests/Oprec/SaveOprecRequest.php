@@ -18,6 +18,7 @@ class SaveOprecRequest extends FormRequest
             'poster' => ['nullable', 'url:http,https', 'max:2048'], 'poster_alt' => ['nullable', 'string', 'max:250'],
             'tanggal_buka' => ['nullable', 'date'], 'tanggal_tutup' => ['nullable', 'date', 'after:tanggal_buka'],
             'schema_version' => ['required', 'string', 'max:20'], 'form_intro' => ['nullable', 'string', 'max:2000'],
+            'link_grup_wa' => ['nullable', 'url:http,https', 'max:500'],
             'form_fields' => ['required', 'array', 'max:40'],
             'form_fields.*.name' => ['required', 'regex:/^[a-z][a-z0-9_]{0,49}$/', 'max:50'],
             'form_fields.*.type' => ['required', Rule::in(['text', 'email', 'tel', 'number', 'date', 'textarea', 'select', 'radio', 'checkbox', 'file'])],

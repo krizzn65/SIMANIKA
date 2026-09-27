@@ -770,6 +770,69 @@
   color: #155eef;
 }
 
+/* WhatsApp Group Link Section */
+.oprec-builder__wa-section {
+  border-top-color: #d1fae5;
+}
+
+.oprec-builder__wa-toggle {
+  color: #059669;
+}
+
+.oprec-builder__wa-toggle:hover {
+  color: #047857;
+}
+
+.oprec-builder__wa-content {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid #d1fae5;
+  background: #f0fdf4;
+}
+
+.oprec-builder__wa-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 11px/1.4 "IBM Plex Mono", monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #059669;
+  margin-bottom: 8px;
+}
+
+.oprec-builder__wa-icon {
+  color: #059669;
+  flex-shrink: 0;
+}
+
+.oprec-builder__wa-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #a7f3d0;
+  background: #ffffff;
+  font: 400 13px/1.5 "Inter", sans-serif;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.oprec-builder__wa-input::placeholder {
+  color: #94a3b8;
+}
+
+.oprec-builder__wa-input:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.12);
+}
+
+.oprec-builder__wa-hint {
+  display: block;
+  margin-top: 6px;
+  font: 400 11px/1.5 "Inter", sans-serif;
+  color: #64748b;
+}
+
 /* ==========================================================================
    PRATINJAU HALAMAN USER (NEO-ARCADE BROWSER FRAME)
    ========================================================================== */
