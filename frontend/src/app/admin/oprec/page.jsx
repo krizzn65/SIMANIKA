@@ -7,7 +7,7 @@ import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
 import { api } from "@/services/api";
 import { getOprecTableFields, getRegistrantFieldValue, getRegistrantFormData } from "@/lib/oprecRegistrants";
 import { AdminErrorNotice } from "../AdminErrorNotice";
-import { Search, X, FileText, RefreshCw, Calendar, Pencil, Trash2 } from "lucide-react";
+import { Search, X, FileText, RefreshCw, Calendar, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import "./oprec-create-dialog.css";
 
 function formatOprecDate(dateStr) {
@@ -53,6 +53,9 @@ export default function AdminOprecPage() {
   const [search, setSearch] = useState("");
   const [divisionFilter, setDivisionFilter] = useState("all");
   const [createOpen, setCreateOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const deleteCancelRef = useRef(null);
 
   // Form Verification Modal State
   const [verifyModal, setVerifyModal] = useState({
@@ -108,24 +111,39 @@ export default function AdminOprecPage() {
     return () => { clearTimeout(timer); requestId.current += 1; };
   }, [selectedOprec?.id, registrantPage, search, divisionFilter]);
 
+  useEffect(() => {
+    if (!deleteTarget) return;
+    deleteCancelRef.current?.focus();
+    const keydown = (event) => {
+      if (event.key === "Escape" && !deleting) setDeleteTarget(null);
+    };
+    window.addEventListener("keydown", keydown);
+    return () => window.removeEventListener("keydown", keydown);
+  }, [deleteTarget, deleting]);
+
   const handleSelectOprec = (oprec) => {
     setSelectedOprec(oprec);
     setRegistrants([]);
     setRegistrantTotal(0);
     setVerifyModal({ isOpen: false, registrant: null });
+    setDeleteTarget(null);
     setRegistrantPage(1);
   };
 
   const handleDeleteOprec = async (oprec) => {
-    if (!oprec || !window.confirm(`Hapus pendaftaran OPREC periode ${oprec.periode}? Tindakan ini tidak dapat dibatalkan.`)) return;
+    if (!oprec || deleting) return;
+    setDeleting(true);
     try {
       await api.delete(`/admin/oprec/${oprec.id}`);
       setSelectedOprec(null);
       setRegistrants([]);
       setRegistrantTotal(0);
+      setDeleteTarget(null);
       await fetchOprecs();
     } catch (err) {
       setLoadError(err.response?.data?.message || err.message || "Pendaftaran belum dapat dihapus.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -235,7 +253,7 @@ export default function AdminOprecPage() {
                 <Pencil size={14} aria-hidden="true" />
                 <span>Kelola formulir</span>
               </Link>
-              <button type="button" className="oprec-admin-overview__delete" onClick={() => handleDeleteOprec(selectedOprec)}>
+              <button type="button" className="oprec-admin-overview__delete" onClick={() => setDeleteTarget(selectedOprec)}>
                 <Trash2 size={14} aria-hidden="true" />
                 <span>Hapus pendaftaran</span>
               </button>
@@ -253,6 +271,32 @@ export default function AdminOprecPage() {
             </div>
           )}
         </section>
+      )}
+
+      {deleteTarget && (
+        <div
+          className="oprec-delete-dialog__overlay"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !deleting) setDeleteTarget(null);
+          }}
+        >
+          <section className="oprec-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="oprec-delete-dialog-title" aria-describedby="oprec-delete-dialog-description">
+            <div className="oprec-delete-dialog__icon" aria-hidden="true"><AlertTriangle size={22} /></div>
+            <span className="oprec-delete-dialog__eyebrow">Konfirmasi tindakan</span>
+            <h2 id="oprec-delete-dialog-title">Hapus pendaftaran?</h2>
+            <p id="oprec-delete-dialog-description">
+              Pendaftaran OPREC periode <strong>{deleteTarget.periode}</strong> akan dihapus. Tindakan ini tidak dapat dibatalkan.
+            </p>
+            <div className="oprec-delete-dialog__actions">
+              <button ref={deleteCancelRef} type="button" onClick={() => setDeleteTarget(null)} disabled={deleting}>Batal</button>
+              <button type="button" onClick={() => handleDeleteOprec(deleteTarget)} disabled={deleting}>
+                <Trash2 size={15} aria-hidden="true" />
+                {deleting ? "Menghapus..." : "Hapus pendaftaran"}
+              </button>
+            </div>
+          </section>
+        </div>
       )}
 
       <AdminErrorNotice message={registrantError} onRetry={() => fetchRegistrants(selectedOprec?.id)} />

@@ -339,6 +339,16 @@
   border-color: var(--ws-blue);
 }
 
+.workspace :global(.event-dynamic-field) input[aria-invalid="true"],
+.workspace :global(.event-dynamic-field) input[aria-invalid="true"]:focus-visible {
+  border-color: var(--ws-red);
+  outline-color: var(--ws-red);
+}
+
+.workspace :global(#oprec-field-nim) {
+  text-transform: uppercase;
+}
+
 .workspace :global(.event-dynamic-field) textarea {
   min-height: 100px;
   resize: vertical;
@@ -808,6 +818,51 @@
   outline-offset: 2px;
 }
 
+.workspace :global(.oprec-submit-dialog__overlay) {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(7, 17, 31, .65);
+  backdrop-filter: blur(4px);
+}
+
+.workspace :global(.oprec-submit-dialog) {
+  width: min(100%, 440px);
+  padding: 28px;
+  border: 1px solid var(--ws-border);
+  border-top: 3px solid var(--ws-blue);
+  border-radius: 0;
+  background: #fff;
+  color: var(--ws-ink);
+  box-shadow: 8px 8px 0 rgba(21, 94, 239, .14), 0 20px 45px rgba(7, 17, 31, .24);
+}
+
+.workspace :global(.oprec-submit-dialog__icon) {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  margin-bottom: 16px;
+  border: 1px solid #bfdbfe;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: var(--ws-blue);
+}
+
+.workspace :global(.oprec-submit-dialog__eyebrow) { display: block; margin-bottom: 6px; color: var(--ws-blue); font: 600 11px/1.3 "IBM Plex Mono", ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; }
+.workspace :global(.oprec-submit-dialog h2) { margin: 0; color: var(--ws-ink); font-size: 20px; font-weight: 600; letter-spacing: -.02em; }
+.workspace :global(.oprec-submit-dialog p) { margin: 10px 0 0; color: var(--ws-muted); font-size: 13px; line-height: 1.6; }
+.workspace :global(.oprec-submit-dialog__actions) { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+.workspace :global(.oprec-submit-dialog__actions button) { display: inline-flex; min-height: 38px; align-items: center; justify-content: center; padding: 8px 14px; border: 1px solid var(--ws-border); border-radius: 0; background: #fff; color: var(--ws-ink); font: 600 12px/1.2 inherit; cursor: pointer; }
+.workspace :global(.oprec-submit-dialog__actions button:last-child) { border-color: var(--ws-blue); background: var(--ws-blue); color: #fff; box-shadow: 2px 2px 0 #0f48c2; }
+.workspace :global(.oprec-submit-dialog__actions button:hover:not(:disabled)) { border-color: var(--ws-blue); background: #eff6ff; color: var(--ws-blue); }
+.workspace :global(.oprec-submit-dialog__actions button:last-child:hover:not(:disabled)) { border-color: #0f48c2; background: #0f48c2; color: #fff; }
+.workspace :global(.oprec-submit-dialog__actions button:focus-visible) { outline: 2px solid var(--ws-blue); outline-offset: 2px; }
+.workspace :global(.oprec-submit-dialog__actions button:disabled) { cursor: wait; opacity: .65; }
+
 
 @media (max-width: 900px) {
   .columns {
@@ -829,4 +884,8 @@
   .workspace :global(.event-dynamic-field) input[type="file"] {
     font-size: 13px;
   }
+  .workspace :global(.oprec-submit-dialog__overlay) { padding: 16px; }
+  .workspace :global(.oprec-submit-dialog) { padding: 22px 18px; }
+  .workspace :global(.oprec-submit-dialog__actions) { flex-direction: column-reverse; }
+  .workspace :global(.oprec-submit-dialog__actions button) { width: 100%; }
 }

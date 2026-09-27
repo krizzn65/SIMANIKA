@@ -21,13 +21,13 @@
   transform: none;
 }
 
-/* ── Recovery Notice Box (Sharp rectangle, dashed frame) ── */
+/* ── Recovery Notice Box (Clean rounded modern card) ── */
 .recovery-notice {
   position: relative;
   background: #ffffff;
-  border: 2px dashed #c0ccdd;
-  border-radius: 0 !important;
-  box-shadow: 4px 4px 0 #dce5f4;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   padding: 1.5rem 1.6rem;
   margin: 1.5rem 0 0.5rem;
   color: var(--ink);
@@ -45,12 +45,12 @@
   }
 }
 
-/* ── Subtle Pale Green Success Card (Ijo Tipis-Tipis) ── */
+/* ── Subtle Pale Green Success Card ── */
 .recovery-notice--success {
   background-color: #f0fdf4 !important;
-  border: 2px dashed #86efac !important;
-  border-radius: 0 !important;
-  box-shadow: 4px 4px 0 #bbf7d0 !important;
+  border: 1px solid #bbf7d0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.08) !important;
   padding: 1.75rem 1.5rem !important;
   text-align: center;
 }

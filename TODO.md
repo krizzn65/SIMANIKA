@@ -4,6 +4,21 @@
 > Last Updated: 25 September 2026
 > Referensi: [PRD.md](./PRD.md) | [Architecture.md](./architecture.md)
 
+## Aturan NIM OPREC (27 September 2026)
+
+- [x] NIM pendaftaran OPREC wajib diawali `E31`; browser, adapter Next, dan Laravel menormalisasi input ke huruf kapital sebelum validasi/penyimpanan. Peringatan inline hanya muncul jika awalan menyimpang dari `E31` (tidak pada input kosong/`E`/`E3`/`E31`), dan kiriman invalid ditolak dengan 422.
+- [ ] Uji manual tampilan input dan pembaca layar di browser dengan sesi peserta nyata.
+
+## Konfirmasi hapus OPREC (27 September 2026)
+
+- [x] Dialog `window.confirm` untuk hapus pendaftaran diganti popup dashboard dengan periode sasaran, backdrop, Escape, tombol Batal, dan status proses hapus untuk mencegah klik ganda.
+- [ ] Uji visual popup hapus pada browser desktop dan mobile dengan sesi admin nyata.
+
+## Konfirmasi kirim formulir OPREC (27 September 2026)
+
+- [x] Form peserta memvalidasi data sebelum membuka popup konfirmasi; pengguna dapat kembali memeriksa jawaban atau mengirim, dengan penegasan bahwa data tidak dapat diedit setelah tersimpan.
+- [ ] Uji visual dan alur kirim popup pada browser desktop dan mobile dengan sesi peserta nyata.
+
 ## Tabel pendaftar OPREC dinamis (27 September 2026)
 
 - [x] Tabel admin menampilkan kolom tetap Nama, NIM, Tanggal lahir, Angkatan, dan Pilihan divisi; semua field tambahan dari skema admin menjadi kolom berurutan, termasuk pertanyaan khusus divisi. Peserta di luar sasaran ditandai "Tidak berlaku", berkas memakai tautan unduh privat.
@@ -23,6 +38,10 @@
 ## Floating navigation editor OPREC (27 September 2026)
 
 - [x] Rail navigasi cepat editor OPREC kembali berada di sisi kiri editor. Posisi mengikuti batas sidebar yang terlihat melalui `ResizeObserver`, tanpa membaca konteks sidebar dari luar provider; ini juga memperbaiki runtime error pada halaman edit OPREC.
+
+## Status kartu dashboard OPREC (27 September 2026)
+
+- [x] Badge status seperti “Menunggu proses” dihapus dari kartu Open Recruitment pada dashboard peserta. Kartu event tetap menampilkan badge statusnya.
 
 ## Audit kesesuaian `architecture.md` (22 September 2026)
 

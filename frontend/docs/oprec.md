@@ -99,8 +99,15 @@ form karena susunan kolom berubah. Jangan ubah skema periode aktif tanpa alasan.
 - Kuota adalah kapasitas divisi, bukan jumlah kursi tersisa.
 - `formFields`: text, email, tel, url (Link), number, date, textarea, select, radio, checkbox,
   file. Maksimal 40 field; nama unik `[a-z][a-z0-9_]*`, bukan nama reserved.
-- NIM (`name: nim`, text required) dan tanggal lahir (`name: tanggal_lahir`, date
-  required) wajib ada untuk mencocokkan hasil. Kolom lain dipilih admin; tidak ada
+- NIM (`name: nim`, text required) wajib diawali `E31` (total 3–32 karakter;
+  sisanya huruf/angka/titik/tanda hubung). Input dinormalisasi menjadi kapital di
+  browser, adapter Next, dan Laravel sebelum validasi serta penyimpanan. Awalan
+  yang menyimpang dari `E31` ditandai melalui field invalid dengan pesan inline
+  bahwa NIM bukan dari Prodi Manajemen Informatika. Input kosong atau awalan yang
+  masih mungkin menjadi `E31` (`E`, `E3`, dan `E31`) tidak menampilkan peringatan;
+  adapter Next dan Laravel menolak submit dengan 422.
+  Tanggal lahir (`name: tanggal_lahir`, date required) juga wajib ada untuk
+  mencocokkan hasil. Kolom lain dipilih admin; tidak ada
   form dummy ketika schema kosong. NIM disimpan sebagai string (leading zero terjaga).
 - `required`, `help`, `placeholder`, `maxLength`, `min`/`max` angka, `options`,
   `accept`, `maxSizeMB` ditangani. Pilihan divisi kedua dapat ditambahkan sebagai

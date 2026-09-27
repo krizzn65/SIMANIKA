@@ -1,6 +1,6 @@
 import "server-only";
 import { getOprec } from "./oprecService";
-import { oprecState, validBirthDate, validateOprecForm } from "@/lib/oprec";
+import { normalizeOprecNim, oprecState, validBirthDate, validateOprecForm } from "@/lib/oprec";
 
 const headers = { "Cache-Control": "private, no-store, max-age=0", "X-Content-Type-Options": "nosniff" };
 const reply = (body, status = 200) => Response.json(body, { status, headers });
@@ -94,6 +94,7 @@ export async function registerOprec(request) {
     if (!oprec || oprecState(oprec).key !== "open") return reply({ message: "Pendaftaran belum dibuka atau sudah ditutup. Muat ulang untuk melihat status terbaru." }, 409);
     if (form.get("oprec_id") !== oprec.id || form.get("schema_version") !== oprec.schemaVersion) return reply({ message: "Formulir sudah diperbarui. Muat ulang halaman sebelum mengirim." }, 409);
     if (!oprec.formFields.length) return reply({ message: "Formulir belum tersedia." }, 409);
+    if (typeof form.get("nim") === "string") form.set("nim", normalizeOprecNim(form.get("nim")));
     const errors = validateOprecForm(oprec.formFields, form, Date.now(), oprec.divisiTersedia);
     if (Object.keys(errors).length) return reply({ message: "Periksa kembali formulir pendaftaranmu.", errors }, 422);
     const body = new FormData();
