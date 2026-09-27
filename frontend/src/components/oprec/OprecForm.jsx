@@ -74,7 +74,7 @@ function DivisionChoiceItem({ option, division, common, id, selected, onToggle }
 function Field({ field, error, divisions = [], selectedDivisions = [], onToggleDivision }) {
   const id = `oprec-field-${field.name}`;
   const isWide =
-    ["textarea", "radio", "checkbox", "file"].includes(field.type) ||
+    Boolean(field.wide) ||
     field.name === "divisi_pilihan_1" ||
     field.name === "divisi_pilihan_2" ||
     field.name === "divisi_pilihan_3";

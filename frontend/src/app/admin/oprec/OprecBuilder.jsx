@@ -693,7 +693,7 @@ export default function OprecBuilder({ oprecId }) {
   if (loading) return <div className="oprec-builder__loading">Memuat formulir OPREC…</div>;
 
   const renderPreviewField = (f, i) => {
-    const isWide = ["textarea", "file", "radio", "checkbox"].includes(f.type);
+    const isWide = Boolean(f.wide);
     const questionNumber = i >= fixed.length ? i + 2 : i + 1;
     const isSpecific =
       (f.target_type === "specific" || f.targetType === "specific") &&

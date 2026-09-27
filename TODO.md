@@ -19,6 +19,7 @@
   - Pertanyaan khusus divisi hanya dimunculkan jika peserta memilih divisi tersebut di salah satu dari 3 pilihan prioritasnya (Pilihan 1, 2, atau 3).
   - Jika peserta tidak memilih divisi sasaran, pertanyaan otomatis disembunyikan dan dilewati dari validasi `required` di sisi frontend (`lib/oprec.js`) maupun server backend (`OprecRegistrationController.php`).
   - Label pertanyaan kondisional dilengkapi badge penanda visual `Khusus: [Nama Divisi]`.
+  - Tata letak 2 kolom sejajar (kiri - kanan): pertanyaan tambahan (termasuk upload berkas `file`, link/teks, dan select) mengalir berdampingan dalam grid 2-kolom tanpa dipaksa melebar `1 / -1`.
   - Live Preview builder di admin bereaksi instan saat admin memilih/mengubah simulasi pilihan divisi.
 - [x] **Verifikasi & Uji Kualitas**:
   - 10 tes unit frontend Node.js (`tests/oprec.test.mjs`) lulus 100%, mencakup skenario field kondisional yang dilewati vs wajib diisi saat divisi sasaran dipilih.

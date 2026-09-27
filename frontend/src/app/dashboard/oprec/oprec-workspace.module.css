@@ -300,7 +300,7 @@
 }
 
 .workspace :global(.event-dynamic-field--wide),
-.workspace :global(.event-dynamic-field):has(textarea, input[type="file"], input[type="radio"], input[type="checkbox"]) {
+.workspace :global(.oprec-division-section) {
   grid-column: 1 / -1;
 }
 
