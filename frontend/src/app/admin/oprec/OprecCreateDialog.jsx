@@ -115,7 +115,7 @@ export default function OprecCreateDialog({ open, onClose, onCreated }) {
 
       onCreated?.();
       onClose();
-      router.push(`/admin/oprec/${response.data.data.id}/edit`);
+      router.push(`/admin/oprec/${encodeURIComponent(data.periode.trim().replace(/\//g, "-"))}/edit`);
     } catch (err) {
       const errors = err.response?.data?.errors;
       setError(errors ? Object.values(errors).flat().join(" ") : err.message || "Pendaftaran belum berhasil dibuat.");

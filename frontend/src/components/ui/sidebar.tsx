@@ -222,11 +222,12 @@ export const MobileSidebar = ({
                 >
                   <button
                     type="button"
-                    className="absolute right-4 top-4 z-50 flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/25 hover:text-blue-100"
+                    className="absolute right-4 top-4 z-50 flex h-11 w-11 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-white shadow-none transition-colors hover:bg-transparent hover:text-blue-100 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                     onClick={() => setMobileOpen(false)}
                     aria-label="Tutup menu admin"
+                    style={{ borderRadius: 0, background: "transparent", boxShadow: "none" }}
                   >
-                    <X aria-hidden="true" className="w-5 h-5" />
+                    <X aria-hidden="true" className="w-6 h-6" />
                   </button>
 
                   {/* Di dalam mobile drawer, tampilkan semua teks secara penuh tanpa collapse */}

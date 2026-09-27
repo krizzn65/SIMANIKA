@@ -54,8 +54,24 @@ const adminLinks = [
   },
 ];
 
+function adminBreadcrumb(pathname) {
+  if (pathname === "/admin") return "Dashboard";
+  if (/^\/admin\/oprec\/[^/]+\/edit$/.test(pathname)) return "Kelola OPREC > Edit Formulir";
+  if (/^\/admin\/events\/[^/]+$/.test(pathname)) return "Kelola Event > Formulir Event";
+  const labels = {
+    users: "Kelola User",
+    events: "Kelola Event",
+    oprec: "Kelola OPREC",
+    merchandise: "Merchandise",
+    settings: "Pengaturan",
+  };
+  const segment = pathname.replace(/^\/admin\/?/, "").split("/")[0];
+  return labels[segment] || "Admin";
+}
+
 function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
-  const { open } = useSidebar();
+  const { open, mobileOpen } = useSidebar();
+  const expanded = open || mobileOpen;
 
   return (
     <SidebarBody className="justify-between gap-6">
@@ -119,17 +135,12 @@ function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
               fontSize="0.85rem"
             />
           </div>
-          <motion.div
-            animate={{
-              display: open ? "flex" : "none",
-              opacity: open ? 1 : 0,
-            }}
-            transition={{ duration: 0.18 }}
-            className="flex flex-col min-w-0 flex-1 whitespace-pre"
-          >
-            <span className="text-xs font-bold text-white truncate">{displayName}</span>
-            <span className="text-[10px] text-blue-100 uppercase tracking-wider font-semibold">ADMIN HIMANIKA</span>
-          </motion.div>
+          {expanded && (
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-xs font-bold text-white truncate">{displayName}</span>
+              <span className="text-[10px] text-blue-100 uppercase tracking-wider font-semibold">Admin HIMANIKA</span>
+            </div>
+          )}
         </div>
 
         <button
@@ -141,16 +152,7 @@ function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
           <div className="flex-shrink-0 transition-transform duration-150 group-hover/sidebar:scale-110 text-red-300 group-hover/sidebar:text-white">
             <LogOut className="h-5 w-5 flex-shrink-0" />
           </div>
-          <motion.span
-            animate={{
-              display: open ? "inline-block" : "none",
-              opacity: open ? 1 : 0,
-            }}
-            transition={{ duration: 0.18 }}
-            className="text-sm font-semibold whitespace-pre inline-block !p-0 !m-0 tracking-tight"
-          >
-            Keluar Admin
-          </motion.span>
+          {expanded && <span className="text-sm font-semibold whitespace-pre inline-block !p-0 !m-0 tracking-tight">Keluar Admin</span>}
         </button>
       </div>
     </SidebarBody>
@@ -186,9 +188,9 @@ export default function AdminLayout({ children }) {
           <header className="admin-topbar">
             <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
               <span className="font-mono text-blue-600 font-semibold">SIMANIKA</span>
-              <span>/</span>
+              <span aria-hidden="true">&gt;</span>
               <span className="text-slate-800 font-semibold capitalize">
-                {pathname === "/admin" ? "Dashboard" : pathname.replace("/admin/", "").replace("/", " / ")}
+                {adminBreadcrumb(pathname)}
               </span>
             </div>
 

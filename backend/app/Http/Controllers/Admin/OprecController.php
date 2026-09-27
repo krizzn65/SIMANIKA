@@ -63,6 +63,15 @@ class OprecController extends Controller
         return new OprecResource($oprec->fresh('divisions'));
     }
 
+    public function destroy(Oprec $oprec)
+    {
+        if ($oprec->registrations()->exists()) {
+            return response()->json(['message' => 'Pendaftaran tidak dapat dihapus karena sudah memiliki berkas pendaftar.'], 409);
+        }
+        DB::transaction(fn () => $oprec->delete());
+        return response()->noContent();
+    }
+
     private function attributes(array $data): array
     {
         $announcement = $data['pengumuman'];

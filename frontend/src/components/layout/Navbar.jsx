@@ -716,8 +716,9 @@ export function Navbar() {
                   className="mobile-drawer__close-btn"
                   onClick={handleClose}
                   aria-label="Tutup menu"
+                  style={{ border: "none", borderRadius: 0, background: "transparent", boxShadow: "none", outline: "none" }}
                 >
-                  <CloseSmallIcon size={18} />
+                  <CloseSmallIcon size={24} />
                 </button>
               </div>
 
