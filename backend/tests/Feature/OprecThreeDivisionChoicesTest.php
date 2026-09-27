@@ -25,16 +25,21 @@ class OprecThreeDivisionChoicesTest extends TestCase
         ]);
         $ids = collect(['BPH', 'Humas', 'PSDM'])->map(fn ($name, $index) => $oprec->divisions()->create(['nama' => $name, 'sort_order' => $index])->id)->all();
         $url = '/api/user/oprec/register';
-        $base = ['oprec_id' => $oprec->id, 'schema_version' => '1', 'nim' => 'E12345', 'tanggal_lahir' => '2004-01-01', 'portofolio' => 'https://github.com/example/portfolio'];
+        $base = ['oprec_id' => $oprec->id, 'schema_version' => '1', 'nim' => 'e312345', 'tanggal_lahir' => '2004-01-01', 'portofolio' => 'https://github.com/example/portfolio'];
 
         $this->actingAs($user, 'sanctum')->postJson($url, $base + ['divisi_pilihan_1' => (string) $ids[0]])->assertUnprocessable();
         $this->postJson($url, $base + ['divisi_pilihan_1' => (string) $ids[0], 'divisi_pilihan_2' => (string) $ids[1], 'divisi_pilihan_3' => (string) $ids[1]])->assertUnprocessable();
         $this->postJson($url, $base + ['divisi_pilihan_1' => (string) $ids[0], 'divisi_pilihan_2' => (string) $ids[1], 'divisi_pilihan_3' => '99999'])->assertUnprocessable();
         $this->postJson($url, array_merge($base, ['portofolio' => 'javascript:alert(1)', 'divisi_pilihan_1' => (string) $ids[0], 'divisi_pilihan_2' => (string) $ids[1], 'divisi_pilihan_3' => (string) $ids[2]]))->assertUnprocessable();
+        foreach (['E12345', 'A312345', 'E31_1234'] as $invalidNim) {
+            $this->postJson($url, array_merge($base, ['nim' => $invalidNim, 'divisi_pilihan_1' => (string) $ids[0], 'divisi_pilihan_2' => (string) $ids[1], 'divisi_pilihan_3' => (string) $ids[2]]))
+                ->assertUnprocessable()
+                ->assertJsonValidationErrors('nim');
+        }
         $this->assertDatabaseCount('oprec_registrations', 0);
 
         $this->postJson($url, $base + ['divisi_pilihan_1' => (string) $ids[0], 'divisi_pilihan_2' => (string) $ids[1], 'divisi_pilihan_3' => (string) $ids[2]])->assertCreated();
-        $this->assertDatabaseHas('oprec_registrations', ['oprec_id' => $oprec->id, 'divisi_pilihan_1' => $ids[0], 'divisi_pilihan_2' => $ids[1], 'divisi_pilihan_3' => $ids[2]]);
+        $this->assertDatabaseHas('oprec_registrations', ['oprec_id' => $oprec->id, 'nim' => 'E312345', 'divisi_pilihan_1' => $ids[0], 'divisi_pilihan_2' => $ids[1], 'divisi_pilihan_3' => $ids[2]]);
         $this->postJson($url, $base + ['divisi_pilihan_1' => (string) $ids[0], 'divisi_pilihan_2' => (string) $ids[1], 'divisi_pilihan_3' => (string) $ids[2]])->assertStatus(409);
     }
 }

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 const source = await readFile(new URL("../src/lib/oprec.js", import.meta.url), "utf8");
-const { normalizeOprec, normalizeFields, oprecState, oprecDate, validBirthDate, validHttpUrl, validateOprecForm, safePosterUrl, isFieldApplicable } = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
+const { normalizeOprec, normalizeFields, oprecState, oprecDate, validBirthDate, validHttpUrl, validateOprecForm, normalizeOprecNim, oprecNimProgramWarning, oprecNimError, safePosterUrl, isFieldApplicable } = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
 const identity = [{ name: "nim", type: "text", label: "NIM", required: true }, { name: "tanggal_lahir", type: "date", label: "Tanggal lahir", required: true }];
 const raw = { id: 1, periode: "2026/2027", status: "open", tanggalBuka: "2026-10-01T08:00:00+07:00", tanggalTutup: "2026-10-14T23:59:00+07:00", divisiTersedia: [{ nama: "Kominfo", jabatan: ["Staff Divisi Kominfo"] }], formFields: identity };
 const oprec = normalizeOprec(raw);
@@ -49,17 +49,41 @@ test("validates required fields, choices, checkbox, email and number ranges", ()
   ]);
   const form = new FormData();
   assert.equal(Object.keys(validateOprecForm(fields, form)).length, 5);
-  for (const [key, value] of Object.entries({ nim: "E12345", tanggal_lahir: "2005-02-28", email: "a@example.com", divisi: "Kominfo", komitmen: "on", semester: "3" })) form.set(key, value);
+  for (const [key, value] of Object.entries({ nim: "E312345", tanggal_lahir: "2005-02-28", email: "a@example.com", divisi: "Kominfo", komitmen: "on", semester: "3" })) form.set(key, value);
   assert.deepEqual(validateOprecForm(fields, form), {});
   form.set("divisi", "forged"); form.set("semester", "99"); form.set("email", "invalid"); form.set("komitmen", "no");
   assert.equal(Object.keys(validateOprecForm(fields, form)).length, 4);
   form.append("nim", "E99999");
   assert.ok(validateOprecForm(fields, form).nim);
 });
+test("OPREC NIM is normalized to uppercase and must start with E31", () => {
+  const fields = normalizeFields(identity);
+  const form = new FormData();
+  form.set("tanggal_lahir", "2004-01-01");
+  for (const nim of ["A312345", "E12345", "EE312345", "31E12345", "E31_1234", `E31${"1".repeat(30)}`]) {
+    form.set("nim", nim);
+    assert.ok(validateOprecForm(fields, form).nim, nim);
+  }
+  assert.equal(oprecNimError("A", true), "NIM tidak valid.");
+  assert.equal(oprecNimError("E", true), null);
+  assert.equal(oprecNimError("E3", true), null);
+  assert.equal(oprecNimError("E31", true), null);
+  assert.equal(oprecNimProgramWarning(""), null);
+  assert.equal(oprecNimProgramWarning("e"), null);
+  assert.equal(oprecNimProgramWarning("e3"), null);
+  assert.equal(oprecNimProgramWarning("e31"), null);
+  assert.equal(oprecNimProgramWarning("E312345"), null);
+  assert.equal(oprecNimProgramWarning("E12"), "NIM ini bukan dari Prodi Manajemen Informatika.");
+  assert.equal(normalizeOprecNim(" e31abc "), "E31ABC");
+  form.set("nim", normalizeOprecNim("e312345"));
+  assert.deepEqual(validateOprecForm(fields, form), {});
+  form.set("nim", "E312345");
+  assert.deepEqual(validateOprecForm(fields, form), {});
+});
 test("three division cards must be distinct and selected before submit", () => {
   const fields = normalizeFields([...identity, { name: "divisi_pilihan_1", type: "select", label: "Divisi pilihan", required: true, options: ["1", "2", "3", "4"] }]);
   const form = new FormData();
-  form.set("nim", "E12345"); form.set("tanggal_lahir", "2004-01-01");
+  form.set("nim", "E312345"); form.set("tanggal_lahir", "2004-01-01");
   form.set("divisi_pilihan_1", "1"); form.set("divisi_pilihan_2", "2");
   assert.ok(validateOprecForm(fields, form).divisi_pilihan_1);
   form.set("divisi_pilihan_3", "2");
@@ -75,7 +99,7 @@ test("birth date handles leap days, impossible dates and future dates", () => {
 });
 test("files have type and size limits", () => {
   const fields = normalizeFields([...identity, { name: "cv", type: "file", label: "CV", accept: [".pdf"], maxSizeMB: 1 }]);
-  const form = new FormData(); form.set("nim", "E12345"); form.set("tanggal_lahir", "2004-02-29");
+  const form = new FormData(); form.set("nim", "E312345"); form.set("tanggal_lahir", "2004-02-29");
   form.set("cv", new Blob(["document"], { type: "application/pdf" }), "cv.pdf");
   assert.deepEqual(validateOprecForm(fields, form), {});
   form.set("cv", new Blob(["script"]), "cv.exe"); assert.ok(validateOprecForm(fields, form).cv);
@@ -111,7 +135,7 @@ test("conditional division questions only apply and validate when matching divis
 
   // When applicant selects BPH, HUMAS, PSDM (No KOMINFO)
   const formWithoutKominfo = new FormData();
-  formWithoutKominfo.set("nim", "E12345");
+  formWithoutKominfo.set("nim", "E312345");
   formWithoutKominfo.set("tanggal_lahir", "2004-01-01");
   formWithoutKominfo.set("divisi_pilihan_1", "1");
   formWithoutKominfo.set("divisi_pilihan_2", "2");
@@ -122,7 +146,7 @@ test("conditional division questions only apply and validate when matching divis
 
   // When applicant selects KOMINFO as choice 2
   const formWithKominfo = new FormData();
-  formWithKominfo.set("nim", "E12345");
+  formWithKominfo.set("nim", "E312345");
   formWithKominfo.set("tanggal_lahir", "2004-01-01");
   formWithKominfo.set("divisi_pilihan_1", "1");
   formWithKominfo.set("divisi_pilihan_2", "3");
@@ -140,7 +164,7 @@ test("conditional division questions only apply and validate when matching divis
 test("link fields accept only clean http or https URLs", () => {
   const fields = normalizeFields([...identity, { name: "portofolio", type: "url", label: "Link portofolio", required: true }]);
   const form = new FormData();
-  form.set("nim", "E12345");
+  form.set("nim", "E312345");
   form.set("tanggal_lahir", "2004-01-01");
   form.set("portofolio", "javascript:alert(1)");
   assert.ok(validateOprecForm(fields, form).portofolio);

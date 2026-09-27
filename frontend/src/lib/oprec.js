@@ -171,6 +171,24 @@ export function isFieldApplicable(field, choices = [], divisions = []) {
   });
 }
 
+export function normalizeOprecNim(value) {
+  return typeof value === "string" ? value.trim().toUpperCase() : "";
+}
+
+export function oprecNimProgramWarning(value) {
+  const nim = normalizeOprecNim(value);
+  if (!nim || "E31".startsWith(nim.slice(0, 3))) return null;
+  return "NIM ini bukan dari Prodi Manajemen Informatika.";
+}
+
+export function oprecNimError(value, partial = false) {
+  const nim = normalizeOprecNim(value);
+  if (!nim) return partial ? null : "NIM wajib diisi.";
+  if (oprecNimProgramWarning(nim)) return "NIM tidak valid.";
+  if (partial && nim.length < 3) return null;
+  return /^E31[A-Za-z0-9.-]{0,29}$/.test(nim) ? null : "Isi NIM yang valid (3–32 karakter; huruf, angka, titik, atau tanda hubung).";
+}
+
 export function validateOprecForm(fields, form, now = Date.now(), divisions = []) {
   const errors = {};
   const choices = [1, 2, 3].map((rank) => form.get(`divisi_pilihan_${rank}`));
@@ -215,7 +233,10 @@ export function validateOprecForm(fields, form, now = Date.now(), divisions = []
     }
     if (typeof value !== "string") { errors[field.name] = "Jawaban tidak valid."; continue; }
     if (value.length > field.maxLength && !["date", "checkbox", "number"].includes(field.type)) errors[field.name] = `Maksimal ${field.maxLength} karakter.`;
-    else if (field.name === "nim" && !/^[a-zA-Z0-9.-]{3,32}$/.test(value.trim())) errors[field.name] = "Isi NIM yang valid (3–32 karakter).";
+    else if (field.name === "nim") {
+      const nimError = oprecNimError(value);
+      if (nimError) errors[field.name] = nimError;
+    }
     else if (field.name === "tanggal_lahir" && !validBirthDate(value, now)) errors[field.name] = "Isi tanggal lahir yang valid.";
     else if (field.type === "date" && (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(Date.parse(value)) || new Date(value).toISOString().slice(0, 10) !== value)) errors[field.name] = "Isi tanggal yang valid.";
     else if (field.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) errors[field.name] = "Isi alamat email yang valid.";

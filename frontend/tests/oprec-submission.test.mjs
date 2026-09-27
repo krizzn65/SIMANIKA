@@ -6,11 +6,11 @@ const lib = await import(`data:text/javascript;base64,${Buffer.from(source).toSt
 const service = (await readFile(new URL("../src/services/oprecSubmission.js", import.meta.url), "utf8")).replace(/^import .*;\n/gm, "").replaceAll("export ", "");
 const period = lib.normalizeOprec({ id: 1, periode: "Test", status: "open", tanggalBuka: "2000-01-01T00:00:00Z", tanggalTutup: "2099-01-01T00:00:00Z", divisiTersedia: [{ id: 1, nama: "Kominfo" }], schemaVersion: "v2", formFields: [{ name: "nim", type: "text", label: "NIM", required: true }, { name: "tanggal_lahir", type: "date", label: "Lahir", required: true }] });
 function handlers(oprec, upstream) {
-  return new Function("getOprec", "oprecState", "validBirthDate", "validateOprecForm", "fetch", "process", `${service}\nreturn {registerOprec, lookupOprecResult};`)(async () => oprec, lib.oprecState, lib.validBirthDate, lib.validateOprecForm, upstream, { env: { API_BASE_URL: "https://backend.test/api" } });
+  return new Function("getOprec", "normalizeOprecNim", "oprecState", "validBirthDate", "validateOprecForm", "fetch", "process", `${service}\nreturn {registerOprec, lookupOprecResult};`)(async () => oprec, lib.normalizeOprecNim, lib.oprecState, lib.validBirthDate, lib.validateOprecForm, upstream, { env: { API_BASE_URL: "https://backend.test/api" } });
 }
 function registration(version = "v2") {
   const form = new FormData();
-  for (const [key, value] of Object.entries({ oprec_id: "1", schema_version: version, nim: "E12345", tanggal_lahir: "2004-02-29", ignored: "private-extra" })) form.set(key, value);
+  for (const [key, value] of Object.entries({ oprec_id: "1", schema_version: version, nim: "e312345", tanggal_lahir: "2004-02-29", ignored: "private-extra" })) form.set(key, value);
   return new Request("https://site.test/api/oprec/register", { method: "POST", body: form });
 }
 function lookup() {
@@ -20,13 +20,22 @@ test("registration forwards only approved schema fields and confirms persisted s
   const { registerOprec } = handlers(period, async (url, options) => {
     assert.match(url, /\/user\/oprec\/register$/);
     assert.equal(options.body.get("ignored"), null);
-    assert.equal(options.body.get("nim"), "E12345");
+    assert.equal(options.body.get("nim"), "E312345");
     return Response.json({ data: { submitted: true, private: "ignored" } });
   });
   const response = await registerOprec(registration());
   assert.equal(response.status, 201);
   assert.match(response.headers.get("cache-control"), /no-store/);
   assert.deepEqual((await response.json()).data, { submitted: true });
+});
+test("registration rejects non-E31 NIM before forwarding", async () => {
+  const request = registration();
+  const body = await request.formData();
+  body.set("nim", "E12345");
+  const forged = new Request(request.url, { method: "POST", body });
+  const response = await handlers(period, async () => { throw new Error("must not forward"); }).registerOprec(forged);
+  assert.equal(response.status, 422);
+  assert.equal((await response.json()).errors.nim, "NIM tidak valid.");
 });
 test("registration forwards exactly three ranked division choices", async () => {
   const divisionPeriod = lib.normalizeOprec({ id: 2, periode: "Three", status: "open", tanggalBuka: "2000-01-01T00:00:00Z", tanggalTutup: "2099-01-01T00:00:00Z", schemaVersion: "1", divisiTersedia: [{ id: 1, nama: "BPH" }, { id: 2, nama: "Humas" }, { id: 3, nama: "PSDM" }], formFields: [...period.formFields, { name: "divisi_pilihan_1", type: "select", label: "Divisi pilihan", required: true }] });
@@ -35,7 +44,7 @@ test("registration forwards exactly three ranked division choices", async () => 
     return Response.json({ data: { submitted: true } });
   }).registerOprec;
   const form = new FormData();
-  for (const [key, value] of Object.entries({ oprec_id: "2", schema_version: "1", nim: "E12345", tanggal_lahir: "2004-02-29", divisi_pilihan_1: "1", divisi_pilihan_2: "2" })) form.set(key, value);
+  for (const [key, value] of Object.entries({ oprec_id: "2", schema_version: "1", nim: "E312345", tanggal_lahir: "2004-02-29", divisi_pilihan_1: "1", divisi_pilihan_2: "2" })) form.set(key, value);
   const request = () => new Request("https://site.test/api/oprec/register", { method: "POST", body: form });
   assert.equal((await submit(request())).status, 422);
   form.set("divisi_pilihan_3", "3");

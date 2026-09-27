@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { RotateCcw, Lock } from "lucide-react";
-import { validateOprecForm, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
+import { validateOprecForm, normalizeOprecNim, oprecNimProgramWarning, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
 
 function getDivisionPositions(division) {
   if (!division) return [];
@@ -71,7 +71,7 @@ function DivisionChoiceItem({ option, division, common, id, selected, onToggle }
   );
 }
 
-function Field({ field, error, divisions = [], selectedDivisions = [], onToggleDivision }) {
+function Field({ field, error, inlineError = error, divisions = [], selectedDivisions = [], onToggleDivision, onNimChange }) {
   const id = `oprec-field-${field.name}`;
   const isWide =
     Boolean(field.wide) ||
@@ -82,7 +82,7 @@ function Field({ field, error, divisions = [], selectedDivisions = [], onToggleD
   const description = [
     field.help && `${id}-help`,
     field.type === "file" && `${id}-file`,
-    error && `${id}-error`,
+    inlineError && `${id}-error`,
   ].filter(Boolean).join(" ") || undefined;
 
   const common = {
@@ -209,6 +209,9 @@ function Field({ field, error, divisions = [], selectedDivisions = [], onToggleD
       <input
         {...common}
         type={field.type}
+        onChange={field.name === "nim" ? onNimChange : undefined}
+        inputMode={field.name === "nim" ? "text" : undefined}
+        autoCapitalize={field.name === "nim" ? "characters" : undefined}
         maxLength={field.maxLength}
         placeholder={field.placeholder || ""}
         min={field.type === "number" ? field.min ?? undefined : field.name === "tanggal_lahir" ? "1900-01-01" : undefined}
@@ -224,9 +227,9 @@ function Field({ field, error, divisions = [], selectedDivisions = [], onToggleD
       {field.type !== "checkbox" && <label htmlFor={id}>{labelText}</label>}
       {field.help && <small id={`${id}-help`}>{field.help}</small>}
       {control}
-      {error && (
+      {inlineError && (
         <small className="event-dynamic-error" id={`${id}-error`}>
-          {error}
+          {inlineError}
         </small>
       )}
     </div>
@@ -236,6 +239,7 @@ function Field({ field, error, divisions = [], selectedDivisions = [], onToggleD
 export function OprecForm({ oprec, onSuccess }) {
   const [pending, setPending] = useState(false);
   const [errors, setErrors] = useState({});
+  const [nimInputError, setNimInputError] = useState(null);
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
   const [selectedDivisions, setSelectedDivisions] = useState([]);
@@ -293,6 +297,18 @@ export function OprecForm({ oprec, onSuccess }) {
     setErrors(nextErrors);
     setMessage(note);
     requestAnimationFrame(() => feedback.current?.focus());
+  }
+
+  function handleNimChange(event) {
+    const normalized = normalizeOprecNim(event.target.value);
+    event.target.value = normalized;
+    setNimInputError(oprecNimProgramWarning(normalized));
+    setErrors((current) => {
+      if (!current.nim) return current;
+      const next = { ...current };
+      delete next.nim;
+      return next;
+    });
   }
 
   async function submit(event) {
@@ -426,7 +442,9 @@ export function OprecForm({ oprec, onSuccess }) {
             <Field
               key={field.name}
               field={field}
-              error={errors[field.name]}
+              error={field.name === "nim" ? nimInputError || (Array.isArray(errors.nim) ? errors.nim[0] : errors.nim) : errors[field.name]}
+              inlineError={field.name === "nim" ? nimInputError : errors[field.name]}
+              onNimChange={handleNimChange}
               divisions={oprec.divisiTersedia}
               selectedDivisions={selectedDivisions}
               onToggleDivision={toggleDivision}

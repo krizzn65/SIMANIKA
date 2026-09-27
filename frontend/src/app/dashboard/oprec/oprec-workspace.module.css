@@ -339,6 +339,16 @@
   border-color: var(--ws-blue);
 }
 
+.workspace :global(.event-dynamic-field) input[aria-invalid="true"],
+.workspace :global(.event-dynamic-field) input[aria-invalid="true"]:focus-visible {
+  border-color: var(--ws-red);
+  outline-color: var(--ws-red);
+}
+
+.workspace :global(#oprec-field-nim) {
+  text-transform: uppercase;
+}
+
 .workspace :global(.event-dynamic-field) textarea {
   min-height: 100px;
   resize: vertical;

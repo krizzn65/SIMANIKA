@@ -91,9 +91,14 @@ class OprecRegistrationController extends Controller
         foreach (['jabatan_pilihan_1', 'jabatan_pilihan_2', 'jabatan_pilihan_3'] as $key) {
             $rules[$key] = ['nullable', 'string', 'max:255'];
         }
-        $rules['nim'][] = 'regex:/^[a-zA-Z0-9.\-]{3,32}$/';
+        if (is_string($request->input('nim'))) {
+            $request->merge(['nim' => strtoupper(trim($request->input('nim')))]);
+        }
+        $rules['nim'][] = 'regex:/^E31[A-Za-z0-9.\-]{0,29}$/D';
         $rules['tanggal_lahir'][] = 'before_or_equal:today';
-        $data = Validator::make($request->all(), $rules)->validate();
+        $data = Validator::make($request->all(), $rules, [
+            'nim.regex' => 'NIM tidak valid.',
+        ])->validate();
 
         foreach (['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'] as $key) {
             if (!empty($data[$key]) && !$oprec->divisions->contains('id', (int) $data[$key])) throw ValidationException::withMessages([$key => ['Divisi tidak tersedia pada periode ini.']]);

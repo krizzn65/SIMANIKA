@@ -47,9 +47,11 @@ function RegistrationCard({ item, onComplete }) {
     <article className="dashboard-entry">
       <div className="dashboard-entry__top">
         <span className="dashboard-entry__type">{type}</span>
-        <span className={"dashboard-entry__status dashboard-entry__status--" + statusTone}>
-          {statusLabels[item.status] || "Terdaftar"}
-        </span>
+        {item.kind !== "oprec" && (
+          <span className={"dashboard-entry__status dashboard-entry__status--" + statusTone}>
+            {statusLabels[item.status] || "Terdaftar"}
+          </span>
+        )}
       </div>
       <div className="dashboard-entry__body">
         <h2>{item.title}</h2>
