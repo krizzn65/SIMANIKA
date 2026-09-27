@@ -21,7 +21,7 @@ class SaveOprecRequest extends FormRequest
             'link_grup_wa' => ['nullable', 'url:http,https', 'max:500'],
             'form_fields' => ['required', 'array', 'max:40'],
             'form_fields.*.name' => ['required', 'regex:/^[a-z][a-z0-9_]{0,49}$/', 'max:50'],
-            'form_fields.*.type' => ['required', Rule::in(['text', 'email', 'tel', 'number', 'date', 'textarea', 'select', 'radio', 'checkbox', 'file'])],
+            'form_fields.*.type' => ['required', Rule::in(['text', 'email', 'tel', 'url', 'number', 'date', 'textarea', 'select', 'radio', 'checkbox', 'file'])],
             'form_fields.*.label' => ['required', 'string', 'max:200'], 'form_fields.*.required' => ['required', 'boolean'],
             'form_fields.*.help' => ['nullable', 'string', 'max:500'], 'form_fields.*.placeholder' => ['nullable', 'string', 'max:250'],
             'form_fields.*.maxLength' => ['nullable', 'integer', 'min:1', 'max:5000'],

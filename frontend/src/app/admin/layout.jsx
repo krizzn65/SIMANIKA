@@ -70,8 +70,10 @@ function adminBreadcrumb(pathname) {
 }
 
 function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
-  const { open, mobileOpen } = useSidebar();
-  const expanded = open || mobileOpen;
+  // MobileSidebar provides open=true to its own drawer content. Desktop must not
+  // inherit mobileOpen: it can otherwise render footer labels inside 76px width.
+  const { open } = useSidebar();
+  const expanded = open;
 
   return (
     <SidebarBody className="justify-between gap-6">
@@ -124,7 +126,7 @@ function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
 
       {/* Admin Profile & Logout Footer */}
       <div className="border-t border-white/20 pt-4 flex flex-col gap-2.5">
-        <div className="flex items-center gap-3 px-1 py-1 rounded-xl">
+        <div className={`flex items-center py-1 rounded-xl ${expanded ? "gap-3 px-1" : "justify-center px-0"}`}>
           <div className="w-9 h-9 min-w-[2.25rem] min-h-[2.25rem] rounded-full overflow-hidden border-2 border-white/40 shadow-sm flex-shrink-0">
             <UserAvatar
               src={user?.fotoProfil}
@@ -146,7 +148,7 @@ function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
         <button
           type="button"
           onClick={handleLogout}
-          className="w-full flex items-center justify-start gap-3 group/sidebar px-3 py-2.5 rounded-xl transition-all duration-150 text-red-200 hover:text-white bg-red-500/20 hover:bg-red-500/35 border border-red-400/25 cursor-pointer"
+          className={`w-full flex items-center group/sidebar py-2.5 rounded-xl transition-all duration-150 text-red-200 hover:text-white bg-red-500/20 hover:bg-red-500/35 border border-red-400/25 cursor-pointer ${expanded ? "justify-start gap-3 px-3" : "justify-center px-0"}`}
           title="Keluar Admin"
         >
           <div className="flex-shrink-0 transition-transform duration-150 group-hover/sidebar:scale-110 text-red-300 group-hover/sidebar:text-white">

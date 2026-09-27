@@ -97,7 +97,7 @@ form karena susunan kolom berubah. Jangan ubah skema periode aktif tanpa alasan.
 - Poster lazy, object-fit contain dalam frame 3:4 supaya tidak terpotong; fallback
   jika belum ada/gagal. Disarankan WebP <=200KB. Poster tidak menentukan status.
 - Kuota adalah kapasitas divisi, bukan jumlah kursi tersisa.
-- `formFields`: text, email, tel, number, date, textarea, select, radio, checkbox,
+- `formFields`: text, email, tel, url (Link), number, date, textarea, select, radio, checkbox,
   file. Maksimal 40 field; nama unik `[a-z][a-z0-9_]*`, bukan nama reserved.
 - NIM (`name: nim`, text required) dan tanggal lahir (`name: tanggal_lahir`, date
   required) wajib ada untuk mencocokkan hasil. Kolom lain dipilih admin; tidak ada
@@ -267,4 +267,3 @@ Berdasarkan keputusan pengguna, seluruh konsep pemecahan tahap bertingkat ("Tes 
 - **Ringkasan Admin**: Bagian "Tahapan berikutnya //" pada overview `/admin/oprec` telah dihapus. Halaman admin kini murni mengelola pendaftaran periode aktif dan verifikasi berkas calon anggota.
 - **Sidebar Admin**: Menu "Kelola OPREC" kini merupakan item navigasi tunggal langsung ke `/admin/oprec` tanpa dropdown submenu tahap.
 - **Pembersihan Dead Code**: Route `/admin/oprec/test`, `/admin/oprec/announcement`, `/admin/oprec/[id]/stages`, komponen `OprecStageOverview`, `OprecTestBuilder`, stylesheet `oprec-review.css`, controller backend `OprecStageController`, `OprecTestController`, dan route stages telah dihapus tuntas tanpa sisa deadcode.
-

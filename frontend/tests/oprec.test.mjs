@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 const source = await readFile(new URL("../src/lib/oprec.js", import.meta.url), "utf8");
-const { normalizeOprec, normalizeFields, oprecState, oprecDate, validBirthDate, validateOprecForm, safePosterUrl, isFieldApplicable } = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
+const { normalizeOprec, normalizeFields, oprecState, oprecDate, validBirthDate, validHttpUrl, validateOprecForm, safePosterUrl, isFieldApplicable } = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
 const identity = [{ name: "nim", type: "text", label: "NIM", required: true }, { name: "tanggal_lahir", type: "date", label: "Tanggal lahir", required: true }];
 const raw = { id: 1, periode: "2026/2027", status: "open", tanggalBuka: "2026-10-01T08:00:00+07:00", tanggalTutup: "2026-10-14T23:59:00+07:00", divisiTersedia: [{ nama: "Kominfo", jabatan: ["Staff Divisi Kominfo"] }], formFields: identity };
 const oprec = normalizeOprec(raw);
@@ -137,3 +137,16 @@ test("conditional division questions only apply and validate when matching divis
   assert.deepEqual(validateOprecForm(fields, formWithKominfo, Date.now(), divisions), {});
 });
 
+test("link fields accept only clean http or https URLs", () => {
+  const fields = normalizeFields([...identity, { name: "portofolio", type: "url", label: "Link portofolio", required: true }]);
+  const form = new FormData();
+  form.set("nim", "E12345");
+  form.set("tanggal_lahir", "2004-01-01");
+  form.set("portofolio", "javascript:alert(1)");
+  assert.ok(validateOprecForm(fields, form).portofolio);
+  form.set("portofolio", "https://user:pass@example.com");
+  assert.ok(validateOprecForm(fields, form).portofolio);
+  form.set("portofolio", "https://github.com/example/portfolio");
+  assert.deepEqual(validateOprecForm(fields, form), {});
+  assert.equal(validHttpUrl("https://drive.google.com/file/d/123"), true);
+});

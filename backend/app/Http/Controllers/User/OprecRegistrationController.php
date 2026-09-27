@@ -39,7 +39,7 @@ class OprecRegistrationController extends Controller
         foreach ($fields as $field) {
             $name = $field['name'] ?? '';
             $type = $field['type'] ?? '';
-            if (!preg_match('/^[a-z][a-z0-9_]{0,49}$/', $name) || in_array($name, ['oprec_id', 'schema_version'], true)) return response()->json(['message' => 'Skema formulir tidak valid.'], 503);
+            if (!preg_match('/^[a-z][a-z0-9_]{0,49}$/', $name) || in_array($name, ['oprec_id', 'schema_version'], true) || !in_array($type, ['text', 'email', 'tel', 'url', 'number', 'date', 'textarea', 'select', 'radio', 'checkbox', 'file'], true)) return response()->json(['message' => 'Skema formulir tidak valid.'], 503);
             
             $targetType = $field['target_type'] ?? 'all';
             $targetDivisions = (array) ($field['target_divisions'] ?? []);
@@ -72,6 +72,7 @@ class OprecRegistrationController extends Controller
                 $rules[$name][] = 'string';
                 if ($type !== 'number') $rules[$name][] = 'max:'.min(5000, max(1, (int) ($field['maxLength'] ?? ($type === 'textarea' ? 3000 : 255))));
                 if ($type === 'email') $rules[$name][] = 'email';
+                if ($type === 'url') $rules[$name][] = 'url:http,https';
                 if ($type === 'date') $rules[$name][] = 'date_format:Y-m-d';
                 if ($type === 'number') {
                     $rules[$name][] = 'numeric';

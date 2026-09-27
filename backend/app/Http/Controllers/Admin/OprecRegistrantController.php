@@ -12,9 +12,38 @@ use Illuminate\Validation\ValidationException;
 
 class OprecRegistrantController extends Controller
 {
-    public function index(Oprec $oprec)
+    public function index(Request $request, Oprec $oprec)
     {
-        return response()->json($oprec->registrations()->with('user:id,email,name')->latest()->paginate(20)->through(function ($item) use ($oprec) {
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+            'division' => ['nullable', 'integer', 'min:1'],
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
+        $query = $oprec->registrations()->with('user:id,email,name');
+        $search = trim($filters['search'] ?? '');
+        if ($search !== '') {
+            $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower($search));
+            $pattern = "%{$escaped}%";
+            $query->where(function ($query) use ($pattern) {
+                $query->whereRaw("LOWER(nim) LIKE ? ESCAPE '\\'", [$pattern])
+                    ->orWhereRaw("LOWER(form_data->>'nama') LIKE ? ESCAPE '\\'", [$pattern])
+                    ->orWhereRaw("LOWER(form_data->>'nama_lengkap') LIKE ? ESCAPE '\\'", [$pattern])
+                    ->orWhereRaw("LOWER(form_data->>'namaLengkap') LIKE ? ESCAPE '\\'", [$pattern])
+                    ->orWhereHas('user', function ($user) use ($pattern) {
+                        $user->whereRaw("LOWER(name) LIKE ? ESCAPE '\\'", [$pattern])
+                            ->orWhereRaw("LOWER(email) LIKE ? ESCAPE '\\'", [$pattern]);
+                    });
+            });
+        }
+        if (isset($filters['division'])) {
+            $divisionId = (int) $filters['division'];
+            $query->where(function ($query) use ($divisionId) {
+                $query->where('divisi_pilihan_1', $divisionId)
+                    ->orWhere('divisi_pilihan_2', $divisionId)
+                    ->orWhere('divisi_pilihan_3', $divisionId);
+            });
+        }
+        return response()->json($query->orderByDesc('created_at')->orderByDesc('id')->paginate(20)->through(function ($item) use ($oprec) {
             $formData = $item->form_data ?? [];
             $formName = $formData['nama'] ?? $formData['nama_lengkap'] ?? $formData['namaLengkap'] ?? null;
             $fileUploads = [];
@@ -23,7 +52,7 @@ class OprecRegistrantController extends Controller
                     if (is_string($path) && $path !== '') {
                         $fileUploads[$key] = [
                             'field' => $key,
-                            'downloadUrl' => url("/api/admin/oprec/{$oprec->id}/registrants/{$item->id}/download/{$key}"),
+                            'downloadUrl' => url("/api/admin/oprec/{$oprec->id}/registrants/{$item->id}/files/".rawurlencode($key)),
                         ];
                     }
                 }

@@ -214,7 +214,7 @@ function Field({ field, error, divisions = [], selectedDivisions = [], onToggleD
         min={field.type === "number" ? field.min ?? undefined : field.name === "tanggal_lahir" ? "1900-01-01" : undefined}
         max={field.type === "number" ? field.max ?? undefined : undefined}
         step={field.type === "number" ? "any" : undefined}
-        autoComplete={field.name === "tanggal_lahir" ? "bday" : field.type === "email" ? "email" : field.type === "tel" ? "tel" : undefined}
+        autoComplete={field.name === "tanggal_lahir" ? "bday" : field.type === "email" ? "email" : field.type === "tel" ? "tel" : field.type === "url" ? "url" : undefined}
       />
     );
   }
