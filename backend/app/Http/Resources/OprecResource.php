@@ -36,13 +36,6 @@ class OprecResource extends JsonResource
                 'tanggal' => $this->pengumuman_published ? $this->pengumuman_tanggal?->toIso8601String() : null,
                 'pesan' => $this->pengumuman_published ? ($this->pengumuman_pesan ?? '') : '',
             ],
-            'stages' => $this->stages->filter(fn ($stage) => $request->user()?->role === 'admin' || $stage->published)->map(fn ($stage) => [
-                'id' => $stage->id, 'type' => $stage->type, 'headline' => $stage->headline,
-                'deskripsi' => $stage->deskripsi, 'poster' => $stage->poster,
-                'tanggalBuka' => $stage->tanggal_buka?->toIso8601String(),
-                'tanggalTutup' => $stage->tanggal_tutup?->toIso8601String(), 'published' => $stage->published,
-                ...($request->user()?->role === 'admin' ? ['formFields' => $stage->form_fields ?? []] : []),
-            ])->values()->all(),
             'faq' => $this->faq ?? [],
         ];
     }

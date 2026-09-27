@@ -1122,7 +1122,7 @@ export default function OprecBuilder({ oprecId }) {
                   <input
                     value={data.headline}
                     onChange={(e) => set("headline", e.target.value)}
-                    placeholder="Saatnya menjadi bagian dari HIMANIKA"
+                    placeholder="Open Recruitment HIMANIKA"
                     maxLength={300}
                   />
                 </label>

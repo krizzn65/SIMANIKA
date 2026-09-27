@@ -12,8 +12,8 @@ use Illuminate\Validation\ValidationException;
 
 class OprecController extends Controller
 {
-    public function index() { return OprecResource::collection(Oprec::with('divisions', 'stages')->latest()->paginate(20)); }
-    public function show(Oprec $oprec) { return new OprecResource($oprec->load('divisions', 'stages')); }
+    public function index() { return OprecResource::collection(Oprec::with('divisions')->latest()->paginate(20)); }
+    public function show(Oprec $oprec) { return new OprecResource($oprec->load('divisions')); }
 
     public function uploadPoster(Request $request)
     {

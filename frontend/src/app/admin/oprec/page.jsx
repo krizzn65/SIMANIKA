@@ -30,6 +30,27 @@ function formatOprecDate(dateStr) {
   }
 }
 
+function getRegistrantName(r) {
+  if (!r) return "Peserta";
+  let fd = r.formData;
+  if (typeof fd === "string") {
+    try {
+      fd = JSON.parse(fd);
+    } catch {
+      fd = null;
+    }
+  }
+  const fromForm =
+    fd?.nama ||
+    fd?.nama_lengkap ||
+    fd?.namaLengkap ||
+    r.name;
+  if (typeof fromForm === "string" && fromForm.trim()) {
+    return fromForm.trim();
+  }
+  return r.user?.name || "Peserta";
+}
+
 export default function AdminOprecPage() {
   const [oprecs, setOprecs] = useState([]);
   const [selectedOprec, setSelectedOprec] = useState(null);
@@ -43,7 +64,6 @@ export default function AdminOprecPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [divisionFilter, setDivisionFilter] = useState("all");
   const [createOpen, setCreateOpen] = useState(false);
-  const [editingStage, setEditingStage] = useState(null);
 
   // Review Modal State
   const [reviewModal, setReviewModal] = useState({
@@ -107,7 +127,7 @@ export default function AdminOprecPage() {
       return;
     }
 
-    if (!confirm(`Tolak berkas calon anggota ${reg.user?.name || reg.nim}?`)) return;
+    if (!confirm(`Tolak berkas calon anggota ${getRegistrantName(reg)} (${reg.nim})?`)) return;
 
     setActionLoading(reg.id);
     try {
@@ -146,8 +166,10 @@ export default function AdminOprecPage() {
 
   // Filter registrants
   const filteredRegistrants = registrants.filter((r) => {
+    const candidateName = getRegistrantName(r);
     const matchSearch = search
       ? r.nim?.toLowerCase().includes(search.toLowerCase()) ||
+        candidateName.toLowerCase().includes(search.toLowerCase()) ||
         r.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
         r.user?.email?.toLowerCase().includes(search.toLowerCase())
       : true;
@@ -190,14 +212,11 @@ export default function AdminOprecPage() {
           )}
           <button
             type="button"
-            onClick={() => {
-              setEditingStage(null);
-              setCreateOpen(true);
-            }}
+            onClick={() => setCreateOpen(true)}
             className="oprec-btn oprec-btn--primary"
           >
             <CalendarPlusIcon size={16} loopDelay={2300} />
-            <span>Tambah tahap</span>
+            <span>Tambah pendaftaran</span>
           </button>
           <button
             type="button"
@@ -272,46 +291,6 @@ export default function AdminOprecPage() {
               <div>
                 {selectedOprec.divisiTersedia.map((division) => (
                   <span key={division.id}>{division.nama}</span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {(selectedOprec.stages || []).length > 0 && (
-            <div className="oprec-admin-overview__next">
-              <h3>Tahapan berikutnya //</h3>
-              <div className="oprec-admin-overview__stage-list">
-                {selectedOprec.stages.map((stage, index) => (
-                  <div className="oprec-admin-overview__stage" key={stage.id}>
-                    <span className="oprec-admin-overview__stage-number">
-                      {String(index + 2).padStart(2, "0")}
-                    </span>
-                    <div>
-                      <strong>
-                        {stage.type === "test_tulis" ? "TES TULIS" : "PENGUMUMAN"}
-                      </strong>
-                      <p>{stage.headline}</p>
-                    </div>
-                    <span className="oprec-admin-overview__stage-state">
-                      {stage.published ? "TERBIT" : "BELUM TERBIT"}
-                    </span>
-                    <div className="oprec-admin-overview__stage-actions">
-                      {stage.type === "test_tulis" && (
-                        <Link href={`/admin/oprec/${selectedOprec.id}/stages/${stage.id}/form`}>
-                          Kelola soal
-                        </Link>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingStage(stage);
-                          setCreateOpen(true);
-                        }}
-                      >
-                        Edit informasi
-                      </button>
-                    </div>
-                  </div>
                 ))}
               </div>
             </div>
@@ -432,7 +411,7 @@ export default function AdminOprecPage() {
                     >
                       <td className="py-3 px-4">
                         <div className="font-medium text-slate-900 text-sm">
-                          {r.user?.name || "Peserta"}
+                          {getRegistrantName(r)}
                         </div>
                         <div className="font-mono text-xs text-slate-400 mt-0.5">
                           {r.user?.email}
@@ -516,13 +495,8 @@ export default function AdminOprecPage() {
 
       <OprecCreateDialog
         open={createOpen}
-        onClose={() => {
-          setCreateOpen(false);
-          setEditingStage(null);
-        }}
+        onClose={() => setCreateOpen(false)}
         onCreated={fetchOprecs}
-        selectedOprec={selectedOprec}
-        editingStage={editingStage}
       />
 
       {/* Review & Acceptance Modal (Minimalist Boxy) */}
@@ -554,7 +528,7 @@ export default function AdminOprecPage() {
                   Calon Anggota
                 </span>
                 <div className="text-sm font-medium text-slate-900 mt-0.5">
-                  {reviewModal.registrant?.user?.name}{" "}
+                  {getRegistrantName(reviewModal.registrant)}{" "}
                   <span className="font-mono text-slate-500 text-xs">
                     ({reviewModal.registrant?.nim})
                   </span>
