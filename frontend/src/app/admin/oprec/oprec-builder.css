@@ -1342,18 +1342,196 @@
   }
 }
 
+/* 3 Horizontal Dropdown Slots for Division Jabatan Selection in Live Preview */
 .oprec-user-preview .oprec-jabatan-choices-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 12px;
+  gap: 8px;
+  margin-top: 10px;
   width: 100%;
+  box-sizing: border-box;
 }
 
-@container (max-width: 580px) {
+@container (max-width: 360px) {
   .oprec-user-preview .oprec-jabatan-choices-row {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
+}
+
+.oprec-user-preview .oprec-jabatan-slot {
+  display: flex;
+  flex-direction: column;
+  border-radius: 0 !important;
+  padding: 8px 10px;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+  position: relative;
+  min-width: 0;
+}
+
+/* State Blocked / Disabled */
+.oprec-user-preview .oprec-jabatan-slot--blocked {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  cursor: not-allowed;
+  user-select: none;
+}
+
+.oprec-user-preview .oprec-jabatan-slot--blocked * {
+  cursor: not-allowed !important;
+}
+
+.oprec-user-preview .oprec-jabatan-slot--blocked .oprec-jabatan-slot__header {
+  opacity: 0.85;
+}
+
+.oprec-user-preview .oprec-jabatan-slot--blocked .oprec-jabatan-slot__label {
+  color: #64748b;
+}
+
+.oprec-user-preview .oprec-jabatan-slot--blocked .oprec-jabatan-slot__select {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #64748b;
+  cursor: not-allowed;
+  opacity: 0.9;
+}
+
+/* State Active / Unlocked */
+.oprec-user-preview .oprec-jabatan-slot--active {
+  background: #ffffff;
+  border: 1px solid #155eef;
+  box-shadow: 2px 2px 0 rgba(21, 94, 239, 0.12);
+}
+
+.oprec-user-preview .oprec-jabatan-slot--active:hover {
+  border-color: #1048b9;
+}
+
+/* Slot Header */
+.oprec-user-preview .oprec-jabatan-slot__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.oprec-user-preview .oprec-jabatan-slot__rank-badge {
+  font-family: var(--font-mono, monospace), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #0f172a;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.oprec-user-preview .oprec-jabatan-slot--blocked .oprec-jabatan-slot__rank-badge {
+  color: #64748b;
+}
+
+.oprec-user-preview .oprec-jabatan-slot__div-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  font-size: 9.5px;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 0 !important;
+  max-width: 90px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oprec-user-preview .oprec-jabatan-slot__locked-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 5px;
+  font-size: 9px;
+  font-weight: 600;
+  font-family: var(--font-mono, monospace), monospace;
+  background: #e2e8f0;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+  border-radius: 0 !important;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.oprec-user-preview .oprec-jabatan-slot__locked-badge svg {
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+}
+
+/* Slot Body */
+.oprec-user-preview .oprec-jabatan-slot__body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.oprec-user-preview .oprec-jabatan-slot__label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oprec-user-preview .oprec-jabatan-slot__select-wrap {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.oprec-user-preview .oprec-jabatan-slot__select {
+  width: 100%;
+  min-height: 32px;
+  height: 32px;
+  padding: 4px 22px 4px 7px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #0f172a;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0 !important;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oprec-user-preview .oprec-jabatan-slot__select:focus {
+  outline: none;
+  border-color: #155eef;
+  box-shadow: 0 0 0 2px rgba(21, 94, 239, 0.15);
+}
+
+.oprec-user-preview .oprec-jabatan-slot__hint {
+  font-size: 9px;
+  color: #64748b;
+  line-height: 1.2;
+  white-space: normal;
 }
 
 .oprec-user-preview .oprec-division-choice {

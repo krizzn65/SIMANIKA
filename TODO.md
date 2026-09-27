@@ -40,6 +40,11 @@
     - Saat tombol "Reset Pilihan" ditekan, ketiga dropdown otomatis dikosongkan dan kembali ke status terkunci abu-abu / not-allowed.
   - Live Preview Builder Admin: terintegrasi penuh secara reaktif dengan pilihan divisi simulasi admin di panel pratinjau.
   - Backend & Validasi: controller pendaftaran (`OprecRegistrationController.php`), API forwarder (`oprecSubmission.js`), dan validasi client (`lib/oprec.js`) memvalidasi dan menyimpan `jabatan_pilihan_1`, `jabatan_pilihan_2`, `jabatan_pilihan_3` ke dalam `form_data` (JSONB) pendaftaran.
+- [x] **Perapian Styling Kartu Jabatan pada Pratinjau Admin (Live Preview)**:
+  - Menyertakan definisi CSS lengkap untuk `.oprec-user-preview .oprec-jabatan-choices-row` dan `.oprec-user-preview .oprec-jabatan-slot` di [oprec-builder.css](file:///d:/Aplikasi/SIMANIKA/frontend/src/app/admin/oprec/oprec-builder.css).
+  - Memperbaiki layout flexbox pada header slot (`.oprec-jabatan-slot__header`) sehingga label "Pilihan #X" dan badge "[ 🔒 Terkunci ]" sejajar rapi secara horizontal, bukan terpisah patah per baris.
+  - Menghadirkan border boxy, latar abu-abu muted saat terkunci (`#f8fafc`), kursor blok (`cursor: not-allowed`), dan styling select dropdown seragam dengan browser frame pratinjau.
+  - Menjaga 3 slot berjejer horizontal pada rentang lebar pratinjau (container query hingga 360px).
 - [x] **Verifikasi Menyeluruh**:
   - 41 tes backend PHPUnit (322 assertions) lulus 100%.
   - 20 tes unit frontend Node.js lulus 100%.

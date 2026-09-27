@@ -579,13 +579,14 @@ export default function OprecBuilder({ oprecId }) {
       return "Pilihan angkatan harus tahun empat digit, misalnya 2024.";
     if (data.form_fields.length > 40) return "Maksimal 40 kolom.";
     const names = new Set();
-    for (const field of data.form_fields) {
-      if (
-        !field.label?.trim() ||
-        !/^[a-z][a-z0-9_]{0,49}$/.test(field.name) ||
-        names.has(field.name)
-      )
-        return "Setiap kolom membutuhkan label dan kode unik (huruf kecil, angka, garis bawah).";
+    for (let i = 0; i < data.form_fields.length; i++) {
+      const field = data.form_fields[i];
+      if (!field.label?.trim()) {
+        return "Setiap kolom pertanyaan membutuhkan label pertanyaan.";
+      }
+      if (!field.name || !/^[a-z][a-z0-9_]{0,49}$/.test(field.name) || names.has(field.name)) {
+        field.name = `pertanyaan_${Date.now()}_${i}`;
+      }
       names.add(field.name);
       if (
         ["select", "radio"].includes(field.type) &&
@@ -1635,21 +1636,6 @@ export default function OprecBuilder({ oprecId }) {
                               </option>
                             ))}
                           </select>
-                        </label>
-
-                        <label>
-                          Kode Kolom (Unik)
-                          <input
-                            value={field.name}
-                            onChange={(e) =>
-                              setField(actualIndex, {
-                                name: e.target.value
-                                  .toLowerCase()
-                                  .replace(/[^a-z0-9_]/g, "_"),
-                              })
-                            }
-                            maxLength={50}
-                          />
                         </label>
 
                         {["select", "radio"].includes(field.type) && (
