@@ -6,7 +6,23 @@
 
 ## Audit kesesuaian `architecture.md` (22 September 2026)
 
-### Pertanyaan Kondisional Berbasis Pilihan Divisi Peserta (Admin & Pendaftar) (27 September 2026)
+### Perbaikan Bug Hover Sidebar Admin & Pemisahan Mobile Drawer (27 September 2026)
+
+- [x] **Akar Masalah Bug Hover Sidebar Admin**:
+  - `DesktopSidebar` dan `MobileSidebar` sebelumnya berbagi state `open` yang sama di `SidebarContext`.
+  - Portal `createPortal(..., document.body)` pada `MobileSidebar` me-render backdrop overlay (`fixed inset-0 z-[9990]`) dan drawer kanan tanpa class `md:hidden`.
+  - Akibatnya, saat kursor mouse di desktop menyentuh sidebar (`onMouseEnter` -> `setOpen(true)`), portal langsung merender backdrop overlay di `document.body` yang menutupi seluruh layar desktop (termasuk Desktop Sidebar di z-30). Kursor mouse seketika terhalang oleh overlay, memicu `onMouseLeave` -> `setOpen(false)`. Siklus instan ini menyebabkan sidebar desktop tampak tidak mau keluar saat di-hover ("di hover g mau keluar").
+- [x] **Pemisahan State & Isolasi Drawer Mobile**:
+  - Memisahkan state `open` (desktop hover) dan `mobileOpen` (mobile drawer) pada `SidebarContextProps` dan `SidebarProvider` di `frontend/src/components/ui/sidebar.tsx`.
+  - Memasang class `md:hidden` pada wrapper, backdrop overlay, dan mobile drawer di dalam `createPortal` agar mustahil muncul atau mengganggu layar desktop.
+  - Memberikan context override di dalam drawer mobile (`open: true, animate: false`) sehingga seluruh teks (logo teks, profile teks, logout teks, label menu) otomatis tampil penuh saat drawer mobile dibuka tanpa bug teks tersembunyi.
+- [x] **Refactoring AdminLayout & Pembersihan Dead Code**:
+  - Mengekstrak navigasi sidebar ke sub-komponen `AdminSidebarNav` yang membaca `useSidebar()`, menghilangkan re-render seluruh halaman `AdminLayout` saat mouse hover desktop.
+  - Menghapus unused import `cn` dan state `open` yang berlebih di `frontend/src/app/admin/layout.jsx`.
+  - Otomatis menutup mobile drawer saat item navigasi (`SidebarLink`) diklik.
+- [x] **Verifikasi Kualitas**:
+  - Build produksi Next.js (`npm run build`, 26 rute) lulus 100% tanpa error TypeScript/lint.
+  - Seluruh 40 tes backend Laravel (307 assertions) lulus 100%.
 
 - [x] **Target Penerima Pertanyaan Kustom (Admin Form Builder)**:
   - Pada setiap kartu editor pertanyaan kustom (No 06 dst), admin dapat memilih target pertanyaan:

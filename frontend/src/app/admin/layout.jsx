@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { AdminRoute } from "@/components/auth/AdminRoute";
-import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
+import { Sidebar, SidebarBody, SidebarLink, useSidebar } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import {
@@ -20,7 +19,6 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Toaster } from "sonner";
-import { cn } from "@/lib/utils";
 import "./admin.css";
 
 const adminLinks = [
@@ -56,8 +54,110 @@ const adminLinks = [
   },
 ];
 
+function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
+  const { open } = useSidebar();
+
+  return (
+    <SidebarBody className="justify-between gap-6">
+      <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+        {/* Logo Header */}
+        <div className="py-2 flex items-center justify-start">
+          <Link
+            href="/admin"
+            className="flex items-center gap-3 px-1 relative z-20 group min-w-0"
+            title="SIMANIKA Admin Console"
+          >
+            <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+              <Image
+                src="/images/logos/Logo-MIF-2020-nav.webp"
+                alt="Logo Himanika MIF"
+                width={40}
+                height={40}
+                className="w-full h-full object-contain drop-shadow"
+                priority
+              />
+            </div>
+            <motion.div
+              animate={{
+                display: open ? "flex" : "none",
+                opacity: open ? 1 : 0,
+              }}
+              transition={{ duration: 0.18 }}
+              className="flex-col whitespace-pre min-w-0"
+            >
+              <span className="font-extrabold text-white tracking-tight text-base leading-none">SIMANIKA</span>
+              <span className="text-[10px] uppercase tracking-widest text-blue-100 font-semibold mt-1">ADMIN CONSOLE</span>
+            </motion.div>
+          </Link>
+        </div>
+
+        {/* Navigation Links */}
+        <div className="mt-8 flex flex-col gap-1.5">
+          {adminLinks.map((link) => {
+            const isActive = pathname === link.href || (link.href !== "/admin" && pathname.startsWith(link.href));
+            return (
+              <SidebarLink
+                key={link.href}
+                link={link}
+                active={isActive}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Admin Profile & Logout Footer */}
+      <div className="border-t border-white/20 pt-4 flex flex-col gap-2.5">
+        <div className="flex items-center gap-3 px-1 py-1 rounded-xl">
+          <div className="w-9 h-9 min-w-[2.25rem] min-h-[2.25rem] rounded-full overflow-hidden border-2 border-white/40 shadow-sm flex-shrink-0">
+            <UserAvatar
+              src={user?.fotoProfil}
+              name={displayName}
+              email={user?.email}
+              size="100%"
+              borderRadius="50%"
+              fontSize="0.85rem"
+            />
+          </div>
+          <motion.div
+            animate={{
+              display: open ? "flex" : "none",
+              opacity: open ? 1 : 0,
+            }}
+            transition={{ duration: 0.18 }}
+            className="flex flex-col min-w-0 flex-1 whitespace-pre"
+          >
+            <span className="text-xs font-bold text-white truncate">{displayName}</span>
+            <span className="text-[10px] text-blue-100 uppercase tracking-wider font-semibold">ADMIN HIMANIKA</span>
+          </motion.div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="w-full flex items-center justify-start gap-3 group/sidebar px-3 py-2.5 rounded-xl transition-all duration-150 text-red-200 hover:text-white bg-red-500/20 hover:bg-red-500/35 border border-red-400/25 cursor-pointer"
+          title="Keluar Admin"
+        >
+          <div className="flex-shrink-0 transition-transform duration-150 group-hover/sidebar:scale-110 text-red-300 group-hover/sidebar:text-white">
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+          </div>
+          <motion.span
+            animate={{
+              display: open ? "inline-block" : "none",
+              opacity: open ? 1 : 0,
+            }}
+            transition={{ duration: 0.18 }}
+            className="text-sm font-semibold whitespace-pre inline-block !p-0 !m-0 tracking-tight"
+          >
+            Keluar Admin
+          </motion.span>
+        </button>
+      </div>
+    </SidebarBody>
+  );
+}
+
 export default function AdminLayout({ children }) {
-  const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -72,105 +172,13 @@ export default function AdminLayout({ children }) {
   return (
     <AdminRoute>
       <div className="admin-layout-root">
-        <Sidebar open={open} setOpen={setOpen} animate={true}>
-          <SidebarBody className="justify-between gap-6">
-            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-              {/* Logo Header */}
-              <div className="py-2 flex items-center justify-start">
-                <Link
-                  href="/admin"
-                  className="flex items-center gap-3 px-1 relative z-20 group min-w-0"
-                  title="SIMANIKA Admin Console"
-                >
-                  <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                    <Image
-                      src="/images/logos/Logo-MIF-2020-nav.webp"
-                      alt="Logo Himanika MIF"
-                      width={40}
-                      height={40}
-                      className="w-full h-full object-contain drop-shadow"
-                      priority
-                    />
-                  </div>
-                  <motion.div
-                    animate={{
-                      display: open ? "flex" : "none",
-                      opacity: open ? 1 : 0,
-                    }}
-                    className="flex-col whitespace-pre min-w-0"
-                  >
-                    <span className="font-extrabold text-white tracking-tight text-base leading-none">SIMANIKA</span>
-                    <span className="text-[10px] uppercase tracking-widest text-blue-100 font-semibold mt-1">ADMIN CONSOLE</span>
-                  </motion.div>
-                </Link>
-              </div>
-
-              {/* Navigation Links */}
-              <div className="mt-8 flex flex-col gap-1.5">
-                {adminLinks.map((link) => {
-                  const isActive = pathname === link.href || (link.href !== "/admin" && pathname.startsWith(link.href));
-                  return (
-                    <SidebarLink
-                      key={link.href}
-                      link={link}
-                      active={isActive}
-                      onClick={() => {
-                        if (typeof window !== "undefined" && window.innerWidth < 768) {
-                          setOpen(false);
-                        }
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Admin Profile & Logout Footer */}
-            <div className="border-t border-white/20 pt-4 flex flex-col gap-2.5">
-              <div className="flex items-center gap-3 px-1 py-1 rounded-xl">
-                <div className="w-9 h-9 min-w-[2.25rem] min-h-[2.25rem] rounded-full overflow-hidden border-2 border-white/40 shadow-sm flex-shrink-0">
-                  <UserAvatar
-                    src={user?.fotoProfil}
-                    name={displayName}
-                    email={user?.email}
-                    size="100%"
-                    borderRadius="50%"
-                    fontSize="0.85rem"
-                  />
-                </div>
-                <motion.div
-                  animate={{
-                    display: open ? "flex" : "none",
-                    opacity: open ? 1 : 0,
-                  }}
-                  className="flex flex-col min-w-0 flex-1 whitespace-pre"
-                >
-                  <span className="text-xs font-bold text-white truncate">{displayName}</span>
-                  <span className="text-[10px] text-blue-100 uppercase tracking-wider font-semibold">ADMIN HIMANIKA</span>
-                </motion.div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-full flex items-center justify-start gap-3 group/sidebar px-3 py-2.5 rounded-xl transition-all duration-150 text-red-200 hover:text-white bg-red-500/20 hover:bg-red-500/35 border border-red-400/25 cursor-pointer"
-                title="Keluar Admin"
-              >
-                <div className="flex-shrink-0 transition-transform duration-150 group-hover/sidebar:scale-110 text-red-300 group-hover/sidebar:text-white">
-                  <LogOut className="h-5 w-5 flex-shrink-0" />
-                </div>
-                <motion.span
-                  animate={{
-                    display: open ? "inline-block" : "none",
-                    opacity: open ? 1 : 0,
-                  }}
-                  className="text-sm font-semibold whitespace-pre inline-block !p-0 !m-0 tracking-tight"
-                >
-                  Keluar Admin
-                </motion.span>
-              </button>
-            </div>
-          </SidebarBody>
+        <Sidebar animate={true}>
+          <AdminSidebarNav
+            pathname={pathname}
+            displayName={displayName}
+            user={user}
+            handleLogout={handleLogout}
+          />
         </Sidebar>
 
         {/* Main Content Area */}
