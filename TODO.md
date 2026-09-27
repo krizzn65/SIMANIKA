@@ -6,7 +6,23 @@
 
 ## Audit kesesuaian `architecture.md` (22 September 2026)
 
-### Pertanyaan Kondisional Berbasis Pilihan Divisi Peserta (Admin & Pendaftar) (27 September 2026)
+### Perbaikan Bug Hover Sidebar Admin & Pemisahan Mobile Drawer (27 September 2026)
+
+- [x] **Akar Masalah Bug Hover Sidebar Admin**:
+  - `DesktopSidebar` dan `MobileSidebar` sebelumnya berbagi state `open` yang sama di `SidebarContext`.
+  - Portal `createPortal(..., document.body)` pada `MobileSidebar` me-render backdrop overlay (`fixed inset-0 z-[9990]`) dan drawer kanan tanpa class `md:hidden`.
+  - Akibatnya, saat kursor mouse di desktop menyentuh sidebar (`onMouseEnter` -> `setOpen(true)`), portal langsung merender backdrop overlay di `document.body` yang menutupi seluruh layar desktop (termasuk Desktop Sidebar di z-30). Kursor mouse seketika terhalang oleh overlay, memicu `onMouseLeave` -> `setOpen(false)`. Siklus instan ini menyebabkan sidebar desktop tampak tidak mau keluar saat di-hover ("di hover g mau keluar").
+- [x] **Pemisahan State & Isolasi Drawer Mobile**:
+  - Memisahkan state `open` (desktop hover) dan `mobileOpen` (mobile drawer) pada `SidebarContextProps` dan `SidebarProvider` di `frontend/src/components/ui/sidebar.tsx`.
+  - Memasang class `md:hidden` pada wrapper, backdrop overlay, dan mobile drawer di dalam `createPortal` agar mustahil muncul atau mengganggu layar desktop.
+  - Memberikan context override di dalam drawer mobile (`open: true, animate: false`) sehingga seluruh teks (logo teks, profile teks, logout teks, label menu) otomatis tampil penuh saat drawer mobile dibuka tanpa bug teks tersembunyi.
+- [x] **Refactoring AdminLayout & Pembersihan Dead Code**:
+  - Mengekstrak navigasi sidebar ke sub-komponen `AdminSidebarNav` yang membaca `useSidebar()`, menghilangkan re-render seluruh halaman `AdminLayout` saat mouse hover desktop.
+  - Menghapus unused import `cn` dan state `open` yang berlebih di `frontend/src/app/admin/layout.jsx`.
+  - Otomatis menutup mobile drawer saat item navigasi (`SidebarLink`) diklik.
+- [x] **Verifikasi Kualitas**:
+  - Build produksi Next.js (`npm run build`, 26 rute) lulus 100% tanpa error TypeScript/lint.
+  - Seluruh 40 tes backend Laravel (307 assertions) lulus 100%.
 
 - [x] **Target Penerima Pertanyaan Kustom (Admin Form Builder)**:
   - Pada setiap kartu editor pertanyaan kustom (No 06 dst), admin dapat memilih target pertanyaan:
@@ -87,6 +103,12 @@
 - [x] Form peserta memilih tepat tiga divisi berbeda melalui kartu yang sudah ada; urutan klik menjadi prioritas. Adapter Next dan Laravel menolak pilihan kurang/duplikat/ID luar periode. Kolom pilihan ketiga dan rekap admin/user ditambahkan. Tes frontend 16 lulus, backend 42 tes/343 assertion lulus, dan build frontend lulus.
 - [x] Migrasi `2026_09_26_000002_add_third_oprec_division_choice` dijalankan pada database lokal.
 - [ ] Jalankan migrasi yang sama pada database deployment dan smoke test browser dengan sesi sungguhan. Tes SQLite/build belum menggantikan pengujian browser.
+
+### Navigasi admin OPREC (27 September 2026)
+
+- [x] Breadcrumb admin tidak lagi mengekspos ID internal periode pada halaman edit OPREC; label menjadi “Kelola OPREC / Edit Formulir”.
+- [x] URL edit memakai slug periode yang terbaca (contoh `2026-2027`), sementara URL numerik lama tetap didukung.
+- [x] Admin dapat menghapus pendaftaran OPREC kosong/draft dengan konfirmasi; periode yang sudah memiliki pendaftar dilindungi backend dan mengembalikan 409.
 
 ### Formulir event per grup (25 September 2026)
 
@@ -747,5 +769,3 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 | 2026-09-27 | Warna merah tanda wajib (*) formulir OPREC | Seluruh simbol asterisk (*) penanda kolom wajib diisi pada form builder OPREC (OprecBuilder) dan dialog tambah tahap OPREC (OprecCreateDialog) diberi warna merah tegas (#ef4444 / rose-500) melalui class scoped .oprec-builder__required dan .oprec-dialog__required. Verifikasi lulus: tes frontend 20/20 lulus dan Next.js production build lulus 26/26 routes. | AI |
 | 2026-09-27 | Upload gambar/logo divisi OPREC | Input teks URL logo divisi (/images/divisi/...) di OprecBuilder diganti total dengan komponen upload gambar interaktif: dilengkapi tombol upload eksplisit "Pilih Berkas" (.oprec-builder__logo-pick-btn), drag-and-drop & file picker, batas 5MB, format JPG/PNG/WebP, endpoint backend POST /api/admin/oprec/upload-logo, thumbnail pratinjau 32x32px, nama logo mono, tombol Ganti & Hapus, serta rendering dinamis di Live Preview. Dropzone poster juga dilengkapi tombol "Pilih Berkas Poster". Verifikasi lulus: tes frontend 20/20, backend Oprec 4 test/32 assertions, dan Next.js production build 26/26 routes. | AI |
 | 2026-09-27 | Perombakan OPREC: Pendaftaran Tunggal Tanpa Tahapan Terpisah | Seluruh alur OPREC dirombak untuk murni mengelola pendaftaran periode rekrutmen: modal tambah tahap 3-opsi (Pendaftaran, Tes tulis, Pengumuman) diganti langsung dengan formulir Buat Pendaftaran Baru; bagian tahapan berikutnya di overview admin dihilangkan; submenu sidebar dihilangkan agar Kelola OPREC mengarah langsung ke /admin/oprec; deadcode frontend (test, announcement, stages form, OprecStageOverview, OprecTestBuilder, oprec-review.css) dan deadcode backend (OprecStageController, OprecTestController, OprecStagesTest, dan route stages) dihapus tuntas. Verifikasi: 40 tes backend (307 assertions) lulus 100%, dan Next.js production build 24/24 routes lulus tanpa error. | AI |
-
-

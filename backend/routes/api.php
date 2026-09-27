@@ -88,6 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/oprec/upload-poster', [AdminOprecController::class, 'uploadPoster']);
         Route::post('/oprec/upload-logo', [AdminOprecController::class, 'uploadLogo']);
         Route::put('/oprec/{oprec}', [AdminOprecController::class, 'update']);
+        Route::delete('/oprec/{oprec}', [AdminOprecController::class, 'destroy']);
         Route::get('/oprec/{oprec}/registrants', [OprecRegistrantController::class, 'index']);
         Route::put('/oprec/{oprec}/registrants/{registration}', [OprecRegistrantController::class, 'update']);
         Route::get('/oprec/{oprec}/registrants/{registration}/files/{field}', [OprecRegistrantController::class, 'download']);

@@ -6,7 +6,7 @@ import OprecCreateDialog from "./OprecCreateDialog";
 import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
 import { api } from "@/services/api";
 import { AdminErrorNotice } from "../AdminErrorNotice";
-import { Search, X, FileText, RefreshCw, Calendar, Pencil } from "lucide-react";
+import { Search, X, FileText, RefreshCw, Calendar, Pencil, Trash2 } from "lucide-react";
 import "./oprec-create-dialog.css";
 
 function formatOprecDate(dateStr) {
@@ -21,6 +21,7 @@ function formatOprecDate(dateStr) {
     return String(dateStr);
   }
 }
+const oprecEditHref = (oprec) => `/admin/oprec/${encodeURIComponent(String(oprec.periode || oprec.id).replace(/\//g, "-"))}/edit`;
 
 function getRegistrantName(r) {
   if (!r) return "Peserta";
@@ -99,6 +100,18 @@ export default function AdminOprecPage() {
   const handleSelectOprec = (oprec) => {
     setSelectedOprec(oprec);
     fetchRegistrants(oprec.id);
+  };
+
+  const handleDeleteOprec = async (oprec) => {
+    if (!oprec || !window.confirm(`Hapus pendaftaran OPREC periode ${oprec.periode}? Tindakan ini tidak dapat dibatalkan.`)) return;
+    try {
+      await api.delete(`/admin/oprec/${oprec.id}`);
+      setSelectedOprec(null);
+      setRegistrants([]);
+      await fetchOprecs();
+    } catch (err) {
+      setLoadError(err.response?.data?.message || err.message || "Pendaftaran belum dapat dihapus.");
+    }
   };
 
   // Filter registrants
@@ -217,13 +230,16 @@ export default function AdminOprecPage() {
                 )}
               </div>
             </div>
-            <Link
-              href={`/admin/oprec/${selectedOprec.id}/edit`}
-              className="oprec-admin-overview__edit"
-            >
-              <Pencil size={14} aria-hidden="true" />
-              <span>Kelola formulir</span>
-            </Link>
+            <div className="oprec-admin-overview__actions">
+              <Link href={oprecEditHref(selectedOprec)} className="oprec-admin-overview__edit">
+                <Pencil size={14} aria-hidden="true" />
+                <span>Kelola formulir</span>
+              </Link>
+              <button type="button" className="oprec-admin-overview__delete" onClick={() => handleDeleteOprec(selectedOprec)}>
+                <Trash2 size={14} aria-hidden="true" />
+                <span>Hapus pendaftaran</span>
+              </button>
+            </div>
           </div>
 
           {selectedOprec.divisiTersedia?.length > 0 && (

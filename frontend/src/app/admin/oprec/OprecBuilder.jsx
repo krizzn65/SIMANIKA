@@ -165,6 +165,7 @@ const apiDateEnd = (value) => {
   if (value.includes("T")) return new Date(value).toISOString();
   return new Date(`${value}T23:59:59+07:00`).toISOString();
 };
+const periodSlug = (value) => encodeURIComponent(String(value || "").trim().replace(/\//g, "-"));
 
 const toOptions = (value) =>
   value
@@ -777,7 +778,7 @@ export default function OprecBuilder({ oprecId }) {
         : await api.post("/admin/oprec", payload);
       setSaved(true);
       setData((current) => ({ ...current, status: nextStatus }));
-      if (!oprecId) router.replace(`/admin/oprec/${response.data.data.id}/edit`);
+      if (!oprecId) router.replace(`/admin/oprec/${periodSlug(data.periode)}/edit`);
     } catch (err) {
       const errors = err.response?.data?.errors;
       setError(

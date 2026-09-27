@@ -17,6 +17,8 @@ export interface Links {
 interface SidebarContextProps {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  mobileOpen: boolean;
+  setMobileOpen: React.Dispatch<React.SetStateAction<boolean>>;
   animate: boolean;
 }
 
@@ -36,20 +38,35 @@ export const SidebarProvider = ({
   children,
   open: openProp,
   setOpen: setOpenProp,
+  mobileOpen: mobileOpenProp,
+  setMobileOpen: setMobileOpenProp,
   animate = true,
 }: {
   children: React.ReactNode;
   open?: boolean;
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  mobileOpen?: boolean;
+  setMobileOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   animate?: boolean;
 }) => {
   const [openState, setOpenState] = useState(false);
+  const [mobileOpenState, setMobileOpenState] = useState(false);
 
   const open = openProp !== undefined ? openProp : openState;
   const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState;
+  const mobileOpen = mobileOpenProp !== undefined ? mobileOpenProp : mobileOpenState;
+  const setMobileOpen = setMobileOpenProp !== undefined ? setMobileOpenProp : setMobileOpenState;
 
   return (
-    <SidebarContext.Provider value={{ open, setOpen, animate }}>
+    <SidebarContext.Provider
+      value={{
+        open,
+        setOpen,
+        mobileOpen,
+        setMobileOpen,
+        animate,
+      }}
+    >
       {children}
     </SidebarContext.Provider>
   );
@@ -59,15 +76,25 @@ export const Sidebar = ({
   children,
   open,
   setOpen,
+  mobileOpen,
+  setMobileOpen,
   animate = true,
 }: {
   children: React.ReactNode;
   open?: boolean;
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  mobileOpen?: boolean;
+  setMobileOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   animate?: boolean;
 }) => {
   return (
-    <SidebarProvider open={open} setOpen={setOpen} animate={animate}>
+    <SidebarProvider
+      open={open}
+      setOpen={setOpen}
+      mobileOpen={mobileOpen}
+      setMobileOpen={setMobileOpen}
+      animate={animate}
+    >
       {children}
     </SidebarProvider>
   );
@@ -89,7 +116,7 @@ export const DesktopSidebar = ({
 }: React.ComponentProps<typeof motion.div>) => {
   const { open, setOpen, animate } = useSidebar();
   return (
-    <motion.div
+    <motion.aside
       className={cn(
         "h-screen h-[100dvh] sticky top-0 px-4 py-5 hidden md:flex md:flex-col justify-between",
         "bg-gradient-to-b from-[#155EEF] via-[#104ECC] to-[#0A3CB3]",
@@ -109,7 +136,7 @@ export const DesktopSidebar = ({
       {...props}
     >
       {children}
-    </motion.div>
+    </motion.aside>
   );
 };
 
@@ -118,7 +145,7 @@ export const MobileSidebar = ({
   children,
   ...props
 }: React.ComponentProps<"div">) => {
-  const { open, setOpen } = useSidebar();
+  const { mobileOpen, setMobileOpen } = useSidebar();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -150,9 +177,9 @@ export const MobileSidebar = ({
           <button
             type="button"
             className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-white/20"
-            onClick={() => setOpen(!open)}
+            onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Buka menu admin"
-            aria-expanded={open}
+            aria-expanded={mobileOpen}
           >
             <Menu className="w-5 h-5 cursor-pointer" />
           </button>
@@ -160,18 +187,19 @@ export const MobileSidebar = ({
       </div>
 
       {mounted &&
+        typeof document !== "undefined" &&
         createPortal(
           <AnimatePresence>
-            {open && (
-              <>
+            {mobileOpen && (
+              <div className="md:hidden">
                 {/* Backdrop Overlay for closing on outside tap */}
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  onClick={() => setOpen(false)}
-                  className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[9990]"
+                  onClick={() => setMobileOpen(false)}
+                  className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[9990] md:hidden"
                   aria-hidden="true"
                 />
 
@@ -188,21 +216,34 @@ export const MobileSidebar = ({
                     "fixed top-0 right-0 bottom-0 h-full h-[100dvh] w-[72vw] sm:w-[50vw] max-w-[340px] min-w-[260px]",
                     "bg-gradient-to-b from-[#155EEF] via-[#104ECC] to-[#0A3CB3]",
                     "p-5 z-[9999] flex flex-col justify-between overflow-y-auto text-white shadow-2xl",
-                    "border-l border-blue-400/30",
+                    "border-l border-blue-400/30 md:hidden",
                     className
                   )}
                 >
                   <button
                     type="button"
-                    className="absolute right-4 top-4 z-50 flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/25 hover:text-blue-100"
-                    onClick={() => setOpen(false)}
+                    className="absolute right-4 top-4 z-50 flex h-11 w-11 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-white shadow-none transition-colors hover:bg-transparent hover:text-blue-100 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                    onClick={() => setMobileOpen(false)}
                     aria-label="Tutup menu admin"
+                    style={{ borderRadius: 0, background: "transparent", boxShadow: "none" }}
                   >
-                    <X aria-hidden="true" className="w-5 h-5" />
+                    <X aria-hidden="true" className="w-6 h-6" />
                   </button>
-                  {children}
+
+                  {/* Di dalam mobile drawer, tampilkan semua teks secara penuh tanpa collapse */}
+                  <SidebarContext.Provider
+                    value={{
+                      open: true,
+                      setOpen: () => {},
+                      mobileOpen: true,
+                      setMobileOpen,
+                      animate: false,
+                    }}
+                  >
+                    {children}
+                  </SidebarContext.Provider>
                 </motion.div>
-              </>
+              </div>
             )}
           </AnimatePresence>,
           document.body
@@ -224,11 +265,14 @@ export const SidebarLink = ({
   onClick?: () => void;
   props?: LinkProps;
 }) => {
-  const { open, animate } = useSidebar();
+  const { open, animate, setMobileOpen } = useSidebar();
   return (
     <Link
       href={link.href}
-      onClick={onClick}
+      onClick={(e) => {
+        setMobileOpen(false);
+        onClick?.();
+      }}
       className={cn(
         "admin-nav-link flex items-center justify-start gap-3 group/sidebar px-3 py-2.5 rounded-xl transition-all duration-150 relative",
         active
@@ -257,6 +301,9 @@ export const SidebarLink = ({
         animate={{
           display: animate ? (open ? "inline-block" : "none") : "inline-block",
           opacity: animate ? (open ? 1 : 0) : 1,
+        }}
+        transition={{
+          duration: 0.18,
         }}
         className={cn(
           "text-sm whitespace-pre inline-block !p-0 !m-0 tracking-tight",

@@ -12,4 +12,13 @@ class Oprec extends Model
     public function divisions(): HasMany { return $this->hasMany(OprecDivision::class)->orderBy('sort_order'); }
     public function stages(): HasMany { return $this->hasMany(OprecStage::class)->orderBy('tanggal_buka'); }
     public function registrations(): HasMany { return $this->hasMany(OprecRegistration::class); }
+
+    /** Allow admin links to use a readable period slug while preserving legacy numeric IDs. */
+    public function resolveRouteBindingQuery($query, $value, $field = null)
+    {
+        if ($field) return $query->where($field, $value);
+        if (ctype_digit((string) $value)) return $query->whereKey((int) $value);
+        $period = str_replace('-', '/', urldecode((string) $value));
+        return $query->where('periode', $period);
+    }
 }
