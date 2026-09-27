@@ -146,9 +146,17 @@ export function isFieldApplicable(field, choices = [], divisions = []) {
   const chosenTerms = (choices || []).filter(Boolean).flatMap((choice) => {
     const val = String(choice).trim().toLowerCase();
     const div = (divisions || []).find(
-      (d, idx) => String(d.id ?? idx).toLowerCase() === val || d.nama?.toLowerCase().trim() === val
+      (d, idx) =>
+        String(d.id ?? idx).toLowerCase() === val ||
+        d.nama?.toLowerCase().trim() === val ||
+        d.namaLengkap?.toLowerCase().trim() === val
     );
-    return [val, div?.nama?.toLowerCase().trim(), div?.namaLengkap?.toLowerCase().trim()].filter(Boolean);
+    return [
+      val,
+      div?.id != null ? String(div.id).trim().toLowerCase() : null,
+      div?.nama?.toLowerCase().trim(),
+      div?.namaLengkap?.toLowerCase().trim(),
+    ].filter(Boolean);
   });
   return targetDivisions.some((target) => {
     const term = String(target).trim().toLowerCase();
@@ -159,8 +167,9 @@ export function isFieldApplicable(field, choices = [], divisions = []) {
 export function validateOprecForm(fields, form, now = Date.now(), divisions = []) {
   const errors = {};
   const choices = [1, 2, 3].map((rank) => form.get(`divisi_pilihan_${rank}`));
+  const hasDivisionField = fields.some((field) => field.name === "divisi_pilihan_1") || form.has("divisi_pilihan_1");
   let divisionOptions = fields.find((field) => field.name === "divisi_pilihan_1")?.options || [];
-  if (!divisionOptions.length && Array.isArray(divisions) && divisions.length > 0) {
+  if (!divisionOptions.length && hasDivisionField && Array.isArray(divisions) && divisions.length > 0) {
     divisionOptions = divisions.map((item, idx) => ({
       value: String(item.id ?? idx),
       label: item.nama || item.namaLengkap || `Divisi #${item.id ?? idx}`,

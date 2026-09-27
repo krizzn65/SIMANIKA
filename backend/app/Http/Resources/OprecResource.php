@@ -16,7 +16,15 @@ class OprecResource extends JsonResource
             'tanggalBuka' => $this->tanggal_buka?->toIso8601String(),
             'tanggalTutup' => $this->tanggal_tutup?->toIso8601String(),
             'schemaVersion' => $this->schema_version, 'formIntro' => $this->form_intro ?? '',
-            'formFields' => collect($this->form_fields ?? [])->reject(fn ($field) => in_array($field['name'] ?? '', ['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'], true))->values()->all(),
+            'formFields' => collect($this->form_fields ?? [])
+                ->reject(fn ($field) => in_array($field['name'] ?? '', ['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'], true))
+                ->map(fn ($field) => array_merge($field, [
+                    'target_type' => $field['target_type'] ?? 'all',
+                    'targetType' => $field['target_type'] ?? 'all',
+                    'target_divisions' => $field['target_divisions'] ?? [],
+                    'targetDivisions' => $field['target_divisions'] ?? [],
+                ]))
+                ->values()->all(),
             'divisiTersedia' => $this->divisions->map(fn ($division) => [
                 'id' => $division->id, 'nama' => $division->nama,
                 'namaLengkap' => $division->nama_lengkap, 'deskripsi' => $division->deskripsi,

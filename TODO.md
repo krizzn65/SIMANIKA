@@ -6,6 +6,27 @@
 
 ## Audit kesesuaian `architecture.md` (22 September 2026)
 
+### Pertanyaan Kondisional Berbasis Pilihan Divisi Peserta (Admin & Pendaftar) (27 September 2026)
+
+- [x] **Target Penerima Pertanyaan Kustom (Admin Form Builder)**:
+  - Pada setiap kartu editor pertanyaan kustom (No 06 dst), admin dapat memilih target pertanyaan:
+    - **Semua Divisi** (`all`): pertanyaan berlaku umum bagi semua pendaftar.
+    - **Divisi Tertentu** (`specific`): pertanyaan hanya ditujukan bagi pendaftar yang memilih satu atau beberapa divisi sasaran (misal: "Wajib sertakan portofolio" untuk Kominfo).
+  - Kontrol antarmuka Neo-Arcade boxy: segmented control "Semua Divisi" vs "Divisi Tertentu", checklist chip divisi aktif dengan kotak centang taktil, serta badge status di header kartu pertanyaan (`SEMUA DIVISI` atau `KHUSUS: [NAMA DIVISI]`).
+  - Validasi builder: jika admin memilih "Divisi Tertentu", wajib mencentang minimal 1 divisi sasaran sebelum formulir dapat disimpan.
+  - Skema database JSONB backward-compatible: `form_fields` menyimpan `target_type` dan `target_divisions` tanpa memerlukan migrasi tabel baru.
+- [x] **Dinamis pada Formulir Pendaftaran Peserta (`OprecForm.jsx`) & Live Preview**:
+  - Pertanyaan khusus divisi hanya dimunculkan jika peserta memilih divisi tersebut di salah satu dari 3 pilihan prioritasnya (Pilihan 1, 2, atau 3).
+  - Jika peserta tidak memilih divisi sasaran, pertanyaan otomatis disembunyikan dan dilewati dari validasi `required` di sisi frontend (`lib/oprec.js`) maupun server backend (`OprecRegistrationController.php`).
+  - Label pertanyaan kondisional dilengkapi badge penanda visual `Khusus: [Nama Divisi]`.
+  - Live Preview builder di admin bereaksi instan saat admin memilih/mengubah simulasi pilihan divisi.
+- [x] **Verifikasi & Uji Kualitas**:
+  - 10 tes unit frontend Node.js (`tests/oprec.test.mjs`) lulus 100%, mencakup skenario field kondisional yang dilewati vs wajib diisi saat divisi sasaran dipilih.
+  - 7 tes integrasi submission frontend (`tests/oprec-submission.test.mjs`) lulus 100%, dengan integrasi parameter `divisiTersedia` pada `validateOprecForm` di route adapter.
+  - 41 tes backend PHPUnit (322 assertions) lulus 100%.
+  - Build produksi Next.js (`npm run build`, 26 rute) lulus dengan 0 warning/error.
+  - Zero dead code / unused code terverifikasi bersih di seluruh stack.
+
 ### Rombak Total Kuota Menjadi Sistem Jabatan Divisi (Admin-First) & Zero Dead Code (27 September 2026)
 
 - [x] **Pembersihan Total Kuota OPREC (Zero Dead Code)**:

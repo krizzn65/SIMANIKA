@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { RotateCcw, Lock } from "lucide-react";
-import { validateOprecForm, getDefaultJabatan } from "@/lib/oprec";
+import { validateOprecForm, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
 
 function getDivisionPositions(division) {
   if (!division) return [];
@@ -19,6 +19,11 @@ const DEFAULT_DIVISION_LOGOS = {
   kominfo: "/images/divisi/kominfo.webp",
   kwu: "/images/divisi/kwu.webp",
 };
+
+const SYSTEM_IDENTIFIERS = ["nama", "nim", "tanggal_lahir", "angkatan"];
+const isSystemField = (name) => SYSTEM_IDENTIFIERS.includes(name);
+const isDivisionField = (name) => ["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(name);
+const isCustomField = (name) => !isSystemField(name) && !isDivisionField(name);
 
 function DivisionChoiceItem({ option, division, common, id, selected, onToggle }) {
   const [imgError, setImgError] = useState(false);
@@ -88,9 +93,32 @@ function Field({ field, error, divisions = [], selectedDivisions = [], onToggleD
     "aria-describedby": description,
   };
 
+  const isSpecific =
+    (field.targetType === "specific" || field.target_type === "specific") &&
+    Array.isArray(field.targetDivisions || field.target_divisions) &&
+    (field.targetDivisions || field.target_divisions).length > 0;
+
+  const targetNames = isSpecific
+    ? (field.targetDivisions || field.target_divisions)
+        .map((target) => {
+          const div = divisions.find(
+            (d, idx) =>
+              String(d.id ?? idx).toLowerCase() === String(target).toLowerCase() ||
+              d.nama?.toLowerCase() === String(target).toLowerCase()
+          );
+          return div?.nama || target;
+        })
+        .join(", ")
+    : null;
+
   const labelText = (
     <>
       {field.label}
+      {isSpecific && targetNames && (
+        <span className="oprec-conditional-badge" title={`Pertanyaan ini khusus pendaftar divisi ${targetNames}`}>
+          Khusus: {targetNames}
+        </span>
+      )}
       {field.required && <b aria-label="wajib"> *</b>}
     </>
   );
@@ -367,9 +395,7 @@ export function OprecForm({ oprec, onSuccess }) {
                 );
               })}
               {oprec.formFields
-                .filter((field) => !["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name))
-                .slice(0, 4)
-                .filter((field) => errors[field.name])
+                .filter((field) => isSystemField(field.name) && errors[field.name])
                 .map((field) => (
                   <li key={field.name}>
                     <a href={`#oprec-field-${field.name}`}>
@@ -377,15 +403,8 @@ export function OprecForm({ oprec, onSuccess }) {
                     </a>
                   </li>
                 ))}
-              {errors.divisi_pilihan_1 && (
-                <li>
-                  <a href="#oprec-field-divisi_pilihan_1">Divisi Pilihan: {errors.divisi_pilihan_1}</a>
-                </li>
-              )}
               {oprec.formFields
-                .filter((field) => !["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name))
-                .slice(4)
-                .filter((field) => errors[field.name])
+                .filter((field) => isCustomField(field.name) && isFieldApplicable(field, selectedDivisions, oprec.divisiTersedia) && errors[field.name])
                 .map((field) => (
                   <li key={field.name}>
                     <a href={`#oprec-field-${field.name}`}>
@@ -402,8 +421,7 @@ export function OprecForm({ oprec, onSuccess }) {
 
         {/* 1. Pertanyaan Sistem (01 s/d 04: identitas wajib) */}
         {oprec.formFields
-          .filter((field) => !["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name))
-          .slice(0, 4)
+          .filter((field) => isSystemField(field.name))
           .map((field) => (
             <Field
               key={field.name}
@@ -588,8 +606,7 @@ export function OprecForm({ oprec, onSuccess }) {
 
         {/* 3. Pertanyaan Tambahan Admin (No 06 dst, berada di bawah divisi) */}
         {oprec.formFields
-          .filter((field) => !["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name))
-          .slice(4)
+          .filter((field) => isCustomField(field.name) && isFieldApplicable(field, selectedDivisions, oprec.divisiTersedia))
           .map((field) => (
             <Field
               key={field.name}

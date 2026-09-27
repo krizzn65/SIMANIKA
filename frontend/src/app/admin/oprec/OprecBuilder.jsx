@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { api } from "@/services/api";
 import { divisionPreview } from "@/components/oprec/divisionPreview";
-import { getDefaultJabatan } from "@/lib/oprec";
+import { getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
 import { OprecPeriodPicker } from "./OprecPeriodPicker";
 import "./oprec-create-dialog.css";
 import "./oprec-builder.css";
@@ -110,6 +110,8 @@ const newField = (index) => ({
   required: false,
   help: "",
   maxLength: 255,
+  target_type: "all",
+  target_divisions: [],
 });
 
 const emptyDivision = () => ({
@@ -360,13 +362,21 @@ export default function OprecBuilder({ oprecId }) {
           form_fields: [
             ...fixed.map((template) => ({
               ...template,
+              target_type: "all",
+              target_divisions: [],
               ...(item.formFields || []).find((field) => field.name === template.name),
             })),
             ...(item.formFields || []).filter(
               (field) =>
                 !fixed.some((template) => template.name === field.name) &&
                 !["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name)
-            ),
+            ).map((field) => ({
+              ...field,
+              target_type: field.targetType || field.target_type || "all",
+              target_divisions: Array.isArray(field.targetDivisions || field.target_divisions)
+                ? (field.targetDivisions || field.target_divisions).map(String)
+                : [],
+            })),
           ],
           divisi_tersedia: (item.divisiTersedia || []).map((division) => ({
             nama: division.nama,
@@ -593,6 +603,12 @@ export default function OprecBuilder({ oprecId }) {
         !field.options?.length
       )
         return `Isi pilihan untuk ${field.label}.`;
+      if (
+        field.target_type === "specific" &&
+        (!Array.isArray(field.target_divisions) || field.target_divisions.length === 0)
+      ) {
+        return `Pilih minimal satu divisi target untuk pertanyaan "${field.label || `No. ${i + 1}`}".`;
+      }
     }
     return "";
   };
@@ -627,6 +643,11 @@ export default function OprecBuilder({ oprecId }) {
         required: Boolean(field.required),
         help: field.help || null,
         placeholder: field.placeholder || null,
+        target_type: field.target_type === "specific" ? "specific" : "all",
+        target_divisions:
+          field.target_type === "specific" && Array.isArray(field.target_divisions)
+            ? field.target_divisions.map(String).map((s) => s.trim()).filter(Boolean)
+            : [],
         ...(["select", "radio"].includes(field.type)
           ? { options: field.options || [] }
           : {}),
@@ -674,6 +695,14 @@ export default function OprecBuilder({ oprecId }) {
   const renderPreviewField = (f, i) => {
     const isWide = ["textarea", "file", "radio", "checkbox"].includes(f.type);
     const questionNumber = i >= fixed.length ? i + 2 : i + 1;
+    const isSpecific =
+      (f.target_type === "specific" || f.targetType === "specific") &&
+      Array.isArray(f.target_divisions || f.targetDivisions) &&
+      (f.target_divisions || f.targetDivisions).length > 0;
+    const targetText = isSpecific
+      ? (f.target_divisions || f.targetDivisions).join(", ")
+      : null;
+
     return (
       <div
         className={`oprec-user-preview__field-item ${
@@ -683,6 +712,11 @@ export default function OprecBuilder({ oprecId }) {
       >
         <label className="oprec-user-preview__field-label">
           {f.label || `Pertanyaan ${questionNumber}`}
+          {isSpecific && targetText && (
+            <span className="oprec-conditional-badge" title={`Pertanyaan ini khusus pendaftar divisi ${targetText}`}>
+              Khusus: {targetText}
+            </span>
+          )}
           {f.required && <b aria-label="wajib"> *</b>}
         </label>
 
@@ -1561,6 +1595,9 @@ export default function OprecBuilder({ oprecId }) {
                 {data.form_fields.slice(fixed.length).map((field, customIdx) => {
                   const actualIndex = fixed.length + customIdx;
                   const displayIndex = actualIndex + 2; // 4 + 2 = 6 ("06"), 5 + 2 = 7 ("07"), dst.
+                  const isSpecific = field.target_type === "specific";
+                  const targetDivs = Array.isArray(field.target_divisions) ? field.target_divisions : [];
+
                   return (
                     <div
                       key={field.name + actualIndex}
@@ -1571,6 +1608,18 @@ export default function OprecBuilder({ oprecId }) {
                           {String(displayIndex).padStart(2, "0")}
                         </span>
                         <strong>{field.label || "Pertanyaan Baru"}</strong>
+                        {isSpecific ? (
+                          <span
+                            className="oprec-builder__field-tag oprec-builder__field-tag--specific"
+                            title={`Khusus pendaftar divisi: ${targetDivs.join(", ") || "(belum ada)"}`}
+                          >
+                            KHUSUS: {targetDivs.length ? targetDivs.join(", ") : "PILIH DIVISI"}
+                          </span>
+                        ) : (
+                          <span className="oprec-builder__field-tag oprec-builder__field-tag--all">
+                            SEMUA DIVISI
+                          </span>
+                        )}
                         <span className="oprec-builder__field-tag">
                           TAMBAHAN
                         </span>
@@ -1637,6 +1686,107 @@ export default function OprecBuilder({ oprecId }) {
                             ))}
                           </select>
                         </label>
+
+                        {/* Target Penerima Pertanyaan */}
+                        <div className="oprec-builder__target-section wide">
+                          <div className="oprec-builder__target-head">
+                            <span className="oprec-builder__label">
+                              Target Divisi Calon Anggota
+                            </span>
+                            <small className="oprec-builder__target-hint">
+                              Tentukan apakah pertanyaan ini wajib/muncul untuk semua pendaftar atau hanya untuk pendaftar divisi tertentu (misal: Kominfo).
+                            </small>
+                          </div>
+
+                          <div className="oprec-builder__target-segmented" role="radiogroup" aria-label="Target Divisi">
+                            <button
+                              type="button"
+                              role="radio"
+                              aria-checked={!isSpecific}
+                              className={`oprec-builder__target-opt ${!isSpecific ? "oprec-builder__target-opt--active" : ""}`}
+                              onClick={() => setField(actualIndex, { target_type: "all" })}
+                            >
+                              <span className="oprec-builder__target-opt-title">Semua Divisi</span>
+                              <span className="oprec-builder__target-opt-desc">Muncul untuk semua pendaftar</span>
+                            </button>
+                            <button
+                              type="button"
+                              role="radio"
+                              aria-checked={isSpecific}
+                              className={`oprec-builder__target-opt ${isSpecific ? "oprec-builder__target-opt--active" : ""}`}
+                              onClick={() => {
+                                const defaultDiv = data.divisi_tersedia.find((d) => d.nama?.trim())?.nama?.trim();
+                                setField(actualIndex, {
+                                  target_type: "specific",
+                                  target_divisions: targetDivs.length > 0
+                                    ? targetDivs
+                                    : (defaultDiv ? [defaultDiv] : [])
+                                });
+                              }}
+                            >
+                              <span className="oprec-builder__target-opt-title">Divisi Tertentu</span>
+                              <span className="oprec-builder__target-opt-desc">Hanya tampil jika memilih divisi sasaran</span>
+                            </button>
+                          </div>
+
+                          {isSpecific && (
+                            <div className="oprec-builder__target-divisions">
+                              <span className="oprec-builder__target-divisions-label">
+                                Centang Divisi Sasaran: <span className="oprec-builder__required">*</span>
+                              </span>
+                              <div className="oprec-builder__target-chips">
+                                {data.divisi_tersedia.map((d, dIdx) => {
+                                  const divName = d.nama?.trim();
+                                  if (!divName) return null;
+                                  const isChecked = targetDivs.some(
+                                    (t) =>
+                                      String(t).toLowerCase() === divName.toLowerCase() ||
+                                      String(t) === String(d.id ?? dIdx)
+                                  );
+                                  return (
+                                    <label
+                                      key={divName + dIdx}
+                                      className={`oprec-builder__target-chip ${
+                                        isChecked ? "oprec-builder__target-chip--checked" : ""
+                                      }`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        className="sr-only"
+                                        checked={isChecked}
+                                        onChange={() => {
+                                          let nextDivs;
+                                          if (isChecked) {
+                                            nextDivs = targetDivs.filter(
+                                              (t) =>
+                                                String(t).toLowerCase() !== divName.toLowerCase() &&
+                                                String(t) !== String(d.id ?? dIdx)
+                                            );
+                                          } else {
+                                            nextDivs = [...targetDivs, divName];
+                                          }
+                                          setField(actualIndex, { target_divisions: nextDivs });
+                                        }}
+                                      />
+                                      <span className="oprec-builder__target-chip-box" aria-hidden="true">
+                                        {isChecked ? "✓" : ""}
+                                      </span>
+                                      <span className="oprec-builder__target-chip-name">{divName}</span>
+                                      {d.nama_lengkap && d.nama_lengkap !== divName && (
+                                        <span className="oprec-builder__target-chip-sub">({d.nama_lengkap})</span>
+                                      )}
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                              {targetDivs.length === 0 && (
+                                <small className="oprec-builder__target-error">
+                                  ⚠️ Pilih minimal satu divisi sasaran untuk pertanyaan ini.
+                                </small>
+                              )}
+                            </div>
+                          )}
+                        </div>
 
                         {["select", "radio"].includes(field.type) && (
                           <label className="wide">
@@ -2171,10 +2321,15 @@ export default function OprecBuilder({ oprecId }) {
                       )}
 
                       {/* 3. Pertanyaan Tambahan Admin (No 06 dst, berada di bawah divisi) */}
-                      {data.form_fields.slice(fixed.length).map((f, customIdx) => {
-                        const actualIndex = fixed.length + customIdx;
-                        return renderPreviewField(f, actualIndex);
-                      })}
+                      {data.form_fields
+                        .slice(fixed.length)
+                        .filter((f) =>
+                          isFieldApplicable(f, previewSelectedDivisions, data.divisi_tersedia)
+                        )
+                        .map((f, customIdx) => {
+                          const actualIndex = fixed.length + customIdx;
+                          return renderPreviewField(f, actualIndex);
+                        })}
                     </div>
 
                     {/* Submit Button di Sebelah Kanan (Sesuai Layout User) */}

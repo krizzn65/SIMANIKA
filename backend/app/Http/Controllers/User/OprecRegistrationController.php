@@ -31,7 +31,9 @@ class OprecRegistrationController extends Controller
             (int) $request->input('divisi_pilihan_2'),
             (int) $request->input('divisi_pilihan_3'),
         ]);
-        $chosenDivisionNames = $oprec->divisions->whereIn('id', $chosenDivisionIds)->pluck('nama')->all();
+        $chosenDivisions = $oprec->divisions->whereIn('id', $chosenDivisionIds);
+        $chosenDivisionNames = $chosenDivisions->pluck('nama')->all();
+        $chosenDivisionFullNames = $chosenDivisions->pluck('nama_lengkap')->filter()->all();
 
         $rules = [];
         foreach ($fields as $field) {
@@ -45,14 +47,20 @@ class OprecRegistrationController extends Controller
             $matchesDivision = false;
             if ($isTargeted) {
                 foreach ($targetDivisions as $td) {
+                    $tdLower = strtolower(trim((string) $td));
                     if (in_array((string) $td, array_map('strval', $chosenDivisionIds), true) ||
-                        in_array(strtolower((string) $td), array_map('strtolower', $chosenDivisionNames), true)) {
+                        in_array($tdLower, array_map('strtolower', $chosenDivisionNames), true) ||
+                        in_array($tdLower, array_map('strtolower', $chosenDivisionFullNames), true)) {
                         $matchesDivision = true;
                         break;
                     }
                 }
             }
-            $isRequired = ($field['required'] ?? false) && (!$isTargeted || $matchesDivision);
+            if ($isTargeted && !$matchesDivision) {
+                $rules[$name] = ['nullable'];
+                continue;
+            }
+            $isRequired = !empty($field['required']);
             $rules[$name] = [$isRequired ? 'required' : 'nullable'];
             if ($type === 'file') {
                 $rules[$name][] = 'file';
