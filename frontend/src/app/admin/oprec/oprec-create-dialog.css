@@ -592,6 +592,73 @@
 .oprec-admin-overview__delete:hover { background: #fee4e7; border-color: #e68b97; }
 .oprec-admin-overview__delete:focus-visible { outline: 2px solid #155eef; outline-offset: 2px; }
 
+.oprec-delete-dialog__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(7, 17, 31, .65);
+  backdrop-filter: blur(4px);
+}
+
+.oprec-delete-dialog {
+  width: min(100%, 420px);
+  padding: 28px;
+  border: 1px solid #cad5e5;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 20px 45px rgba(7, 17, 31, .24);
+  color: #0a1020;
+}
+
+.oprec-delete-dialog__icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  margin-bottom: 16px;
+  border: 1px solid #fecdd3;
+  border-radius: 50%;
+  background: #fff1f2;
+  color: #b42318;
+}
+
+.oprec-delete-dialog__eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  color: #b42318;
+  font: 600 11px/1.3 "IBM Plex Mono", ui-monospace, monospace;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.oprec-delete-dialog h2 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -.02em; }
+.oprec-delete-dialog p { margin: 10px 0 0; color: #526176; font-size: 13px; line-height: 1.6; }
+.oprec-delete-dialog p strong { color: #0a1020; }
+
+.oprec-delete-dialog__actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+.oprec-delete-dialog__actions button {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid #cad5e5;
+  border-radius: 0;
+  background: #fff;
+  color: #334155;
+  font: 600 12px/1.2 inherit;
+  cursor: pointer;
+}
+.oprec-delete-dialog__actions button:last-child { border-color: #b42318; background: #b42318; color: #fff; }
+.oprec-delete-dialog__actions button:hover:not(:disabled) { border-color: #155eef; background: #eff6ff; color: #155eef; }
+.oprec-delete-dialog__actions button:last-child:hover:not(:disabled) { border-color: #8f1710; background: #8f1710; color: #fff; }
+.oprec-delete-dialog__actions button:focus-visible { outline: 2px solid #155eef; outline-offset: 2px; }
+.oprec-delete-dialog__actions button:disabled { cursor: wait; opacity: .65; }
+
 .oprec-admin-overview__stage-actions :is(a, button) {
   display: inline-flex;
   align-items: center;
@@ -662,6 +729,10 @@
   .oprec-dialog__overlay {
     padding: 10px;
   }
+  .oprec-delete-dialog__overlay { padding: 16px; }
+  .oprec-delete-dialog { padding: 22px 18px; }
+  .oprec-delete-dialog__actions { flex-direction: column-reverse; }
+  .oprec-delete-dialog__actions button { width: 100%; }
   .oprec-dialog__header,
   .oprec-dialog__form {
     padding: 16px;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { RotateCcw, Lock } from "lucide-react";
+import { RotateCcw, Lock, AlertTriangle } from "lucide-react";
 import { validateOprecForm, normalizeOprecNim, oprecNimProgramWarning, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
 
 function getDivisionPositions(division) {
@@ -242,10 +242,14 @@ export function OprecForm({ oprec, onSuccess }) {
   const [nimInputError, setNimInputError] = useState(null);
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedDivisions, setSelectedDivisions] = useState([]);
   const [selectedJabatan, setSelectedJabatan] = useState({ 1: "", 2: "", 3: "" });
   const feedback = useRef(null);
   const submitting = useRef(false);
+  const pendingForm = useRef(null);
+  const pendingBody = useRef(null);
+  const confirmCancelRef = useRef(null);
 
   useEffect(() => {
     setSelectedJabatan((prev) => {
@@ -287,6 +291,16 @@ export function OprecForm({ oprec, onSuccess }) {
     });
   }, [selectedDivisions, oprec.divisiTersedia]);
 
+  useEffect(() => {
+    if (!confirmOpen) return;
+    confirmCancelRef.current?.focus();
+    const keydown = (event) => {
+      if (event.key === "Escape" && !pending) dismissConfirmation();
+    };
+    window.addEventListener("keydown", keydown);
+    return () => window.removeEventListener("keydown", keydown);
+  }, [confirmOpen, pending]);
+
   function toggleDivision(value) {
     setSelectedDivisions((current) => current.includes(String(value))
       ? current.filter((item) => item !== String(value))
@@ -297,6 +311,13 @@ export function OprecForm({ oprec, onSuccess }) {
     setErrors(nextErrors);
     setMessage(note);
     requestAnimationFrame(() => feedback.current?.focus());
+  }
+
+  function dismissConfirmation() {
+    if (pending) return;
+    pendingForm.current = null;
+    pendingBody.current = null;
+    setConfirmOpen(false);
   }
 
   function handleNimChange(event) {
@@ -311,9 +332,43 @@ export function OprecForm({ oprec, onSuccess }) {
     });
   }
 
-  async function submit(event) {
+  async function sendRegistration() {
+    const form = pendingForm.current;
+    const body = pendingBody.current;
+    if (!form || !body || submitting.current) return;
+    setConfirmOpen(false);
+    submitting.current = true;
+    setPending(true);
+    setErrors({});
+    setMessage("");
+    try {
+      const response = await fetch("/api/oprec/register", {
+        method: "POST",
+        body,
+        signal: AbortSignal.timeout(25000),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        showErrors(result.errors || {}, result.message || "Pendaftaran belum berhasil. Coba lagi.");
+        return;
+      }
+      if (result.data?.submitted !== true) throw new Error("Invalid response");
+      form.reset();
+      setSuccess(true);
+      onSuccess?.();
+    } catch {
+      showErrors({}, "Koneksi terputus atau layanan belum tersedia. Pastikan status pendaftaran sebelum mencoba kembali.");
+    } finally {
+      pendingForm.current = null;
+      pendingBody.current = null;
+      submitting.current = false;
+      setPending(false);
+    }
+  }
+
+  function submit(event) {
     event.preventDefault();
-    if (submitting.current) return;
+    if (submitting.current || confirmOpen) return;
     const form = event.currentTarget;
     const body = new FormData(form);
     selectedDivisions.forEach((value, index) => body.set(`divisi_pilihan_${index + 1}`, value));
@@ -339,31 +394,9 @@ export function OprecForm({ oprec, onSuccess }) {
     }
     body.set("oprec_id", oprec.id);
     body.set("schema_version", oprec.schemaVersion);
-    submitting.current = true;
-    setPending(true);
-    setErrors({});
-    setMessage("");
-    try {
-      const response = await fetch("/api/oprec/register", {
-        method: "POST",
-        body,
-        signal: AbortSignal.timeout(25000),
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        showErrors(result.errors || {}, result.message || "Pendaftaran belum berhasil. Coba lagi.");
-        return;
-      }
-      if (result.data?.submitted !== true) throw new Error("Invalid response");
-      form.reset();
-      setSuccess(true);
-      onSuccess?.();
-    } catch {
-      showErrors({}, "Koneksi terputus atau layanan belum tersedia. Pastikan status pendaftaran sebelum mencoba kembali.");
-    } finally {
-      submitting.current = false;
-      setPending(false);
-    }
+    pendingForm.current = form;
+    pendingBody.current = body;
+    setConfirmOpen(true);
   }
 
   if (success) {
@@ -385,7 +418,8 @@ export function OprecForm({ oprec, onSuccess }) {
   }
 
   return (
-    <form className="event-dynamic-form" onSubmit={submit} noValidate aria-busy={pending}>
+    <>
+    <form className="event-dynamic-form" onSubmit={submit} noValidate aria-busy={pending || confirmOpen}>
       <p>Kolom bertanda * wajib diisi. Isilah sesuai petunjuk penyelenggara.</p>
       {message && (
         <div ref={feedback} tabIndex={-1} className="event-form-feedback" role="alert">
@@ -432,7 +466,7 @@ export function OprecForm({ oprec, onSuccess }) {
           )}
         </div>
       )}
-      <fieldset disabled={pending}>
+      <fieldset disabled={pending || confirmOpen}>
         <legend className="event-form-sr-only">Formulir pendaftaran OPREC</legend>
 
         {/* 1. Pertanyaan Sistem (01 s/d 04: identitas wajib) */}
@@ -637,10 +671,27 @@ export function OprecForm({ oprec, onSuccess }) {
           ))}
       </fieldset>
       <div className="event-group-submit">
-        <button className="event-button" type="submit" disabled={pending || selectedDivisions.length !== 3}>
+        <button className="event-button" type="submit" disabled={pending || confirmOpen || selectedDivisions.length !== 3}>
           {pending ? "Mengirim…" : "Kirim"}
         </button>
       </div>
     </form>
+    {confirmOpen && (
+      <div className="oprec-submit-dialog__overlay" role="presentation" onMouseDown={(event) => {
+        if (event.target === event.currentTarget) dismissConfirmation();
+      }}>
+        <section className="oprec-submit-dialog" role="dialog" aria-modal="true" aria-labelledby="oprec-submit-dialog-title" aria-describedby="oprec-submit-dialog-description">
+          <div className="oprec-submit-dialog__icon" aria-hidden="true"><AlertTriangle size={22} /></div>
+          <span className="oprec-submit-dialog__eyebrow">Konfirmasi pengiriman</span>
+          <h2 id="oprec-submit-dialog-title">Yakin ingin mengirim formulir?</h2>
+          <p id="oprec-submit-dialog-description">Periksa kembali seluruh jawabanmu. Setelah formulir dikirim, data pendaftaran tidak dapat diedit.</p>
+          <div className="oprec-submit-dialog__actions">
+            <button ref={confirmCancelRef} type="button" onClick={dismissConfirmation} disabled={pending}>Periksa lagi</button>
+            <button type="button" onClick={sendRegistration} disabled={pending}>{pending ? "Mengirim..." : "Ya, kirim formulir"}</button>
+          </div>
+        </section>
+      </div>
+    )}
+    </>
   );
 }
