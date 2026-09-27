@@ -274,59 +274,79 @@ export default function OprecBuilder({ oprecId }) {
 
   // Deteksi scroll untuk navigasi melayang (3 kotak vertikal di sebelah kiri)
   useEffect(() => {
-    const tabsEl = tabsNavRef.current;
-    if (!tabsEl) return;
+    if (loading) return;
 
-    const scrollContainer = tabsEl.closest(".admin-main-wrapper") || window;
+    const checkVisibilityAndPosition = () => {
+      const tabsEl = tabsNavRef.current || document.querySelector(".oprec-builder__tabs");
+      if (tabsEl) {
+        const rect = tabsEl.getBoundingClientRect();
+        // Tabs dianggap tidak terlihat ketika bagian bawahnya sudah tergulung melewati batas atas topbar (<= 70px)
+        const isPast = rect.bottom <= 70;
+        setShowFloatingNav(isPast);
+      }
 
-    const handleScrollOrResize = () => {
-      if (!tabsNavRef.current) return;
-      const rect = tabsNavRef.current.getBoundingClientRect();
-      // Tabs dianggap tidak terlihat ketika bagian bawahnya sudah tergulung melewati batas atas topbar (<= 72px)
-      const isScrolledPast = rect.bottom <= 72;
-      setShowFloatingNav(isScrolledPast);
-
-      // Hitung posisi horizontal (kiri) secara dinamis agar presisi dan tidak menimpa konten
-      if (builderRootRef.current) {
-        const rootRect = builderRootRef.current.getBoundingClientRect();
+      // Hitung posisi horizontal (kiri) agar persis berada di sebelah kiri kartu builder (sesuai kotak merah)
+      const builderRoot = builderRootRef.current || document.querySelector(".oprec-builder");
+      if (builderRoot) {
+        const rootRect = builderRoot.getBoundingClientRect();
         const isDesktop = window.innerWidth >= 768;
         const sidebarW = isDesktop ? 76 : 0;
-        const availableGutter = rootRect.left - sidebarW;
+        const dockWidth = 46;
+        const gap = 12;
 
-        if (availableGutter >= 52) {
-          // Ada ruang kosong di sebelah kiri kartu builder
-          setNavLeftPos(`${rootRect.left - 48}px`);
-        } else {
-          // Layar lebih sempit / laptop, dock rapi di sisi kiri
-          setNavLeftPos(isDesktop ? "84px" : "12px");
+        // Posisi target tepat di sebelah kiri kartu builder (sesuai area merah yang ditandai pengguna)
+        let leftPx = rootRect.left - dockWidth - gap;
+
+        // Jika ruang di sebelah kiri kartu terlalu sempit (layar sempit), jaga agar tidak tertutup sidebar
+        if (leftPx < sidebarW + 8) {
+          leftPx = sidebarW + 8;
         }
+
+        setNavLeftPos(`${Math.round(leftPx)}px`);
       }
     };
 
-    handleScrollOrResize();
+    // Jalankan pengecekan langsung saat render/tab berganti
+    checkVisibilityAndPosition();
 
-    scrollContainer.addEventListener("scroll", handleScrollOrResize, { passive: true });
-    window.addEventListener("scroll", handleScrollOrResize, { passive: true });
-    window.addEventListener("resize", handleScrollOrResize, { passive: true });
+    // ResizeObserver untuk memantau perubahan ukuran kartu builder secara real-time
+    let resizeObserver;
+    const builderRoot = builderRootRef.current || document.querySelector(".oprec-builder");
+    if (builderRoot && typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => {
+        checkVisibilityAndPosition();
+      });
+      resizeObserver.observe(builderRoot);
+    }
+
+    // Event listener scroll dengan capture: true agar menangkap scroll di container manapun (.admin-main-wrapper, window, dll)
+    window.addEventListener("scroll", checkVisibilityAndPosition, { passive: true, capture: true });
+    document.addEventListener("scroll", checkVisibilityAndPosition, { passive: true, capture: true });
+    window.addEventListener("resize", checkVisibilityAndPosition, { passive: true });
+
+    const scrollParent = document.querySelector(".admin-main-wrapper");
+    if (scrollParent) {
+      scrollParent.addEventListener("scroll", checkVisibilityAndPosition, { passive: true });
+    }
 
     return () => {
-      scrollContainer.removeEventListener("scroll", handleScrollOrResize);
-      window.removeEventListener("scroll", handleScrollOrResize);
-      window.removeEventListener("resize", handleScrollOrResize);
+      resizeObserver?.disconnect();
+      window.removeEventListener("scroll", checkVisibilityAndPosition, { capture: true });
+      document.removeEventListener("scroll", checkVisibilityAndPosition, { capture: true });
+      window.removeEventListener("resize", checkVisibilityAndPosition);
+      if (scrollParent) {
+        scrollParent.removeEventListener("scroll", checkVisibilityAndPosition);
+      }
     };
-  }, []);
+  }, [loading, activeTab]);
 
   const handleFloatingTabClick = (tabKey) => {
     setActiveTab(tabKey);
-    if (tabsNavRef.current) {
-      tabsNavRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    const scrollParent = document.querySelector(".admin-main-wrapper");
+    if (scrollParent) {
+      scrollParent.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      const scrollParent = document.querySelector(".admin-main-wrapper");
-      if (scrollParent) {
-        scrollParent.scrollTo({ top: 0, behavior: "smooth" });
-      } else {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
