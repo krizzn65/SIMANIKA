@@ -1342,6 +1342,20 @@
   }
 }
 
+.oprec-user-preview .oprec-jabatan-choices-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+@container (max-width: 580px) {
+  .oprec-user-preview .oprec-jabatan-choices-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .oprec-user-preview .oprec-division-choice {
   display: flex;
   align-items: center;
@@ -1442,6 +1456,107 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Division Choices Footer Toolbar & Neo-Arcade Reset Button in Preview */
+.oprec-user-preview .oprec-division-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0 !important;
+  min-height: 38px;
+  box-sizing: border-box;
+}
+
+.oprec-user-preview .oprec-division-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  letter-spacing: 0.03em;
+  user-select: none;
+}
+
+.oprec-user-preview .oprec-division-counter__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #94a3b8;
+  display: inline-block;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  flex-shrink: 0;
+}
+
+.oprec-user-preview .oprec-division-counter--active .oprec-division-counter__dot {
+  background: #2563eb;
+  box-shadow: 0 0 6px rgba(37, 99, 235, 0.45);
+}
+
+.oprec-user-preview .oprec-division-counter--complete .oprec-division-counter__dot {
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.55);
+}
+
+.oprec-user-preview .oprec-division-reset-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 10px;
+  min-height: 28px;
+  border: 1px solid #fecdd3 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  color: #e11d48 !important;
+  font-family: "IBM Plex Mono", monospace !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  line-height: 1;
+  box-shadow: 2px 2px 0 rgba(225, 29, 72, 0.08);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  text-decoration: none !important;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.oprec-user-preview .oprec-division-reset-btn:hover {
+  background: #fff1f2 !important;
+  border-color: #f43f5e !important;
+  color: #be123c !important;
+  box-shadow: 2px 2px 0 rgba(225, 29, 72, 0.22);
+}
+
+.oprec-user-preview .oprec-division-reset-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 rgba(225, 29, 72, 0.2);
+}
+
+.oprec-user-preview .oprec-division-reset-btn:focus-visible {
+  outline: 2px solid #e11d48 !important;
+  outline-offset: 2px;
+}
+
+.oprec-user-preview .oprec-division-reset-btn__icon {
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.oprec-user-preview .oprec-division-reset-btn:hover .oprec-division-reset-btn__icon {
+  transform: rotate(-90deg);
 }
 
 /* Submit Row on the Right (Tombol Sebelah Kanan) */
@@ -1950,20 +2065,136 @@
   font-weight: 600;
 }
 
-.oprec-builder__chip-quota {
-  font: 500 10px/1 "IBM Plex Mono", monospace;
-  padding: 2px 5px;
-  background: #e0f2fe;
-  color: #0369a1;
-  border: 1px solid #bae6fd;
+/* ==========================================================================
+   NEO-ARCADE JABATAN DIVISI MANAGER
+   ========================================================================== */
+.oprec-builder__jabatan-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: 0 !important;
+  margin-top: 4px;
 }
 
-.oprec-builder__chip-unlimited {
-  font: 500 10px/1 "IBM Plex Mono", monospace;
-  padding: 2px 5px;
-  background: #f8fafc;
+.oprec-builder__jabatan-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.oprec-builder__jabatan-desc {
+  display: block;
+  font-size: 11px;
   color: #64748b;
-  border: 1px solid #e2e8f0;
+  margin-top: 2px;
+}
+
+.oprec-builder__jabatan-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-height: 32px;
+}
+
+.oprec-builder__jabatan-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0 !important;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e40af;
+  transition: all 0.15s ease;
+}
+
+.oprec-builder__jabatan-chip:hover {
+  border-color: #93c5fd;
+  background: #e0f2fe;
+}
+
+.oprec-builder__jabatan-chip-text {
+  line-height: 1.2;
+}
+
+.oprec-builder__jabatan-chip-del {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 0 !important;
+  padding: 0;
+  transition: all 0.12s ease;
+}
+
+.oprec-builder__jabatan-chip-del:hover {
+  background: #fee2e2;
+  border-color: #fecdd3;
+  color: #dc2626;
+}
+
+.oprec-builder__jabatan-empty {
+  font-size: 12px;
+  font-style: italic;
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px dashed #fde68a;
+  padding: 8px 12px;
+  width: 100%;
+}
+
+.oprec-builder__jabatan-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.oprec-builder__jabatan-input {
+  flex: 1;
+  min-width: 0;
+  background: #ffffff;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 0 !important;
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+  color: #0f172a;
+  height: 32px;
+  transition: border-color 0.15s ease;
+}
+
+.oprec-builder__jabatan-input:focus {
+  outline: none;
+  border-color: #2563eb !important;
+}
+
+.oprec-builder__jabatan-add-btn {
+  height: 32px;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  gap: 4px !important;
+  border-radius: 0 !important;
+  white-space: nowrap;
+}
+
+.oprec-btn--xs {
+  padding: 3px 8px !important;
+  font-size: 11px !important;
+  gap: 4px !important;
+  min-height: unset !important;
+  height: 26px;
+  border-radius: 0 !important;
 }
 
 .oprec-builder__division-config-footer {

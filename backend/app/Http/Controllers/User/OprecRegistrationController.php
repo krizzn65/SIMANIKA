@@ -57,6 +57,9 @@ class OprecRegistrationController extends Controller
         foreach (['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'] as $key) {
             $rules[$key] = ['required', 'string', Rule::in($divisionIds)];
         }
+        foreach (['jabatan_pilihan_1', 'jabatan_pilihan_2', 'jabatan_pilihan_3'] as $key) {
+            $rules[$key] = ['nullable', 'string', 'max:255'];
+        }
         $rules['nim'][] = 'regex:/^[a-zA-Z0-9.\-]{3,32}$/';
         $rules['tanggal_lahir'][] = 'before_or_equal:today';
         $data = Validator::make($request->all(), $rules)->validate();
@@ -75,8 +78,7 @@ class OprecRegistrationController extends Controller
                 }
                 $divisionId = !empty($data['divisi_pilihan_1']) ? (int) $data['divisi_pilihan_1'] : null;
                 if ($divisionId) {
-                    $division = OprecDivision::where('oprec_id', $oprec->id)->lockForUpdate()->findOrFail($divisionId);
-                    if ($division->kuota !== null && $oprec->registrations()->where('divisi_pilihan_1', $divisionId)->count() >= $division->kuota) throw ValidationException::withMessages(['divisi_pilihan_1' => ['Kuota divisi telah penuh.']]);
+                    OprecDivision::where('oprec_id', $oprec->id)->lockForUpdate()->findOrFail($divisionId);
                 }
                 $filePaths = [];
                 $answers = [];

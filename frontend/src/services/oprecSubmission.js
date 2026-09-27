@@ -90,6 +90,10 @@ export async function registerOprec(request) {
       const value = form.get(`divisi_pilihan_${rank}`);
       if (value !== null) body.set(`divisi_pilihan_${rank}`, value);
     }
+    for (const rank of [1, 2, 3]) {
+      const value = form.get(`jabatan_pilihan_${rank}`);
+      if (value !== null && value !== "") body.set(`jabatan_pilihan_${rank}`, typeof value === "string" ? value.trim() : value);
+    }
     const response = await forward(oprec, "register", body, request);
     if (!response.ok) return await upstreamError(response, oprec);
     const result = await response.json();

@@ -1,3 +1,12 @@
+export function getDefaultJabatan(nama) {
+  const clean = (nama || "").trim();
+  if (!clean) return [];
+  if (clean.toLowerCase() === "bph") {
+    return ["Wakil Ketua Umum", "Sekretaris 2", "Bendahara 2"];
+  }
+  return [`Staff Divisi ${clean}`];
+}
+
 const text = (value) => typeof value === "string" ? value.trim() : "";
 const count = (value) => Number.isSafeInteger(value) && value >= 0 ? value : null;
 const FIELD_TYPES = new Set(["text", "email", "tel", "number", "date", "textarea", "select", "radio", "checkbox", "file"]);
@@ -81,7 +90,11 @@ export function normalizeOprec(raw) {
     formIntro: text(raw.formIntro ?? raw.form_intro),
     divisiTersedia: divisions.map((item, index) => {
       if (!item || !text(item.nama)) throw new Error("Invalid OPREC division");
-      return { id: String(item.id ?? index), nama: text(item.nama), namaLengkap: text(item.namaLengkap ?? item.nama_lengkap), deskripsi: text(item.deskripsi), logo: safePosterUrl(item.logo), kuota: count(item.kuota) };
+      const nama = text(item.nama);
+      const jabatan = Array.isArray(item.jabatan) && item.jabatan.length > 0
+        ? item.jabatan.map(String).filter(Boolean)
+        : getDefaultJabatan(nama);
+      return { id: String(item.id ?? index), nama, namaLengkap: text(item.namaLengkap ?? item.nama_lengkap), deskripsi: text(item.deskripsi), logo: safePosterUrl(item.logo), jabatan };
     }),
     pengumuman: { published: announcement.published === true, tanggal: date(announcement.tanggal), pesan: text(announcement.pesan) },
     stages: (Array.isArray(raw.stages) ? raw.stages : []).filter((stage) => stage && stage.published === true && ["test_tulis", "pengumuman"].includes(stage.type) && text(stage.headline)).map((stage) => ({
@@ -133,6 +146,15 @@ export function validateOprecForm(fields, form, now = Date.now(), divisions = []
   for (let index = 1; index < choices.length; index++) {
     if (choices[index] && choices.slice(0, index).includes(choices[index])) errors[`divisi_pilihan_${index + 1}`] = "Pilih divisi yang berbeda untuk setiap prioritas.";
     if (choices[index] && !choices[index - 1]) errors[`divisi_pilihan_${index + 1}`] = "Isi pilihan sebelumnya terlebih dahulu.";
+  }
+  for (let index = 0; index < 3; index++) {
+    const rank = index + 1;
+    if (choices[index] && form.has(`jabatan_pilihan_${rank}`)) {
+      const val = form.get(`jabatan_pilihan_${rank}`);
+      if (!val || (typeof val === "string" && !val.trim())) {
+        errors[`jabatan_pilihan_${rank}`] = `Pilih jabatan untuk Divisi Pilihan ${rank}.`;
+      }
+    }
   }
   for (const field of fields) {
     if (["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name)) continue;

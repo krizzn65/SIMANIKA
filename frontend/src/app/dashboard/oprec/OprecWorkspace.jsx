@@ -245,7 +245,11 @@ function WorkspaceContent() {
                       {registration.formData && Object.entries(registration.formData).map(([key, val]) => {
                         if (["nim", "tanggal_lahir", "divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(key)) return null;
                         const fieldMeta = normalizedOprec?.formFields?.find((f) => f.name === key);
-                        const label = fieldMeta?.label || key;
+                        const label = fieldMeta?.label || (
+                          key === "jabatan_pilihan_1" ? "Jabatan Pilihan 1" :
+                          key === "jabatan_pilihan_2" ? "Jabatan Pilihan 2" :
+                          key === "jabatan_pilihan_3" ? "Jabatan Pilihan 3" : key
+                        );
                         return (
                           <div key={key}>
                             <dt>{label}</dt>

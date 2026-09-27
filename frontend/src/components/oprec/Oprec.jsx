@@ -43,7 +43,6 @@ export function Oprec({ oprec }) {
           <h3>{division.nama}</h3>
           {namaLengkap && <span className="oprec-division__full">{namaLengkap}</span>}
           <p>{division.deskripsi || "Informasi peran divisi akan diumumkan oleh pengurus."}</p>
-          {hasOpenDivisions && division.kuota !== null && <span className="oprec-division__quota">{division.kuota ? `Kuota ${division.kuota} anggota` : "Tidak membuka kuota"}</span>}
         </article>;
       })}</div>
     </section>

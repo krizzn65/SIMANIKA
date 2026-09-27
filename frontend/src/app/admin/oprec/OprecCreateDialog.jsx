@@ -8,6 +8,7 @@ import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
 import { AnimatedCheckIcon } from "@/components/ui/AnimatedCheckIcon";
 import { api } from "@/services/api";
 import { divisionPreview } from "@/components/oprec/divisionPreview";
+import { getDefaultJabatan } from "@/lib/oprec";
 import { OprecPeriodPicker } from "./OprecPeriodPicker";
 import "./oprec-create-dialog.css";
 
@@ -79,7 +80,16 @@ export default function OprecCreateDialog({ open, onClose, onCreated, selectedOp
           periode: data.periode.trim(), status: "draft", headline: data.headline.trim(), deskripsi: data.deskripsi.trim(), poster,
           tanggal_buka: apiDateStart(data.tanggal_buka), tanggal_tutup: apiDateEnd(data.tanggal_tutup),
           schema_version: "1", form_intro: "", form_fields: firstFields,
-          divisi_tersedia: divisionPreview.map((item) => ({ nama: item.nama, nama_lengkap: item.namaLengkap, deskripsi: item.deskripsi, logo: item.logo || null, kuota: null })),
+          divisi_tersedia: divisionPreview.map((item) => ({
+            nama: item.nama,
+            nama_lengkap: item.namaLengkap,
+            deskripsi: item.deskripsi,
+            logo: item.logo || null,
+            jabatan:
+              Array.isArray(item.jabatan) && item.jabatan.length > 0
+                ? item.jabatan
+                : getDefaultJabatan(item.nama),
+          })),
           faq: [], pengumuman: { published: false, tanggal: null, pesan: "" },
         });
         onClose(); router.push(`/admin/oprec/${response.data.data.id}/edit`);

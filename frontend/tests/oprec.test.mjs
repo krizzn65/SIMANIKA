@@ -4,7 +4,7 @@ import test from "node:test";
 const source = await readFile(new URL("../src/lib/oprec.js", import.meta.url), "utf8");
 const { normalizeOprec, normalizeFields, oprecState, oprecDate, validBirthDate, validateOprecForm, safePosterUrl } = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
 const identity = [{ name: "nim", type: "text", label: "NIM", required: true }, { name: "tanggal_lahir", type: "date", label: "Tanggal lahir", required: true }];
-const raw = { id: 1, periode: "2026/2027", status: "open", tanggalBuka: "2026-10-01T08:00:00+07:00", tanggalTutup: "2026-10-14T23:59:00+07:00", divisiTersedia: [{ nama: "Kominfo", kuota: 10 }], formFields: identity };
+const raw = { id: 1, periode: "2026/2027", status: "open", tanggalBuka: "2026-10-01T08:00:00+07:00", tanggalTutup: "2026-10-14T23:59:00+07:00", divisiTersedia: [{ nama: "Kominfo", jabatan: ["Staff Divisi Kominfo"] }], formFields: identity };
 const oprec = normalizeOprec(raw);
 const start = Date.parse(raw.tanggalBuka);
 const end = Date.parse(raw.tanggalTutup);

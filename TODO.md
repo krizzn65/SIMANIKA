@@ -6,6 +6,45 @@
 
 ## Audit kesesuaian `architecture.md` (22 September 2026)
 
+### Rombak Total Kuota Menjadi Sistem Jabatan Divisi (Admin-First) & Zero Dead Code (27 September 2026)
+
+- [x] **Pembersihan Total Kuota OPREC (Zero Dead Code)**:
+  - Migrasi Laravel `2026_09_27_000001_replace_kuota_with_jabatan_in_oprec_divisions.php` berhasil dijalankan (`dropColumn('kuota')` dan penambahan kolom `jsonb('jabatan')` pada tabel `oprec_divisions`).
+  - Pembersihan total referensi `kuota` di Model (`OprecDivision.php`), Request (`SaveOprecRequest.php`), Admin Controller (`OprecController.php`), Resources (`OprecResource.php`), User Workspace Controller (`OprecWorkspaceController.php`), dan User Registration Controller (`OprecRegistrationController.php`).
+  - Pembersihan total sisa logika dan teks `kuota` di frontend (`OprecBuilder.jsx`, `OprecCreateDialog.jsx`, `OprecDetailModal.jsx`, `Oprec.jsx`, `page.jsx`, `lib/oprec.js`, `divisionPreview.js`, dan CSS).
+  - Pemeriksaan `grep_search` memastikan 0 hasil `kuota` di seluruh domain OPREC frontend & backend.
+- [x] **Sistem Jabatan Divisi (Admin-First)**:
+  - Default BPH: otomatis memiliki 3 posisi pimpinan (`"Wakil Ketua Umum"`, `"Sekretaris 2"`, `"Bendahara 2"`).
+  - Default Divisi lainnya: otomatis berstatus `"Staff Divisi " + namaDivisi` (misal `"Staff Divisi Humas"`, `"Staff Divisi Kominfo"`).
+  - Sinkronisasi dinamis: saat admin mengubah nama divisi, jika jabatannya masih berstatus default, teks jabatan otomatis ikut menyesuaikan nama divisi baru.
+  - Subkomponen Neo-Arcade Jabatan Manager di Tab 2 `OprecBuilder.jsx`:
+    - List chip interaktif dengan tombol hapus `(×)`.
+    - Input tambah jabatan baru dengan dukungan tombol keyboard `Enter` dan tombol klik `+ Tambah`.
+    - Tombol `↺ Reset Default` untuk mengembalikan susunan jabatan ke standar sistem.
+    - Validasi minimal 1 jabatan pada setiap divisi.
+  - Pembaruan live preview kartu divisi (Mode 1 & Mode 2) untuk menampilkan badge jabatan / jumlah jabatan aktif.
+- [x] **Pembersihan Teks Jumlah Jabatan Dibuka (User & Admin)**:
+  - Menghapus badge/keterangan jumlah jabatan ("X Jabatan", "1 Jabatan", "X Jabatan dibuka") dari seluruh antarmuka sisi user dan admin sesuai permintaan pengguna.
+  - Pada Admin OprecBuilder: badge chip ringkasan divisi (`.oprec-builder__chip-badge`) dan badge live preview dihapus; menyisakan nama divisi murni tanpa distraksi kuantitas jabatan.
+  - Pada Admin Overview (`page.jsx`): menghapus teks suffix `· ${division.jabatan.length} JABATAN`.
+  - Pada Sisi User (`Oprec.jsx` & `OprecDetailModal.jsx`): menghapus badge count jabatan (`.oprec-division__quota`, `.oprec-modal-div-quota`).
+  - Pembersihan dead code CSS (`.oprec-builder__chip-badge`, `.oprec-division__quota`, `.oprec-modal-div-quota`, `.oprec-user-preview__div-positions`).
+- [x] **3 Dropdown Horizontal Jabatan Divisi Dinamis (User & Live Preview Admin)**:
+  - Menyediakan 3 slot dropdown jabatan berjejer horizontal tepat di bawah grid pilihan divisi dan toolbar reset.
+  - State Blocked / Terkunci (Divisi belum dipilih): berlatar abu-abu muted (`#f1f5f9`), border dashed tipis, kursor blok `not-allowed`, dengan placeholder informatif dan badge status "Terkunci".
+  - State Active / Terbuka Dinamis (Saat divisi dipilih sesuai prioritas #1, #2, #3):
+    - Slot otomatis aktif dengan border kontras biru, kursor pointer, dan badge nama divisi terkait.
+    - Menampilkan opsi jabatan sesuai pengaturan divisi di admin.
+    - Untuk divisi dengan banyak opsi (misal BPH): menampilkan dropdown pilihan lengkap (Wakil Ketua Umum, Sekretaris 2, Bendahara 2) dengan prompt pemilihan.
+    - Untuk divisi dengan 1 opsi tunggal (misal PSDM, Humas, Kominfo): dropdown otomatis terisi langsung dengan jabatan tunggal tersebut ("Staff Divisi ...").
+    - Saat tombol "Reset Pilihan" ditekan, ketiga dropdown otomatis dikosongkan dan kembali ke status terkunci abu-abu / not-allowed.
+  - Live Preview Builder Admin: terintegrasi penuh secara reaktif dengan pilihan divisi simulasi admin di panel pratinjau.
+  - Backend & Validasi: controller pendaftaran (`OprecRegistrationController.php`), API forwarder (`oprecSubmission.js`), dan validasi client (`lib/oprec.js`) memvalidasi dan menyimpan `jabatan_pilihan_1`, `jabatan_pilihan_2`, `jabatan_pilihan_3` ke dalam `form_data` (JSONB) pendaftaran.
+- [x] **Verifikasi Menyeluruh**:
+  - 41 tes backend PHPUnit (322 assertions) lulus 100%.
+  - 20 tes unit frontend Node.js lulus 100%.
+  - Build produksi Next.js (`npm run build`, 26 rute) lulus dengan 0 error/lint issue.
+
 ### Integrasi Divisi OPREC ke Tab Kelola Divisi & Pembersihan Dead Code (27 September 2026)
 
 - [x] Rombak total arsitektur form divisi: Bagian divisi murni terintegrasi langsung dengan tab "Kelola Divisi". Kartu pertanyaan sistem `05 Divisi pilihan` dikembalikan tetap berada di **form bagian bawah** (setelah pertanyaan identitas/kustom), tanpa input tipe/label yang membingungkan (screenshot 2), melainkan memuat box pemberitahuan integrasi otomatis dan tombol pintas konfigurasi ke tab "Kelola Divisi".
@@ -13,6 +52,7 @@
 - [x] Tombol "Konfigurasi di Formulir" (`Sliders`) terpasang pada header tab "Kelola Divisi" di `OprecBuilder.jsx`, lengkap dengan panel konfigurasi integrasi interaktif Neo-Arcade Editorial, status integrasi sistem, validasi kuota, ringkasan divisi aktif, dan shortcut navigasi.
 - [x] Formulir publik (`OprecForm.jsx`) & Live Preview: Pilihan 3 kartu divisi konsisten dirender di **bagian bawah formulir** setelah data diri/pertanyaan formulir, langsung dari `divisiTersedia`.
 - [x] Urutan pertanyaan formulir OPREC: Pertanyaan 01–04 adalah identitas wajib sistem (`nama`, `nim`, `tanggal_lahir`, `angkatan`). Pertanyaan **05** adalah **`Divisi pilihan`** (terkunci permanen di nomor 05 sebagai pertanyaan sistem terintegrasi). Setiap penambahan pertanyaan baru oleh admin otomatis dirender **DI BAWAH DIVISI** (dimulai dari nomor **06**, **07**, dst.), sehingga posisi dan nomor urut Divisi tidak tergeser. Logika ini selaras pada Builder Tab 3, Live Preview formulir pendaftaran, dan formulir registrasi peserta publik (`OprecForm.jsx`).
+- [x] Desain ulang tombol "Reset Pilihan" Divisi: Mengganti tombol default browser mentah yang beveled abu-abu dengan toolbar terpadu `.oprec-division-toolbar`, badge counter interaktif dengan status dot bercahaya (`.oprec-division-counter`), dan tombol Neo-Arcade boxy `.oprec-division-reset-btn` lengkap dengan ikon `RotateCcw` beranimasi putar halus saat hover, hairline border rose, micro-shadow 2px, serta transisi tactile press.
 - [x] Seluruh 41 tes backend (322 assertions) lulus 100%, 20 tes unit frontend lulus 100%, dan build produksi Next.js (`npm run build`) lulus dengan 0 error.
 
 ### OPREC: pilih tiga divisi dalam satu grid kartu (26 September 2026)

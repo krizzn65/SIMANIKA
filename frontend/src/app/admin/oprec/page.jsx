@@ -271,10 +271,7 @@ export default function AdminOprecPage() {
               <strong>Divisi dibuka //</strong>
               <div>
                 {selectedOprec.divisiTersedia.map((division) => (
-                  <span key={division.id}>
-                    {division.nama}
-                    {division.kuota ? ` · ${division.kuota} KUOTA` : ""}
-                  </span>
+                  <span key={division.id}>{division.nama}</span>
                 ))}
               </div>
             </div>
@@ -582,7 +579,7 @@ export default function AdminOprecPage() {
                   <option value="">-- Pilih Divisi --</option>
                   {selectedOprec?.divisiTersedia?.map((div) => (
                     <option key={div.id} value={div.id}>
-                      {div.nama} {div.kuota ? `(Kuota: ${div.kuota})` : ""}
+                      {div.nama}
                     </option>
                   ))}
                 </select>
