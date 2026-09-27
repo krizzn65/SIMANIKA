@@ -6,15 +6,7 @@ import OprecCreateDialog from "./OprecCreateDialog";
 import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
 import { api } from "@/services/api";
 import { AdminErrorNotice } from "../AdminErrorNotice";
-import { toast } from "sonner";
-import {
-  RefreshCw,
-  Search,
-  Check,
-  X,
-  Pencil,
-  Calendar,
-} from "lucide-react";
+import { Search, X, FileText, RefreshCw, Calendar, Pencil } from "lucide-react";
 import "./oprec-create-dialog.css";
 
 function formatOprecDate(dateStr) {
@@ -57,21 +49,16 @@ export default function AdminOprecPage() {
   const [registrants, setRegistrants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingRegistrants, setLoadingRegistrants] = useState(false);
-  const [actionLoading, setActionLoading] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [registrantError, setRegistrantError] = useState("");
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [divisionFilter, setDivisionFilter] = useState("all");
   const [createOpen, setCreateOpen] = useState(false);
 
-  // Review Modal State
-  const [reviewModal, setReviewModal] = useState({
+  // Form Verification Modal State
+  const [verifyModal, setVerifyModal] = useState({
     isOpen: false,
     registrant: null,
-    status: "accepted",
-    accepted_division_id: "",
-    catatan: "",
   });
 
   const fetchOprecs = async () => {
@@ -114,56 +101,6 @@ export default function AdminOprecPage() {
     fetchRegistrants(oprec.id);
   };
 
-  const handleUpdateStatus = async (reg, newStatus) => {
-    if (newStatus === "accepted") {
-      const defaultDiv = reg.divisiPilihan1 || selectedOprec?.divisiTersedia?.[0]?.id || "";
-      setReviewModal({
-        isOpen: true,
-        registrant: reg,
-        status: "accepted",
-        accepted_division_id: defaultDiv,
-        catatan: "",
-      });
-      return;
-    }
-
-    if (!confirm(`Tolak berkas calon anggota ${getRegistrantName(reg)} (${reg.nim})?`)) return;
-
-    setActionLoading(reg.id);
-    try {
-      await api.put(`/admin/oprec/${selectedOprec.id}/registrants/${reg.id}`, {
-        status: "rejected",
-        catatan: "Belum memenuhi kriteria seleksi saat ini.",
-      });
-      fetchRegistrants(selectedOprec.id);
-    } catch (err) {
-      toast.error(err.message || "Gagal memperbarui status.");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const submitReview = async (e) => {
-    e.preventDefault();
-    const { registrant, status, accepted_division_id, catatan } = reviewModal;
-    if (!registrant) return;
-
-    setActionLoading(registrant.id);
-    try {
-      await api.put(`/admin/oprec/${selectedOprec.id}/registrants/${registrant.id}`, {
-        status,
-        accepted_division_id: status === "accepted" ? parseInt(accepted_division_id, 10) : null,
-        catatan: catatan || null,
-      });
-      setReviewModal({ isOpen: false, registrant: null, status: "accepted", accepted_division_id: "", catatan: "" });
-      fetchRegistrants(selectedOprec.id);
-    } catch (err) {
-      toast.error(err.message || "Gagal menyimpan review.");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
   // Filter registrants
   const filteredRegistrants = registrants.filter((r) => {
     const candidateName = getRegistrantName(r);
@@ -173,9 +110,13 @@ export default function AdminOprecPage() {
         r.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
         r.user?.email?.toLowerCase().includes(search.toLowerCase())
       : true;
-    const matchStatus = statusFilter === "all" ? true : r.status === statusFilter;
-    const matchDiv = divisionFilter === "all" ? true : (r.divisiPilihan1 === parseInt(divisionFilter, 10) || r.acceptedDivisionId === parseInt(divisionFilter, 10));
-    return matchSearch && matchStatus && matchDiv;
+    const matchDiv =
+      divisionFilter === "all"
+        ? true
+        : r.divisiPilihan1 === parseInt(divisionFilter, 10) ||
+          r.divisiPilihan2 === parseInt(divisionFilter, 10) ||
+          r.divisiPilihan3 === parseInt(divisionFilter, 10);
+    return matchSearch && matchDiv;
   });
 
   return (
@@ -308,7 +249,7 @@ export default function AdminOprecPage() {
               Daftar Berkas Calon Anggota
             </h2>
             <p className="text-xs text-slate-500">
-              Verifikasi kelengkapan berkas dan tentukan hasil seleksi calon anggota.
+              Periksa kelengkapan isian formulir dan berkas calon anggota.
             </p>
           </div>
 
@@ -325,22 +266,11 @@ export default function AdminOprecPage() {
             </div>
 
             <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-2.5 py-1.5 rounded-none border border-slate-300 text-xs font-mono text-slate-800 bg-white focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 cursor-pointer"
-            >
-              <option value="all">Semua Status</option>
-              <option value="pending">Menunggu Review</option>
-              <option value="accepted">Diterima</option>
-              <option value="rejected">Belum Diterima</option>
-            </select>
-
-            <select
               value={divisionFilter}
               onChange={(e) => setDivisionFilter(e.target.value)}
               className="px-2.5 py-1.5 rounded-none border border-slate-300 text-xs font-mono text-slate-800 bg-white focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 cursor-pointer"
             >
-              <option value="all">Semua Divisi</option>
+              <option value="all">Semua Pilihan Divisi</option>
               {selectedOprec?.divisiTersedia?.map((div) => (
                 <option key={div.id} value={div.id}>
                   {div.nama}
@@ -366,42 +296,36 @@ export default function AdminOprecPage() {
                 <th className="font-mono text-[11px] font-medium uppercase tracking-wider text-slate-500 py-3 px-4">
                   Tanggal Masuk
                 </th>
-                <th className="font-mono text-[11px] font-medium uppercase tracking-wider text-slate-500 py-3 px-4">
-                  Status
-                </th>
                 <th className="font-mono text-[11px] font-medium uppercase tracking-wider text-slate-500 py-3 px-4 text-right">
-                  Aksi Verifikasi
+                  Verifikasi Formulir
                 </th>
               </tr>
             </thead>
             <tbody>
               {loadingRegistrants ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-500 font-mono text-xs">
+                  <td colSpan={5} className="text-center py-12 text-slate-500 font-mono text-xs">
                     Memuat data pendaftar OPREC...
                   </td>
                 </tr>
               ) : filteredRegistrants.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-500 font-mono text-xs">
+                  <td colSpan={5} className="text-center py-12 text-slate-500 font-mono text-xs">
                     Belum ada calon anggota pada filter ini.
                   </td>
                 </tr>
               ) : (
                 filteredRegistrants.map((r) => {
                   const div1 =
-                    selectedOprec?.divisiTersedia?.find((d) => d.id === r.divisiPilihan1)?.nama ||
+                    selectedOprec?.divisiTersedia?.find((d) => String(d.id) === String(r.divisiPilihan1))?.nama ||
                     `Divisi #${r.divisiPilihan1}`;
                   const div2 = r.divisiPilihan2
-                    ? selectedOprec?.divisiTersedia?.find((d) => d.id === r.divisiPilihan2)?.nama ||
+                    ? selectedOprec?.divisiTersedia?.find((d) => String(d.id) === String(r.divisiPilihan2))?.nama ||
                       `Divisi #${r.divisiPilihan2}`
                     : null;
                   const div3 = r.divisiPilihan3
-                    ? selectedOprec?.divisiTersedia?.find((d) => d.id === r.divisiPilihan3)?.nama ||
+                    ? selectedOprec?.divisiTersedia?.find((d) => String(d.id) === String(r.divisiPilihan3))?.nama ||
                       `Divisi #${r.divisiPilihan3}`
-                    : null;
-                  const acceptedDiv = r.acceptedDivisionId
-                    ? selectedOprec?.divisiTersedia?.find((d) => d.id === r.acceptedDivisionId)?.nama
                     : null;
 
                   return (
@@ -436,53 +360,20 @@ export default function AdminOprecPage() {
                             3. {div3}
                           </div>
                         )}
-                        {acceptedDiv && (
-                          <div className="mt-1 text-[11px] font-mono text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-none border border-emerald-300 inline-block">
-                            DITERIMA: {acceptedDiv}
-                          </div>
-                        )}
                       </td>
                       <td className="py-3 px-4 font-mono text-xs text-slate-500">
                         {r.createdAt ? new Date(r.createdAt).toLocaleDateString("id-ID") : "-"}
                       </td>
-                      <td className="py-3 px-4">
-                        {r.status === "accepted" ? (
-                          <span className="font-mono text-[11px] uppercase tracking-wide px-2 py-0.5 rounded-none border border-emerald-300 bg-emerald-50 text-emerald-800 inline-block">
-                            Diterima
-                          </span>
-                        ) : r.status === "rejected" ? (
-                          <span className="font-mono text-[11px] uppercase tracking-wide px-2 py-0.5 rounded-none border border-rose-300 bg-rose-50 text-rose-800 inline-block">
-                            Ditolak
-                          </span>
-                        ) : (
-                          <span className="font-mono text-[11px] uppercase tracking-wide px-2 py-0.5 rounded-none border border-amber-300 bg-amber-50 text-amber-800 inline-block">
-                            Pending
-                          </span>
-                        )}
-                      </td>
                       <td className="py-3 px-4 text-right">
-                        <div className="inline-flex items-center gap-1.5 justify-end">
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateStatus(r, "accepted")}
-                            disabled={actionLoading === r.id}
-                            className="oprec-table-btn oprec-table-btn--accept"
-                            title="Terima Calon Anggota"
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                            <span>Terima</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateStatus(r, "rejected")}
-                            disabled={actionLoading === r.id}
-                            className="oprec-table-btn oprec-table-btn--reject"
-                            title="Tolak Calon Anggota"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                            <span>Tolak</span>
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setVerifyModal({ isOpen: true, registrant: r })}
+                          className="oprec-table-btn oprec-table-btn--verify"
+                          title="Periksa kelengkapan formulir pendaftaran"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>Verifikasi Form</span>
+                        </button>
                       </td>
                     </tr>
                   );
@@ -499,22 +390,31 @@ export default function AdminOprecPage() {
         onCreated={fetchOprecs}
       />
 
-      {/* Review & Acceptance Modal (Minimalist Boxy) */}
-      {reviewModal.isOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white border border-slate-300 rounded-none shadow-2xl">
-            <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+      {/* Modal Verifikasi Formulir Pendaftaran (Minimalist Boxy Editorial) */}
+      {verifyModal.isOpen && verifyModal.registrant && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setVerifyModal({ isOpen: false, registrant: null });
+          }}
+        >
+          <div className="w-full max-w-2xl bg-white border border-slate-300 rounded-none shadow-2xl flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="p-4 md:p-5 border-b border-slate-200 flex items-start justify-between gap-4">
               <div>
                 <span className="font-mono text-[10px] text-blue-600 uppercase tracking-wider block font-medium">
-                  // KEPUTUSAN SELEKSI
+                  // VERIFIKASI FORMULIR PENDAFTARAN
                 </span>
-                <h2 className="text-base font-semibold text-slate-900 mt-0.5">
-                  Konfirmasi Kelulusan OPREC
+                <h2 className="text-lg font-semibold text-slate-900 mt-1">
+                  {getRegistrantName(verifyModal.registrant)}
                 </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  NIM: <span className="font-mono text-slate-700 font-medium">{verifyModal.registrant.nim}</span> · Terdaftar pada {formatOprecDate(verifyModal.registrant.createdAt)}
+                </p>
               </div>
               <button
                 type="button"
-                onClick={() => setReviewModal({ ...reviewModal, isOpen: false })}
+                onClick={() => setVerifyModal({ isOpen: false, registrant: null })}
                 className="p-1 border border-slate-200 rounded-none hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer"
                 aria-label="Tutup popup"
               >
@@ -522,72 +422,186 @@ export default function AdminOprecPage() {
               </button>
             </div>
 
-            <form onSubmit={submitReview} className="p-5 flex flex-col gap-4">
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-none">
-                <span className="text-[11px] font-mono uppercase text-slate-500 block">
-                  Calon Anggota
-                </span>
-                <div className="text-sm font-medium text-slate-900 mt-0.5">
-                  {getRegistrantName(reviewModal.registrant)}{" "}
-                  <span className="font-mono text-slate-500 text-xs">
-                    ({reviewModal.registrant?.nim})
-                  </span>
+            {/* Content Body (Scrollable) */}
+            <div className="p-5 md:p-6 overflow-y-auto flex flex-col gap-6">
+              {/* Section 1: Data Akun & Identitas */}
+              <div>
+                <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-1.5 mb-3">
+                  1. Informasi Identitas Calon Anggota
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-50 border border-slate-200 p-3.5">
+                  <div>
+                    <span className="text-slate-500 font-mono text-[11px] block">NAMA LENGKAP FORM</span>
+                    <span className="font-medium text-slate-900 text-sm">
+                      {getRegistrantName(verifyModal.registrant)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 font-mono text-[11px] block">NIM</span>
+                    <span className="font-mono font-medium text-slate-900 text-sm">
+                      {verifyModal.registrant.nim}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 font-mono text-[11px] block">EMAIL AKUN</span>
+                    <span className="font-mono text-slate-800">
+                      {verifyModal.registrant.user?.email || "-"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 font-mono text-[11px] block">NAMA AKUN PROFIL</span>
+                    <span className="text-slate-800">
+                      {verifyModal.registrant.user?.name || "-"}
+                    </span>
+                  </div>
+                  {verifyModal.registrant.formData?.tanggal_lahir && (
+                    <div>
+                      <span className="text-slate-500 font-mono text-[11px] block">TANGGAL LAHIR</span>
+                      <span className="font-mono text-slate-800">
+                        {formatOprecDate(verifyModal.registrant.formData.tanggal_lahir)}
+                      </span>
+                    </div>
+                  )}
+                  {verifyModal.registrant.formData?.angkatan && (
+                    <div>
+                      <span className="text-slate-500 font-mono text-[11px] block">ANGKATAN</span>
+                      <span className="font-mono text-slate-800">
+                        {verifyModal.registrant.formData.angkatan}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
+              {/* Section 2: Pilihan Divisi & Jabatan */}
               <div>
-                <label className="text-xs font-medium text-slate-700 mb-1 block uppercase tracking-wider font-mono">
-                  Pilih Divisi Diterima *
-                </label>
-                <select
-                  required
-                  value={reviewModal.accepted_division_id}
-                  onChange={(e) =>
-                    setReviewModal({ ...reviewModal, accepted_division_id: e.target.value })
-                  }
-                  className="w-full px-3 py-2 rounded-none border border-slate-300 text-sm focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 bg-white"
-                >
-                  <option value="">-- Pilih Divisi --</option>
-                  {selectedOprec?.divisiTersedia?.map((div) => (
-                    <option key={div.id} value={div.id}>
-                      {div.nama}
-                    </option>
-                  ))}
-                </select>
+                <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-1.5 mb-3">
+                  2. Pilihan Divisi & Jabatan
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[1, 2, 3].map((rank) => {
+                    const divId = verifyModal.registrant[`divisiPilihan${rank}`];
+                    const division = selectedOprec?.divisiTersedia?.find((d) => String(d.id) === String(divId));
+                    const jabatan = verifyModal.registrant.formData?.[`jabatan_pilihan_${rank}`];
+                    return (
+                      <div
+                        key={rank}
+                        className="p-3 border border-slate-200 bg-white"
+                      >
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className="font-mono text-[10px] font-semibold text-blue-600 uppercase tracking-wider">
+                            Pilihan {rank}
+                          </span>
+                          <span className="font-mono text-[10px] text-slate-400">
+                            Prioritas #{rank}
+                          </span>
+                        </div>
+                        <div className="text-sm font-semibold text-slate-900">
+                          {division?.nama || (divId ? `Divisi #${divId}` : "—")}
+                        </div>
+                        {division?.namaLengkap && (
+                          <div className="text-[11px] text-slate-500 line-clamp-1">
+                            {division.namaLengkap}
+                          </div>
+                        )}
+                        <div className="mt-2 pt-2 border-t border-slate-100">
+                          <span className="text-[10px] font-mono text-slate-500 block uppercase">
+                            Jabatan Dilamar:
+                          </span>
+                          <span className="text-xs font-medium text-slate-800">
+                            {jabatan || "Staff Divisi"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
-              <div>
-                <label className="text-xs font-medium text-slate-700 mb-1 block uppercase tracking-wider font-mono">
-                  Catatan / Pesan Pengumuman
-                </label>
-                <textarea
-                  rows={3}
-                  value={reviewModal.catatan}
-                  onChange={(e) =>
-                    setReviewModal({ ...reviewModal, catatan: e.target.value })
-                  }
-                  placeholder="Selamat telah diterima di divisi..."
-                  className="w-full px-3 py-2 rounded-none border border-slate-300 text-sm focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-sans"
-                />
-              </div>
+              {/* Section 3: Jawaban Formulir Tambahan */}
+              {(() => {
+                const fd = verifyModal.registrant.formData || {};
+                const excluded = [
+                  "nama",
+                  "nim",
+                  "tanggal_lahir",
+                  "angkatan",
+                  "divisi_pilihan_1",
+                  "divisi_pilihan_2",
+                  "divisi_pilihan_3",
+                  "jabatan_pilihan_1",
+                  "jabatan_pilihan_2",
+                  "jabatan_pilihan_3",
+                ];
+                const dynamicEntries = Object.entries(fd).filter(([key]) => !excluded.includes(key));
+                if (dynamicEntries.length === 0) return null;
 
-              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setReviewModal({ ...reviewModal, isOpen: false })}
-                  className="oprec-btn oprec-btn--secondary !min-h-[36px] !py-1.5"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="oprec-btn oprec-btn--primary !min-h-[36px] !py-1.5"
-                >
-                  Simpan Keputusan
-                </button>
-              </div>
-            </form>
+                return (
+                  <div>
+                    <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-1.5 mb-3">
+                      3. Isian & Jawaban Formulir
+                    </h3>
+                    <div className="flex flex-col gap-3">
+                      {dynamicEntries.map(([key, val]) => {
+                        const fieldMeta = selectedOprec?.formFields?.find((f) => f.name === key);
+                        const label = fieldMeta?.label || key;
+                        const isLong = typeof val === "string" && val.length > 80;
+                        return (
+                          <div key={key} className="p-3 border border-slate-200 bg-white">
+                            <span className="text-xs font-semibold text-slate-700 block mb-1">
+                              {label}
+                            </span>
+                            <div className={`text-xs text-slate-900 ${isLong ? "whitespace-pre-wrap leading-relaxed bg-slate-50 p-2.5 border border-slate-100 font-sans" : "font-medium"}`}>
+                              {typeof val === "boolean" ? (val ? "Ya" : "Tidak") : String(val || "—")}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Section 4: Berkas Dokumen (Upload) */}
+              {verifyModal.registrant.fileUploads && Object.keys(verifyModal.registrant.fileUploads).length > 0 && (
+                <div>
+                  <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-1.5 mb-3">
+                    4. Berkas / Dokumen Terlampir
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    {Object.entries(verifyModal.registrant.fileUploads).map(([key, fileInfo]) => {
+                      const fieldMeta = selectedOprec?.formFields?.find((f) => f.name === key);
+                      const label = fieldMeta?.label || key;
+                      const downloadUrl = fileInfo?.downloadUrl || `/api/admin/oprec/${selectedOprec.id}/registrants/${verifyModal.registrant.id}/download/${key}`;
+                      return (
+                        <div key={key} className="p-3 border border-slate-200 bg-white flex items-center justify-between gap-3">
+                          <span className="text-xs font-medium text-slate-800">{label}</span>
+                          <a
+                            href={downloadUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="oprec-btn oprec-btn--secondary !min-h-[32px] !py-1 !text-xs"
+                          >
+                            Unduh Berkas
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-slate-200 flex items-center justify-end bg-slate-50">
+              <button
+                type="button"
+                onClick={() => setVerifyModal({ isOpen: false, registrant: null })}
+                className="oprec-btn oprec-btn--secondary !min-h-[36px] !py-1.5"
+              >
+                Tutup
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -378,26 +378,16 @@
   white-space: nowrap;
 }
 
-.oprec-table-btn--accept {
-  background: #ecfdf5 !important;
-  color: #065f46 !important;
-  border: 1px solid #a7f3d0 !important;
+.oprec-table-btn--verify {
+  background: #eff6ff !important;
+  color: #155eef !important;
+  border: 1px solid #bfdbfe !important;
 }
 
-.oprec-table-btn--accept:hover:not(:disabled) {
-  background: #d1fae5 !important;
-  border-color: #6ee7b7 !important;
-}
-
-.oprec-table-btn--reject {
-  background: #fff1f2 !important;
-  color: #9f1239 !important;
-  border: 1px solid #fecdd3 !important;
-}
-
-.oprec-table-btn--reject:hover:not(:disabled) {
-  background: #ffe4e6 !important;
-  border-color: #fda4af !important;
+.oprec-table-btn--verify:hover:not(:disabled) {
+  background: #dbeafe !important;
+  border-color: #155eef !important;
+  color: #0f48c2 !important;
 }
 
 .oprec-table-btn:disabled {
