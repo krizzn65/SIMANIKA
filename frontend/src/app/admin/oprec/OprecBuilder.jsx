@@ -1109,6 +1109,19 @@ export default function OprecBuilder({ oprecId }) {
                   </div>
                 )}
               </div>
+
+              <div className="oprec-builder__bottom-actions">
+                <button
+                  type="button"
+                  onClick={() => save(data.status)}
+                  disabled={busy}
+                  className="oprec-btn oprec-btn--primary oprec-btn--sm"
+                  title="Simpan formulir OPREC"
+                >
+                  <Save size={13} aria-hidden="true" />
+                  <span>{busy ? "Menyimpan…" : "Simpan Formulir"}</span>
+                </button>
+              </div>
             </section>
           )}
 
@@ -1468,6 +1481,19 @@ export default function OprecBuilder({ oprecId }) {
                 <Plus size={15} aria-hidden="true" />
                 <span>Tambah Divisi Baru</span>
               </button>
+
+              <div className="oprec-builder__bottom-actions">
+                <button
+                  type="button"
+                  onClick={() => save(data.status)}
+                  disabled={busy}
+                  className="oprec-btn oprec-btn--primary oprec-btn--sm"
+                  title="Simpan formulir OPREC"
+                >
+                  <Save size={13} aria-hidden="true" />
+                  <span>{busy ? "Menyimpan…" : "Simpan Formulir"}</span>
+                </button>
+              </div>
             </section>
           )}
 
@@ -1841,6 +1867,19 @@ export default function OprecBuilder({ oprecId }) {
                 <Plus size={15} aria-hidden="true" />
                 <span>Tambah Pertanyaan Baru</span>
               </button>
+
+              <div className="oprec-builder__bottom-actions">
+                <button
+                  type="button"
+                  onClick={() => save(data.status)}
+                  disabled={busy}
+                  className="oprec-btn oprec-btn--primary oprec-btn--sm"
+                  title="Simpan formulir OPREC"
+                >
+                  <Save size={13} aria-hidden="true" />
+                  <span>{busy ? "Menyimpan…" : "Simpan Formulir"}</span>
+                </button>
+              </div>
             </section>
           )}
         </div>
