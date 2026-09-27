@@ -47,7 +47,15 @@ class OprecWorkspaceController extends Controller
                     'tanggalBuka' => $oprec->tanggal_buka?->toIso8601String(),
                     'tanggalTutup' => $oprec->tanggal_tutup?->toIso8601String(),
                     'schemaVersion' => $oprec->schema_version,
-                    'formFields' => collect($oprec->form_fields ?? [])->reject(fn ($field) => in_array($field['name'] ?? '', ['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'], true))->values()->all(),
+                    'formFields' => collect($oprec->form_fields ?? [])
+                        ->reject(fn ($field) => in_array($field['name'] ?? '', ['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'], true))
+                        ->map(fn ($field) => array_merge($field, [
+                            'target_type' => $field['target_type'] ?? 'all',
+                            'targetType' => $field['target_type'] ?? 'all',
+                            'target_divisions' => $field['target_divisions'] ?? [],
+                            'targetDivisions' => $field['target_divisions'] ?? [],
+                        ]))
+                        ->values()->all(),
                     'formIntro' => $oprec->form_intro ?? null,
                     'divisiTersedia' => $oprec->divisions->map(fn ($d) => [
                         'id' => (string) $d->id,

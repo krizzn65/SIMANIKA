@@ -26,12 +26,42 @@ class OprecRegistrationController extends Controller
         $fields = $oprec->form_fields ?? [];
         if (!count($fields) || count($fields) > 40) return response()->json(['message' => 'Formulir belum tersedia.'], 409);
 
+        $chosenDivisionIds = array_filter([
+            (int) $request->input('divisi_pilihan_1'),
+            (int) $request->input('divisi_pilihan_2'),
+            (int) $request->input('divisi_pilihan_3'),
+        ]);
+        $chosenDivisions = $oprec->divisions->whereIn('id', $chosenDivisionIds);
+        $chosenDivisionNames = $chosenDivisions->pluck('nama')->all();
+        $chosenDivisionFullNames = $chosenDivisions->pluck('nama_lengkap')->filter()->all();
+
         $rules = [];
         foreach ($fields as $field) {
             $name = $field['name'] ?? '';
             $type = $field['type'] ?? '';
             if (!preg_match('/^[a-z][a-z0-9_]{0,49}$/', $name) || in_array($name, ['oprec_id', 'schema_version'], true)) return response()->json(['message' => 'Skema formulir tidak valid.'], 503);
-            $rules[$name] = [($field['required'] ?? false) ? 'required' : 'nullable'];
+            
+            $targetType = $field['target_type'] ?? 'all';
+            $targetDivisions = (array) ($field['target_divisions'] ?? []);
+            $isTargeted = $targetType === 'specific' && count($targetDivisions) > 0;
+            $matchesDivision = false;
+            if ($isTargeted) {
+                foreach ($targetDivisions as $td) {
+                    $tdLower = strtolower(trim((string) $td));
+                    if (in_array((string) $td, array_map('strval', $chosenDivisionIds), true) ||
+                        in_array($tdLower, array_map('strtolower', $chosenDivisionNames), true) ||
+                        in_array($tdLower, array_map('strtolower', $chosenDivisionFullNames), true)) {
+                        $matchesDivision = true;
+                        break;
+                    }
+                }
+            }
+            if ($isTargeted && !$matchesDivision) {
+                $rules[$name] = ['nullable'];
+                continue;
+            }
+            $isRequired = !empty($field['required']);
+            $rules[$name] = [$isRequired ? 'required' : 'nullable'];
             if ($type === 'file') {
                 $rules[$name][] = 'file';
                 $rules[$name][] = 'mimes:pdf,jpg,jpeg,png';

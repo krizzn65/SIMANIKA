@@ -51,6 +51,10 @@ export function normalizeFields(fields = []) {
       help: text(field.help), placeholder: text(field.placeholder), options, accept, min, max,
       maxLength: Math.min(Math.max(count(field.maxLength ?? field.max_length) ?? (field.type === "textarea" ? 3000 : 255), 1), 5000),
       maxSizeMB: Math.min(Math.max(count(field.maxSizeMB ?? field.max_size_mb) ?? 5, 1), 10),
+      targetType: field.target_type ?? field.targetType ?? "all",
+      targetDivisions: Array.isArray(field.target_divisions ?? field.targetDivisions)
+        ? (field.target_divisions ?? field.targetDivisions).map(String).filter(Boolean)
+        : [],
     };
   });
   // Identity fields are configured by admin but required for private result lookup.
@@ -130,11 +134,42 @@ export function validBirthDate(value, now = Date.now()) {
   return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) === value && value >= "1900-01-01" && time <= now;
 }
 
+export function isFieldApplicable(field, choices = [], divisions = []) {
+  if (!field) return false;
+  const targetType = field.targetType ?? field.target_type ?? "all";
+  const targetDivisions = Array.isArray(field.targetDivisions ?? field.target_divisions)
+    ? (field.targetDivisions ?? field.target_divisions)
+    : [];
+  if (targetType !== "specific" || targetDivisions.length === 0) {
+    return true;
+  }
+  const chosenTerms = (choices || []).filter(Boolean).flatMap((choice) => {
+    const val = String(choice).trim().toLowerCase();
+    const div = (divisions || []).find(
+      (d, idx) =>
+        String(d.id ?? idx).toLowerCase() === val ||
+        d.nama?.toLowerCase().trim() === val ||
+        d.namaLengkap?.toLowerCase().trim() === val
+    );
+    return [
+      val,
+      div?.id != null ? String(div.id).trim().toLowerCase() : null,
+      div?.nama?.toLowerCase().trim(),
+      div?.namaLengkap?.toLowerCase().trim(),
+    ].filter(Boolean);
+  });
+  return targetDivisions.some((target) => {
+    const term = String(target).trim().toLowerCase();
+    return chosenTerms.includes(term);
+  });
+}
+
 export function validateOprecForm(fields, form, now = Date.now(), divisions = []) {
   const errors = {};
   const choices = [1, 2, 3].map((rank) => form.get(`divisi_pilihan_${rank}`));
+  const hasDivisionField = fields.some((field) => field.name === "divisi_pilihan_1") || form.has("divisi_pilihan_1");
   let divisionOptions = fields.find((field) => field.name === "divisi_pilihan_1")?.options || [];
-  if (!divisionOptions.length && Array.isArray(divisions) && divisions.length > 0) {
+  if (!divisionOptions.length && hasDivisionField && Array.isArray(divisions) && divisions.length > 0) {
     divisionOptions = divisions.map((item, idx) => ({
       value: String(item.id ?? idx),
       label: item.nama || item.namaLengkap || `Divisi #${item.id ?? idx}`,
@@ -158,6 +193,7 @@ export function validateOprecForm(fields, form, now = Date.now(), divisions = []
   }
   for (const field of fields) {
     if (["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name)) continue;
+    if (!isFieldApplicable(field, choices, divisions)) continue;
     const values = form.getAll(field.name);
     const value = values[0];
     const file = field.type === "file";

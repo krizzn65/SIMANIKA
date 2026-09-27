@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 const source = await readFile(new URL("../src/lib/oprec.js", import.meta.url), "utf8");
-const { normalizeOprec, normalizeFields, oprecState, oprecDate, validBirthDate, validateOprecForm, safePosterUrl } = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
+const { normalizeOprec, normalizeFields, oprecState, oprecDate, validBirthDate, validateOprecForm, safePosterUrl, isFieldApplicable } = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
 const identity = [{ name: "nim", type: "text", label: "NIM", required: true }, { name: "tanggal_lahir", type: "date", label: "Tanggal lahir", required: true }];
 const raw = { id: 1, periode: "2026/2027", status: "open", tanggalBuka: "2026-10-01T08:00:00+07:00", tanggalTutup: "2026-10-14T23:59:00+07:00", divisiTersedia: [{ nama: "Kominfo", jabatan: ["Staff Divisi Kominfo"] }], formFields: identity };
 const oprec = normalizeOprec(raw);
@@ -87,3 +87,53 @@ test("posters reject unsafe URLs and dates display in WIB", () => {
   assert.equal(safePosterUrl("https://example.com/poster.webp"), "https://example.com/poster.webp");
   assert.match(oprecDate("2026-10-01T18:00:00Z"), /2 Oktober 2026/);
 });
+
+test("conditional division questions only apply and validate when matching division is chosen", () => {
+  const divisions = [
+    { id: 1, nama: "BPH" },
+    { id: 2, nama: "HUMAS" },
+    { id: 3, nama: "KOMINFO" },
+    { id: 4, nama: "PSDM" },
+  ];
+  const conditionalField = {
+    name: "portofolio_kominfo",
+    type: "text",
+    label: "Link Portofolio Kominfo",
+    required: true,
+    target_type: "specific",
+    target_divisions: ["KOMINFO"],
+  };
+  const fields = normalizeFields([
+    ...identity,
+    { name: "divisi_pilihan_1", type: "select", label: "Divisi", required: true, options: ["1", "2", "3", "4"] },
+    conditionalField,
+  ]);
+
+  // When applicant selects BPH, HUMAS, PSDM (No KOMINFO)
+  const formWithoutKominfo = new FormData();
+  formWithoutKominfo.set("nim", "E12345");
+  formWithoutKominfo.set("tanggal_lahir", "2004-01-01");
+  formWithoutKominfo.set("divisi_pilihan_1", "1");
+  formWithoutKominfo.set("divisi_pilihan_2", "2");
+  formWithoutKominfo.set("divisi_pilihan_3", "4");
+  // portofolio_kominfo is empty, but KOMINFO is not chosen -> passes validation!
+  assert.equal(isFieldApplicable(fields.find(f => f.name === "portofolio_kominfo"), ["1", "2", "4"], divisions), false);
+  assert.deepEqual(validateOprecForm(fields, formWithoutKominfo, Date.now(), divisions), {});
+
+  // When applicant selects KOMINFO as choice 2
+  const formWithKominfo = new FormData();
+  formWithKominfo.set("nim", "E12345");
+  formWithKominfo.set("tanggal_lahir", "2004-01-01");
+  formWithKominfo.set("divisi_pilihan_1", "1");
+  formWithKominfo.set("divisi_pilihan_2", "3");
+  formWithKominfo.set("divisi_pilihan_3", "4");
+  assert.equal(isFieldApplicable(fields.find(f => f.name === "portofolio_kominfo"), ["1", "3", "4"], divisions), true);
+  // Empty -> error!
+  const errors = validateOprecForm(fields, formWithKominfo, Date.now(), divisions);
+  assert.ok(errors.portofolio_kominfo);
+
+  // Filled -> passes!
+  formWithKominfo.set("portofolio_kominfo", "https://github.com/my-portfolio");
+  assert.deepEqual(validateOprecForm(fields, formWithKominfo, Date.now(), divisions), {});
+});
+
