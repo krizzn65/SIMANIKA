@@ -280,8 +280,9 @@ export default function OprecBuilder({ oprecId }) {
       const tabsEl = tabsNavRef.current || document.querySelector(".oprec-builder__tabs");
       if (tabsEl) {
         const rect = tabsEl.getBoundingClientRect();
-        // Tabs dianggap tidak terlihat ketika bagian bawahnya sudah tergulung melewati batas atas topbar (<= 70px)
-        const isPast = rect.bottom <= 70;
+        // Tabs dianggap tidak terlihat ketika bagian bawahnya sudah tergulung melewati batas bawah navbar sticky
+        const topThreshold = typeof window !== "undefined" && window.innerWidth < 768 ? 105 : 70;
+        const isPast = rect.bottom <= topThreshold;
         setShowFloatingNav(isPast);
       }
 
@@ -290,7 +291,13 @@ export default function OprecBuilder({ oprecId }) {
       if (builderRoot) {
         const rootRect = builderRoot.getBoundingClientRect();
         const isDesktop = window.innerWidth >= 768;
-        const sidebarW = isDesktop ? 76 : 0;
+        if (!isDesktop) {
+          // Pada mode mobile, posisi dikontrol 100% oleh CSS (tengah bawah)
+          setNavLeftPos(null);
+          return;
+        }
+
+        const sidebarW = 76;
         const dockWidth = 46;
         const gap = 12;
 
@@ -882,7 +889,6 @@ export default function OprecBuilder({ oprecId }) {
       {/* Hero Header */}
       <header className="oprec-builder__hero">
         <div>
-          <span className="oprec-builder__eyebrow">// TAHAP 01 · FORM BUILDER</span>
           <h1>Susun Formulir Pendaftaran</h1>
           <div className="oprec-builder__hero-meta">
             <span>PERIODE: {data.periode || "BELUM DIISI"}</span>
@@ -953,8 +959,10 @@ export default function OprecBuilder({ oprecId }) {
             activeTab === "info" ? "oprec-builder__tab-btn--active" : ""
           }`}
         >
-          <Calendar size={15} />
-          <span>1. Informasi & Jadwal</span>
+          <Calendar size={14} className="oprec-builder__tab-icon" />
+          <span className="oprec-builder__tab-label-full">1. Informasi & Jadwal</span>
+          <span className="oprec-builder__tab-label-short">1. Info & Jadwal</span>
+          <span className="oprec-builder__tab-label-mini">1. Info</span>
         </button>
         <button
           type="button"
@@ -963,8 +971,10 @@ export default function OprecBuilder({ oprecId }) {
             activeTab === "divisions" ? "oprec-builder__tab-btn--active" : ""
           }`}
         >
-          <Layers size={15} />
-          <span>2. Kelola Divisi</span>
+          <Layers size={14} className="oprec-builder__tab-icon" />
+          <span className="oprec-builder__tab-label-full">2. Kelola Divisi</span>
+          <span className="oprec-builder__tab-label-short">2. Divisi</span>
+          <span className="oprec-builder__tab-label-mini">2. Divisi</span>
           <span className="oprec-builder__tab-badge">{data.divisi_tersedia.length}</span>
         </button>
         <button
@@ -974,8 +984,10 @@ export default function OprecBuilder({ oprecId }) {
             activeTab === "fields" ? "oprec-builder__tab-btn--active" : ""
           }`}
         >
-          <ListChecks size={15} />
-          <span>3. Pertanyaan Formulir</span>
+          <ListChecks size={14} className="oprec-builder__tab-icon" />
+          <span className="oprec-builder__tab-label-full">3. Pertanyaan Formulir</span>
+          <span className="oprec-builder__tab-label-short">3. Formulir</span>
+          <span className="oprec-builder__tab-label-mini">3. Form</span>
           <span className="oprec-builder__tab-badge">{data.form_fields.length + 1}</span>
         </button>
       </nav>
