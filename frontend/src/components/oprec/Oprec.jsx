@@ -43,7 +43,6 @@ export function Oprec({ oprec }) {
           <h3>{division.nama}</h3>
           {namaLengkap && <span className="oprec-division__full">{namaLengkap}</span>}
           <p>{division.deskripsi || "Informasi peran divisi akan diumumkan oleh pengurus."}</p>
-          {hasOpenDivisions && division.jabatan && division.jabatan.length > 0 && <span className="oprec-division__quota">{division.jabatan.length} Jabatan dibuka</span>}
         </article>;
       })}</div>
     </section>

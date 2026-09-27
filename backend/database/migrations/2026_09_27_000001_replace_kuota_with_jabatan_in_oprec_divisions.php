@@ -15,6 +15,25 @@ return new class extends Migration {
                 $table->jsonb('jabatan')->default('[]');
             }
         });
+
+        // Backfill existing divisions with default positions
+        $divisions = \Illuminate\Support\Facades\DB::table('oprec_divisions')->get();
+        foreach ($divisions as $d) {
+            $current = json_decode($d->jabatan ?? '[]', true);
+            if (empty($current)) {
+                $clean = trim($d->nama ?? '');
+                if (strcasecmp($clean, 'bph') === 0) {
+                    $default = ['Wakil Ketua Umum', 'Sekretaris 2', 'Bendahara 2'];
+                } elseif ($clean !== '') {
+                    $default = ['Staff Divisi ' . $clean];
+                } else {
+                    $default = [];
+                }
+                \Illuminate\Support\Facades\DB::table('oprec_divisions')
+                    ->where('id', $d->id)
+                    ->update(['jabatan' => json_encode($default)]);
+            }
+        }
     }
 
     public function down(): void

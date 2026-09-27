@@ -271,10 +271,7 @@ export default function AdminOprecPage() {
               <strong>Divisi dibuka //</strong>
               <div>
                 {selectedOprec.divisiTersedia.map((division) => (
-                  <span key={division.id}>
-                    {division.nama}
-                    {division.jabatan?.length ? ` · ${division.jabatan.length} JABATAN` : ""}
-                  </span>
+                  <span key={division.id}>{division.nama}</span>
                 ))}
               </div>
             </div>

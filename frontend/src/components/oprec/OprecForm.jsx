@@ -1,8 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { RotateCcw } from "lucide-react";
-import { validateOprecForm } from "@/lib/oprec";
+import { useEffect, useRef, useState } from "react";
+import { RotateCcw, Lock } from "lucide-react";
+import { validateOprecForm, getDefaultJabatan } from "@/lib/oprec";
+
+function getDivisionPositions(division) {
+  if (!division) return [];
+  if (Array.isArray(division.jabatan) && division.jabatan.length > 0) {
+    return division.jabatan;
+  }
+  return getDefaultJabatan(division.nama);
+}
 
 const DEFAULT_DIVISION_LOGOS = {
   bph: "/images/divisi/bph.webp",
@@ -203,8 +211,50 @@ export function OprecForm({ oprec, onSuccess }) {
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
   const [selectedDivisions, setSelectedDivisions] = useState([]);
+  const [selectedJabatan, setSelectedJabatan] = useState({ 1: "", 2: "", 3: "" });
   const feedback = useRef(null);
   const submitting = useRef(false);
+
+  useEffect(() => {
+    setSelectedJabatan((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      [1, 2, 3].forEach((rank) => {
+        const divVal = selectedDivisions[rank - 1];
+        if (!divVal) {
+          if (next[rank] !== "") {
+            next[rank] = "";
+            changed = true;
+          }
+        } else {
+          const division = (oprec.divisiTersedia || []).find(
+            (d, idx) =>
+              String(d.id ?? idx) === String(divVal) ||
+              d.nama?.toLowerCase() === String(divVal).toLowerCase()
+          );
+          const positions = getDivisionPositions(division);
+          if (positions.length === 1) {
+            if (next[rank] !== positions[0]) {
+              next[rank] = positions[0];
+              changed = true;
+            }
+          } else if (positions.length > 1) {
+            if (next[rank] && !positions.includes(next[rank])) {
+              next[rank] = "";
+              changed = true;
+            }
+          } else {
+            if (next[rank] !== "") {
+              next[rank] = "";
+              changed = true;
+            }
+          }
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [selectedDivisions, oprec.divisiTersedia]);
+
   function toggleDivision(value) {
     setSelectedDivisions((current) => current.includes(String(value))
       ? current.filter((item) => item !== String(value))
@@ -223,6 +273,13 @@ export function OprecForm({ oprec, onSuccess }) {
     const form = event.currentTarget;
     const body = new FormData(form);
     selectedDivisions.forEach((value, index) => body.set(`divisi_pilihan_${index + 1}`, value));
+    [1, 2, 3].forEach((rank) => {
+      if (selectedJabatan[rank]) {
+        body.set(`jabatan_pilihan_${rank}`, selectedJabatan[rank]);
+      } else if (selectedDivisions[rank - 1]) {
+        body.set(`jabatan_pilihan_${rank}`, "");
+      }
+    });
     const nextErrors = validateOprecForm(oprec.formFields, body, Date.now(), oprec.divisiTersedia);
     if (Object.keys(nextErrors).length) {
       showErrors(nextErrors, "Periksa kolom yang ditandai sebelum mengirim.");
@@ -298,6 +355,17 @@ export function OprecForm({ oprec, onSuccess }) {
                   </a>
                 </li>
               )}
+              {[1, 2, 3].map((rank) => {
+                const err = errors[`jabatan_pilihan_${rank}`];
+                if (!err) return null;
+                return (
+                  <li key={`jabatan-err-${rank}`}>
+                    <a href={`#oprec-jabatan-select-${rank}`}>
+                      Jabatan Pilihan {rank}: {err}
+                    </a>
+                  </li>
+                );
+              })}
               {oprec.formFields
                 .filter((field) => !["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name))
                 .slice(0, 4)
@@ -391,7 +459,10 @@ export function OprecForm({ oprec, onSuccess }) {
               {selectedDivisions.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => setSelectedDivisions([])}
+                  onClick={() => {
+                    setSelectedDivisions([]);
+                    setSelectedJabatan({ 1: "", 2: "", 3: "" });
+                  }}
                   className="oprec-division-reset-btn"
                   title="Reset semua pilihan divisi"
                 >
@@ -400,6 +471,113 @@ export function OprecForm({ oprec, onSuccess }) {
                 </button>
               )}
             </div>
+
+            {/* 3 Dropdown Jabatan Berjejer Horizontal */}
+            <div className="oprec-jabatan-choices-row" role="region" aria-label="Pilihan Jabatan Divisi">
+              {[1, 2, 3].map((rank) => {
+                const divVal = selectedDivisions[rank - 1];
+                const division = divVal
+                  ? (oprec.divisiTersedia || []).find(
+                      (d, idx) =>
+                        String(d.id ?? idx) === String(divVal) ||
+                        d.nama?.toLowerCase() === String(divVal).toLowerCase()
+                    )
+                  : null;
+                const isUnlocked = Boolean(division);
+                const positions = getDivisionPositions(division);
+                const currentChoice = selectedJabatan[rank] || "";
+                const slotError = errors[`jabatan_pilihan_${rank}`];
+
+                return (
+                  <div
+                    key={rank}
+                    className={`oprec-jabatan-slot ${
+                      isUnlocked
+                        ? "oprec-jabatan-slot--active"
+                        : "oprec-jabatan-slot--blocked"
+                    } ${slotError ? "oprec-jabatan-slot--has-error" : ""}`}
+                  >
+                    <div className="oprec-jabatan-slot__header">
+                      <span className="oprec-jabatan-slot__rank-badge">
+                        Pilihan #{rank}
+                      </span>
+                      {isUnlocked ? (
+                        <span className="oprec-jabatan-slot__div-badge" title={division.namaLengkap || division.nama}>
+                          {division.nama}
+                        </span>
+                      ) : (
+                        <span className="oprec-jabatan-slot__locked-badge">
+                          <Lock size={10} aria-hidden="true" />
+                          <span>Terkunci</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="oprec-jabatan-slot__body">
+                      <label
+                        htmlFor={`oprec-jabatan-select-${rank}`}
+                        className="oprec-jabatan-slot__label"
+                      >
+                        Jabatan {isUnlocked ? `di ${division.nama}` : `Pilihan ${rank}`}
+                        {isUnlocked && <b aria-label="wajib"> *</b>}
+                      </label>
+                      <div className="oprec-jabatan-slot__select-wrap">
+                        <select
+                          id={`oprec-jabatan-select-${rank}`}
+                          name={`jabatan_pilihan_${rank}`}
+                          className="oprec-jabatan-slot__select"
+                          disabled={!isUnlocked}
+                          value={currentChoice}
+                          onChange={(e) => {
+                            setSelectedJabatan((prev) => ({
+                              ...prev,
+                              [rank]: e.target.value,
+                            }));
+                          }}
+                        >
+                          {!isUnlocked ? (
+                            <option value="" disabled>
+                              Pilih divisi ke-{rank} terlebih dahulu...
+                            </option>
+                          ) : positions.length > 1 ? (
+                            <>
+                              <option value="" disabled>
+                                -- Pilih Jabatan di {division.nama} --
+                              </option>
+                              {positions.map((pos) => (
+                                <option key={pos} value={pos}>
+                                  {pos}
+                                </option>
+                              ))}
+                            </>
+                          ) : (
+                            positions.map((pos) => (
+                              <option key={pos} value={pos}>
+                                {pos}
+                              </option>
+                            ))
+                          )}
+                        </select>
+                      </div>
+
+                      {isUnlocked && (
+                        <small className="oprec-jabatan-slot__hint">
+                          {positions.length > 1
+                            ? `${positions.length} opsi jabatan dapat dipilih`
+                            : "Otomatis terpilih (jabatan tunggal)"}
+                        </small>
+                      )}
+                      {slotError && (
+                        <small className="event-dynamic-error oprec-jabatan-slot__error">
+                          {slotError}
+                        </small>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
             {errors.divisi_pilihan_1 && (
               <small className="event-dynamic-error" id="oprec-divisi-error">
                 {errors.divisi_pilihan_1}

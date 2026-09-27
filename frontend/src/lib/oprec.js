@@ -147,6 +147,15 @@ export function validateOprecForm(fields, form, now = Date.now(), divisions = []
     if (choices[index] && choices.slice(0, index).includes(choices[index])) errors[`divisi_pilihan_${index + 1}`] = "Pilih divisi yang berbeda untuk setiap prioritas.";
     if (choices[index] && !choices[index - 1]) errors[`divisi_pilihan_${index + 1}`] = "Isi pilihan sebelumnya terlebih dahulu.";
   }
+  for (let index = 0; index < 3; index++) {
+    const rank = index + 1;
+    if (choices[index] && form.has(`jabatan_pilihan_${rank}`)) {
+      const val = form.get(`jabatan_pilihan_${rank}`);
+      if (!val || (typeof val === "string" && !val.trim())) {
+        errors[`jabatan_pilihan_${rank}`] = `Pilih jabatan untuk Divisi Pilihan ${rank}.`;
+      }
+    }
+  }
   for (const field of fields) {
     if (["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name)) continue;
     const values = form.getAll(field.name);

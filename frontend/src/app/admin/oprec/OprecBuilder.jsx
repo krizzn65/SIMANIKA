@@ -27,6 +27,7 @@ import {
   Ticket,
   RotateCcw,
   X,
+  Lock,
 } from "lucide-react";
 import { api } from "@/services/api";
 import { divisionPreview } from "@/components/oprec/divisionPreview";
@@ -195,6 +196,52 @@ export default function OprecBuilder({ oprecId }) {
   const [showDivisionConfig, setShowDivisionConfig] = useState(false);
   const [previewMode, setPreviewMode] = useState("page"); // "page" | "form"
   const [previewSelectedDivisions, setPreviewSelectedDivisions] = useState([]);
+  const [previewSelectedJabatan, setPreviewSelectedJabatan] = useState({ 1: "", 2: "", 3: "" });
+
+  useEffect(() => {
+    setPreviewSelectedJabatan((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      [1, 2, 3].forEach((rank) => {
+        const divVal = previewSelectedDivisions[rank - 1];
+        if (!divVal) {
+          if (next[rank] !== "") {
+            next[rank] = "";
+            changed = true;
+          }
+        } else {
+          const division = (data.divisi_tersedia || []).find(
+            (d, idx) =>
+              String(d.nama) === String(divVal) ||
+              String(idx) === String(divVal)
+          );
+          const positions = division
+            ? (Array.isArray(division.jabatan) && division.jabatan.length > 0
+                ? division.jabatan
+                : getDefaultJabatan(division.nama))
+            : [];
+          if (positions.length === 1) {
+            if (next[rank] !== positions[0]) {
+              next[rank] = positions[0];
+              changed = true;
+            }
+          } else if (positions.length > 1) {
+            if (next[rank] && !positions.includes(next[rank])) {
+              next[rank] = "";
+              changed = true;
+            }
+          } else {
+            if (next[rank] !== "") {
+              next[rank] = "";
+              changed = true;
+            }
+          }
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [previewSelectedDivisions, data.divisi_tersedia]);
+
   const togglePreviewDivision = (val) => {
     setPreviewSelectedDivisions((current) => {
       const strVal = String(val);
@@ -1105,9 +1152,6 @@ export default function OprecBuilder({ oprecId }) {
                               <div key={i} className="oprec-builder__division-chip">
                                 <span className="font-mono text-blue-600 font-bold">#{i + 1}</span>
                                 <strong>{d.nama}</strong>
-                                <span className="oprec-builder__chip-badge">
-                                  {(d.jabatan && d.jabatan.length > 0) ? `${d.jabatan.length} Jabatan` : "0 Jabatan"}
-                                </span>
                               </div>
                             ))
                         ) : (
@@ -1886,17 +1930,6 @@ export default function OprecBuilder({ oprecId }) {
                             <p className="oprec-user-preview__div-desc">
                               {d.deskripsi || "Informasi fokus dan peran divisi."}
                             </p>
-                            <div className="oprec-user-preview__div-positions">
-                              {d.jabatan && d.jabatan.length > 0 ? (
-                                <span className="oprec-user-preview__div-badge" title={d.jabatan.join(", ")}>
-                                  {d.jabatan.length} Jabatan
-                                </span>
-                              ) : (
-                                <span className="oprec-user-preview__div-badge oprec-user-preview__div-badge--muted">
-                                  1 Jabatan
-                                </span>
-                              )}
-                            </div>
                           </div>
                         ))}
                       </div>
@@ -2030,7 +2063,10 @@ export default function OprecBuilder({ oprecId }) {
                             {previewSelectedDivisions.length > 0 && (
                               <button
                                 type="button"
-                                onClick={() => setPreviewSelectedDivisions([])}
+                                onClick={() => {
+                                  setPreviewSelectedDivisions([]);
+                                  setPreviewSelectedJabatan({ 1: "", 2: "", 3: "" });
+                                }}
                                 className="oprec-division-reset-btn"
                                 title="Reset semua pilihan divisi"
                               >
@@ -2038,6 +2074,112 @@ export default function OprecBuilder({ oprecId }) {
                                 <span>Reset Pilihan</span>
                               </button>
                             )}
+                          </div>
+
+                          {/* 3 Dropdown Jabatan Berjejer Horizontal di Live Preview */}
+                          <div className="oprec-jabatan-choices-row" role="region" aria-label="Pratinjau Pilihan Jabatan Divisi">
+                            {[1, 2, 3].map((rank) => {
+                              const divVal = previewSelectedDivisions[rank - 1];
+                              const division = divVal
+                                ? (data.divisi_tersedia || []).find(
+                                    (d, idx) =>
+                                      String(d.nama) === String(divVal) ||
+                                      String(idx) === String(divVal)
+                                  )
+                                : null;
+                              const isUnlocked = Boolean(division);
+                              const positions = division
+                                ? (Array.isArray(division.jabatan) && division.jabatan.length > 0
+                                    ? division.jabatan
+                                    : getDefaultJabatan(division.nama))
+                                : [];
+                              const currentChoice = previewSelectedJabatan[rank] || "";
+
+                              return (
+                                <div
+                                  key={rank}
+                                  className={`oprec-jabatan-slot ${
+                                    isUnlocked
+                                      ? "oprec-jabatan-slot--active"
+                                      : "oprec-jabatan-slot--blocked"
+                                  }`}
+                                >
+                                  <div className="oprec-jabatan-slot__header">
+                                    <span className="oprec-jabatan-slot__rank-badge">
+                                      Pilihan #{rank}
+                                    </span>
+                                    {isUnlocked ? (
+                                      <span
+                                        className="oprec-jabatan-slot__div-badge"
+                                        title={division.nama_lengkap || division.nama}
+                                      >
+                                        {division.nama}
+                                      </span>
+                                    ) : (
+                                      <span className="oprec-jabatan-slot__locked-badge">
+                                        <Lock size={10} aria-hidden="true" />
+                                        <span>Terkunci</span>
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div className="oprec-jabatan-slot__body">
+                                    <label
+                                      htmlFor={`preview-jabatan-select-${rank}`}
+                                      className="oprec-jabatan-slot__label"
+                                    >
+                                      Jabatan {isUnlocked ? `di ${division.nama}` : `Pilihan ${rank}`}
+                                      {isUnlocked && <b aria-label="wajib"> *</b>}
+                                    </label>
+                                    <div className="oprec-jabatan-slot__select-wrap">
+                                      <select
+                                        id={`preview-jabatan-select-${rank}`}
+                                        className="oprec-jabatan-slot__select"
+                                        disabled={!isUnlocked}
+                                        value={currentChoice}
+                                        onChange={(e) => {
+                                          setPreviewSelectedJabatan((prev) => ({
+                                            ...prev,
+                                            [rank]: e.target.value,
+                                          }));
+                                        }}
+                                      >
+                                        {!isUnlocked ? (
+                                          <option value="" disabled>
+                                            Pilih divisi ke-{rank} terlebih dahulu...
+                                          </option>
+                                        ) : positions.length > 1 ? (
+                                          <>
+                                            <option value="" disabled>
+                                              -- Pilih Jabatan di {division.nama} --
+                                            </option>
+                                            {positions.map((pos) => (
+                                              <option key={pos} value={pos}>
+                                                {pos}
+                                              </option>
+                                            ))}
+                                          </>
+                                        ) : (
+                                          positions.map((pos) => (
+                                            <option key={pos} value={pos}>
+                                              {pos}
+                                            </option>
+                                          ))
+                                        )}
+                                      </select>
+                                    </div>
+
+                                    {isUnlocked && (
+                                      <small className="oprec-jabatan-slot__hint">
+                                        {positions.length > 1
+                                          ? `${positions.length} opsi jabatan dapat dipilih`
+                                          : "Otomatis terpilih (jabatan tunggal)"}
+                                      </small>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       )}

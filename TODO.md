@@ -23,6 +23,23 @@
     - Tombol `↺ Reset Default` untuk mengembalikan susunan jabatan ke standar sistem.
     - Validasi minimal 1 jabatan pada setiap divisi.
   - Pembaruan live preview kartu divisi (Mode 1 & Mode 2) untuk menampilkan badge jabatan / jumlah jabatan aktif.
+- [x] **Pembersihan Teks Jumlah Jabatan Dibuka (User & Admin)**:
+  - Menghapus badge/keterangan jumlah jabatan ("X Jabatan", "1 Jabatan", "X Jabatan dibuka") dari seluruh antarmuka sisi user dan admin sesuai permintaan pengguna.
+  - Pada Admin OprecBuilder: badge chip ringkasan divisi (`.oprec-builder__chip-badge`) dan badge live preview dihapus; menyisakan nama divisi murni tanpa distraksi kuantitas jabatan.
+  - Pada Admin Overview (`page.jsx`): menghapus teks suffix `· ${division.jabatan.length} JABATAN`.
+  - Pada Sisi User (`Oprec.jsx` & `OprecDetailModal.jsx`): menghapus badge count jabatan (`.oprec-division__quota`, `.oprec-modal-div-quota`).
+  - Pembersihan dead code CSS (`.oprec-builder__chip-badge`, `.oprec-division__quota`, `.oprec-modal-div-quota`, `.oprec-user-preview__div-positions`).
+- [x] **3 Dropdown Horizontal Jabatan Divisi Dinamis (User & Live Preview Admin)**:
+  - Menyediakan 3 slot dropdown jabatan berjejer horizontal tepat di bawah grid pilihan divisi dan toolbar reset.
+  - State Blocked / Terkunci (Divisi belum dipilih): berlatar abu-abu muted (`#f1f5f9`), border dashed tipis, kursor blok `not-allowed`, dengan placeholder informatif dan badge status "Terkunci".
+  - State Active / Terbuka Dinamis (Saat divisi dipilih sesuai prioritas #1, #2, #3):
+    - Slot otomatis aktif dengan border kontras biru, kursor pointer, dan badge nama divisi terkait.
+    - Menampilkan opsi jabatan sesuai pengaturan divisi di admin.
+    - Untuk divisi dengan banyak opsi (misal BPH): menampilkan dropdown pilihan lengkap (Wakil Ketua Umum, Sekretaris 2, Bendahara 2) dengan prompt pemilihan.
+    - Untuk divisi dengan 1 opsi tunggal (misal PSDM, Humas, Kominfo): dropdown otomatis terisi langsung dengan jabatan tunggal tersebut ("Staff Divisi ...").
+    - Saat tombol "Reset Pilihan" ditekan, ketiga dropdown otomatis dikosongkan dan kembali ke status terkunci abu-abu / not-allowed.
+  - Live Preview Builder Admin: terintegrasi penuh secara reaktif dengan pilihan divisi simulasi admin di panel pratinjau.
+  - Backend & Validasi: controller pendaftaran (`OprecRegistrationController.php`), API forwarder (`oprecSubmission.js`), dan validasi client (`lib/oprec.js`) memvalidasi dan menyimpan `jabatan_pilihan_1`, `jabatan_pilihan_2`, `jabatan_pilihan_3` ke dalam `form_data` (JSONB) pendaftaran.
 - [x] **Verifikasi Menyeluruh**:
   - 41 tes backend PHPUnit (322 assertions) lulus 100%.
   - 20 tes unit frontend Node.js lulus 100%.
