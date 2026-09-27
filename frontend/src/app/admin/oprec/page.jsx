@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import OprecCreateDialog from "./OprecCreateDialog";
 import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
 import { api } from "@/services/api";
+import { getOprecTableFields, getRegistrantFieldValue, getRegistrantFormData } from "@/lib/oprecRegistrants";
 import { AdminErrorNotice } from "../AdminErrorNotice";
 import { Search, X, FileText, RefreshCw, Calendar, Pencil, Trash2 } from "lucide-react";
 import "./oprec-create-dialog.css";
@@ -25,14 +26,7 @@ const oprecEditHref = (oprec) => `/admin/oprec/${encodeURIComponent(String(oprec
 
 function getRegistrantName(r) {
   if (!r) return "Peserta";
-  let fd = r.formData;
-  if (typeof fd === "string") {
-    try {
-      fd = JSON.parse(fd);
-    } catch {
-      fd = null;
-    }
-  }
+  const fd = getRegistrantFormData(r);
   const fromForm =
     fd?.nama ||
     fd?.nama_lengkap ||
@@ -48,6 +42,10 @@ export default function AdminOprecPage() {
   const [oprecs, setOprecs] = useState([]);
   const [selectedOprec, setSelectedOprec] = useState(null);
   const [registrants, setRegistrants] = useState([]);
+  const [registrantPage, setRegistrantPage] = useState(1);
+  const [registrantPages, setRegistrantPages] = useState(1);
+  const [registrantTotal, setRegistrantTotal] = useState(0);
+  const requestId = useRef(0);
   const [loading, setLoading] = useState(true);
   const [loadingRegistrants, setLoadingRegistrants] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -71,7 +69,6 @@ export default function AdminOprecPage() {
       setOprecs(list);
       const nextSelected = list.find((item) => item.id === selectedOprec?.id) || list[0] || null;
       setSelectedOprec(nextSelected);
-      if (nextSelected) fetchRegistrants(nextSelected.id);
     } catch (err) {
       setLoadError(err.message || "Gagal memuat OPREC.");
     } finally {
@@ -79,17 +76,24 @@ export default function AdminOprecPage() {
     }
   };
 
-  const fetchRegistrants = async (oprecId) => {
+  const fetchRegistrants = async (oprecId, page = registrantPage, term = search, division = divisionFilter) => {
     if (!oprecId) return;
+    const currentRequest = ++requestId.current;
     setLoadingRegistrants(true);
     setRegistrantError("");
     try {
-      const res = await api.get(`/admin/oprec/${oprecId}/registrants`);
+      const res = await api.get(`/admin/oprec/${oprecId}/registrants`, { params: { page, search: term.trim(), division: division === "all" ? undefined : division } });
+      if (currentRequest !== requestId.current) return;
       setRegistrants(res.data?.data || []);
+      setRegistrantPages(Math.max(1, Number(res.data?.last_page) || 1));
+      setRegistrantTotal(Number(res.data?.total) || 0);
     } catch (err) {
+      if (currentRequest !== requestId.current) return;
+      setRegistrants([]);
+      setRegistrantTotal(0);
       setRegistrantError(err.message || "Gagal memuat pendaftar OPREC.");
     } finally {
-      setLoadingRegistrants(false);
+      if (currentRequest === requestId.current) setLoadingRegistrants(false);
     }
   };
 
@@ -97,9 +101,19 @@ export default function AdminOprecPage() {
     fetchOprecs();
   }, []);
 
+  useEffect(() => {
+    if (!selectedOprec?.id) return;
+    setLoadingRegistrants(true);
+    const timer = setTimeout(() => fetchRegistrants(selectedOprec.id, registrantPage, search, divisionFilter), 250);
+    return () => { clearTimeout(timer); requestId.current += 1; };
+  }, [selectedOprec?.id, registrantPage, search, divisionFilter]);
+
   const handleSelectOprec = (oprec) => {
     setSelectedOprec(oprec);
-    fetchRegistrants(oprec.id);
+    setRegistrants([]);
+    setRegistrantTotal(0);
+    setVerifyModal({ isOpen: false, registrant: null });
+    setRegistrantPage(1);
   };
 
   const handleDeleteOprec = async (oprec) => {
@@ -108,29 +122,15 @@ export default function AdminOprecPage() {
       await api.delete(`/admin/oprec/${oprec.id}`);
       setSelectedOprec(null);
       setRegistrants([]);
+      setRegistrantTotal(0);
       await fetchOprecs();
     } catch (err) {
       setLoadError(err.response?.data?.message || err.message || "Pendaftaran belum dapat dihapus.");
     }
   };
 
-  // Filter registrants
-  const filteredRegistrants = registrants.filter((r) => {
-    const candidateName = getRegistrantName(r);
-    const matchSearch = search
-      ? r.nim?.toLowerCase().includes(search.toLowerCase()) ||
-        candidateName.toLowerCase().includes(search.toLowerCase()) ||
-        r.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
-        r.user?.email?.toLowerCase().includes(search.toLowerCase())
-      : true;
-    const matchDiv =
-      divisionFilter === "all"
-        ? true
-        : r.divisiPilihan1 === parseInt(divisionFilter, 10) ||
-          r.divisiPilihan2 === parseInt(divisionFilter, 10) ||
-          r.divisiPilihan3 === parseInt(divisionFilter, 10);
-    return matchSearch && matchDiv;
-  });
+  const tableFields = getOprecTableFields(selectedOprec?.formFields);
+  const tableColumnCount = 6 + tableFields.length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -201,8 +201,8 @@ export default function AdminOprecPage() {
               <p>Informasi pendaftaran dan tahapan seleksi calon anggota HIMANIKA.</p>
             </div>
             <div className="oprec-admin-overview__count">
-              <strong>{registrants.length}</strong>
-              <span>Berkas masuk</span>
+              <strong>{registrantTotal}</strong>
+              <span>{search || divisionFilter !== "all" ? "Hasil filter" : "Berkas masuk"}</span>
             </div>
           </div>
 
@@ -275,15 +275,16 @@ export default function AdminOprecPage() {
               <input
                 type="text"
                 placeholder="Cari NIM atau nama..."
+                maxLength={100}
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setRegistrantPage(1); }}
                 className="pl-8 pr-3 py-1.5 rounded-none border border-slate-300 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 min-w-[200px]"
               />
             </div>
 
             <select
               value={divisionFilter}
-              onChange={(e) => setDivisionFilter(e.target.value)}
+              onChange={(e) => { setDivisionFilter(e.target.value); setRegistrantPage(1); }}
               className="px-2.5 py-1.5 rounded-none border border-slate-300 text-xs font-mono text-slate-800 bg-white focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 cursor-pointer"
             >
               <option value="all">Semua Pilihan Divisi</option>
@@ -296,22 +297,26 @@ export default function AdminOprecPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse">
+        <div className="overflow-x-auto" role="region" aria-label="Tabel pendaftar OPREC; geser ke samping untuk melihat seluruh jawaban" tabIndex={0}>
+          <table className="w-full min-w-max text-left text-sm border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
                 <th className="font-mono text-[11px] font-medium uppercase tracking-wider text-slate-500 py-3 px-4">
-                  Calon Anggota
+                  Nama
                 </th>
                 <th className="font-mono text-[11px] font-medium uppercase tracking-wider text-slate-500 py-3 px-4">
                   NIM
                 </th>
                 <th className="font-mono text-[11px] font-medium uppercase tracking-wider text-slate-500 py-3 px-4">
-                  Pilihan Divisi
+                  Tanggal lahir
                 </th>
                 <th className="font-mono text-[11px] font-medium uppercase tracking-wider text-slate-500 py-3 px-4">
-                  Tanggal Masuk
+                  Angkatan
                 </th>
+                <th className="font-mono text-[11px] font-medium uppercase tracking-wider text-slate-500 py-3 px-4">
+                  Pilihan Divisi
+                </th>
+                {tableFields.map((field) => <th key={field.name} scope="col" className="font-mono text-[11px] font-medium uppercase tracking-wider text-slate-500 py-3 px-4 min-w-44 max-w-64" title={field.label || field.name}>{field.label || field.name}</th>)}
                 <th className="font-mono text-[11px] font-medium uppercase tracking-wider text-slate-500 py-3 px-4 text-right">
                   Verifikasi Formulir
                 </th>
@@ -320,18 +325,18 @@ export default function AdminOprecPage() {
             <tbody>
               {loadingRegistrants ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-slate-500 font-mono text-xs">
+                  <td colSpan={tableColumnCount} className="text-center py-12 text-slate-500 font-mono text-xs">
                     Memuat data pendaftar OPREC...
                   </td>
                 </tr>
-              ) : filteredRegistrants.length === 0 ? (
+              ) : registrants.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-slate-500 font-mono text-xs">
+                  <td colSpan={tableColumnCount} className="text-center py-12 text-slate-500 font-mono text-xs">
                     Belum ada calon anggota pada filter ini.
                   </td>
                 </tr>
               ) : (
-                filteredRegistrants.map((r) => {
+                registrants.map((r) => {
                   const div1 =
                     selectedOprec?.divisiTersedia?.find((d) => String(d.id) === String(r.divisiPilihan1))?.nama ||
                     `Divisi #${r.divisiPilihan1}`;
@@ -362,6 +367,12 @@ export default function AdminOprecPage() {
                           {r.nim}
                         </span>
                       </td>
+                      <td className="py-3 px-4 font-mono text-xs text-slate-700 whitespace-nowrap">
+                        {r.tanggalLahir ? formatOprecDate(`${r.tanggalLahir}T00:00:00`) : "—"}
+                      </td>
+                      <td className="py-3 px-4 text-xs text-slate-700">
+                        {getRegistrantFormData(r).angkatan || "—"}
+                      </td>
                       <td className="py-3 px-4">
                         <div className="text-xs font-medium text-slate-800">
                           1. {div1}
@@ -377,9 +388,12 @@ export default function AdminOprecPage() {
                           </div>
                         )}
                       </td>
-                      <td className="py-3 px-4 font-mono text-xs text-slate-500">
-                        {r.createdAt ? new Date(r.createdAt).toLocaleDateString("id-ID") : "-"}
-                      </td>
+                      {tableFields.map((field) => {
+                        const value = getRegistrantFieldValue(r, field, selectedOprec?.divisiTersedia);
+                        return <td key={field.name} className="py-3 px-4 text-xs text-slate-700 min-w-44 max-w-64 break-words" title={value.downloadUrl ? undefined : value.text}>
+                          {value.downloadUrl ? <a href={value.downloadUrl} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline underline-offset-2">{value.text}</a> : <span className="line-clamp-3 whitespace-pre-wrap">{value.text}</span>}
+                        </td>;
+                      })}
                       <td className="py-3 px-4 text-right">
                         <button
                           type="button"
@@ -398,6 +412,11 @@ export default function AdminOprecPage() {
             </tbody>
           </table>
         </div>
+        {registrantPages > 1 && <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-4 py-3 text-xs text-slate-600">
+          <span>Halaman {registrantPage} dari {registrantPages}</span>
+          <button type="button" className="oprec-btn oprec-btn--secondary" disabled={registrantPage <= 1 || loadingRegistrants} onClick={() => setRegistrantPage((page) => page - 1)}>Sebelumnya</button>
+          <button type="button" className="oprec-btn oprec-btn--secondary" disabled={registrantPage >= registrantPages || loadingRegistrants} onClick={() => setRegistrantPage((page) => page + 1)}>Berikutnya</button>
+        </div>}
       </div>
 
       <OprecCreateDialog
@@ -588,7 +607,8 @@ export default function AdminOprecPage() {
                     {Object.entries(verifyModal.registrant.fileUploads).map(([key, fileInfo]) => {
                       const fieldMeta = selectedOprec?.formFields?.find((f) => f.name === key);
                       const label = fieldMeta?.label || key;
-                      const downloadUrl = fileInfo?.downloadUrl || `/api/admin/oprec/${selectedOprec.id}/registrants/${verifyModal.registrant.id}/download/${key}`;
+                      const downloadUrl = fileInfo?.downloadUrl;
+                      if (!downloadUrl) return null;
                       return (
                         <div key={key} className="p-3 border border-slate-200 bg-white flex items-center justify-between gap-3">
                           <span className="text-xs font-medium text-slate-800">{label}</span>

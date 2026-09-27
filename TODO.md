@@ -4,6 +4,26 @@
 > Last Updated: 25 September 2026
 > Referensi: [PRD.md](./PRD.md) | [Architecture.md](./architecture.md)
 
+## Tabel pendaftar OPREC dinamis (27 September 2026)
+
+- [x] Tabel admin menampilkan kolom tetap Nama, NIM, Tanggal lahir, Angkatan, dan Pilihan divisi; semua field tambahan dari skema admin menjadi kolom berurutan, termasuk pertanyaan khusus divisi. Peserta di luar sasaran ditandai "Tidak berlaku", berkas memakai tautan unduh privat.
+- [x] Filter pencarian/divisi dan paginasi diproses di server untuk seluruh pendaftar, bukan hanya 20 baris pertama. Respons lama diabaikan saat periode/filter berubah; fallback URL unduh yang tidak valid dihapus.
+- [x] Build produksi Next.js serta tes helper tabel dan endpoint OPREC lulus.
+- [ ] Uji visual dan unduh berkas memakai sesi admin nyata di browser, termasuk tabel dengan banyak kolom pada layar mobile.
+
+## Tipe input Link OPREC (27 September 2026)
+
+- [x] Builder OPREC menyediakan tipe input `Link`; pratinjau dan formulir peserta memakai kontrol URL dengan autofill URL.
+- [x] Validasi browser dan Laravel hanya menerima URL HTTP/HTTPS yang valid. Skema server juga menolak tipe field yang tidak dikenal sebelum menyimpan jawaban.
+
+## Footer sidebar admin desktop (27 September 2026)
+
+- [x] Footer sidebar desktop tidak lagi membaca state drawer mobile. Avatar dan tombol keluar kembali terpusat sebagai ikon ketika sidebar ringkas; label hanya tampil ketika sidebar desktop di-hover/terbuka.
+
+## Floating navigation editor OPREC (27 September 2026)
+
+- [x] Rail navigasi cepat editor OPREC kembali berada di sisi kiri editor. Posisi mengikuti batas sidebar yang terlihat melalui `ResizeObserver`, tanpa membaca konteks sidebar dari luar provider; ini juga memperbaiki runtime error pada halaman edit OPREC.
+
 ## Audit kesesuaian `architecture.md` (22 September 2026)
 
 ### Perbaikan Bug Hover Sidebar Admin & Pemisahan Mobile Drawer (27 September 2026)

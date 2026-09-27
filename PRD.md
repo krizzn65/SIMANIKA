@@ -242,7 +242,7 @@ Poster berada di area pendaftaran. Tidak ada section timeline/benefit terpisah.
   belum diterima, masih diproses, atau data tidak ditemukan. Lookup hasil tidak perlu login.
 - FAQ menjadi section terakhir sebelum footer.
 
-Form mendukung text, email, tel, number, date, textarea, select, radio, checkbox, dan
+Form mendukung text, email, tel, url (Link), number, date, textarea, select, radio, checkbox, dan
 file. NIM serta tanggal lahir wajib tersedia dalam schema untuk pencocokan hasil;
 kolom lain, opsi, kewajiban, dan batas berkas ditentukan admin. Hasil seleksi tidak
 tersedia pada payload publik halaman. Endpoint lookup memakai POST, no-store,

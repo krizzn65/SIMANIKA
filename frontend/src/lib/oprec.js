@@ -9,7 +9,7 @@ export function getDefaultJabatan(nama) {
 
 const text = (value) => typeof value === "string" ? value.trim() : "";
 const count = (value) => Number.isSafeInteger(value) && value >= 0 ? value : null;
-const FIELD_TYPES = new Set(["text", "email", "tel", "number", "date", "textarea", "select", "radio", "checkbox", "file"]);
+const FIELD_TYPES = new Set(["text", "email", "tel", "url", "number", "date", "textarea", "select", "radio", "checkbox", "file"]);
 const FILE_TYPES = [".pdf", ".jpg", ".jpeg", ".png"];
 const RESERVED_KEYS = new Set(["__proto__", "constructor", "prototype", "oprec_id", "schema_version"]);
 
@@ -26,6 +26,14 @@ export function safePosterUrl(value) {
     const url = new URL(value);
     return ["https:", "http:"].includes(url.protocol) && !url.username && !url.password ? url.href : null;
   } catch { return null; }
+}
+
+export function validHttpUrl(value) {
+  if (typeof value !== "string" || !value.trim() || value !== value.trim()) return false;
+  try {
+    const url = new URL(value);
+    return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password && Boolean(url.hostname);
+  } catch { return false; }
 }
 
 export function normalizeFields(fields = []) {
@@ -211,6 +219,7 @@ export function validateOprecForm(fields, form, now = Date.now(), divisions = []
     else if (field.name === "tanggal_lahir" && !validBirthDate(value, now)) errors[field.name] = "Isi tanggal lahir yang valid.";
     else if (field.type === "date" && (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(Date.parse(value)) || new Date(value).toISOString().slice(0, 10) !== value)) errors[field.name] = "Isi tanggal yang valid.";
     else if (field.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) errors[field.name] = "Isi alamat email yang valid.";
+    else if (field.type === "url" && !validHttpUrl(value)) errors[field.name] = "Isi link http:// atau https:// yang valid.";
     else if (field.type === "number" && (!Number.isFinite(Number(value)) || (field.min !== null && Number(value) < field.min) || (field.max !== null && Number(value) > field.max))) errors[field.name] = "Angka berada di luar batas yang diperbolehkan.";
     else if (["select", "radio"].includes(field.type) && !field.options.some((option) => option.value === value)) errors[field.name] = "Pilih salah satu pilihan yang tersedia.";
     else if (field.type === "checkbox" && value !== "on") errors[field.name] = "Nilai persetujuan tidak valid.";

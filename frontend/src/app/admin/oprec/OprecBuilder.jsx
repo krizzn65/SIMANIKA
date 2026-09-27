@@ -96,6 +96,7 @@ const fieldTypes = [
   ["textarea", "Paragraf"],
   ["email", "Email"],
   ["tel", "Nomor telepon"],
+  ["url", "Link"],
   ["number", "Angka"],
   ["date", "Tanggal"],
   ["select", "Pilihan dropdown"],
@@ -297,38 +298,32 @@ export default function OprecBuilder({ oprecId }) {
         setShowFloatingNav(isPast);
       }
 
-      // Hitung posisi horizontal (kiri) agar persis berada di sebelah kiri kartu builder (sesuai kotak merah)
+      // Pertahankan dock di sisi kiri editor, dengan tepi sidebar yang terlihat
+      // sebagai batas aman saat animasi lebar sidebar berlangsung.
       const builderRoot = builderRootRef.current || document.querySelector(".oprec-builder");
       if (builderRoot) {
         const rootRect = builderRoot.getBoundingClientRect();
-
-        const sidebarW = 76;
+        const sidebar = document.querySelector(".admin-layout-root > aside");
+        const sidebarRight = sidebar?.getBoundingClientRect().right ?? 76;
         const dockWidth = 46;
         const gap = 12;
-
-        // Posisi target tepat di sebelah kiri kartu builder (sesuai area merah yang ditandai pengguna)
-        let leftPx = rootRect.left - dockWidth - gap;
-
-        // Jika ruang di sebelah kiri kartu terlalu sempit (layar sempit), jaga agar tidak tertutup sidebar
-        if (leftPx < sidebarW + 8) {
-          leftPx = sidebarW + 8;
-        }
-
+        const leftPx = Math.max(sidebarRight + 8, rootRect.left - dockWidth - gap);
         setNavLeftPos(`${Math.round(leftPx)}px`);
       }
     };
 
     // Jalankan pengecekan langsung saat render/tab berganti
     checkVisibilityAndPosition();
-
-    // ResizeObserver untuk memantau perubahan ukuran kartu builder secara real-time
+    // ResizeObserver mengikuti perpindahan editor dan animasi lebar sidebar.
     let resizeObserver;
     const builderRoot = builderRootRef.current || document.querySelector(".oprec-builder");
-    if (builderRoot && typeof ResizeObserver !== "undefined") {
+    const desktopSidebar = document.querySelector(".admin-layout-root > aside");
+    if (typeof ResizeObserver !== "undefined") {
       resizeObserver = new ResizeObserver(() => {
         checkVisibilityAndPosition();
       });
-      resizeObserver.observe(builderRoot);
+      if (builderRoot) resizeObserver.observe(builderRoot);
+      if (desktopSidebar) resizeObserver.observe(desktopSidebar);
     }
 
     // Event listener scroll dengan capture: true agar menangkap scroll di container manapun (.admin-main-wrapper, window, dll)
@@ -758,7 +753,7 @@ export default function OprecBuilder({ oprecId }) {
               maxSizeMB: Number(field.maxSizeMB || 5),
             }
           : {}),
-        ...(["text", "email", "tel", "textarea"].includes(field.type)
+        ...(["text", "email", "tel", "url", "textarea"].includes(field.type)
           ? {
               maxLength: Number(
                 field.maxLength || (field.type === "textarea" ? 3000 : 255)
@@ -862,6 +857,8 @@ export default function OprecBuilder({ oprecId }) {
                 ? "date"
                 : f.type === "number"
                 ? "number"
+                : f.type === "url"
+                ? "url"
                 : "text"
             }
             className="oprec-user-preview__field-input"
