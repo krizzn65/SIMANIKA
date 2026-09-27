@@ -152,29 +152,46 @@ export const MobileSidebar = ({
         </div>
         <AnimatePresence>
           {open && (
-            <motion.div
-              initial={{ x: "-100%", opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: "-100%", opacity: 0 }}
-              transition={{
-                duration: 0.25,
-                ease: "easeInOut",
-              }}
-              className={cn(
-                "fixed h-full w-full inset-0 bg-gradient-to-b from-[#155EEF] via-[#104ECC] to-[#0A3CB3] p-6 z-[100] flex flex-col justify-between overflow-y-auto text-white shadow-2xl",
-                className
-              )}
-            >
-              <button
-                type="button"
-                className="absolute right-6 top-6 z-50 flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/25 hover:text-blue-100"
+            <>
+              {/* Backdrop Overlay for closing on outside tap */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
                 onClick={() => setOpen(false)}
-                aria-label="Tutup menu admin"
+                className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[90]"
+                aria-hidden="true"
+              />
+
+              {/* Mobile Drawer sliding from the RIGHT */}
+              <motion.div
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{
+                  duration: 0.26,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className={cn(
+                  "fixed top-0 right-0 bottom-0 h-full h-[100dvh] w-[72vw] sm:w-[50vw] max-w-[340px] min-w-[260px]",
+                  "bg-gradient-to-b from-[#155EEF] via-[#104ECC] to-[#0A3CB3]",
+                  "p-5 z-[100] flex flex-col justify-between overflow-y-auto text-white shadow-2xl",
+                  "border-l border-blue-400/30",
+                  className
+                )}
               >
-                <X aria-hidden="true" className="w-5 h-5" />
-              </button>
-              {children}
-            </motion.div>
+                <button
+                  type="button"
+                  className="absolute right-4 top-4 z-50 flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/25 hover:text-blue-100"
+                  onClick={() => setOpen(false)}
+                  aria-label="Tutup menu admin"
+                >
+                  <X aria-hidden="true" className="w-5 h-5" />
+                </button>
+                {children}
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
       </div>

@@ -173,7 +173,10 @@ const toOptions = (value) =>
     .filter(Boolean)
     .map((line) => ({ value: line, label: line }));
 
-const fromOptions = (options) => (options || []).map((item) => item.label).join("\n");
+const fromOptions = (options) =>
+  (options || [])
+    .map((item) => (typeof item === "string" ? item : item?.label || item?.value || ""))
+    .join("\n");
 
 const formatDisplayDate = (val) => {
   if (!val) return null;
@@ -1710,10 +1713,18 @@ export default function OprecBuilder({ oprecId }) {
                             Pilihan Angkatan (Satu tahun per baris)
                             <textarea
                               rows={3}
-                              value={fromOptions(field.options)}
-                              onChange={(e) =>
-                                setField(index, { options: toOptions(e.target.value) })
+                              value={
+                                field.raw_options !== undefined
+                                  ? field.raw_options
+                                  : fromOptions(field.options)
                               }
+                              onChange={(e) => {
+                                const rawVal = e.target.value;
+                                setField(index, {
+                                  raw_options: rawVal,
+                                  options: toOptions(rawVal),
+                                });
+                              }}
                               placeholder={"2023\n2024\n2025\n2026"}
                             />
                           </label>
@@ -1952,10 +1963,12 @@ export default function OprecBuilder({ oprecId }) {
                                       <span className="oprec-builder__target-chip-box" aria-hidden="true">
                                         {isChecked ? "✓" : ""}
                                       </span>
-                                      <span className="oprec-builder__target-chip-name">{divName}</span>
-                                      {d.nama_lengkap && d.nama_lengkap !== divName && (
-                                        <span className="oprec-builder__target-chip-sub">({d.nama_lengkap})</span>
-                                      )}
+                                      <div className="oprec-builder__target-chip-text">
+                                        <span className="oprec-builder__target-chip-name">{divName}</span>
+                                        {d.nama_lengkap && d.nama_lengkap !== divName && (
+                                          <span className="oprec-builder__target-chip-sub">({d.nama_lengkap})</span>
+                                        )}
+                                      </div>
                                     </label>
                                   );
                                 })}
@@ -1974,10 +1987,18 @@ export default function OprecBuilder({ oprecId }) {
                             Opsi Pilihan (Satu opsi per baris)
                             <textarea
                               rows={3}
-                              value={fromOptions(field.options)}
-                              onChange={(e) =>
-                                setField(actualIndex, { options: toOptions(e.target.value) })
+                              value={
+                                field.raw_options !== undefined
+                                  ? field.raw_options
+                                  : fromOptions(field.options)
                               }
+                              onChange={(e) => {
+                                const rawVal = e.target.value;
+                                setField(actualIndex, {
+                                  raw_options: rawVal,
+                                  options: toOptions(rawVal),
+                                });
+                              }}
                               placeholder={"Pilihan A\nPilihan B\nPilihan C"}
                             />
                           </label>
