@@ -13,8 +13,22 @@ import {
   Check,
   X,
   Pencil,
+  Calendar,
 } from "lucide-react";
 import "./oprec-create-dialog.css";
+
+function formatOprecDate(dateStr) {
+  if (!dateStr) return "";
+  try {
+    return new Date(dateStr).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return String(dateStr);
+  }
+}
 
 export default function AdminOprecPage() {
   const [oprecs, setOprecs] = useState([]);
@@ -147,10 +161,7 @@ export default function AdminOprecPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <span className="font-mono text-[11px] tracking-wider text-blue-600 uppercase block font-medium">
-            // KELOLA OPREC · PENDAFTARAN
-          </span>
-          <h1 className="text-xl font-semibold tracking-tight text-slate-900 mt-0.5">
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900">
             Kelola Pendaftaran OPREC
           </h1>
           <p className="text-xs text-slate-500 mt-1">
@@ -224,7 +235,6 @@ export default function AdminOprecPage() {
 
           <div className="oprec-admin-overview__registration">
             <div className="oprec-admin-overview__registration-main">
-              <span className="oprec-admin-overview__step">01 // PENDAFTARAN</span>
               <h3>{selectedOprec.headline || "Pendaftaran calon anggota HIMANIKA"}</h3>
               <p>{selectedOprec.deskripsi || "Pendaftaran calon anggota pengurus HIMANIKA untuk periode ini."}</p>
               <div className="oprec-admin-overview__meta">
@@ -235,24 +245,14 @@ export default function AdminOprecPage() {
                     ? "STATUS: BERLANGSUNG"
                     : "STATUS: SELESAI"}
                 </span>
-                {selectedOprec.tanggalBuka && (
-                  <span>
-                    MULAI:{" "}
-                    {new Date(selectedOprec.tanggalBuka).toLocaleDateString("id-ID", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </span>
-                )}
-                {selectedOprec.tanggalTutup && (
-                  <span>
-                    BERAKHIR:{" "}
-                    {new Date(selectedOprec.tanggalTutup).toLocaleDateString("id-ID", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                {(selectedOprec.tanggalBuka || selectedOprec.tanggalTutup) && (
+                  <span className="oprec-admin-overview__date-range">
+                    <Calendar size={13} aria-hidden="true" />
+                    <span>
+                      {selectedOprec.tanggalBuka && selectedOprec.tanggalTutup
+                        ? `${formatOprecDate(selectedOprec.tanggalBuka)} - ${formatOprecDate(selectedOprec.tanggalTutup)}`
+                        : formatOprecDate(selectedOprec.tanggalBuka || selectedOprec.tanggalTutup)}
+                    </span>
                   </span>
                 )}
               </div>
@@ -325,10 +325,7 @@ export default function AdminOprecPage() {
       <div className="border border-slate-300 bg-white rounded-none">
         <div className="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <span className="font-mono text-[11px] text-blue-600 uppercase tracking-wider block font-medium">
-              // DATA CALON ANGGOTA
-            </span>
-            <h2 className="text-base font-semibold text-slate-900 mt-0.5">
+            <h2 className="text-base font-semibold text-slate-900">
               Daftar Berkas Calon Anggota
             </h2>
             <p className="text-xs text-slate-500">

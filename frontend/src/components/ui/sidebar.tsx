@@ -3,7 +3,8 @@
 import { cn } from "@/lib/utils";
 import Link, { type LinkProps } from "next/link";
 import Image from "next/image";
-import React, { useState, createContext, useContext } from "react";
+import React, { useState, useEffect, createContext, useContext } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 
@@ -118,6 +119,12 @@ export const MobileSidebar = ({
   ...props
 }: React.ComponentProps<"div">) => {
   const { open, setOpen } = useSidebar();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <>
       <div
@@ -150,51 +157,56 @@ export const MobileSidebar = ({
             <Menu className="w-5 h-5 cursor-pointer" />
           </button>
         </div>
-        <AnimatePresence>
-          {open && (
-            <>
-              {/* Backdrop Overlay for closing on outside tap */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                onClick={() => setOpen(false)}
-                className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[90]"
-                aria-hidden="true"
-              />
-
-              {/* Mobile Drawer sliding from the RIGHT */}
-              <motion.div
-                initial={{ x: "100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "100%" }}
-                transition={{
-                  duration: 0.26,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                className={cn(
-                  "fixed top-0 right-0 bottom-0 h-full h-[100dvh] w-[72vw] sm:w-[50vw] max-w-[340px] min-w-[260px]",
-                  "bg-gradient-to-b from-[#155EEF] via-[#104ECC] to-[#0A3CB3]",
-                  "p-5 z-[100] flex flex-col justify-between overflow-y-auto text-white shadow-2xl",
-                  "border-l border-blue-400/30",
-                  className
-                )}
-              >
-                <button
-                  type="button"
-                  className="absolute right-4 top-4 z-50 flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/25 hover:text-blue-100"
-                  onClick={() => setOpen(false)}
-                  aria-label="Tutup menu admin"
-                >
-                  <X aria-hidden="true" className="w-5 h-5" />
-                </button>
-                {children}
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
       </div>
+
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {open && (
+              <>
+                {/* Backdrop Overlay for closing on outside tap */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  onClick={() => setOpen(false)}
+                  className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[9990]"
+                  aria-hidden="true"
+                />
+
+                {/* Mobile Drawer sliding from the RIGHT */}
+                <motion.div
+                  initial={{ x: "100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "100%" }}
+                  transition={{
+                    duration: 0.26,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  className={cn(
+                    "fixed top-0 right-0 bottom-0 h-full h-[100dvh] w-[72vw] sm:w-[50vw] max-w-[340px] min-w-[260px]",
+                    "bg-gradient-to-b from-[#155EEF] via-[#104ECC] to-[#0A3CB3]",
+                    "p-5 z-[9999] flex flex-col justify-between overflow-y-auto text-white shadow-2xl",
+                    "border-l border-blue-400/30",
+                    className
+                  )}
+                >
+                  <button
+                    type="button"
+                    className="absolute right-4 top-4 z-50 flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white transition-colors hover:bg-white/25 hover:text-blue-100"
+                    onClick={() => setOpen(false)}
+                    aria-label="Tutup menu admin"
+                  >
+                    <X aria-hidden="true" className="w-5 h-5" />
+                  </button>
+                  {children}
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
     </>
   );
 };

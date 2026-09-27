@@ -546,7 +546,7 @@
 }
 
 .oprec-admin-overview__registration h3 {
-  margin: 6px 0 4px;
+  margin: 0 0 4px;
   color: #0a1020;
   font-size: 16px;
   font-weight: 600;
@@ -571,7 +571,7 @@
   margin-top: 12px;
 }
 
-.oprec-admin-overview__meta span:first-child {
+.oprec-admin-overview__meta > span:first-child {
   font: 500 11px/1 "IBM Plex Mono", monospace;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -581,12 +581,51 @@
   color: #1e40af;
 }
 
-.oprec-admin-overview__meta span:not(:first-child) {
+.oprec-admin-overview__meta > span:not(:first-child),
+.oprec-admin-overview__date-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font: 400 12px/1 "IBM Plex Mono", monospace;
   color: #64748b;
 }
 
-.oprec-admin-overview__edit,
+.oprec-admin-overview__date-range svg {
+  flex-shrink: 0;
+  color: #64748b;
+}
+
+.oprec-admin-overview__edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: none;
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 1.5px solid #155eef;
+  border-radius: 0;
+  background: #155eef;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 2px 2px 0 #0f48c2;
+}
+
+.oprec-admin-overview__edit:hover {
+  background: #0f48c2;
+  border-color: #0f48c2;
+  color: #ffffff;
+}
+
+.oprec-admin-overview__edit:active {
+  transform: translate(1px, 1px);
+  box-shadow: none;
+}
+
 .oprec-admin-overview__stage-actions :is(a, button) {
   display: inline-flex;
   align-items: center;
@@ -606,7 +645,6 @@
   transition: all 0.15s ease;
 }
 
-.oprec-admin-overview__edit:hover,
 .oprec-admin-overview__stage-actions :is(a, button):hover {
   background: #eff6ff;
   border-color: #155eef;

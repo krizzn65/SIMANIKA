@@ -280,12 +280,19 @@ export default function OprecBuilder({ oprecId }) {
     if (loading) return;
 
     const checkVisibilityAndPosition = () => {
+      const isDesktop = typeof window !== "undefined" && window.innerWidth >= 768;
+      if (!isDesktop) {
+        // Pada mode mobile, 3 kotak navigasi dihilangkan karena navbar atas sudah sticky
+        setShowFloatingNav(false);
+        setNavLeftPos(null);
+        return;
+      }
+
       const tabsEl = tabsNavRef.current || document.querySelector(".oprec-builder__tabs");
       if (tabsEl) {
         const rect = tabsEl.getBoundingClientRect();
-        // Tabs dianggap tidak terlihat ketika bagian bawahnya sudah tergulung melewati batas bawah navbar sticky
-        const topThreshold = typeof window !== "undefined" && window.innerWidth < 768 ? 105 : 70;
-        const isPast = rect.bottom <= topThreshold;
+        // Tabs dianggap tidak terlihat ketika bagian bawahnya sudah tergulung melewati batas atas topbar (<= 70px)
+        const isPast = rect.bottom <= 70;
         setShowFloatingNav(isPast);
       }
 
@@ -293,12 +300,6 @@ export default function OprecBuilder({ oprecId }) {
       const builderRoot = builderRootRef.current || document.querySelector(".oprec-builder");
       if (builderRoot) {
         const rootRect = builderRoot.getBoundingClientRect();
-        const isDesktop = window.innerWidth >= 768;
-        if (!isDesktop) {
-          // Pada mode mobile, posisi dikontrol 100% oleh CSS (tengah bawah)
-          setNavLeftPos(null);
-          return;
-        }
 
         const sidebarW = 76;
         const dockWidth = 46;

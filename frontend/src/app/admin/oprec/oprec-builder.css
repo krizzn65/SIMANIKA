@@ -2969,36 +2969,6 @@
 
 @media (max-width: 768px) {
   .oprec-builder__floating-nav {
-    left: 50% !important;
-    right: auto !important;
-    top: auto !important;
-    bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
-    transform: translate(-50%, 16px) !important;
-    flex-direction: row !important;
-    gap: 8px !important;
-    padding: 6px 10px !important;
-    border-radius: 9999px !important;
-    background: rgba(255, 255, 255, 0.96) !important;
-    backdrop-filter: blur(14px) !important;
-    -webkit-backdrop-filter: blur(14px) !important;
-    border: 2px solid #0f172a !important;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.22), 2px 2px 0 #0f172a !important;
-  }
-
-  .oprec-builder__floating-nav--visible {
-    transform: translate(-50%, 0) !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
-    visibility: visible !important;
-  }
-
-  .oprec-builder__floating-nav-btn {
-    width: 38px !important;
-    height: 38px !important;
-    border-radius: 9999px !important;
-  }
-
-  .oprec-builder__floating-tooltip {
     display: none !important;
   }
 }
