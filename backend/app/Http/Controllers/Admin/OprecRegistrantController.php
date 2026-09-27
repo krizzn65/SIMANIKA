@@ -14,21 +14,31 @@ class OprecRegistrantController extends Controller
 {
     public function index(Oprec $oprec)
     {
-        return response()->json($oprec->registrations()->with('user:id,email,name')->latest()->paginate(20)->through(function ($item) {
+        return response()->json($oprec->registrations()->with('user:id,email,name')->latest()->paginate(20)->through(function ($item) use ($oprec) {
             $formData = $item->form_data ?? [];
             $formName = $formData['nama'] ?? $formData['nama_lengkap'] ?? $formData['namaLengkap'] ?? null;
+            $fileUploads = [];
+            if (is_array($item->file_uploads)) {
+                foreach ($item->file_uploads as $key => $path) {
+                    if (is_string($path) && $path !== '') {
+                        $fileUploads[$key] = [
+                            'field' => $key,
+                            'downloadUrl' => url("/api/admin/oprec/{$oprec->id}/registrants/{$item->id}/download/{$key}"),
+                        ];
+                    }
+                }
+            }
             return [
                 'id' => $item->id,
                 'user' => $item->user,
                 'name' => (is_string($formName) && trim($formName) !== '') ? trim($formName) : ($item->user?->name ?? 'Peserta'),
                 'nim' => $item->nim,
+                'tanggalLahir' => $item->tanggal_lahir?->format('Y-m-d'),
                 'formData' => $formData,
-                'status' => $item->status,
+                'fileUploads' => $fileUploads,
                 'divisiPilihan1' => $item->divisi_pilihan_1,
                 'divisiPilihan2' => $item->divisi_pilihan_2,
                 'divisiPilihan3' => $item->divisi_pilihan_3,
-                'acceptedDivisionId' => $item->accepted_division_id,
-                'catatan' => $item->catatan,
                 'createdAt' => $item->created_at?->toIso8601String(),
             ];
         }));
