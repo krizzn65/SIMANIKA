@@ -92,6 +92,8 @@ export function normalizeOprec(raw) {
     schemaVersion: String(raw.schemaVersion ?? raw.schema_version ?? "1"),
     formFields: normalizeFields(rawFields),
     formIntro: text(raw.formIntro ?? raw.form_intro),
+    link_grup_wa: typeof (raw.link_grup_wa ?? raw.linkGrupWa) === "string" && (raw.link_grup_wa ?? raw.linkGrupWa).trim() ? (raw.link_grup_wa ?? raw.linkGrupWa).trim() : null,
+    linkGrupWa: typeof (raw.link_grup_wa ?? raw.linkGrupWa) === "string" && (raw.link_grup_wa ?? raw.linkGrupWa).trim() ? (raw.link_grup_wa ?? raw.linkGrupWa).trim() : null,
     divisiTersedia: divisions.map((item, index) => {
       if (!item || !text(item.nama)) throw new Error("Invalid OPREC division");
       const nama = text(item.nama);

@@ -720,6 +720,94 @@
   transform: rotate(-90deg);
 }
 
+/* WhatsApp Group Card (for registered applicants) */
+.waCard {
+  border-top: 3px solid #25d366 !important;
+  background: #ffffffed;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.waCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.waIconBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  background: #e8fbf0;
+  color: #25d366;
+  border: 1px solid #a7f3d0;
+  flex-shrink: 0;
+}
+
+.waTitle {
+  margin: 0 !important;
+  font-size: 15px !important;
+  font-weight: 700;
+  color: #101b2d;
+  line-height: 1.2 !important;
+}
+
+.waSubtitle {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #059669;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.waDesc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ws-muted);
+}
+
+.waButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 14px;
+  background: #25d366;
+  color: #ffffff !important;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none !important;
+  border: 1px solid #1ea952;
+  box-shadow: 3px 3px 0 #128c7e;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.waButton:hover {
+  background: #20bd5a;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #128c7e;
+}
+
+.waButton:active {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 #128c7e;
+}
+
+.waButton:focus-visible {
+  outline: 2px solid #25d366;
+  outline-offset: 2px;
+}
+
 
 @media (max-width: 900px) {
   .columns {

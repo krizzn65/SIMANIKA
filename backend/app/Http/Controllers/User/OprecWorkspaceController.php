@@ -47,6 +47,8 @@ class OprecWorkspaceController extends Controller
                     'tanggalBuka' => $oprec->tanggal_buka?->toIso8601String(),
                     'tanggalTutup' => $oprec->tanggal_tutup?->toIso8601String(),
                     'schemaVersion' => $oprec->schema_version,
+                    'link_grup_wa' => $registration ? $oprec->link_grup_wa : null,
+                    'linkGrupWa' => $registration ? $oprec->link_grup_wa : null,
                     'formFields' => collect($oprec->form_fields ?? [])
                         ->reject(fn ($field) => in_array($field['name'] ?? '', ['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'], true))
                         ->map(fn ($field) => array_merge($field, [
@@ -87,6 +89,8 @@ class OprecWorkspaceController extends Controller
                     'divisiPilihan2' => $registration->divisi_pilihan_2,
                     'divisiPilihan3' => $registration->divisi_pilihan_3,
                     'formData' => $registration->form_data,
+                    'link_grup_wa' => $oprec->link_grup_wa,
+                    'linkGrupWa' => $oprec->link_grup_wa,
                     'status' => $announced ? $registration->status : 'pending',
                     'catatan' => $announced ? $registration->catatan : null,
                     'acceptedDivision' => $announced && $registration->status === 'accepted' ? $acceptedDivision : null,
