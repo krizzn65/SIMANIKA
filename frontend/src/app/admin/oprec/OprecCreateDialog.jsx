@@ -79,7 +79,7 @@ export default function OprecCreateDialog({ open, onClose, onCreated, selectedOp
           periode: data.periode.trim(), status: "draft", headline: data.headline.trim(), deskripsi: data.deskripsi.trim(), poster,
           tanggal_buka: apiDateStart(data.tanggal_buka), tanggal_tutup: apiDateEnd(data.tanggal_tutup),
           schema_version: "1", form_intro: "", form_fields: firstFields,
-          divisi_tersedia: divisionPreview.map((item) => ({ nama: item.nama, nama_lengkap: item.namaLengkap, deskripsi: item.deskripsi, logo: item.logo || null, kuota: null })),
+          divisi_tersedia: divisionPreview.map((item) => ({ nama: item.nama, nama_lengkap: item.namaLengkap, deskripsi: item.deskripsi, logo: item.logo || null, jabatan: item.jabatan || [] })),
           faq: [], pengumuman: { published: false, tanggal: null, pesan: "" },
         });
         onClose(); router.push(`/admin/oprec/${response.data.data.id}/edit`);

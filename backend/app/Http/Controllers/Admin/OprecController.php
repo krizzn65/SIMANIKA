@@ -44,12 +44,12 @@ class OprecController extends Controller
         $data = $request->validated();
         $currentDivisions = $oprec->divisions()->get()->map(fn ($division) => [
             'nama' => $division->nama, 'nama_lengkap' => $division->nama_lengkap,
-            'deskripsi' => $division->deskripsi, 'logo' => $division->logo, 'kuota' => $division->kuota,
+            'deskripsi' => $division->deskripsi, 'logo' => $division->logo, 'jabatan' => $division->jabatan ?? [],
         ])->all();
         $incomingDivisions = collect($data['divisi_tersedia'] ?? [])->map(fn ($division) => [
             'nama' => $division['nama'], 'nama_lengkap' => $division['nama_lengkap'] ?? null,
             'deskripsi' => $division['deskripsi'] ?? null, 'logo' => $division['logo'] ?? null,
-            'kuota' => $division['kuota'] ?? null,
+            'jabatan' => $division['jabatan'] ?? [],
         ])->all();
         $divisionsChanged = array_key_exists('divisi_tersedia', $data) && $incomingDivisions !== $currentDivisions;
         if ($oprec->registrations()->exists()) {

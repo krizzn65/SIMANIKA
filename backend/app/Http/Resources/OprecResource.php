@@ -20,7 +20,7 @@ class OprecResource extends JsonResource
             'divisiTersedia' => $this->divisions->map(fn ($division) => [
                 'id' => $division->id, 'nama' => $division->nama,
                 'namaLengkap' => $division->nama_lengkap, 'deskripsi' => $division->deskripsi,
-                'logo' => $division->logo, 'kuota' => $division->kuota,
+                'logo' => $division->logo, 'jabatan' => $division->jabatan ?? [],
             ])->all(),
             'pengumuman' => [
                 'published' => $this->pengumuman_published,

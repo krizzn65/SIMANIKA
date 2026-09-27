@@ -1142,3 +1142,105 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Division Choices Footer Toolbar & Neo-Arcade Reset Button */
+.oprec-division-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0 !important;
+  min-height: 38px;
+  box-sizing: border-box;
+}
+
+.oprec-division-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono, monospace), monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  letter-spacing: 0.03em;
+  user-select: none;
+}
+
+.oprec-division-counter__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #94a3b8;
+  display: inline-block;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  flex-shrink: 0;
+}
+
+.oprec-division-counter--active .oprec-division-counter__dot {
+  background: #2563eb;
+  box-shadow: 0 0 6px rgba(37, 99, 235, 0.45);
+}
+
+.oprec-division-counter--complete .oprec-division-counter__dot {
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.55);
+}
+
+.oprec-division-reset-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 10px;
+  min-height: 28px;
+  border: 1px solid #fecdd3 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  color: #e11d48 !important;
+  font-family: var(--font-mono, monospace), monospace !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  line-height: 1;
+  box-shadow: 2px 2px 0 rgba(225, 29, 72, 0.08);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  text-decoration: none !important;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.oprec-division-reset-btn:hover {
+  background: #fff1f2 !important;
+  border-color: #f43f5e !important;
+  color: #be123c !important;
+  box-shadow: 2px 2px 0 rgba(225, 29, 72, 0.22);
+}
+
+.oprec-division-reset-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 rgba(225, 29, 72, 0.2);
+}
+
+.oprec-division-reset-btn:focus-visible {
+  outline: 2px solid #e11d48 !important;
+  outline-offset: 2px;
+}
+
+.oprec-division-reset-btn__icon {
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.oprec-division-reset-btn:hover .oprec-division-reset-btn__icon {
+  transform: rotate(-90deg);
+}
+

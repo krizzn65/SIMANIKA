@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { RotateCcw } from "lucide-react";
 import { validateOprecForm } from "@/lib/oprec";
 
 const DEFAULT_DIVISION_LOGOS = {
@@ -373,17 +374,29 @@ export function OprecForm({ oprec, onSuccess }) {
                 );
               })}
             </div>
-            <div className="flex items-center justify-between mt-1">
-              <small aria-live="polite" className="font-mono text-xs text-slate-500">
-                {selectedDivisions.length}/3 divisi dipilih
-              </small>
+            <div className="oprec-division-toolbar">
+              <div
+                className={`oprec-division-counter ${
+                  selectedDivisions.length === 3
+                    ? "oprec-division-counter--complete"
+                    : selectedDivisions.length > 0
+                    ? "oprec-division-counter--active"
+                    : ""
+                }`}
+                aria-live="polite"
+              >
+                <span className="oprec-division-counter__dot" aria-hidden="true" />
+                <span>{selectedDivisions.length} / 3 divisi dipilih</span>
+              </div>
               {selectedDivisions.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setSelectedDivisions([])}
-                  className="text-xs text-red-600 hover:underline font-mono"
+                  className="oprec-division-reset-btn"
+                  title="Reset semua pilihan divisi"
                 >
-                  Reset Pilihan
+                  <RotateCcw size={12} className="oprec-division-reset-btn__icon" aria-hidden="true" />
+                  <span>Reset Pilihan</span>
                 </button>
               )}
             </div>

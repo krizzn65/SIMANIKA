@@ -203,9 +203,9 @@ export function OprecDetailModal({ isOpen, onClose, oprec, stage = null }) {
                   {divisions.map((div, idx) => (
                     <div key={div.id || idx} className="oprec-modal-div-chip">
                       <span className="oprec-modal-div-name">{div.nama}</span>
-                      {div.kuota !== null && div.kuota !== undefined && (
+                      {div.jabatan && div.jabatan.length > 0 && (
                         <span className="oprec-modal-div-quota">
-                          {div.kuota ? `${div.kuota} Kuota` : "Info kuota menyusul"}
+                          {div.jabatan.length} Jabatan
                         </span>
                       )}
                     </div>

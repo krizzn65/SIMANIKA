@@ -32,7 +32,9 @@ class SaveOprecRequest extends FormRequest
             'form_fields.*.accept' => ['nullable', 'array'], 'form_fields.*.accept.*' => [Rule::in(['.pdf', '.jpg', '.jpeg', '.png'])],
             'divisi_tersedia' => ['array', 'max:30'], 'divisi_tersedia.*.nama' => ['required', 'string', 'max:150'],
             'divisi_tersedia.*.nama_lengkap' => ['nullable', 'string', 'max:200'], 'divisi_tersedia.*.deskripsi' => ['nullable', 'string', 'max:500'],
-            'divisi_tersedia.*.logo' => ['nullable', 'string', 'max:2048', function ($attribute, $value, $fail) { if (!(preg_match("~^https?://~i", $value) && filter_var($value, FILTER_VALIDATE_URL)) && !preg_match('~^/images/divisi/[a-zA-Z0-9._-]+\.webp$~', $value)) $fail('Logo harus berupa URL http(s) atau gambar divisi lokal.'); }], 'divisi_tersedia.*.kuota' => ['nullable', 'integer', 'min:0'],
+            'divisi_tersedia.*.logo' => ['nullable', 'string', 'max:2048', function ($attribute, $value, $fail) { if (!(preg_match("~^https?://~i", $value) && filter_var($value, FILTER_VALIDATE_URL)) && !preg_match('~^/images/divisi/[a-zA-Z0-9._-]+\.webp$~', $value)) $fail('Logo harus berupa URL http(s) atau gambar divisi lokal.'); }],
+            'divisi_tersedia.*.jabatan' => ['nullable', 'array'],
+            'divisi_tersedia.*.jabatan.*' => ['required', 'string', 'max:100'],
             'faq' => ['array', 'max:40'], 'faq.*.pertanyaan' => ['required', 'string', 'max:500'], 'faq.*.jawaban' => ['required', 'string', 'max:2000'],
             'pengumuman.published' => ['required', 'boolean'], 'pengumuman.tanggal' => ['nullable', 'date'], 'pengumuman.pesan' => ['nullable', 'string', 'max:2000'],
         ];

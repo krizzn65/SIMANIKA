@@ -54,7 +54,7 @@ class OprecWorkspaceController extends Controller
                         'nama' => $d->nama,
                         'namaLengkap' => $d->nama_lengkap,
                         'deskripsi' => $d->deskripsi,
-                        'kuota' => $d->kuota,
+                        'jabatan' => $d->jabatan ?? [],
                         'logo' => $d->logo,
                     ])->values()->all(),
                     'divisions' => $oprec->divisions->map(fn ($d) => [
@@ -62,7 +62,7 @@ class OprecWorkspaceController extends Controller
                         'nama' => $d->nama,
                         'namaLengkap' => $d->nama_lengkap,
                         'deskripsi' => $d->deskripsi,
-                        'kuota' => $d->kuota,
+                        'jabatan' => $d->jabatan ?? [],
                         'logo' => $d->logo,
                     ])->values()->all(),
                     'pengumuman' => [

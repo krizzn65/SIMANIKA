@@ -75,8 +75,7 @@ class OprecRegistrationController extends Controller
                 }
                 $divisionId = !empty($data['divisi_pilihan_1']) ? (int) $data['divisi_pilihan_1'] : null;
                 if ($divisionId) {
-                    $division = OprecDivision::where('oprec_id', $oprec->id)->lockForUpdate()->findOrFail($divisionId);
-                    if ($division->kuota !== null && $oprec->registrations()->where('divisi_pilihan_1', $divisionId)->count() >= $division->kuota) throw ValidationException::withMessages(['divisi_pilihan_1' => ['Kuota divisi telah penuh.']]);
+                    OprecDivision::where('oprec_id', $oprec->id)->lockForUpdate()->findOrFail($divisionId);
                 }
                 $filePaths = [];
                 $answers = [];
