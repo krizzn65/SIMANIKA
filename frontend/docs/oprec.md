@@ -260,3 +260,11 @@ Halaman `/admin/oprec` telah dirombak total menyelaraskan bahasa desain **Neo-Ar
 - Pembersihan dead code: 10 import ikon mati di `page.jsx` dan 2 import mati di `OprecCreateDialog.jsx` telah dihapus total.
 - Halaman penyusun formulir (`/admin/oprec/[id]/edit`) dirombak total menggunakan layout 3-tab terstruktur (1. Informasi & Jadwal, 2. Kelola Divisi, 3. Pertanyaan Formulir) serta panel pratinjau formulir interaktif real-time yang dapat di-toggle.
 
+## Perombakan Konsep OPREC Mandiri (Pendaftaran Tunggal) — 27 September 2026
+
+Berdasarkan keputusan pengguna, seluruh konsep pemecahan tahap bertingkat ("Tes tulis" dan "Pengumuman" sebagai tahapan terpisah) telah dirombak dan dihapus ke akar-akarnya agar alur OPREC murni terfokus pada Pendaftaran periode baru:
+- **Dialog Pembuatan**: Modal `OprecCreateDialog` tidak lagi menampilkan kartu pemilih 3 jenis tahap. Tombol header "Tambah pendaftaran" langsung membuka formulir pendaftaran periode baru (periode, headline, tanggal buka-tutup, deskripsi, poster) dan berlanjut ke penyusun formulir.
+- **Ringkasan Admin**: Bagian "Tahapan berikutnya //" pada overview `/admin/oprec` telah dihapus. Halaman admin kini murni mengelola pendaftaran periode aktif dan verifikasi berkas calon anggota.
+- **Sidebar Admin**: Menu "Kelola OPREC" kini merupakan item navigasi tunggal langsung ke `/admin/oprec` tanpa dropdown submenu tahap.
+- **Pembersihan Dead Code**: Route `/admin/oprec/test`, `/admin/oprec/announcement`, `/admin/oprec/[id]/stages`, komponen `OprecStageOverview`, `OprecTestBuilder`, stylesheet `oprec-review.css`, controller backend `OprecStageController`, `OprecTestController`, dan route stages telah dihapus tuntas tanpa sisa deadcode.
+

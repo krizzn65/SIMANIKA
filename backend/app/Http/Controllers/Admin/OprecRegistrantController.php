@@ -14,13 +14,24 @@ class OprecRegistrantController extends Controller
 {
     public function index(Oprec $oprec)
     {
-        return response()->json($oprec->registrations()->with('user:id,email,name')->latest()->paginate(20)->through(fn ($item) => [
-            'id' => $item->id, 'user' => $item->user, 'nim' => $item->nim,
-            'formData' => $item->form_data, 'status' => $item->status,
-            'divisiPilihan1' => $item->divisi_pilihan_1, 'divisiPilihan2' => $item->divisi_pilihan_2, 'divisiPilihan3' => $item->divisi_pilihan_3,
-            'acceptedDivisionId' => $item->accepted_division_id, 'catatan' => $item->catatan,
-            'createdAt' => $item->created_at?->toIso8601String(),
-        ]));
+        return response()->json($oprec->registrations()->with('user:id,email,name')->latest()->paginate(20)->through(function ($item) {
+            $formData = $item->form_data ?? [];
+            $formName = $formData['nama'] ?? $formData['nama_lengkap'] ?? $formData['namaLengkap'] ?? null;
+            return [
+                'id' => $item->id,
+                'user' => $item->user,
+                'name' => (is_string($formName) && trim($formName) !== '') ? trim($formName) : ($item->user?->name ?? 'Peserta'),
+                'nim' => $item->nim,
+                'formData' => $formData,
+                'status' => $item->status,
+                'divisiPilihan1' => $item->divisi_pilihan_1,
+                'divisiPilihan2' => $item->divisi_pilihan_2,
+                'divisiPilihan3' => $item->divisi_pilihan_3,
+                'acceptedDivisionId' => $item->accepted_division_id,
+                'catatan' => $item->catatan,
+                'createdAt' => $item->created_at?->toIso8601String(),
+            ];
+        }));
     }
 
     public function update(Request $request, Oprec $oprec, OprecRegistration $registration)

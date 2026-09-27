@@ -35,20 +35,7 @@ import { getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
 import { OprecPeriodPicker } from "./OprecPeriodPicker";
 import "./oprec-create-dialog.css";
 import "./oprec-builder.css";
-
-const WhatsAppIcon = ({ size = 14, className = "" }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className={className}
-    aria-hidden="true"
-  >
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-  </svg>
-);
+import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 
 function DivisionJabatanAdder({ onAdd, placeholder }) {
   const [val, setVal] = useState("");
@@ -186,7 +173,10 @@ const toOptions = (value) =>
     .filter(Boolean)
     .map((line) => ({ value: line, label: line }));
 
-const fromOptions = (options) => (options || []).map((item) => item.label).join("\n");
+const fromOptions = (options) =>
+  (options || [])
+    .map((item) => (typeof item === "string" ? item : item?.label || item?.value || ""))
+    .join("\n");
 
 const formatDisplayDate = (val) => {
   if (!val) return null;
@@ -278,8 +268,98 @@ export default function OprecBuilder({ oprecId }) {
   const [dragOverLogoIndex, setDragOverLogoIndex] = useState(null);
   const posterInputRef = useRef(null);
   const containerRef = useRef(null);
+  const tabsNavRef = useRef(null);
+  const builderRootRef = useRef(null);
+  const [showFloatingNav, setShowFloatingNav] = useState(false);
+  const [navLeftPos, setNavLeftPos] = useState(null);
   const [previewWidth, setPreviewWidth] = useState(540);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Deteksi scroll untuk navigasi melayang (3 kotak vertikal di sebelah kiri)
+  useEffect(() => {
+    if (loading) return;
+
+    const checkVisibilityAndPosition = () => {
+      const isDesktop = typeof window !== "undefined" && window.innerWidth >= 768;
+      if (!isDesktop) {
+        // Pada mode mobile, 3 kotak navigasi dihilangkan karena navbar atas sudah sticky
+        setShowFloatingNav(false);
+        setNavLeftPos(null);
+        return;
+      }
+
+      const tabsEl = tabsNavRef.current || document.querySelector(".oprec-builder__tabs");
+      if (tabsEl) {
+        const rect = tabsEl.getBoundingClientRect();
+        // Tabs dianggap tidak terlihat ketika bagian bawahnya sudah tergulung melewati batas atas topbar (<= 70px)
+        const isPast = rect.bottom <= 70;
+        setShowFloatingNav(isPast);
+      }
+
+      // Hitung posisi horizontal (kiri) agar persis berada di sebelah kiri kartu builder (sesuai kotak merah)
+      const builderRoot = builderRootRef.current || document.querySelector(".oprec-builder");
+      if (builderRoot) {
+        const rootRect = builderRoot.getBoundingClientRect();
+
+        const sidebarW = 76;
+        const dockWidth = 46;
+        const gap = 12;
+
+        // Posisi target tepat di sebelah kiri kartu builder (sesuai area merah yang ditandai pengguna)
+        let leftPx = rootRect.left - dockWidth - gap;
+
+        // Jika ruang di sebelah kiri kartu terlalu sempit (layar sempit), jaga agar tidak tertutup sidebar
+        if (leftPx < sidebarW + 8) {
+          leftPx = sidebarW + 8;
+        }
+
+        setNavLeftPos(`${Math.round(leftPx)}px`);
+      }
+    };
+
+    // Jalankan pengecekan langsung saat render/tab berganti
+    checkVisibilityAndPosition();
+
+    // ResizeObserver untuk memantau perubahan ukuran kartu builder secara real-time
+    let resizeObserver;
+    const builderRoot = builderRootRef.current || document.querySelector(".oprec-builder");
+    if (builderRoot && typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => {
+        checkVisibilityAndPosition();
+      });
+      resizeObserver.observe(builderRoot);
+    }
+
+    // Event listener scroll dengan capture: true agar menangkap scroll di container manapun (.admin-main-wrapper, window, dll)
+    window.addEventListener("scroll", checkVisibilityAndPosition, { passive: true, capture: true });
+    document.addEventListener("scroll", checkVisibilityAndPosition, { passive: true, capture: true });
+    window.addEventListener("resize", checkVisibilityAndPosition, { passive: true });
+
+    const scrollParent = document.querySelector(".admin-main-wrapper");
+    if (scrollParent) {
+      scrollParent.addEventListener("scroll", checkVisibilityAndPosition, { passive: true });
+    }
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("scroll", checkVisibilityAndPosition, { capture: true });
+      document.removeEventListener("scroll", checkVisibilityAndPosition, { capture: true });
+      window.removeEventListener("resize", checkVisibilityAndPosition);
+      if (scrollParent) {
+        scrollParent.removeEventListener("scroll", checkVisibilityAndPosition);
+      }
+    };
+  }, [loading, activeTab]);
+
+  const handleFloatingTabClick = (tabKey) => {
+    setActiveTab(tabKey);
+    const scrollParent = document.querySelector(".admin-main-wrapper");
+    if (scrollParent) {
+      scrollParent.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   useEffect(() => {
     try {
@@ -803,7 +883,7 @@ export default function OprecBuilder({ oprecId }) {
   };
 
   return (
-    <div className="oprec-builder">
+    <div ref={builderRootRef} className="oprec-builder">
       {/* Back navigation */}
       <Link href="/admin/oprec" className="oprec-builder__back">
         <ArrowLeft aria-hidden="true" size={16} />
@@ -813,7 +893,6 @@ export default function OprecBuilder({ oprecId }) {
       {/* Hero Header */}
       <header className="oprec-builder__hero">
         <div>
-          <span className="oprec-builder__eyebrow">// TAHAP 01 · FORM BUILDER</span>
           <h1>Susun Formulir Pendaftaran</h1>
           <div className="oprec-builder__hero-meta">
             <span>PERIODE: {data.periode || "BELUM DIISI"}</span>
@@ -876,7 +955,7 @@ export default function OprecBuilder({ oprecId }) {
       )}
 
       {/* Segmented Tabs Navigation */}
-      <nav className="oprec-builder__tabs" aria-label="Bagian formulir">
+      <nav ref={tabsNavRef} className="oprec-builder__tabs" aria-label="Bagian formulir">
         <button
           type="button"
           onClick={() => setActiveTab("info")}
@@ -884,8 +963,10 @@ export default function OprecBuilder({ oprecId }) {
             activeTab === "info" ? "oprec-builder__tab-btn--active" : ""
           }`}
         >
-          <Calendar size={15} />
-          <span>1. Informasi & Jadwal</span>
+          <Calendar size={14} className="oprec-builder__tab-icon" />
+          <span className="oprec-builder__tab-label-full">1. Informasi & Jadwal</span>
+          <span className="oprec-builder__tab-label-short">1. Info & Jadwal</span>
+          <span className="oprec-builder__tab-label-mini">1. Info</span>
         </button>
         <button
           type="button"
@@ -894,8 +975,10 @@ export default function OprecBuilder({ oprecId }) {
             activeTab === "divisions" ? "oprec-builder__tab-btn--active" : ""
           }`}
         >
-          <Layers size={15} />
-          <span>2. Kelola Divisi</span>
+          <Layers size={14} className="oprec-builder__tab-icon" />
+          <span className="oprec-builder__tab-label-full">2. Kelola Divisi</span>
+          <span className="oprec-builder__tab-label-short">2. Divisi</span>
+          <span className="oprec-builder__tab-label-mini">2. Divisi</span>
           <span className="oprec-builder__tab-badge">{data.divisi_tersedia.length}</span>
         </button>
         <button
@@ -905,9 +988,66 @@ export default function OprecBuilder({ oprecId }) {
             activeTab === "fields" ? "oprec-builder__tab-btn--active" : ""
           }`}
         >
-          <ListChecks size={15} />
-          <span>3. Pertanyaan Formulir</span>
+          <ListChecks size={14} className="oprec-builder__tab-icon" />
+          <span className="oprec-builder__tab-label-full">3. Pertanyaan Formulir</span>
+          <span className="oprec-builder__tab-label-short">3. Formulir</span>
+          <span className="oprec-builder__tab-label-mini">3. Form</span>
           <span className="oprec-builder__tab-badge">{data.form_fields.length + 1}</span>
+        </button>
+      </nav>
+
+      {/* Floating Quick Tab Navigation Dock (3 kotak vertikal di sebelah kiri, hanya aktif ketika tabs di atas tidak terlihat) */}
+      <nav
+        className={`oprec-builder__floating-nav ${
+          showFloatingNav ? "oprec-builder__floating-nav--visible" : ""
+        }`}
+        style={navLeftPos ? { left: navLeftPos } : undefined}
+        aria-label="Navigasi cepat antar halaman formulir"
+      >
+        <button
+          type="button"
+          onClick={() => handleFloatingTabClick("info")}
+          className={`oprec-builder__floating-nav-btn ${
+            activeTab === "info" ? "oprec-builder__floating-nav-btn--active" : ""
+          }`}
+          title="1. Informasi & Jadwal"
+          aria-label="1. Informasi & Jadwal"
+          aria-current={activeTab === "info" ? "page" : undefined}
+        >
+          <Calendar size={16} />
+          <span className="oprec-builder__floating-tooltip">1. Informasi & Jadwal</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleFloatingTabClick("divisions")}
+          className={`oprec-builder__floating-nav-btn ${
+            activeTab === "divisions" ? "oprec-builder__floating-nav-btn--active" : ""
+          }`}
+          title={`2. Kelola Divisi (${data.divisi_tersedia.length})`}
+          aria-label={`2. Kelola Divisi (${data.divisi_tersedia.length})`}
+          aria-current={activeTab === "divisions" ? "page" : undefined}
+        >
+          <Layers size={16} />
+          <span className="oprec-builder__floating-tooltip">
+            2. Kelola Divisi ({data.divisi_tersedia.length})
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleFloatingTabClick("fields")}
+          className={`oprec-builder__floating-nav-btn ${
+            activeTab === "fields" ? "oprec-builder__floating-nav-btn--active" : ""
+          }`}
+          title={`3. Pertanyaan Formulir (${data.form_fields.length + 1})`}
+          aria-label={`3. Pertanyaan Formulir (${data.form_fields.length + 1})`}
+          aria-current={activeTab === "fields" ? "page" : undefined}
+        >
+          <ListChecks size={16} />
+          <span className="oprec-builder__floating-tooltip">
+            3. Pertanyaan Formulir ({data.form_fields.length + 1})
+          </span>
         </button>
       </nav>
 
@@ -982,7 +1122,7 @@ export default function OprecBuilder({ oprecId }) {
                   <input
                     value={data.headline}
                     onChange={(e) => set("headline", e.target.value)}
-                    placeholder="Saatnya menjadi bagian dari HIMANIKA"
+                    placeholder="Open Recruitment HIMANIKA"
                     maxLength={300}
                   />
                 </label>
@@ -1574,10 +1714,18 @@ export default function OprecBuilder({ oprecId }) {
                             Pilihan Angkatan (Satu tahun per baris)
                             <textarea
                               rows={3}
-                              value={fromOptions(field.options)}
-                              onChange={(e) =>
-                                setField(index, { options: toOptions(e.target.value) })
+                              value={
+                                field.raw_options !== undefined
+                                  ? field.raw_options
+                                  : fromOptions(field.options)
                               }
+                              onChange={(e) => {
+                                const rawVal = e.target.value;
+                                setField(index, {
+                                  raw_options: rawVal,
+                                  options: toOptions(rawVal),
+                                });
+                              }}
                               placeholder={"2023\n2024\n2025\n2026"}
                             />
                           </label>
@@ -1816,10 +1964,12 @@ export default function OprecBuilder({ oprecId }) {
                                       <span className="oprec-builder__target-chip-box" aria-hidden="true">
                                         {isChecked ? "✓" : ""}
                                       </span>
-                                      <span className="oprec-builder__target-chip-name">{divName}</span>
-                                      {d.nama_lengkap && d.nama_lengkap !== divName && (
-                                        <span className="oprec-builder__target-chip-sub">({d.nama_lengkap})</span>
-                                      )}
+                                      <div className="oprec-builder__target-chip-text">
+                                        <span className="oprec-builder__target-chip-name">{divName}</span>
+                                        {d.nama_lengkap && d.nama_lengkap !== divName && (
+                                          <span className="oprec-builder__target-chip-sub">({d.nama_lengkap})</span>
+                                        )}
+                                      </div>
                                     </label>
                                   );
                                 })}
@@ -1838,10 +1988,18 @@ export default function OprecBuilder({ oprecId }) {
                             Opsi Pilihan (Satu opsi per baris)
                             <textarea
                               rows={3}
-                              value={fromOptions(field.options)}
-                              onChange={(e) =>
-                                setField(actualIndex, { options: toOptions(e.target.value) })
+                              value={
+                                field.raw_options !== undefined
+                                  ? field.raw_options
+                                  : fromOptions(field.options)
                               }
+                              onChange={(e) => {
+                                const rawVal = e.target.value;
+                                setField(actualIndex, {
+                                  raw_options: rawVal,
+                                  options: toOptions(rawVal),
+                                });
+                              }}
                               placeholder={"Pilihan A\nPilihan B\nPilihan C"}
                             />
                           </label>

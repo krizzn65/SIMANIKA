@@ -13,8 +13,43 @@ import {
   Check,
   X,
   Pencil,
+  Calendar,
 } from "lucide-react";
 import "./oprec-create-dialog.css";
+
+function formatOprecDate(dateStr) {
+  if (!dateStr) return "";
+  try {
+    return new Date(dateStr).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return String(dateStr);
+  }
+}
+
+function getRegistrantName(r) {
+  if (!r) return "Peserta";
+  let fd = r.formData;
+  if (typeof fd === "string") {
+    try {
+      fd = JSON.parse(fd);
+    } catch {
+      fd = null;
+    }
+  }
+  const fromForm =
+    fd?.nama ||
+    fd?.nama_lengkap ||
+    fd?.namaLengkap ||
+    r.name;
+  if (typeof fromForm === "string" && fromForm.trim()) {
+    return fromForm.trim();
+  }
+  return r.user?.name || "Peserta";
+}
 
 export default function AdminOprecPage() {
   const [oprecs, setOprecs] = useState([]);
@@ -29,7 +64,6 @@ export default function AdminOprecPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [divisionFilter, setDivisionFilter] = useState("all");
   const [createOpen, setCreateOpen] = useState(false);
-  const [editingStage, setEditingStage] = useState(null);
 
   // Review Modal State
   const [reviewModal, setReviewModal] = useState({
@@ -93,7 +127,7 @@ export default function AdminOprecPage() {
       return;
     }
 
-    if (!confirm(`Tolak berkas calon anggota ${reg.user?.name || reg.nim}?`)) return;
+    if (!confirm(`Tolak berkas calon anggota ${getRegistrantName(reg)} (${reg.nim})?`)) return;
 
     setActionLoading(reg.id);
     try {
@@ -132,8 +166,10 @@ export default function AdminOprecPage() {
 
   // Filter registrants
   const filteredRegistrants = registrants.filter((r) => {
+    const candidateName = getRegistrantName(r);
     const matchSearch = search
       ? r.nim?.toLowerCase().includes(search.toLowerCase()) ||
+        candidateName.toLowerCase().includes(search.toLowerCase()) ||
         r.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
         r.user?.email?.toLowerCase().includes(search.toLowerCase())
       : true;
@@ -147,10 +183,7 @@ export default function AdminOprecPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <span className="font-mono text-[11px] tracking-wider text-blue-600 uppercase block font-medium">
-            // KELOLA OPREC · PENDAFTARAN
-          </span>
-          <h1 className="text-xl font-semibold tracking-tight text-slate-900 mt-0.5">
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900">
             Kelola Pendaftaran OPREC
           </h1>
           <p className="text-xs text-slate-500 mt-1">
@@ -179,14 +212,11 @@ export default function AdminOprecPage() {
           )}
           <button
             type="button"
-            onClick={() => {
-              setEditingStage(null);
-              setCreateOpen(true);
-            }}
+            onClick={() => setCreateOpen(true)}
             className="oprec-btn oprec-btn--primary"
           >
             <CalendarPlusIcon size={16} loopDelay={2300} />
-            <span>Tambah tahap</span>
+            <span>Tambah pendaftaran</span>
           </button>
           <button
             type="button"
@@ -224,7 +254,6 @@ export default function AdminOprecPage() {
 
           <div className="oprec-admin-overview__registration">
             <div className="oprec-admin-overview__registration-main">
-              <span className="oprec-admin-overview__step">01 // PENDAFTARAN</span>
               <h3>{selectedOprec.headline || "Pendaftaran calon anggota HIMANIKA"}</h3>
               <p>{selectedOprec.deskripsi || "Pendaftaran calon anggota pengurus HIMANIKA untuk periode ini."}</p>
               <div className="oprec-admin-overview__meta">
@@ -235,24 +264,14 @@ export default function AdminOprecPage() {
                     ? "STATUS: BERLANGSUNG"
                     : "STATUS: SELESAI"}
                 </span>
-                {selectedOprec.tanggalBuka && (
-                  <span>
-                    MULAI:{" "}
-                    {new Date(selectedOprec.tanggalBuka).toLocaleDateString("id-ID", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </span>
-                )}
-                {selectedOprec.tanggalTutup && (
-                  <span>
-                    BERAKHIR:{" "}
-                    {new Date(selectedOprec.tanggalTutup).toLocaleDateString("id-ID", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                {(selectedOprec.tanggalBuka || selectedOprec.tanggalTutup) && (
+                  <span className="oprec-admin-overview__date-range">
+                    <Calendar size={13} aria-hidden="true" />
+                    <span>
+                      {selectedOprec.tanggalBuka && selectedOprec.tanggalTutup
+                        ? `${formatOprecDate(selectedOprec.tanggalBuka)} - ${formatOprecDate(selectedOprec.tanggalTutup)}`
+                        : formatOprecDate(selectedOprec.tanggalBuka || selectedOprec.tanggalTutup)}
+                    </span>
                   </span>
                 )}
               </div>
@@ -276,46 +295,6 @@ export default function AdminOprecPage() {
               </div>
             </div>
           )}
-
-          {(selectedOprec.stages || []).length > 0 && (
-            <div className="oprec-admin-overview__next">
-              <h3>Tahapan berikutnya //</h3>
-              <div className="oprec-admin-overview__stage-list">
-                {selectedOprec.stages.map((stage, index) => (
-                  <div className="oprec-admin-overview__stage" key={stage.id}>
-                    <span className="oprec-admin-overview__stage-number">
-                      {String(index + 2).padStart(2, "0")}
-                    </span>
-                    <div>
-                      <strong>
-                        {stage.type === "test_tulis" ? "TES TULIS" : "PENGUMUMAN"}
-                      </strong>
-                      <p>{stage.headline}</p>
-                    </div>
-                    <span className="oprec-admin-overview__stage-state">
-                      {stage.published ? "TERBIT" : "BELUM TERBIT"}
-                    </span>
-                    <div className="oprec-admin-overview__stage-actions">
-                      {stage.type === "test_tulis" && (
-                        <Link href={`/admin/oprec/${selectedOprec.id}/stages/${stage.id}/form`}>
-                          Kelola soal
-                        </Link>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingStage(stage);
-                          setCreateOpen(true);
-                        }}
-                      >
-                        Edit informasi
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </section>
       )}
 
@@ -325,10 +304,7 @@ export default function AdminOprecPage() {
       <div className="border border-slate-300 bg-white rounded-none">
         <div className="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <span className="font-mono text-[11px] text-blue-600 uppercase tracking-wider block font-medium">
-              // DATA CALON ANGGOTA
-            </span>
-            <h2 className="text-base font-semibold text-slate-900 mt-0.5">
+            <h2 className="text-base font-semibold text-slate-900">
               Daftar Berkas Calon Anggota
             </h2>
             <p className="text-xs text-slate-500">
@@ -435,7 +411,7 @@ export default function AdminOprecPage() {
                     >
                       <td className="py-3 px-4">
                         <div className="font-medium text-slate-900 text-sm">
-                          {r.user?.name || "Peserta"}
+                          {getRegistrantName(r)}
                         </div>
                         <div className="font-mono text-xs text-slate-400 mt-0.5">
                           {r.user?.email}
@@ -519,13 +495,8 @@ export default function AdminOprecPage() {
 
       <OprecCreateDialog
         open={createOpen}
-        onClose={() => {
-          setCreateOpen(false);
-          setEditingStage(null);
-        }}
+        onClose={() => setCreateOpen(false)}
         onCreated={fetchOprecs}
-        selectedOprec={selectedOprec}
-        editingStage={editingStage}
       />
 
       {/* Review & Acceptance Modal (Minimalist Boxy) */}
@@ -557,7 +528,7 @@ export default function AdminOprecPage() {
                   Calon Anggota
                 </span>
                 <div className="text-sm font-medium text-slate-900 mt-0.5">
-                  {reviewModal.registrant?.user?.name}{" "}
+                  {getRegistrantName(reviewModal.registrant)}{" "}
                   <span className="font-mono text-slate-500 text-xs">
                     ({reviewModal.registrant?.nim})
                   </span>

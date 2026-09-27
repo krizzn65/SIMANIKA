@@ -63,7 +63,24 @@ async function upstreamError(response, oprec) {
       const message = Array.isArray(value) ? value[0] : value;
       if (typeof message === "string") errors[field.name] = message.slice(0, 250);
     }
-    return reply({ message: "Periksa kembali data yang kamu isi.", errors }, 422);
+    for (const rank of [1, 2, 3]) {
+      const divErr = body?.errors?.[`divisi_pilihan_${rank}`];
+      const divMsg = Array.isArray(divErr) ? divErr[0] : divErr;
+      if (typeof divMsg === "string") errors[`divisi_pilihan_${rank}`] = divMsg.slice(0, 250);
+
+      const jabErr = body?.errors?.[`jabatan_pilihan_${rank}`];
+      const jabMsg = Array.isArray(jabErr) ? jabErr[0] : jabErr;
+      if (typeof jabMsg === "string") errors[`jabatan_pilihan_${rank}`] = jabMsg.slice(0, 250);
+    }
+    if (body?.errors && typeof body.errors === "object") {
+      for (const [key, val] of Object.entries(body.errors)) {
+        if (!errors[key]) {
+          const msg = Array.isArray(val) ? val[0] : val;
+          if (typeof msg === "string") errors[key] = msg.slice(0, 250);
+        }
+      }
+    }
+    return reply({ message: body?.message || "Periksa kembali data yang kamu isi.", errors }, 422);
   }
   return reply({ message: "Layanan belum bisa memproses permintaan. Coba lagi sebentar." }, 503);
 }
@@ -86,7 +103,7 @@ export async function registerOprec(request) {
       const value = form.get(field.name);
       if (value !== null && !(field.type === "file" && !value.size)) body.set(field.name, typeof value === "string" ? value.trim() : value);
     }
-    for (const rank of [2, 3]) {
+    for (const rank of [1, 2, 3]) {
       const value = form.get(`divisi_pilihan_${rank}`);
       if (value !== null) body.set(`divisi_pilihan_${rank}`, value);
     }

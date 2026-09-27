@@ -10,6 +10,7 @@ import { OprecForm } from "@/components/oprec/OprecForm";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
 import { normalizeOprec } from "@/lib/oprec";
+import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import styles from "./oprec-workspace.module.css";
 import "../../oprec/oprec.css";
 
@@ -86,6 +87,7 @@ function WorkspaceContent() {
   const isSubmitted = Boolean(registration);
   const announced = Boolean(data?.announced);
   const oprecInfo = data?.oprec;
+  const waLink = oprecInfo?.link_grup_wa || oprecInfo?.linkGrupWa || registration?.link_grup_wa || registration?.linkGrupWa || normalizedOprec?.link_grup_wa || normalizedOprec?.linkGrupWa || "";
 
   const divisionMap = new Map();
   if (data?.oprec?.divisions) {
@@ -191,6 +193,34 @@ function WorkspaceContent() {
                     )}
                   </div>
                 </section>
+
+                {/* WhatsApp Group Card (only appears after registration is submitted) */}
+                {isSubmitted && waLink && (
+                  <section className={`${styles.panel} ${styles.waCard}`}>
+                    <div className={styles.waCardHeader}>
+                      <div className={styles.waIconBadge}>
+                        <WhatsAppIcon size={20} />
+                      </div>
+                      <div>
+                        <h2 className={styles.waTitle}>Grup WhatsApp</h2>
+                        <span className={styles.waSubtitle}>Koordinasi Peserta</span>
+                      </div>
+                    </div>
+                    <p className={styles.waDesc}>
+                      Bergabunglah ke grup WhatsApp resmi untuk mendapatkan arahan teknis, tanya jawab, dan info tahapan seleksi selanjutnya.
+                    </p>
+                    <a
+                      href={waLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.waButton}
+                    >
+                      <WhatsAppIcon size={17} />
+                      <span>Masuk Grup WhatsApp</span>
+                      <ArrowUpRight size={15} aria-hidden="true" />
+                    </a>
+                  </section>
+                )}
               </aside>
 
               {/* Main Content Area */}

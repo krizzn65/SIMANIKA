@@ -52,13 +52,6 @@
   box-shadow: 0 4px 14px rgba(10, 60, 179, 0.25) !important;
 }
 
-.admin-oprec-nav__trigger { display: flex; align-items: center; gap: .75rem; width: 100%; min-height: 44px; padding: .625rem .75rem; border-radius: .75rem; color: #eff6ff; text-align: left; font-size: .875rem; font-weight: 600; }
-.admin-oprec-nav__trigger:hover, .admin-oprec-nav__trigger:focus-visible { background: rgba(255,255,255,.17); color: #fff; }
-.admin-oprec-nav__trigger--active { background: rgba(255,255,255,.14); color: #fff; }
-.admin-oprec-nav__submenu { display: grid; gap: .2rem; margin: .25rem 0 .45rem 1.15rem; padding-left: .7rem; border-left: 1px solid rgba(255,255,255,.35); }
-.admin-oprec-nav__submenu a { display: flex; align-items: center; gap: .5rem; min-height: 38px; padding: .4rem .55rem; border-radius: .55rem; color: #eff6ff; font-size: .77rem; font-weight: 500; text-decoration: none; }
-.admin-oprec-nav__submenu a:hover, .admin-oprec-nav__submenu a:focus-visible { background: rgba(255,255,255,.17); color: #fff; }
-.admin-oprec-nav__submenu a[aria-current="page"] { background: #fff; color: #155eef; font-weight: 700; }
 
 .admin-nav-link.active span,
 .admin-nav-link.active .admin-nav-icon,
@@ -505,11 +498,30 @@
 }
 
 @media (max-width: 768px) {
+  .admin-layout-root {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    flex-direction: column;
+  }
+
+  .admin-main-wrapper {
+    flex: 1 1 0%;
+    min-height: 0;
+    height: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .admin-content-stage {
     padding: 1rem;
   }
+
   .admin-topbar {
     padding: 0.75rem 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 25;
   }
 }
 

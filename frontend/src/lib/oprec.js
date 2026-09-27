@@ -92,6 +92,8 @@ export function normalizeOprec(raw) {
     schemaVersion: String(raw.schemaVersion ?? raw.schema_version ?? "1"),
     formFields: normalizeFields(rawFields),
     formIntro: text(raw.formIntro ?? raw.form_intro),
+    link_grup_wa: typeof (raw.link_grup_wa ?? raw.linkGrupWa) === "string" && (raw.link_grup_wa ?? raw.linkGrupWa).trim() ? (raw.link_grup_wa ?? raw.linkGrupWa).trim() : null,
+    linkGrupWa: typeof (raw.link_grup_wa ?? raw.linkGrupWa) === "string" && (raw.link_grup_wa ?? raw.linkGrupWa).trim() ? (raw.link_grup_wa ?? raw.linkGrupWa).trim() : null,
     divisiTersedia: divisions.map((item, index) => {
       if (!item || !text(item.nama)) throw new Error("Invalid OPREC division");
       const nama = text(item.nama);
@@ -101,10 +103,7 @@ export function normalizeOprec(raw) {
       return { id: String(item.id ?? index), nama, namaLengkap: text(item.namaLengkap ?? item.nama_lengkap), deskripsi: text(item.deskripsi), logo: safePosterUrl(item.logo), jabatan };
     }),
     pengumuman: { published: announcement.published === true, tanggal: date(announcement.tanggal), pesan: text(announcement.pesan) },
-    stages: (Array.isArray(raw.stages) ? raw.stages : []).filter((stage) => stage && stage.published === true && ["test_tulis", "pengumuman"].includes(stage.type) && text(stage.headline)).map((stage) => ({
-      id: String(stage.id), type: stage.type, headline: text(stage.headline), deskripsi: text(stage.deskripsi),
-      poster: safePosterUrl(stage.poster), tanggalBuka: date(stage.tanggalBuka), tanggalTutup: date(stage.tanggalTutup), published: true,
-    })),
+    stages: [],
     faq: (Array.isArray(raw.faq) ? raw.faq : []).filter((item) => item && text(item.pertanyaan) && text(item.jawaban)).map((item) => ({ pertanyaan: text(item.pertanyaan), jawaban: text(item.jawaban) })),
   };
 }
