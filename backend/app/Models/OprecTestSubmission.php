@@ -12,4 +12,6 @@ class OprecTestSubmission extends Model
     protected function casts(): array { return ['answers' => 'array']; }
 
     public function stage(): BelongsTo { return $this->belongsTo(OprecStage::class, 'oprec_stage_id'); }
+    public function registration(): BelongsTo { return $this->belongsTo(OprecRegistration::class, 'oprec_registration_id'); }
+    public function user(): BelongsTo { return $this->belongsTo(User::class); }
 }

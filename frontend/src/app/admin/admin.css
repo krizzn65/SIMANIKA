@@ -61,6 +61,37 @@
   fill: none;
 }
 
+/* Nested OPREC navigation must keep its icon and label visible even when its
+   active white surface is affected by global link styles. */
+#admin-oprec-submenu a {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 2.75rem;
+  color: #eff6ff !important;
+  text-decoration: none !important;
+}
+
+#admin-oprec-submenu a svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  color: currentColor !important;
+  stroke: currentColor !important;
+}
+
+#admin-oprec-submenu a[aria-current="page"] {
+  color: #155eef !important;
+}
+
+#admin-oprec-submenu a:hover {
+  color: #ffffff !important;
+}
+
+#admin-oprec-submenu a[aria-current="page"]:hover {
+  color: #155eef !important;
+}
+
 /* ── Segmented Filter Tabs ── */
 .admin-filter-tabs {
   display: inline-flex;

@@ -32,7 +32,9 @@ class OprecController extends Controller
     {
         $data = $request->validated();
         $oprec = DB::transaction(function () use ($data) {
-            $oprec = Oprec::create($this->attributes($data));
+            $attributes = $this->attributes($data);
+            if ($data['status'] === 'open') $attributes['first_published_at'] = now();
+            $oprec = Oprec::create($attributes);
             $this->syncDivisions($oprec, $data['divisi_tersedia'] ?? []);
             return $oprec;
         });
@@ -58,7 +60,9 @@ class OprecController extends Controller
                 if ($current->schema_version === $data['schema_version'] && $current->form_fields !== $data['form_fields']) throw ValidationException::withMessages(['schema_version' => ['Naikkan versi skema saat mengubah kolom.']]);
                 if ($divisionsChanged) throw ValidationException::withMessages(['divisi_tersedia' => ['Divisi tidak boleh diubah setelah ada pendaftar.']]);
             }
-            $current->update($this->attributes($data));
+            $attributes = $this->attributes($data);
+            if ($data['status'] === 'open' && !$current->first_published_at) $attributes['first_published_at'] = now();
+            $current->update($attributes);
             if ($divisionsChanged) $this->syncDivisions($current, $data['divisi_tersedia']);
             return $current;
         });

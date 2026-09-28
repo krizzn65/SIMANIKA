@@ -15,94 +15,205 @@ class OprecWrittenTestTest extends TestCase
     private function admin(): User
     {
         config()->set('admin.email', 'test-admin@example.test');
-        $admin = User::create(['email' => 'test-admin@example.test', 'password' => 'password-testing-123']);
+        $admin = User::firstOrCreate(['email' => 'test-admin@example.test'], ['password' => 'password-testing-123']);
         $admin->forceFill(['role' => 'admin'])->save();
         return $admin;
     }
 
-    private function payload(int $divisionId): array
+    private function period(bool $published = true): Oprec
+    {
+        $oprec = Oprec::create([
+            'periode' => '2026/2027', 'status' => $published ? 'closed' : 'draft',
+            'first_published_at' => $published ? now()->subDay() : null,
+            'schema_version' => '1', 'form_fields' => [],
+        ]);
+        foreach (['Humas', 'PSDM', 'KWU'] as $index => $name) {
+            $oprec->divisions()->create(['nama' => $name, 'sort_order' => $index]);
+        }
+        return $oprec;
+    }
+
+    private function questions(Oprec $oprec): array
     {
         return [
-            'headline' => 'Tes Tulis OPREC',
-            'deskripsi' => 'Kerjakan dengan jujur.',
-            'tanggal_buka' => now()->addDay()->toIso8601String(),
-            'tanggal_tutup' => now()->addDays(2)->toIso8601String(),
-            'questions' => [
-                [
-                    'id' => 'q_motivasi', 'label' => 'Mengapa ingin bergabung?',
-                    'type' => 'paragraph', 'required' => true,
-                    'options' => [], 'targetDivisions' => [],
-                ],
-                [
-                    'id' => 'q_divisi', 'label' => 'Pilih prioritas',
-                    'type' => 'single_choice', 'required' => true,
-                    'options' => ['A', 'B'], 'targetDivisions' => [$divisionId],
-                ],
-            ],
+            ['id' => 'q_motivasi', 'label' => 'Mengapa ingin bergabung?', 'type' => 'paragraph',
+                'required' => true, 'options' => [], 'targetDivisions' => []],
+            ['id' => 'q_divisi', 'label' => 'Pilih prioritas', 'type' => 'single_choice',
+                'required' => true, 'options' => ['A', 'B'], 'targetDivisions' => [$oprec->divisions->first()->id]],
         ];
     }
 
-    public function test_only_admin_can_create_and_read_written_test_draft(): void
+    private function createTest(Oprec $oprec, bool $active = false): string
     {
-        $oprec = Oprec::create(['periode' => '2026/2027', 'status' => 'draft', 'schema_version' => '1', 'form_fields' => []]);
-        $division = $oprec->divisions()->create(['nama' => 'Humas', 'sort_order' => 0]);
-        $payload = $this->payload($division->id);
         $url = "/api/admin/oprec/{$oprec->id}/written-test";
-
-        $this->getJson($url)->assertUnauthorized();
-        $user = User::create(['email' => 'test-user@example.test', 'password' => 'password-testing-123']);
-        $this->actingAs($user, 'sanctum')->putJson($url, $payload)->assertForbidden();
-        $this->actingAs($this->admin(), 'sanctum')->putJson($url, $payload)
-            ->assertCreated()->assertJsonPath('data.published', false)
-            ->assertJsonCount(2, 'data.questions');
-        $this->getJson($url)->assertOk()->assertJsonPath('data.test.headline', 'Tes Tulis OPREC');
-        $this->getJson('/api/admin/oprec/written-tests')->assertOk()
-            ->assertJsonPath('data.0.written_test.headline', 'Tes Tulis OPREC');
-        $this->assertDatabaseCount('oprec_stages', 1);
-
-        $payload['headline'] = 'Tes Tulis Diperbarui';
-        $this->putJson($url, $payload)->assertOk()->assertJsonPath('data.headline', 'Tes Tulis Diperbarui');
-        $this->assertDatabaseCount('oprec_stages', 1);
+        $this->actingAs($this->admin(), 'sanctum')->postJson($url, [
+            'tanggal_buka' => ($active ? now()->subMinute() : now()->addDay())->toIso8601String(),
+            'tanggal_tutup' => ($active ? now()->addHour() : now()->addDays(2))->toIso8601String(),
+        ])->assertCreated()->assertJsonPath('data.published', false);
+        return $url;
     }
 
-    public function test_invalid_options_and_cross_period_divisions_are_rejected(): void
+    private function applicant(Oprec $oprec): User
     {
-        $oprec = Oprec::create(['periode' => '2026/2027', 'status' => 'draft', 'schema_version' => '1', 'form_fields' => []]);
-        $division = $oprec->divisions()->create(['nama' => 'Humas', 'sort_order' => 0]);
-        $other = Oprec::create(['periode' => '2027/2028', 'status' => 'draft', 'schema_version' => '1', 'form_fields' => []]);
-        $otherDivision = $other->divisions()->create(['nama' => 'Kominfo', 'sort_order' => 0]);
-        $url = "/api/admin/oprec/{$oprec->id}/written-test";
-        $payload = $this->payload($division->id);
+        $user = User::create(['email' => 'applicant@example.test', 'password' => 'password-testing-123']);
+        $ids = $oprec->divisions->pluck('id')->all();
+        OprecRegistration::create([
+            'oprec_id' => $oprec->id, 'user_id' => $user->id, 'nim' => 'E312345',
+            'tanggal_lahir' => '2004-01-01', 'form_data' => ['nama' => 'Peserta Tes'],
+            'divisi_pilihan_1' => $ids[0], 'divisi_pilihan_2' => $ids[1], 'divisi_pilihan_3' => $ids[2],
+        ]);
+        return $user;
+    }
 
-        $payload['questions'][1]['options'] = ['Sama', 'sama'];
-        $this->actingAs($this->admin(), 'sanctum')->putJson($url, $payload)
-            ->assertUnprocessable()->assertJsonValidationErrors('questions.1.options');
-        $payload['questions'][1]['options'] = ['A', 'B'];
-        $payload['questions'][1]['targetDivisions'] = [$otherDivision->id];
-        $this->putJson($url, $payload)->assertUnprocessable()
-            ->assertJsonValidationErrors('questions.1.targetDivisions');
+    public function test_create_requires_admin_and_previously_opened_registration(): void
+    {
+        $draft = $this->period(false);
+        $url = "/api/admin/oprec/{$draft->id}/written-test";
+        $schedule = ['tanggal_buka' => now()->addDay()->toIso8601String(), 'tanggal_tutup' => now()->addDays(2)->toIso8601String()];
+        $this->postJson($url, $schedule)->assertUnauthorized();
+        $user = User::create(['email' => 'user@example.test', 'password' => 'password-testing-123']);
+        $this->actingAs($user, 'sanctum')->postJson($url, $schedule)->assertForbidden();
+        $this->actingAs($this->admin(), 'sanctum')->postJson($url, $schedule)->assertUnprocessable();
         $this->assertDatabaseCount('oprec_stages', 0);
+
+        $draft->update(['first_published_at' => now()->subDay(), 'status' => 'closed']);
+        $this->postJson($url, $schedule)->assertCreated()->assertJsonPath('data.headline', 'Tes Tulis OPREC 2026/2027');
+        $this->postJson($url, $schedule)->assertStatus(409);
+        $this->getJson('/api/admin/oprec/written-tests')->assertOk()
+            ->assertJsonPath('data.0.written_test.published', false);
+        $this->assertDatabaseCount('oprec_stages', 1);
     }
 
-    public function test_questions_are_locked_after_a_submission_exists(): void
+    public function test_questions_publish_automatically_and_validate_options_and_divisions(): void
     {
-        $oprec = Oprec::create(['periode' => '2026/2027', 'status' => 'closed', 'schema_version' => '1', 'form_fields' => []]);
-        $division = $oprec->divisions()->create(['nama' => 'Humas', 'sort_order' => 0]);
-        $url = "/api/admin/oprec/{$oprec->id}/written-test";
-        $payload = $this->payload($division->id);
-        $this->actingAs($this->admin(), 'sanctum')->putJson($url, $payload)->assertCreated();
+        $oprec = $this->period();
+        $url = $this->createTest($oprec);
+        $stage = $oprec->writtenTest;
+        $this->assertCount(0, $stage->form_fields);
 
-        $user = User::create(['email' => 'test-applicant@example.test', 'password' => 'password-testing-123']);
-        $registration = OprecRegistration::create([
-            'oprec_id' => $oprec->id, 'user_id' => $user->id,
-            'nim' => 'E312345', 'tanggal_lahir' => '2004-01-01', 'form_data' => [],
-        ]);
-        $oprec->writtenTest->submissions()->create([
-            'oprec_registration_id' => $registration->id, 'user_id' => $user->id,
-            'answers' => ['q_motivasi' => 'Alasan saya'],
-        ]);
-        $payload['questions'][0]['label'] = 'Soal yang berubah';
-        $this->putJson($url, $payload)->assertUnprocessable()->assertJsonValidationErrors('questions');
-        $this->assertDatabaseHas('oprec_stages', ['id' => $oprec->writtenTest->id, 'headline' => 'Tes Tulis OPREC']);
+        $questions = $this->questions($oprec);
+        $payload = [
+            'headline' => $stage->headline, 'deskripsi' => '',
+            'tanggal_buka' => $stage->tanggal_buka->toIso8601String(),
+            'tanggal_tutup' => $stage->tanggal_tutup->toIso8601String(),
+            'questions' => $questions,
+        ];
+        $invalid = $payload;
+        $invalid['questions'][1]['options'] = ['Sama', 'sama'];
+        $this->putJson($url, $invalid)->assertUnprocessable()->assertJsonValidationErrors('questions.1.options');
+        $invalid = $payload;
+        $invalid['questions'][1]['targetDivisions'] = [999999];
+        $this->putJson($url, $invalid)->assertUnprocessable()->assertJsonValidationErrors('questions.1.targetDivisions');
+        $this->putJson($url, $payload)->assertOk()->assertJsonPath('data.published', true)->assertJsonCount(2, 'data.questions');
     }
+
+    public function test_only_submitted_applicant_sees_test_and_can_submit_once(): void
+    {
+        $oprec = $this->period();
+        $url = $this->createTest($oprec, true);
+        $stage = $oprec->writtenTest;
+        $questions = $this->questions($oprec);
+        $this->putJson($url, [
+            'headline' => $stage->headline, 'deskripsi' => '',
+            'tanggal_buka' => $stage->tanggal_buka->toIso8601String(),
+            'tanggal_tutup' => $stage->tanggal_tutup->toIso8601String(),
+            'questions' => $questions,
+        ])->assertOk();
+
+        $user = User::create(['email' => 'outsider@example.test', 'password' => 'password-testing-123']);
+        $participantUrl = "/api/user/oprec/{$oprec->id}/written-test";
+        $this->actingAs($user, 'sanctum')->getJson($participantUrl)->assertNotFound();
+        $this->postJson($participantUrl, ['answers' => ['q_motivasi' => 'Jawaban']])->assertNotFound();
+
+        $this->actingAs($this->applicant($oprec), 'sanctum')->getJson($participantUrl)
+            ->assertOk()->assertJsonPath('data.active', true)->assertJsonCount(2, 'data.questions');
+        $this->postJson($participantUrl, ['answers' => ['q_motivasi' => 'Lengkap']])
+            ->assertUnprocessable()->assertJsonValidationErrors('answers.q_divisi');
+        $this->postJson($participantUrl, ['answers' => ['q_motivasi' => 'Lengkap', 'q_divisi' => 'X']])
+            ->assertUnprocessable()->assertJsonValidationErrors('answers.q_divisi');
+        $this->postJson($participantUrl, ['answers' => ['q_motivasi' => 'Lengkap', 'q_divisi' => 'A']])
+            ->assertCreated()->assertJsonPath('data.submitted', true);
+        $this->postJson($participantUrl, ['answers' => ['q_motivasi' => 'Lagi', 'q_divisi' => 'A']])->assertStatus(409);
+        $this->assertDatabaseCount('oprec_test_submissions', 1);
+
+        $this->actingAs($this->admin(), 'sanctum')->getJson($url.'/submissions')
+            ->assertOk()->assertJsonPath('data.0.name', 'Peserta Tes')
+            ->assertJsonPath('data.0.answers.q_motivasi', 'Lengkap')->assertJsonCount(2, 'questions');
+        $submissionId = $stage->submissions()->first()->id;
+        $this->getJson($url.'/submissions/'.$submissionId)->assertOk()->assertJsonPath('data.nim', 'E312345');
+        $this->deleteJson($url.'/submissions/'.$submissionId)->assertNoContent();
+        $this->actingAs($oprec->registrations()->first()->user, 'sanctum')
+            ->postJson($participantUrl, ['answers' => ['q_motivasi' => 'Ulang', 'q_divisi' => 'A']])->assertCreated();
+    }
+
+    public function test_questions_hidden_before_start_and_submission_closed_after_deadline(): void
+    {
+        $oprec = $this->period();
+        $url = $this->createTest($oprec);
+        $stage = $oprec->writtenTest;
+        $this->putJson($url, [
+            'headline' => $stage->headline, 'deskripsi' => '',
+            'tanggal_buka' => $stage->tanggal_buka->toIso8601String(),
+            'tanggal_tutup' => $stage->tanggal_tutup->toIso8601String(),
+            'questions' => $this->questions($oprec),
+        ])->assertOk();
+        $participantUrl = "/api/user/oprec/{$oprec->id}/written-test";
+        $this->actingAs($this->applicant($oprec), 'sanctum')->getJson($participantUrl)
+            ->assertOk()->assertJsonPath('data.active', false)->assertJsonCount(0, 'data.questions');
+        $this->postJson($participantUrl, ['answers' => ['q_motivasi' => 'Terlalu awal']])->assertStatus(409);
+
+        $stage->update(['tanggal_buka' => now()->subDays(2), 'tanggal_tutup' => now()->subDay()]);
+        $this->getJson($participantUrl)->assertOk()->assertJsonCount(0, 'data.questions');
+        $this->postJson($participantUrl, ['answers' => ['q_motivasi' => 'Terlambat']])->assertStatus(409);
+    }
+    public function test_schedule_and_questions_are_locked_after_test_starts(): void
+    {
+        $oprec = $this->period();
+        $url = $this->createTest($oprec, true);
+        $stage = $oprec->writtenTest;
+        $payload = [
+            'headline' => $stage->headline, 'deskripsi' => '',
+            'tanggal_buka' => $stage->tanggal_buka->toIso8601String(),
+            'tanggal_tutup' => $stage->tanggal_tutup->toIso8601String(),
+            'questions' => $this->questions($oprec),
+        ];
+        $this->putJson($url, $payload)->assertOk();
+        $changedSchedule = $payload;
+        $changedSchedule['tanggal_tutup'] = now()->addHours(2)->toIso8601String();
+        $this->putJson($url, $changedSchedule)->assertUnprocessable()->assertJsonValidationErrors('tanggal_buka');
+        $changedQuestions = $payload;
+        $changedQuestions['questions'][0]['label'] = 'Pertanyaan baru';
+        $this->putJson($url, $changedQuestions)->assertUnprocessable()->assertJsonValidationErrors('questions');
+        $blankLabel = $payload;
+        $blankLabel['questions'][0]['label'] = '   ';
+        $this->putJson($url, $blankLabel)->assertUnprocessable()->assertJsonValidationErrors('questions.0.label');
+    }
+
+    public function test_optional_answers_can_be_empty_and_division_specific_questions_are_hidden(): void
+    {
+        $oprec = $this->period();
+        $other = $oprec->divisions()->create(['nama' => 'Ristek', 'sort_order' => 4]);
+        $url = $this->createTest($oprec, true);
+        $stage = $oprec->writtenTest;
+        $this->putJson($url, [
+            'headline' => $stage->headline, 'deskripsi' => '',
+            'tanggal_buka' => $stage->tanggal_buka->toIso8601String(),
+            'tanggal_tutup' => $stage->tanggal_tutup->toIso8601String(),
+            'questions' => [
+                ['id' => 'q_optional', 'label' => 'Opsional', 'type' => 'short_text',
+                    'required' => false, 'options' => [], 'targetDivisions' => []],
+                ['id' => 'q_ristek', 'label' => 'Khusus Ristek', 'type' => 'paragraph',
+                    'required' => true, 'options' => [], 'targetDivisions' => [$other->id]],
+            ],
+        ])->assertOk();
+
+        $participantUrl = "/api/user/oprec/{$oprec->id}/written-test";
+        $this->actingAs($this->applicant($oprec), 'sanctum')->getJson($participantUrl)
+            ->assertOk()->assertJsonCount(1, 'data.questions');
+        $this->postJson($participantUrl, ['answers' => ['q_ristek' => 'Tidak berlaku']])
+            ->assertUnprocessable()->assertJsonValidationErrors('answers');
+        $this->postJson($participantUrl, ['answers' => []])->assertCreated();
+        $this->assertDatabaseHas('oprec_test_submissions', ['oprec_stage_id' => $stage->id]);
+    }
+
 }

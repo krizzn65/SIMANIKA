@@ -1,172 +1,157 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { ArrowDown, ArrowUp, Plus, RefreshCw, Save, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { CalendarDays, Eye, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { api } from "@/services/api";
 import { AdminErrorNotice } from "../../AdminErrorNotice";
 import "./test.css";
 
-const blankForm = () => ({
-  headline: "",
-  deskripsi: "",
-  tanggal_buka: "",
-  tanggal_tutup: "",
-  questions: [],
-});
+const toIso = (value) => new Date(`${value}:00+07:00`).toISOString();
+const formatWib = (value) => value ? new Intl.DateTimeFormat("id-ID", {
+  timeZone: "Asia/Jakarta", day: "numeric", month: "short", year: "numeric",
+  hour: "2-digit", minute: "2-digit",
+}).format(new Date(value)) + " WIB" : "—";
+const editHref = (period) => `/admin/oprec/test/${encodeURIComponent(period.periode.replaceAll("/", "-"))}/edit`;
+const errorText = (error, fallback) => Object.values(error.response?.data?.errors || {}).flat()[0] || error.response?.data?.message || error.message || fallback;
 
-function wibDateTime(value) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
-  }).formatToParts(date).map((part) => [part.type, part.value]));
-  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
-}
-
-const wibTimestamp = (value) => Date.parse(`${value}:00+07:00`);
-
-function newQuestion() {
-  return {
-    id: `q_${crypto.randomUUID().replaceAll("-", "").slice(0, 24)}`,
-    label: "",
-    type: "paragraph",
-    required: true,
-    options: [],
-    targetDivisions: [],
-  };
-}
-
-function validate(form) {
-  if (!form.headline.trim()) return "Judul tes tulis wajib diisi.";
-  const start = wibTimestamp(form.tanggal_buka);
-  const end = wibTimestamp(form.tanggal_tutup);
-  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return "Jadwal tes harus lengkap dan waktu tutup setelah waktu buka.";
-  if (!form.questions.length) return "Tambahkan minimal satu pertanyaan.";
-  for (const [index, question] of form.questions.entries()) {
-    if (!question.label.trim()) return `Isi pertanyaan nomor ${index + 1}.`;
-    if (question.type === "single_choice") {
-      const options = question.options.map((option) => option.trim()).filter(Boolean);
-      if (options.length < 2 || new Set(options.map((option) => option.toLowerCase())).size !== options.length) {
-        return `Pertanyaan nomor ${index + 1} memerlukan minimal dua opsi berbeda.`;
-      }
+function useNativeDialog(open, onClose) {
+  const ref = useRef(null);
+  const trigger = useRef(null);
+  useEffect(() => {
+    const dialog = ref.current;
+    if (open && dialog && !dialog.open) {
+      trigger.current = document.activeElement;
+      dialog.showModal();
+    } else if (!open && dialog?.open) {
+      dialog.close();
+      trigger.current?.focus?.();
     }
-  }
-  return "";
+  }, [open]);
+  return { ref, onClose };
 }
 
 export default function AdminOprecWrittenTestPage() {
+  const router = useRouter();
   const [periods, setPeriods] = useState([]);
+  const [eligible, setEligible] = useState([]);
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [selectedId, setSelectedId] = useState(null);
-  const [divisions, setDivisions] = useState([]);
-  const [form, setForm] = useState(blankForm);
-  const [loadingList, setLoadingList] = useState(true);
-  const [loadingTest, setLoadingTest] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [submissions, setSubmissions] = useState([]);
+  const [questions, setQuestions] = useState([]);
+  const [answerPage, setAnswerPage] = useState(1);
+  const [answerPages, setAnswerPages] = useState(1);
+  const [answerTotal, setAnswerTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [loadingAnswers, setLoadingAnswers] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [answerError, setAnswerError] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState({ oprec_id: "", tanggal_buka: "", tanggal_tutup: "" });
+  const [preview, setPreview] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const createDialog = useNativeDialog(createOpen, () => setCreateOpen(false));
+  const previewDialog = useNativeDialog(Boolean(preview), () => setPreview(null));
+  const deleteDialog = useNativeDialog(Boolean(deleteTarget), () => setDeleteTarget(null));
 
   const loadPeriods = useCallback(async () => {
-    setLoadingList(true);
+    setLoading(true);
     try {
       const response = await api.get("/admin/oprec/written-tests", { params: { page } });
       const rows = response.data?.data || [];
       setPeriods(rows);
+      setEligible(response.data?.eligible_periods || []);
       setLastPage(Math.max(1, Number(response.data?.last_page) || 1));
-      setSelectedId((previous) => rows.some((row) => row.id === previous) ? previous : rows[0]?.id ?? null);
+      setSelectedId((old) => rows.some((row) => row.id === old) ? old : rows.find((row) => row.written_test)?.id ?? rows[0]?.id ?? null);
       setError("");
     } catch (cause) {
-      setError(cause.message || "Daftar periode OPREC tidak dapat dimuat.");
+      setError(errorText(cause, "Daftar Tes Tulis gagal dimuat."));
       setPeriods([]);
+      setEligible([]);
       setSelectedId(null);
     } finally {
-      setLoadingList(false);
+      setLoading(false);
     }
   }, [page]);
 
   useEffect(() => { loadPeriods(); }, [loadPeriods]);
 
-  useEffect(() => {
-    if (!selectedId) {
-      setForm(blankForm());
-      setDivisions([]);
+  const selected = periods.find((period) => period.id === selectedId);
+  const test = selected?.written_test;
+  const loadAnswers = useCallback(async (signal) => {
+    if (!selectedId || !test) {
+      setSubmissions([]);
+      setQuestions([]);
+      setAnswerTotal(0);
       return;
     }
-    let active = true;
-    setLoadingTest(true);
-    setForm(blankForm());
-    setDivisions([]);
-    setSaved(false);
-    setError("");
-    setSuccess("");
-    api.get(`/admin/oprec/${selectedId}/written-test`).then((response) => {
-      if (!active) return;
-      const data = response.data?.data;
-      setDivisions(data?.divisions || []);
-      setSaved(Boolean(data?.test));
-      setForm(data?.test ? {
-        headline: data.test.headline || "",
-        deskripsi: data.test.deskripsi || "",
-        tanggal_buka: wibDateTime(data.test.tanggal_buka),
-        tanggal_tutup: wibDateTime(data.test.tanggal_tutup),
-        questions: (data.test.questions || []).map((question) => ({
-          ...question,
-          options: question.options || [],
-          targetDivisions: (question.targetDivisions || []).map(Number),
-        })),
-      } : blankForm());
-    }).catch((cause) => {
-      if (active) setError(cause.message || "Tes tulis tidak dapat dimuat.");
-    }).finally(() => { if (active) setLoadingTest(false); });
-    return () => { active = false; };
-  }, [selectedId]);
-
-  const selected = periods.find((item) => item.id === selectedId);
-  const updateQuestion = (index, changes) => setForm((current) => ({
-    ...current,
-    questions: current.questions.map((question, itemIndex) => itemIndex === index ? { ...question, ...changes } : question),
-  }));
-  const removeQuestion = (index) => setForm((current) => ({
-    ...current,
-    questions: current.questions.filter((_, itemIndex) => itemIndex !== index),
-  }));
-  const moveQuestion = (index, step) => setForm((current) => {
-    const questions = [...current.questions];
-    [questions[index], questions[index + step]] = [questions[index + step], questions[index]];
-    return { ...current, questions };
-  });
-
-  async function saveTest(event) {
-    event.preventDefault();
-    const message = validate(form);
-    if (message) { setError(message); setSuccess(""); return; }
-    setSaving(true);
-    setError("");
-    setSuccess("");
+    setLoadingAnswers(true);
     try {
-      await api.put(`/admin/oprec/${selectedId}/written-test`, {
-        headline: form.headline.trim(),
-        deskripsi: form.deskripsi.trim(),
-        tanggal_buka: new Date(wibTimestamp(form.tanggal_buka)).toISOString(),
-        tanggal_tutup: new Date(wibTimestamp(form.tanggal_tutup)).toISOString(),
-        questions: form.questions.map((question) => ({
-          ...question,
-          label: question.label.trim(),
-          options: question.type === "single_choice" ? question.options.map((option) => option.trim()).filter(Boolean) : [],
-        })),
+      const response = await api.get(`/admin/oprec/${selectedId}/written-test/submissions`, { params: { page: answerPage }, signal });
+      if (signal?.aborted) return;
+      setSubmissions(response.data?.data || []);
+      setQuestions(response.data?.questions || []);
+      setAnswerPages(Math.max(1, Number(response.data?.last_page) || 1));
+      setAnswerTotal(Number(response.data?.total) || 0);
+      setAnswerError("");
+    } catch (cause) {
+      if (signal?.aborted) return;
+      setAnswerError(errorText(cause, "Jawaban tes gagal dimuat."));
+      setSubmissions([]);
+    } finally {
+      if (!signal?.aborted) setLoadingAnswers(false);
+    }
+  }, [selectedId, test?.id, answerPage]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    loadAnswers(controller.signal);
+    return () => controller.abort();
+  }, [loadAnswers]);
+
+  useEffect(() => { setAnswerPage(1); }, [selectedId]);
+
+  async function createTest(event) {
+    event.preventDefault();
+    const start = Date.parse(`${form.tanggal_buka}:00+07:00`);
+    const end = Date.parse(`${form.tanggal_tutup}:00+07:00`);
+    if (!form.oprec_id || !Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+      setError("Pilih periode serta waktu mulai dan selesai yang benar.");
+      return;
+    }
+    setCreating(true);
+    setError("");
+    try {
+      await api.post(`/admin/oprec/${form.oprec_id}/written-test`, {
+        tanggal_buka: toIso(form.tanggal_buka),
+        tanggal_tutup: toIso(form.tanggal_tutup),
       });
-      setSaved(true);
-      setSuccess("Draf tes tulis berhasil disimpan.");
+      const period = eligible.find((item) => String(item.id) === String(form.oprec_id));
+      setCreateOpen(false);
+      router.push(editHref(period));
+    } catch (cause) {
+      setError(errorText(cause, "Tes Tulis gagal dibuat."));
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  async function deleteAnswer() {
+    if (!deleteTarget || !selectedId) return;
+    setDeleting(true);
+    setAnswerError("");
+    try {
+      await api.delete(`/admin/oprec/${selectedId}/written-test/submissions/${deleteTarget.id}`);
+      setDeleteTarget(null);
+      await loadAnswers();
       await loadPeriods();
     } catch (cause) {
-      const firstFieldError = Object.values(cause.response?.data?.errors || {}).flat()[0];
-      setError(firstFieldError || cause.message || "Draf tes tulis gagal disimpan.");
+      setAnswerError(errorText(cause, "Jawaban gagal dihapus."));
     } finally {
-      setSaving(false);
+      setDeleting(false);
     }
   }
 
@@ -174,70 +159,87 @@ export default function AdminOprecWrittenTestPage() {
     <div className="oprec-test">
       <header className="oprec-test__header">
         <div>
-          <span className="oprec-test__eyebrow">OPREC / TES TULIS</span>
+          <span className="oprec-test__eyebrow">OPREC · TES TULIS</span>
           <h1>Kelola Tes Tulis</h1>
-          <p>Buat soal untuk satu periode rekrutmen. Tes tersimpan sebagai draf admin dan belum tampil bagi peserta.</p>
+          <p>Atur soal dan periksa jawaban peserta OPREC per periode.</p>
         </div>
-        <button type="button" className="oprec-test__secondary" onClick={loadPeriods} disabled={loadingList || saving}><RefreshCw size={16} aria-hidden="true" /> Muat ulang</button>
+        <div className="oprec-test__header-actions">
+          <button className="oprec-test__primary" type="button" onClick={() => { setForm({ oprec_id: String(eligible[0]?.id || ""), tanggal_buka: "", tanggal_tutup: "" }); setCreateOpen(true); }} disabled={!eligible.length || loading}>
+            <Plus size={17} aria-hidden="true" /> Tambah Tes Tulis
+          </button>
+          <button className="oprec-test__secondary" type="button" onClick={loadPeriods} disabled={loading}><RefreshCw size={16} aria-hidden="true" /> Perbarui</button>
+        </div>
       </header>
-
+      {!loading && !eligible.length && !periods.some((period) => period.written_test) && <p className="oprec-test__hint">Buka pendaftaran OPREC terlebih dahulu sebelum membuat Tes Tulis.</p>}
       {error && <AdminErrorNotice message={error} />}
-      {success && <p className="oprec-test__success" role="status">{success}</p>}
-
-      <div className="oprec-test__layout">
-        <aside className="oprec-test__periods" aria-label="Daftar periode OPREC">
-          <div className="oprec-test__section-head"><h2>Periode OPREC</h2><span>{loadingList ? "Memuat..." : `Halaman ${page} / ${lastPage}`}</span></div>
-          {!loadingList && !periods.length && <p className="oprec-test__empty">Belum ada pendaftaran OPREC. Buat periode di halaman Pendaftaran terlebih dahulu.</p>}
-          {periods.map((period) => (
-            <button key={period.id} type="button" className={`oprec-test__period ${selectedId === period.id ? "is-active" : ""}`} onClick={() => { if (period.id !== selectedId) { setLoadingTest(true); setSelectedId(period.id); } }} aria-pressed={selectedId === period.id}>
-              <strong>{period.periode}</strong>
-              <small>{period.written_test ? "Draf tes tersedia" : "Belum ada tes"}</small>
-            </button>
-          ))}
-          {lastPage > 1 && <div className="oprec-test__pager">
-            <button type="button" disabled={page === 1 || loadingList} onClick={() => setPage((value) => value - 1)}>Sebelumnya</button>
-            <button type="button" disabled={page === lastPage || loadingList} onClick={() => setPage((value) => value + 1)}>Berikutnya</button>
-          </div>}
-        </aside>
-
-        <section className="oprec-test__editor" aria-label="Editor tes tulis">
-          {selectedId && !loadingTest ? (
-            <form onSubmit={saveTest}>
-              <div className="oprec-test__section-head"><div><h2>{saved ? "Edit Draf Tes Tulis" : "Buat Tes Tulis"}</h2><p>Periode {selected?.periode || ""}</p></div><span className="oprec-test__badge">Draf</span></div>
-              <div className="oprec-test__fields">
-                <label className="oprec-test__wide">Judul tes <span aria-hidden="true">*</span><input value={form.headline} onChange={(event) => setForm({ ...form, headline: event.target.value })} maxLength={300} required placeholder="Contoh: Tes Tulis OPREC 2026/2027" /></label>
-                <label className="oprec-test__wide">Petunjuk peserta<textarea value={form.deskripsi} onChange={(event) => setForm({ ...form, deskripsi: event.target.value })} maxLength={5000} rows={3} placeholder="Instruksi pengerjaan tes..." /></label>
-                <label>Waktu mulai (WIB) <span aria-hidden="true">*</span><input type="datetime-local" value={form.tanggal_buka} onChange={(event) => setForm({ ...form, tanggal_buka: event.target.value })} required /></label>
-                <label>Waktu selesai (WIB) <span aria-hidden="true">*</span><input type="datetime-local" value={form.tanggal_tutup} onChange={(event) => setForm({ ...form, tanggal_tutup: event.target.value })} required /></label>
-              </div>
-
-              <div className="oprec-test__questions-head"><div><h2>Pertanyaan</h2><p>Tambah teks singkat, paragraf, atau pilihan satu jawaban.</p></div><span>{form.questions.length} / 40</span></div>
-              {form.questions.map((question, index) => (
-                <fieldset className="oprec-test__question" key={question.id}>
-                  <legend>Pertanyaan {index + 1}</legend>
-                  <div className="oprec-test__question-actions">
-                    <button type="button" aria-label={`Naikkan pertanyaan ${index + 1}`} disabled={index === 0} onClick={() => moveQuestion(index, -1)}><ArrowUp size={16} /></button>
-                    <button type="button" aria-label={`Turunkan pertanyaan ${index + 1}`} disabled={index === form.questions.length - 1} onClick={() => moveQuestion(index, 1)}><ArrowDown size={16} /></button>
-                    <button type="button" aria-label={`Hapus pertanyaan ${index + 1}`} onClick={() => removeQuestion(index)}><Trash2 size={16} /></button>
-                  </div>
-                  <div className="oprec-test__fields">
-                    <label className="oprec-test__wide">Teks pertanyaan <span aria-hidden="true">*</span><input value={question.label} onChange={(event) => updateQuestion(index, { label: event.target.value })} maxLength={300} required /></label>
-                    <label>Tipe jawaban<select value={question.type} onChange={(event) => updateQuestion(index, { type: event.target.value, options: event.target.value === "single_choice" ? ["", ""] : [] })}><option value="short_text">Teks singkat</option><option value="paragraph">Paragraf</option><option value="single_choice">Pilihan satu</option></select></label>
-                    <label className="oprec-test__check"><input type="checkbox" checked={question.required} onChange={(event) => updateQuestion(index, { required: event.target.checked })} /> Wajib dijawab</label>
-                    {question.type === "single_choice" && <label className="oprec-test__wide">Opsi jawaban <small>Satu opsi per baris, minimal dua opsi berbeda.</small><textarea rows={4} value={question.options.join("\n")} onChange={(event) => updateQuestion(index, { options: event.target.value.split("\n") })} /></label>}
-                  </div>
-                  {divisions.length > 0 && <div className="oprec-test__targets">
-                    <strong>Ditujukan untuk divisi</strong><small>Jika tidak ada yang dicentang, pertanyaan berlaku untuk semua divisi.</small>
-                    <div>{divisions.map((division) => <label key={division.id}><input type="checkbox" checked={question.targetDivisions.includes(Number(division.id))} onChange={(event) => updateQuestion(index, { targetDivisions: event.target.checked ? [...question.targetDivisions, Number(division.id)] : question.targetDivisions.filter((id) => id !== Number(division.id)) })} /> {division.nama}</label>)}</div>
-                  </div>}
-                </fieldset>
-              ))}
-              <button className="oprec-test__add" type="button" disabled={form.questions.length >= 40} onClick={() => setForm((current) => ({ ...current, questions: [...current.questions, newQuestion()] }))}><Plus size={17} aria-hidden="true" /> Tambah pertanyaan</button>
-              <footer className="oprec-test__footer"><span>Draf ini belum dipublikasikan kepada peserta.</span><button type="submit" disabled={saving || loadingTest}><Save size={16} aria-hidden="true" /> {saving ? "Menyimpan..." : "Simpan tes tulis"}</button></footer>
-            </form>
-          ) : <p className="oprec-test__empty">{loadingTest ? "Memuat tes tulis..." : "Pilih periode untuk membuat tes tulis."}</p>}
-        </section>
+      <div className="oprec-test__selector">
+        <label htmlFor="test-period">Periode OPREC</label>
+        <select id="test-period" value={selectedId || ""} onChange={(event) => setSelectedId(Number(event.target.value))}>
+          {periods.map((period) => <option key={period.id} value={period.id}>{period.periode}</option>)}
+        </select>
+        {lastPage > 1 && <div className="oprec-test__pager">
+          <button type="button" onClick={() => setPage((value) => value - 1)} disabled={page === 1}>Sebelumnya</button>
+          <span>{page} / {lastPage}</span>
+          <button type="button" onClick={() => setPage((value) => value + 1)} disabled={page === lastPage}>Berikutnya</button>
+        </div>}
       </div>
+
+      {loading ? <div className="oprec-test__empty" role="status">Memuat data Tes Tulis…</div> : test ? (
+        <>
+          <section className="oprec-test__overview" aria-labelledby="test-title">
+            <div className="oprec-test__overview-top"><span className="oprec-test__eyebrow">OPREC · PERIODE {selected.periode}</span><strong>{test.submissions_count || 0}<small>JAWABAN MASUK</small></strong></div>
+            <div className="oprec-test__overview-main">
+              <div>
+                <h2 id="test-title">{test.headline}</h2>
+                <p><CalendarDays size={16} aria-hidden="true" /> {formatWib(test.tanggal_buka)} – {formatWib(test.tanggal_tutup)}</p>
+                <span className={`oprec-test__badge ${test.published ? "is-ready" : ""}`}>{test.published ? "Soal siap" : "Soal belum disimpan"}</span>
+              </div>
+              <button className="oprec-test__primary" type="button" onClick={() => router.push(editHref(selected))}><Pencil size={16} aria-hidden="true" /> Kelola pertanyaan</button>
+            </div>
+          </section>
+          <section className="oprec-test__answers" aria-labelledby="answers-title">
+            <div className="oprec-test__section-head"><div><h2 id="answers-title">Jawaban Tes Tulis</h2><p>Seluruh kolom pertanyaan mengikuti soal pada tes ini.</p></div><span>{answerTotal} jawaban</span></div>
+            {answerError && <AdminErrorNotice message={answerError} />}
+            {loadingAnswers ? <p role="status">Memuat jawaban…</p> : submissions.length ? (
+              <div className="oprec-test__table-scroll" tabIndex={0} aria-label="Tabel jawaban dapat digulir mendatar">
+                <table><thead><tr><th>Nama</th><th>NIM</th><th>Pilihan Divisi</th>{questions.map((question) => <th key={question.id}>{question.label}</th>)}<th>Aksi</th></tr></thead>
+                  <tbody>{submissions.map((item) => <tr key={item.id}>
+                    <td><strong>{item.name}</strong></td><td>{item.nim}</td><td>{item.divisions.join(", ") || "—"}</td>
+                    {questions.map((question) => <td key={question.id}>{item.answers?.[question.id] ? <details><summary>{String(item.answers[question.id]).slice(0, 70)}{String(item.answers[question.id]).length > 70 ? "…" : ""}</summary><p>{item.answers[question.id]}</p></details> : "Tidak berlaku / kosong"}</td>)}
+                    <td><div className="oprec-test__row-actions"><button type="button" onClick={() => setPreview(item)}><Eye size={15} aria-hidden="true" /> Preview</button><button type="button" className="is-danger" onClick={() => setDeleteTarget(item)}><Trash2 size={15} aria-hidden="true" /> Hapus</button></div></td>
+                  </tr>)}</tbody>
+                </table>
+              </div>
+            ) : <p className="oprec-test__empty">Belum ada peserta yang mengirim Tes Tulis.</p>}
+            {answerPages > 1 && <div className="oprec-test__pager"><button type="button" disabled={answerPage === 1} onClick={() => setAnswerPage((value) => value - 1)}>Sebelumnya</button><span>{answerPage} / {answerPages}</span><button type="button" disabled={answerPage === answerPages} onClick={() => setAnswerPage((value) => value + 1)}>Berikutnya</button></div>}
+          </section>
+        </>
+      ) : <div className="oprec-test__empty">Belum ada Tes Tulis untuk periode ini.</div>}
+
+      <dialog ref={createDialog.ref} onClose={createDialog.onClose} className="oprec-test__dialog">
+        <form onSubmit={createTest}>
+          <span className="oprec-test__eyebrow">BUAT TES TULIS</span><h2>Jadwal Tes Tulis</h2>
+          <p>Pilih periode OPREC yang pernah dibuka dan tentukan waktu pelaksanaan dalam WIB.</p>
+          {error && <p className="oprec-test__form-error" role="alert">{error}</p>}
+          <div className="oprec-test__fields">
+            <label className="oprec-test__wide">Periode OPREC<select required value={form.oprec_id} onChange={(event) => setForm((value) => ({ ...value, oprec_id: event.target.value }))}>{eligible.map((period) => <option key={period.id} value={period.id}>{period.periode}</option>)}</select></label>
+            <label>Mulai (WIB)<input required type="datetime-local" value={form.tanggal_buka} onChange={(event) => setForm((value) => ({ ...value, tanggal_buka: event.target.value }))} /></label>
+            <label>Selesai (WIB)<input required type="datetime-local" value={form.tanggal_tutup} min={form.tanggal_buka} onChange={(event) => setForm((value) => ({ ...value, tanggal_tutup: event.target.value }))} /></label>
+          </div>
+          <div className="oprec-test__dialog-actions"><button type="button" className="oprec-test__secondary" onClick={() => setCreateOpen(false)} disabled={creating}>Batal</button><button type="submit" className="oprec-test__primary" disabled={creating}>{creating ? "Membuat…" : "Buat & kelola soal"}</button></div>
+        </form>
+      </dialog>
+      <dialog ref={previewDialog.ref} onClose={previewDialog.onClose} className="oprec-test__dialog">
+        {preview && <><span className="oprec-test__eyebrow">DETAIL JAWABAN</span><h2>{preview.name}</h2><p>{preview.nim} · {preview.divisions.join(", ")}</p>
+          <dl className="oprec-test__preview-list">{questions.map((question) => <div key={question.id}><dt>{question.label}</dt><dd>{preview.answers?.[question.id] || "Tidak berlaku / kosong"}</dd></div>)}</dl>
+          <div className="oprec-test__dialog-actions"><button type="button" className="oprec-test__secondary" onClick={() => setPreview(null)}>Tutup</button></div>
+        </>}
+      </dialog>
+      <dialog ref={deleteDialog.ref} onClose={deleteDialog.onClose} className="oprec-test__dialog">
+        {deleteTarget && <><span className="oprec-test__eyebrow">KONFIRMASI TINDAKAN</span><h2>Hapus jawaban Tes Tulis?</h2><p>Jawaban {deleteTarget.name} akan dihapus. Peserta dapat mengirim ulang selama jadwal tes masih aktif.</p>
+          <div className="oprec-test__dialog-actions"><button type="button" className="oprec-test__secondary" onClick={() => setDeleteTarget(null)} disabled={deleting}>Batal</button><button type="button" className="oprec-test__danger" onClick={deleteAnswer} disabled={deleting}>{deleting ? "Menghapus…" : "Hapus jawaban"}</button></div>
+        </>}
+      </dialog>
     </div>
   );
 }

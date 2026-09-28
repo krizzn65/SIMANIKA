@@ -19,6 +19,7 @@ import {
   Globe,
   ChevronDown,
   ClipboardList,
+  FilePenLine,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Toaster } from "sonner";
@@ -140,7 +141,7 @@ function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
                     )}
                     {expanded && oprecMenuOpen && (
                       <div id="admin-oprec-submenu" className="ml-5 mt-1 flex flex-col gap-1 border-l border-white/25 pl-3">
-                        <Link href="/admin/oprec" onClick={() => setMobileOpen(false)} aria-current={pathname === "/admin/oprec" ? "page" : undefined} className={`rounded-lg px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${pathname === "/admin/oprec" ? "bg-white font-semibold text-[#155eef]" : "text-blue-50 hover:bg-white/15"}`}>Pendaftaran</Link>
+                        <Link href="/admin/oprec" onClick={() => setMobileOpen(false)} aria-current={pathname === "/admin/oprec" ? "page" : undefined} className={`rounded-lg px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${pathname === "/admin/oprec" ? "bg-white font-semibold text-[#155eef]" : "text-blue-50 hover:bg-white/15"}`}><FilePenLine className="h-4 w-4" aria-hidden="true" /> Pendaftaran</Link>
                         <Link href="/admin/oprec/test" onClick={() => setMobileOpen(false)} aria-current={pathname === "/admin/oprec/test" ? "page" : undefined} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${pathname === "/admin/oprec/test" ? "bg-white font-semibold text-[#155eef]" : "text-blue-50 hover:bg-white/15"}`}><ClipboardList className="h-4 w-4" aria-hidden="true" />Tes Tulis</Link>
                       </div>
                     )}

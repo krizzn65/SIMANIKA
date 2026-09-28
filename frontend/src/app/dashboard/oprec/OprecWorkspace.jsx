@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowUpRight, RefreshCw, User, CheckCircle2, FileText, Calen
 import { Navbar } from "@/components/layout/Navbar";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { OprecForm } from "@/components/oprec/OprecForm";
+import { WrittenTestCard } from "./WrittenTestCard";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
 import { normalizeOprec, oprecState } from "@/lib/oprec";
@@ -224,6 +225,7 @@ function WorkspaceContent({ oprecId }) {
               </aside>
 
               {/* Main Content Area */}
+              <div className={styles.mainColumn}>
               <section className={styles.panel} aria-labelledby="form-section-title">
                 <header className={styles.panelHeader}>
                   <h2 id="form-section-title">
@@ -295,6 +297,8 @@ function WorkspaceContent({ oprecId }) {
                   ) : <p className={styles.loading}>Formulir pendaftaran belum dibuka atau sudah ditutup.</p>
                 )}
               </section>
+              {isSubmitted && <WrittenTestCard oprecId={oprecInfo.id} />}
+              </div>
             </div>
           </>
         )}

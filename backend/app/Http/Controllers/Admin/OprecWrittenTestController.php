@@ -7,6 +7,7 @@ use App\Models\Oprec;
 use App\Models\OprecStage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -16,21 +17,50 @@ class OprecWrittenTestController extends Controller
     public function index(): JsonResponse
     {
         $periods = Oprec::query()
-            ->with('writtenTest:id,oprec_id,headline,tanggal_buka,tanggal_tutup,published')
+            ->with(['writtenTest' => fn ($query) => $query->withCount('submissions')])
             ->latest('created_at')->latest('id')
-            ->paginate(20, ['id', 'periode', 'headline', 'status', 'created_at']);
+            ->paginate(20, ['id', 'periode', 'headline', 'status', 'first_published_at', 'created_at']);
 
-        return response()->json($periods);
+        $periods->getCollection()->transform(function (Oprec $period) {
+            $period->can_create_test = $period->first_published_at !== null && $period->writtenTest === null;
+            return $period;
+        });
+        $response = $periods->toArray();
+        $response['eligible_periods'] = Oprec::query()->whereNotNull('first_published_at')
+            ->whereDoesntHave('writtenTest')->latest('created_at')->get(['id', 'periode']);
+        return response()->json($response);
     }
 
     public function show(Oprec $oprec): JsonResponse
     {
         $stage = $oprec->writtenTest()->first();
         return response()->json(['data' => [
-            'oprec' => $oprec->only(['id', 'periode', 'headline', 'status']),
+            'oprec' => $oprec->only(['id', 'periode', 'headline', 'status', 'first_published_at']),
             'divisions' => $oprec->divisions()->get(['id', 'nama']),
-            'test' => $stage ? $this->stageData($stage) : null,
+            'test' => $stage ? $this->stageData($stage->loadCount('submissions')) : null,
         ]]);
+    }
+
+    public function create(Request $request, Oprec $oprec): JsonResponse
+    {
+        $data = $request->validate([
+            'tanggal_buka' => ['required', 'date'],
+            'tanggal_tutup' => ['required', 'date', 'after:tanggal_buka'],
+        ]);
+        $stage = DB::transaction(function () use ($oprec, $data) {
+            $current = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
+            abort_unless($current->first_published_at, 422, 'Pendaftaran OPREC harus pernah dibuka sebelum membuat tes tulis.');
+            abort_if($current->writtenTest()->exists(), 409, 'Tes tulis untuk periode ini sudah ada.');
+            return $current->writtenTest()->create([
+                'type' => 'test_tulis',
+                'headline' => 'Tes Tulis OPREC '.$current->periode,
+                'tanggal_buka' => $data['tanggal_buka'],
+                'tanggal_tutup' => $data['tanggal_tutup'],
+                'form_fields' => [],
+                'published' => false,
+            ]);
+        });
+        return response()->json(['data' => $this->stageData($stage)], 201);
     }
 
     public function save(Request $request, Oprec $oprec): JsonResponse
@@ -67,9 +97,13 @@ class OprecWrittenTestController extends Controller
             if (count(array_unique($targets)) !== count($targets) || array_diff($targets, $divisionIds)) {
                 throw ValidationException::withMessages(["questions.$index.targetDivisions" => ['Divisi tujuan tidak termasuk periode ini.']]);
             }
+            $label = trim($question['label']);
+            if ($label === '') {
+                throw ValidationException::withMessages(["questions.$index.label" => ['Pertanyaan tidak boleh kosong.']]);
+            }
             $questions[] = [
                 'id' => $question['id'],
-                'label' => trim($question['label']),
+                'label' => $label,
                 'type' => $question['type'],
                 'required' => (bool) $question['required'],
                 'options' => $options,
@@ -81,23 +115,30 @@ class OprecWrittenTestController extends Controller
             Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
             $stage = OprecStage::where('oprec_id', $oprec->id)
                 ->where('type', 'test_tulis')->lockForUpdate()->first();
-            if ($stage && $stage->submissions()->exists() && $stage->form_fields !== $questions) {
-                throw ValidationException::withMessages(['questions' => ['Soal tidak dapat diubah setelah ada jawaban peserta.']]);
+            abort_unless($stage, 404, 'Tes tulis belum dibuat.');
+            $locked = ($stage->published && $stage->tanggal_buka->isPast()) || $stage->submissions()->exists();
+            if ($locked && $stage->form_fields !== $questions) {
+                throw ValidationException::withMessages(['questions' => ['Soal tidak dapat diubah setelah tes dimulai atau ada jawaban peserta.']]);
             }
-            $stage ??= new OprecStage(['oprec_id' => $oprec->id, 'type' => 'test_tulis']);
+            if ($locked && (
+                !$stage->tanggal_buka->equalTo(Carbon::parse($data['tanggal_buka']))
+                || !$stage->tanggal_tutup->equalTo(Carbon::parse($data['tanggal_tutup']))
+            )) {
+                throw ValidationException::withMessages(['tanggal_buka' => ['Jadwal tidak dapat diubah setelah tes dimulai atau ada jawaban peserta.']]);
+            }
             $stage->fill([
                 'headline' => trim($data['headline']),
                 'deskripsi' => trim($data['deskripsi'] ?? ''),
                 'tanggal_buka' => $data['tanggal_buka'],
                 'tanggal_tutup' => $data['tanggal_tutup'],
                 'form_fields' => $questions,
-                'published' => false,
+                'published' => true,
             ]);
             $stage->save();
             return $stage;
         });
 
-        return response()->json(['data' => $this->stageData($stage)], $stage->wasRecentlyCreated ? 201 : 200);
+        return response()->json(['data' => $this->stageData($stage)], 200);
     }
 
     private function stageData(OprecStage $stage): array
@@ -110,6 +151,7 @@ class OprecWrittenTestController extends Controller
             'tanggal_tutup' => $stage->tanggal_tutup?->toIso8601String(),
             'published' => $stage->published,
             'questions' => $stage->form_fields ?? [],
+            'submissions_count' => $stage->submissions_count ?? $stage->submissions()->count(),
         ];
     }
 }
