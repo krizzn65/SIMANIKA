@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Oprec;
 use App\Models\OprecRegistration;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -105,6 +106,10 @@ class OprecRegistrantController extends Controller
     public function updateForm(Request $request, Oprec $oprec, OprecRegistration $registration)
     {
         abort_unless($registration->oprec_id === $oprec->id, 404);
+        $head = $request->validate(['schema_version' => ['required', 'string', 'max:20']]);
+        if ($head['schema_version'] !== $oprec->schema_version) {
+            return response()->json(['message' => 'Formulir telah berubah. Muat ulang halaman sebelum menyimpan.'], 409);
+        }
 
         $oprec->load('divisions');
         $fields = $oprec->form_fields ?? [];
@@ -208,6 +213,10 @@ class OprecRegistrantController extends Controller
         }
 
         $updated = DB::transaction(function () use ($oprec, $registration, $data, $inactiveTargetFields) {
+            $currentOprec = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
+            if ($currentOprec->schema_version !== $oprec->schema_version) {
+                throw new HttpResponseException(response()->json(['message' => 'Formulir telah berubah. Muat ulang halaman sebelum menyimpan.'], 409));
+            }
             $current = OprecRegistration::whereKey($registration->id)->lockForUpdate()->firstOrFail();
             abort_unless($current->oprec_id === $oprec->id, 404);
             $newChoices = array_map('intval', [$data['divisi_pilihan_1'], $data['divisi_pilihan_2'], $data['divisi_pilihan_3']]);

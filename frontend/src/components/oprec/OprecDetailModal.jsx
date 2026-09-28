@@ -6,6 +6,8 @@ import { X, Calendar, MapPin, Tag, ArrowRight, CheckCircle2, AlertCircle, Loader
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
 import { oprecState } from "@/lib/oprec";
+import { OprecCountdown } from "./OprecCountdown";
+import { OprecResult } from "./OprecResult";
 
 function formatOprecDate(value) {
   if (!value) return null;
@@ -26,7 +28,7 @@ const statusBadgeLabels = {
   announcement: "Pengumuman Tersedia",
 };
 
-export function OprecDetailModal({ isOpen, onClose, oprec, stage = null }) {
+export function OprecDetailModal({ isOpen, onClose, oprec }) {
   const router = useRouter();
   const { user } = useAuth();
   const [enrolling, setEnrolling] = useState(false);
@@ -37,9 +39,24 @@ export function OprecDetailModal({ isOpen, onClose, oprec, stage = null }) {
   useEffect(() => {
     if (!isOpen) return;
 
+    const previousFocus = document.activeElement;
+    modalRef.current?.querySelector("button")?.focus();
     const handleKeyDown = (e) => {
       if (e.key === "Escape" && !enrolling) {
         onClose();
+      }
+      if (e.key === "Tab") {
+        const focusable = [...(modalRef.current?.querySelectorAll('a[href], button:not(:disabled), input:not(:disabled)') || [])];
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
 
@@ -50,6 +67,7 @@ export function OprecDetailModal({ isOpen, onClose, oprec, stage = null }) {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = originalOverflow;
+      previousFocus?.focus?.();
     };
   }, [isOpen, enrolling, onClose]);
 
@@ -57,8 +75,8 @@ export function OprecDetailModal({ isOpen, onClose, oprec, stage = null }) {
 
   const state = oprecState(oprec);
   const isOpenPhase = state.key === "open";
-  const start = stage?.tanggalBuka || oprec?.tanggalBuka;
-  const deadline = stage?.tanggalTutup || oprec?.tanggalTutup;
+  const start = oprec?.tanggalBuka;
+  const deadline = oprec?.tanggalTutup;
   const startFormatted = formatOprecDate(start);
   const deadlineFormatted = formatOprecDate(deadline);
 
@@ -73,14 +91,12 @@ export function OprecDetailModal({ isOpen, onClose, oprec, stage = null }) {
     dateLabel = deadlineFormatted;
   }
 
-  const title = stage?.headline || oprec?.headline || "Open Recruitment HIMANIKA";
-  const image = stage?.poster || oprec?.poster;
-  const lokasi = stage?.lokasi || "Online (SIMANIKA Portal)";
-  const kategori = stage
-    ? (stage.type === "test_tulis" ? "Ujian Seleksi Daring" : stage.type === "pengumuman" ? "Hasil Seleksi" : "Tahap Pendaftaran")
-    : "Rekrutmen Anggota Baru";
+  const title = oprec?.headline || "Open Recruitment HIMANIKA";
+  const image = oprec?.poster;
+  const lokasi = "Online (SIMANIKA Portal)";
+  const kategori = "Rekrutmen Anggota Baru";
 
-  const deskripsi = stage?.deskripsi || oprec?.deskripsi || "Buka potensi diri dan bergabung bersama Himpunan Mahasiswa Manajemen Informatika. Siapkan dirimu untuk menjadi bagian dari perjalanan kepengurusan berikutnya.";
+  const deskripsi = oprec?.deskripsi || "Buka potensi diri dan bergabung bersama Himpunan Mahasiswa Manajemen Informatika. Siapkan dirimu untuk menjadi bagian dari perjalanan kepengurusan berikutnya.";
   const divisions = oprec?.divisiTersedia || [];
 
   async function handleDaftar() {
@@ -95,17 +111,12 @@ export function OprecDetailModal({ isOpen, onClose, oprec, stage = null }) {
     setError("");
 
     try {
-      const response = await api.post("/user/oprec/enroll", { oprec_id: oprec?.id });
+      await api.post("/user/oprec/enroll", { oprec_id: oprec?.id });
       onClose();
       router.push(`/dashboard?oprec=${oprec?.id || ""}`);
     } catch (err) {
       if (err.response?.status === 401) {
         router.push(`/login?next=${encodeURIComponent("/dashboard/oprec")}`);
-        return;
-      }
-      if (err.response?.status === 409) {
-        onClose();
-        router.push("/dashboard/oprec");
         return;
       }
       setError(err.response?.data?.message || err.message || "Pendaftaran belum dapat diproses. Coba lagi.");
@@ -238,6 +249,8 @@ export function OprecDetailModal({ isOpen, onClose, oprec, stage = null }) {
                     </>
                   )}
                 </button>
+              ) : state.key === "announcement" ? (
+                <OprecResult oprecId={oprec.id} />
               ) : state.key === "soon" ? (
                 <div className="oprec-modal-notice oprec-modal-notice--soon">
                   <Calendar size={18} aria-hidden="true" />
@@ -250,6 +263,7 @@ export function OprecDetailModal({ isOpen, onClose, oprec, stage = null }) {
                 </div>
               )}
             </div>
+            {state.target && <OprecCountdown target={state.target} initialNow={Date.now()} label={state.key === "soon" ? "Menuju pembukaan pendaftaran" : "Menuju pengumuman hasil"} />}
           </div>
         </div>
       </div>

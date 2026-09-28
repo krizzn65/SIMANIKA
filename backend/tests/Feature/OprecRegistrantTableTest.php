@@ -93,6 +93,7 @@ class OprecRegistrantTableTest extends TestCase
         ]);
         $url = "/api/admin/oprec/{$oprec->id}/registrants/{$registration->id}/form";
         $payload = [
+            'schema_version' => '1',
             'nama' => 'Nama Baru', 'nim' => 'e3121111', 'tanggal_lahir' => '2004-02-02', 'angkatan' => '2024',
             'portfolio' => 'https://example.test/portfolio',
             'divisi_pilihan_1' => (string) $divisions[2]->id, 'divisi_pilihan_2' => (string) $divisions[1]->id, 'divisi_pilihan_3' => (string) $divisions[0]->id,
@@ -105,5 +106,6 @@ class OprecRegistrantTableTest extends TestCase
         $this->assertDatabaseHas('oprec_registrations', ['id' => $registration->id, 'nim' => 'E3121111']);
         $this->putJson($url, [...$payload, 'nim' => 'A123'])->assertUnprocessable();
         $this->putJson($url, [...$payload, 'divisi_pilihan_3' => (string) $divisions[1]->id])->assertUnprocessable();
+        $this->putJson($url, [...$payload, 'schema_version' => 'old'])->assertStatus(409);
     }
 }

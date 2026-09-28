@@ -13,8 +13,11 @@ class OprecWorkspaceController extends Controller
     public function show(Request $request)
     {
         $userId = $request->user()->getKey();
-        $oprec = Oprec::with('divisions')->where('status', 'open')->latest()->first()
-            ?: Oprec::with('divisions')->latest()->first();
+        $requested = $request->validate(['oprec_id' => ['nullable', 'integer', 'min:1']])['oprec_id'] ?? null;
+        $oprec = $requested
+            ? Oprec::with('divisions')->find($requested)
+            : Oprec::with('divisions')->where('status', '!=', 'draft')
+                ->latest('created_at')->latest('id')->first();
 
         abort_unless($oprec, 404, 'OPREC tidak ditemukan.');
 
@@ -27,7 +30,10 @@ class OprecWorkspaceController extends Controller
             ->where('user_id', $userId)
             ->exists();
 
-        $announced = (bool) ($oprec->pengumuman_published
+        if ($requested) abort_unless($registration || $enrolled, 404, 'Pendaftaran OPREC tidak ditemukan.');
+
+        $announced = (bool) (($oprec->status === 'closed' || ($oprec->tanggal_tutup && $oprec->tanggal_tutup->isPast()))
+            && $oprec->pengumuman_published
             && (!$oprec->pengumuman_tanggal || $oprec->pengumuman_tanggal->isPast()));
 
         $acceptedDivision = null;

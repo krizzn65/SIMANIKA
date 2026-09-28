@@ -29,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('oauth', fn ($request) => Limit::perMinute(20)->by('ip:'.($request->ip() ?? 'unknown')));
         RateLimiter::for('oprec-result', fn ($request) => [
             Limit::perMinute(20)->by('ip:'.($request->ip() ?? 'unknown')),
-            Limit::perMinute(5)->by(hash('sha256', (string) $request->route('oprec').'|'.(string) $request->input('nim', ''))),
+            Limit::perMinute(5)->by(hash('sha256', (string) $request->route('oprec').'|'.strtoupper(trim((string) $request->input('nim', ''))))),
         ]);
     }
 }

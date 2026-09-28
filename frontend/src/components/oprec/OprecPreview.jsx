@@ -89,7 +89,7 @@ function ArrowRightIcon({ size = 14 }) {
   );
 }
 
-export function OprecPreview({ oprec, initialNow, stage = null }) {
+export function OprecPreview({ oprec, initialNow }) {
   const [now, setNow] = useState(initialNow);
   const [posterFailed, setPosterFailed] = useState(false);
   const [active, setActive] = useState(false);
@@ -108,12 +108,12 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
   }, [oprec, router]);
 
   const state = oprecState(oprec, now);
-  if (!stage && state.key === "empty") {
+  if (state.key === "empty") {
     return <OprecEmptyState />;
   }
 
-  const start = stage?.tanggalBuka || oprec?.tanggalBuka;
-  const deadline = stage?.tanggalTutup || oprec?.tanggalTutup;
+  const start = oprec?.tanggalBuka;
+  const deadline = oprec?.tanggalTutup;
 
   const startFormatted = formatOprecDate(start);
   const deadlineFormatted = formatOprecDate(deadline);
@@ -136,11 +136,10 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
     announcement: "Hasil seleksi sudah tersedia. Cek hasilmu menggunakan NIM dan tanggal lahir.",
   }[state.key];
 
-  const title = stage?.headline || oprec?.headline || "Open Recruitment";
-  const image = stage?.poster || oprec?.poster;
-  const kind = stage?.type === "test_tulis" ? "Tes tulis" : stage?.type === "pengumuman" ? "Pengumuman" : "Pendaftaran";
-  const lokasi = stage?.lokasi || "Online (SIMANIKA Portal)";
-  const kategori = stage ? (stage.type === "test_tulis" ? "Ujian Seleksi Daring" : stage.type === "pengumuman" ? "Hasil Seleksi" : "Tahap Pendaftaran") : "Rekrutmen Anggota Baru";
+  const title = oprec?.headline || "Open Recruitment";
+  const image = oprec?.poster;
+  const lokasi = "Online (SIMANIKA Portal)";
+  const kategori = "Rekrutmen Anggota Baru";
 
   return (
     <>
@@ -152,14 +151,14 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setActive(false);
       }}
-      aria-labelledby={`oprec-preview-title-${stage?.id || "registration"}`}
+      aria-labelledby="oprec-preview-title-registration"
     >
       {/* Top 3px IFEST accent bar */}
       <div className="oprec-preview__top-bar" aria-hidden="true" />
 
       {/* LEFT: Information & actions */}
       <div className="oprec-preview__content">
-        <h3 id={`oprec-preview-title-${stage?.id || "registration"}`}>{title}</h3>
+        <h3 id="oprec-preview-title-registration">{title}</h3>
 
         {/* Facts with 3 icons matching IFEST */}
         <div className="oprec-preview__facts">
@@ -181,12 +180,12 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
         <div className="oprec-preview__badge-wrapper">
           <span className={`oprec-preview__badge oprec-preview__badge--${state.key}`} aria-live="polite">
             <span className="oprec-preview__badge-dot" aria-hidden="true" />
-            {stage ? kind : previewStatus[state.key]}
+            {previewStatus[state.key]}
           </span>
         </div>
 
         <p className="oprec-preview__description">
-          {stage?.deskripsi || oprec?.deskripsi || description}
+          {oprec?.deskripsi || description}
         </p>
 
         <div className="oprec-preview__footer">
@@ -254,7 +253,6 @@ export function OprecPreview({ oprec, initialNow, stage = null }) {
       isOpen={modalOpen}
       onClose={() => setModalOpen(false)}
       oprec={oprec}
-      stage={stage}
     />
   </>
 );

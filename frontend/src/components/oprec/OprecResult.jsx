@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { validBirthDate } from "@/lib/oprec";
+import { normalizeOprecNim, validBirthDate } from "@/lib/oprec";
 
 const resultCopy = {
   accepted: ["DITERIMA", "Selamat, kamu diterima!", "Perjalanan barumu bersama HIMANIKA dimulai di sini."],
@@ -20,7 +20,7 @@ export function OprecResult({ oprecId }) {
     if (submitting.current) return;
     const form = event.currentTarget;
     const data = new FormData(form);
-    const nim = String(data.get("nim") || "").trim();
+    const nim = normalizeOprecNim(data.get("nim"));
     const tanggal_lahir = String(data.get("tanggal_lahir") || "");
     setError(""); setResult(null);
     if (!/^[a-zA-Z0-9.-]{3,32}$/.test(nim) || !validBirthDate(tanggal_lahir)) { setError("Masukkan NIM dan tanggal lahir yang valid."); return; }
@@ -38,7 +38,7 @@ export function OprecResult({ oprecId }) {
   return <div className="oprec-result">
     <form onSubmit={submit} aria-busy={pending} autoComplete="off">
       <fieldset disabled={pending}><legend className="oprec-sr-only">Cek hasil seleksi</legend>
-        <label htmlFor="result-nim">NIM<input id="result-nim" name="nim" type="text" required minLength={3} maxLength={32} placeholder="NIM saat pendaftaran" autoCapitalize="none" spellCheck={false} /></label>
+        <label htmlFor="result-nim">NIM<input id="result-nim" name="nim" type="text" required minLength={3} maxLength={32} placeholder="NIM saat pendaftaran" autoCapitalize="characters" spellCheck={false} onInput={(event) => { event.currentTarget.value = event.currentTarget.value.toUpperCase(); }} /></label>
         <label htmlFor="result-birth">Tanggal lahir<input id="result-birth" name="tanggal_lahir" type="date" min="1900-01-01" required /></label>
       </fieldset>
       {error && <p className="oprec-feedback oprec-feedback--error" role="alert">{error}</p>}

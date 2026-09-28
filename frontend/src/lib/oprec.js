@@ -111,7 +111,6 @@ export function normalizeOprec(raw) {
       return { id: String(item.id ?? index), nama, namaLengkap: text(item.namaLengkap ?? item.nama_lengkap), deskripsi: text(item.deskripsi), logo: safePosterUrl(item.logo), jabatan };
     }),
     pengumuman: { published: announcement.published === true, tanggal: date(announcement.tanggal), pesan: text(announcement.pesan) },
-    stages: [],
     faq: (Array.isArray(raw.faq) ? raw.faq : []).filter((item) => item && text(item.pertanyaan) && text(item.jawaban)).map((item) => ({ pertanyaan: text(item.pertanyaan), jawaban: text(item.jawaban) })),
   };
 }
@@ -127,7 +126,7 @@ export function oprecState(oprec, now = Date.now()) {
   }
   if (oprec.tanggalBuka && now < Date.parse(oprec.tanggalBuka)) return { key: "soon", label: "SEGERA DIBUKA", title: "Bersiap untuk cerita barumu.", message: `Pendaftaran dimulai ${oprecDate(oprec.tanggalBuka)}.`, target: oprec.tanggalBuka };
   if (!oprec.tanggalBuka || !oprec.tanggalTutup) return { key: "empty", label: "JADWAL MENYUSUL", title: "Sampai bertemu di periode berikutnya.", message: "Jadwal pendaftaran belum diumumkan oleh pengurus." };
-  if (!oprec.divisiTersedia.length) return { key: "empty", label: "DIVISI MENYUSUL", title: "Temukan peranmu sebentar lagi.", message: "Divisi untuk periode ini belum diumumkan. Formulir akan tersedia setelah pengurus menyiapkannya." };
+  if (oprec.divisiTersedia.length < 3) return { key: "empty", label: "DIVISI MENYUSUL", title: "Temukan peranmu sebentar lagi.", message: "Divisi untuk periode ini belum lengkap. Formulir akan tersedia setelah pengurus menyiapkannya." };
   return { key: "open", label: "PENDAFTARAN DIBUKA", title: "Sekarang, giliranmu.", message: `Lengkapi formulir sebelum ${oprecDate(oprec.tanggalTutup)}.` };
 }
 

@@ -222,6 +222,7 @@ export default function AdminOprecPage() {
     setRegistrantEditError("");
     try {
       const payload = {
+        schema_version: selectedOprec.schemaVersion,
         ...registrantEdit.values,
         divisi_pilihan_1: registrantEdit.divisi_pilihan_1,
         divisi_pilihan_2: registrantEdit.divisi_pilihan_2,

@@ -21,7 +21,9 @@ class OprecRegistrationController extends Controller
         if ((int) $request->server('CONTENT_LENGTH', 0) > 12 * 1024 * 1024) return response()->json(['message' => 'Ukuran formulir terlalu besar.'], 413);
         $head = $request->validate(['oprec_id' => ['required', 'integer', 'exists:oprecs,id'], 'schema_version' => ['required', 'string', 'max:20']]);
         $oprec = Oprec::with('divisions')->findOrFail($head['oprec_id']);
-        if ($oprec->status !== 'open' || !$oprec->tanggal_buka || !$oprec->tanggal_tutup || now()->lt($oprec->tanggal_buka) || now()->gte($oprec->tanggal_tutup) || !$oprec->divisions->count()) return response()->json(['message' => 'Pendaftaran belum dibuka atau sudah ditutup.'], 409);
+        $currentPublicId = Oprec::where('status', '!=', 'draft')->latest('created_at')->latest('id')->value('id');
+        if ($oprec->id !== $currentPublicId) return response()->json(['message' => 'Periode pendaftaran telah berubah. Muat ulang halaman.'], 409);
+        if ($oprec->status !== 'open' || !$oprec->tanggal_buka || !$oprec->tanggal_tutup || now()->lt($oprec->tanggal_buka) || now()->gte($oprec->tanggal_tutup) || $oprec->divisions->count() < 3) return response()->json(['message' => 'Pendaftaran belum dibuka atau sudah ditutup.'], 409);
         if ($oprec->schema_version !== $head['schema_version']) return response()->json(['message' => 'Formulir sudah diperbarui. Muat ulang halaman.'], 409);
         $fields = $oprec->form_fields ?? [];
         if (!count($fields) || count($fields) > 40) return response()->json(['message' => 'Formulir belum tersedia.'], 409);

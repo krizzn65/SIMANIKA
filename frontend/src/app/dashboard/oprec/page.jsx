@@ -6,6 +6,7 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function DashboardOprecPage() {
-  return <OprecWorkspace />;
+export default async function DashboardOprecPage({ searchParams }) {
+  const { oprec_id: oprecId } = (await searchParams) ?? {};
+  return <OprecWorkspace oprecId={typeof oprecId === "string" ? oprecId : null} />;
 }

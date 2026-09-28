@@ -4,7 +4,7 @@ import test from "node:test";
 const source = await readFile(new URL("../src/lib/oprec.js", import.meta.url), "utf8");
 const lib = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
 const service = (await readFile(new URL("../src/services/oprecSubmission.js", import.meta.url), "utf8")).replace(/^import .*;\n/gm, "").replaceAll("export ", "");
-const period = lib.normalizeOprec({ id: 1, periode: "Test", status: "open", tanggalBuka: "2000-01-01T00:00:00Z", tanggalTutup: "2099-01-01T00:00:00Z", divisiTersedia: [{ id: 1, nama: "Kominfo" }], schemaVersion: "v2", formFields: [{ name: "nim", type: "text", label: "NIM", required: true }, { name: "tanggal_lahir", type: "date", label: "Lahir", required: true }] });
+const period = lib.normalizeOprec({ id: 1, periode: "Test", status: "open", tanggalBuka: "2000-01-01T00:00:00Z", tanggalTutup: "2099-01-01T00:00:00Z", divisiTersedia: [{ id: 1, nama: "Kominfo" }, { id: 2, nama: "Humas" }, { id: 3, nama: "PSDM" }], schemaVersion: "v2", formFields: [{ name: "nim", type: "text", label: "NIM", required: true }, { name: "tanggal_lahir", type: "date", label: "Lahir", required: true }] });
 function handlers(oprec, upstream) {
   return new Function("getOprec", "normalizeOprecNim", "oprecState", "validBirthDate", "validateOprecForm", "fetch", "process", `${service}\nreturn {registerOprec, lookupOprecResult};`)(async () => oprec, lib.normalizeOprecNim, lib.oprecState, lib.validBirthDate, lib.validateOprecForm, upstream, { env: { API_BASE_URL: "https://backend.test/api" } });
 }
@@ -69,6 +69,15 @@ test("private selection response is reduced to status, division and message", as
   const response = await lookupOprecResult(lookup());
   assert.deepEqual((await response.json()).data, { status: "accepted", divisi: "Kominfo", pesan: "Selamat" });
   assert.match(response.headers.get("cache-control"), /no-store/);
+});
+test("result lookup normalizes lowercase NIM before forwarding", async () => {
+  const announced = { ...period, status: "closed", pengumuman: { published: true, tanggal: null } };
+  const request = new Request("https://site.test/api/oprec/result", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ oprec_id: "1", nim: " e312345 ", tanggal_lahir: "2004-02-29" }) });
+  const response = await handlers(announced, async (_url, options) => {
+    assert.equal(JSON.parse(options.body).nim, "E312345");
+    return Response.json({ data: { status: "not_found" } });
+  }).lookupOprecResult(request);
+  assert.equal(response.status, 200);
 });
 test("upstream failure never becomes rejection or a fake success", async () => {
   const announced = { ...period, status: "closed", pengumuman: { published: true, tanggal: null } };
