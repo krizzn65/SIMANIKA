@@ -16,7 +16,7 @@ class OprecResource extends JsonResource
             'tanggalBuka' => $this->tanggal_buka?->toIso8601String(),
             'tanggalTutup' => $this->tanggal_tutup?->toIso8601String(),
             'schemaVersion' => $this->schema_version, 'formIntro' => $this->form_intro ?? '',
-            'linkGrupWa' => $this->link_grup_wa,
+            'linkGrupWa' => $request->is('api/admin/*') ? $this->link_grup_wa : null,
             'formFields' => collect($this->form_fields ?? [])
                 ->reject(fn ($field) => in_array($field['name'] ?? '', ['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'], true))
                 ->map(fn ($field) => array_merge($field, [
@@ -34,7 +34,11 @@ class OprecResource extends JsonResource
             'pengumuman' => [
                 'published' => $this->pengumuman_published,
                 'tanggal' => $this->pengumuman_published ? $this->pengumuman_tanggal?->toIso8601String() : null,
-                'pesan' => $this->pengumuman_published ? ($this->pengumuman_pesan ?? '') : '',
+                'pesan' => ($request->is('api/admin/*') || (($this->status === 'closed'
+                    || ($this->tanggal_tutup && $this->tanggal_tutup->isPast()))
+                    && $this->pengumuman_published
+                    && (!$this->pengumuman_tanggal || $this->pengumuman_tanggal->isPast())))
+                    ? ($this->pengumuman_pesan ?? '') : '',
             ],
             'faq' => $this->faq ?? [],
         ];

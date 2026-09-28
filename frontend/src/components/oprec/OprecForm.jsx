@@ -24,6 +24,7 @@ const SYSTEM_IDENTIFIERS = ["nama", "nim", "tanggal_lahir", "angkatan"];
 const isSystemField = (name) => SYSTEM_IDENTIFIERS.includes(name);
 const isDivisionField = (name) => ["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(name);
 const isCustomField = (name) => !isSystemField(name) && !isDivisionField(name);
+const DRAFT_MAX_BYTES = 100_000;
 
 function DivisionChoiceItem({ option, division, common, id, selected, onToggle }) {
   const [imgError, setImgError] = useState(false);
@@ -236,7 +237,7 @@ function Field({ field, error, inlineError = error, divisions = [], selectedDivi
   );
 }
 
-export function OprecForm({ oprec, onSuccess }) {
+export function OprecForm({ oprec, onSuccess, draftScope }) {
   const [pending, setPending] = useState(false);
   const [errors, setErrors] = useState({});
   const [nimInputError, setNimInputError] = useState(null);
@@ -250,6 +251,9 @@ export function OprecForm({ oprec, onSuccess }) {
   const pendingForm = useRef(null);
   const pendingBody = useRef(null);
   const confirmCancelRef = useRef(null);
+  const formRef = useRef(null);
+  const draftReady = useRef(false);
+  const draftKey = `simanika:oprec-draft:${encodeURIComponent(String(draftScope || "anonymous"))}:${encodeURIComponent(String(oprec.id))}:${encodeURIComponent(String(oprec.schemaVersion))}`;
 
   useEffect(() => {
     setSelectedJabatan((prev) => {
@@ -290,6 +294,63 @@ export function OprecForm({ oprec, onSuccess }) {
       return changed ? next : prev;
     });
   }, [selectedDivisions, oprec.divisiTersedia]);
+
+  function saveDraft() {
+    if (!draftReady.current || !formRef.current) return;
+    try {
+      const formData = new FormData(formRef.current);
+      const answers = {};
+      for (const field of oprec.formFields) {
+        if (field.type === "file" || isDivisionField(field.name)) continue;
+        const value = formData.get(field.name);
+        if (typeof value === "string" && value) answers[field.name] = field.name === "nim" ? normalizeOprecNim(value) : value;
+      }
+      const draft = JSON.stringify({ version: 1, answers, selectedDivisions, selectedJabatan });
+      if (draft.length <= DRAFT_MAX_BYTES) sessionStorage.setItem(draftKey, draft);
+    } catch {
+      // Draft is an optional client-side convenience and must never interrupt form use.
+    }
+  }
+
+  useEffect(() => {
+    draftReady.current = false;
+    try {
+      const raw = sessionStorage.getItem(draftKey);
+      const draft = raw ? JSON.parse(raw) : null;
+      if (!draft || draft.version !== 1 || typeof draft !== "object") {
+        sessionStorage.removeItem(draftKey);
+        return;
+      }
+      const form = formRef.current;
+      if (form && draft.answers && typeof draft.answers === "object") {
+        for (const field of oprec.formFields) {
+          if (field.type === "file" || isDivisionField(field.name)) continue;
+          const value = typeof draft.answers[field.name] === "string" ? draft.answers[field.name] : "";
+          const controls = form.querySelectorAll(`[name="${field.name}"]`);
+          if (field.type === "checkbox") controls.forEach((control) => { control.checked = value === "on"; });
+          else if (field.type === "radio") controls.forEach((control) => { control.checked = control.value === value; });
+          else if (controls[0]) controls[0].value = field.name === "nim" ? normalizeOprecNim(value) : value;
+        }
+        setNimInputError(oprecNimProgramWarning(draft.answers.nim));
+      }
+      const validDivisions = new Set((oprec.divisiTersedia || []).map((division, index) => String(division.id ?? index)));
+      const restoredDivisions = Array.isArray(draft.selectedDivisions)
+        ? [...new Set(draft.selectedDivisions.map(String).filter((id) => validDivisions.has(id)))].slice(0, 3)
+        : [];
+      setSelectedDivisions(restoredDivisions);
+      const restoredJabatan = draft.selectedJabatan && typeof draft.selectedJabatan === "object" ? draft.selectedJabatan : {};
+      setSelectedJabatan({ 1: typeof restoredJabatan[1] === "string" ? restoredJabatan[1] : "", 2: typeof restoredJabatan[2] === "string" ? restoredJabatan[2] : "", 3: typeof restoredJabatan[3] === "string" ? restoredJabatan[3] : "" });
+    } catch {
+      try { sessionStorage.removeItem(draftKey); } catch {}
+    } finally {
+      const frame = requestAnimationFrame(() => { draftReady.current = true; });
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [draftKey, oprec.formFields, oprec.divisiTersedia]);
+
+  useEffect(() => {
+    saveDraft();
+  }, [selectedDivisions, selectedJabatan]);
 
   useEffect(() => {
     if (!confirmOpen) return;
@@ -353,6 +414,7 @@ export function OprecForm({ oprec, onSuccess }) {
         return;
       }
       if (result.data?.submitted !== true) throw new Error("Invalid response");
+      try { sessionStorage.removeItem(draftKey); } catch {}
       form.reset();
       setSuccess(true);
       onSuccess?.();
@@ -419,7 +481,7 @@ export function OprecForm({ oprec, onSuccess }) {
 
   return (
     <>
-    <form className="event-dynamic-form" onSubmit={submit} noValidate aria-busy={pending || confirmOpen}>
+    <form ref={formRef} className="event-dynamic-form" onSubmit={submit} onInput={saveDraft} onChange={saveDraft} noValidate aria-busy={pending || confirmOpen}>
       <p>Kolom bertanda * wajib diisi. Isilah sesuai petunjuk penyelenggara.</p>
       {message && (
         <div ref={feedback} tabIndex={-1} className="event-form-feedback" role="alert">

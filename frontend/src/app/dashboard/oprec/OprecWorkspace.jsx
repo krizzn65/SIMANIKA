@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowUpRight, RefreshCw, User, CheckCircle2, FileText, Calendar, AlertCircle, Clock3 } from "lucide-react";
@@ -9,7 +9,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { OprecForm } from "@/components/oprec/OprecForm";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
-import { normalizeOprec } from "@/lib/oprec";
+import { normalizeOprec, oprecState } from "@/lib/oprec";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import styles from "./oprec-workspace.module.css";
 import "../../oprec/oprec.css";
@@ -26,7 +26,7 @@ function formatDate(value) {
   }).format(d);
 }
 
-function WorkspaceContent() {
+function WorkspaceContent({ oprecId }) {
   const { user } = useAuth();
   const router = useRouter();
   const [data, setData] = useState(null);
@@ -41,7 +41,7 @@ function WorkspaceContent() {
     abortRef.current = controller;
     setRefreshing(true);
     try {
-      const response = await api.get("/user/oprec/workspace", { signal: controller.signal });
+      const response = await api.get("/user/oprec/workspace", { signal: controller.signal, params: oprecId ? { oprec_id: oprecId } : undefined });
       if (!response.data?.data?.oprec) throw new Error("Data OPREC belum dapat dimuat.");
       setData(response.data.data);
       setError("");
@@ -56,7 +56,7 @@ function WorkspaceContent() {
         setRefreshing(false);
       }
     }
-  }, []);
+  }, [oprecId]);
 
   useEffect(() => {
     if (user?.role === "admin") {
@@ -68,20 +68,20 @@ function WorkspaceContent() {
     return () => abortRef.current?.abort();
   }, [load, user?.id, user?.role, router]);
 
-  if (user?.role === "admin") return null;
-
-  let normalizedOprec = null;
-  if (data?.oprec) {
+  const normalizedOprec = useMemo(() => {
+    if (!data?.oprec) return null;
     const rawOprec = {
       ...data.oprec,
       divisiTersedia: data.oprec.divisiTersedia || data.oprec.divisions || [],
     };
     try {
-      normalizedOprec = normalizeOprec(rawOprec);
+      return normalizeOprec(rawOprec);
     } catch {
-      normalizedOprec = rawOprec;
+      return rawOprec;
     }
-  }
+  }, [data?.oprec]);
+
+  if (user?.role === "admin") return null;
 
   const registration = data?.registration;
   const isSubmitted = Boolean(registration);
@@ -290,9 +290,9 @@ function WorkspaceContent() {
                     </dl>
                   </div>
                 ) : (
-                  normalizedOprec && (
-                    <OprecForm oprec={normalizedOprec} onSuccess={load} />
-                  )
+                  normalizedOprec && oprecState(normalizedOprec).key === "open" ? (
+                    <OprecForm oprec={normalizedOprec} onSuccess={load} draftScope={user?.id} />
+                  ) : <p className={styles.loading}>Formulir pendaftaran belum dibuka atau sudah ditutup.</p>
                 )}
               </section>
             </div>
@@ -303,12 +303,12 @@ function WorkspaceContent() {
   );
 }
 
-export function OprecWorkspace() {
+export function OprecWorkspace({ oprecId }) {
   return (
     <div className="site-root">
       <Navbar />
       <ProtectedRoute>
-        <WorkspaceContent />
+        <WorkspaceContent oprecId={oprecId} />
       </ProtectedRoute>
     </div>
   );

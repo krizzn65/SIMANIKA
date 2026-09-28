@@ -504,7 +504,7 @@
 .oprec-countdown-wrap { margin-top: 2rem; }
 .oprec-countdown-wrap > p { color: var(--ink-muted); }
 .oprec-countdown { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; }
-.oprec-countdown > div { padding: 1rem .3rem; text-align: center; border: 1px solid var(--border); background: var(--background); border-radius: 6px; }
+.oprec-countdown > div { padding: 1rem .3rem; text-align: center; border: 1px solid var(--border); background: var(--background); border-radius: 0; }
 .oprec-countdown strong { display: block; font: clamp(1.4rem, 2.5vw, 2.4rem)/1.3 "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; color: var(--blue-dark); }
 .oprec-countdown span { font-size: .8rem; color: var(--ink-muted); }
 .oprec-button { display: inline-flex; align-items: center; justify-content: center; gap: 1.5rem; min-height: 48px; padding: .85rem 1.25rem; border: 1px solid var(--blue); border-radius: 8px; background: var(--blue); color: white; font-weight: 500; transition: background-color 180ms; }
@@ -978,9 +978,21 @@
   }
 }
 
-/* Registration detail mirrors the Event two-panel rhythm: context left, answers right. */
-.oprec-registration-grid{grid-template-columns:minmax(280px,4fr) minmax(0,6fr);gap:clamp(24px,4vw,64px)}.oprec-registration-grid>.oprec-poster{position:sticky;top:100px;width:100%;border-radius:12px}.oprec-stage{border-radius:12px;padding:clamp(24px,3vw,40px);box-shadow:0 16px 40px rgba(7,17,31,.05)}.oprec-stage__intro h3{font-size:clamp(27px,3vw,42px);font-weight:650;letter-spacing:-.045em}.oprec-form__fields{grid-template-columns:1fr;gap:22px}.oprec-field--wide{grid-column:auto}.oprec-field>label,.oprec-field>legend{font-weight:650;font-size:15px}.oprec-form__intro{font-size:16px}.oprec-field :is(input:not([type=checkbox]):not([type=radio]),textarea,select){min-height:50px}@media(max-width:760px){.oprec-registration-grid{grid-template-columns:1fr}.oprec-registration-grid>.oprec-poster{position:static;width:min(100%,400px)}}
-.oprec-preview__sheet--empty{height:100%;background:#fff;color:#0a1020}.oprec-preview__sheet--empty .oprec-preview__placeholder{color:#0a1020}
+
+/* Preserve the compact single-column registration form without orphan stage selectors. */
+.oprec-form__fields {
+  grid-template-columns: 1fr;
+  gap: 22px;
+}
+.oprec-field--wide { grid-column: auto; }
+.oprec-field > label, .oprec-field > legend {
+  font-weight: 650;
+  font-size: 15px;
+}
+.oprec-form__intro { font-size: 16px; }
+.oprec-field :is(input:not([type=checkbox]):not([type=radio]), textarea, select) {
+  min-height: 50px;
+}
 
 /* Division choice tiles (Compact single-box, sharp corners, atas 3 bawah 3) */
 .oprec-division-choices {
@@ -1437,4 +1449,3 @@
   vertical-align: middle;
   line-height: 1.4;
 }
-

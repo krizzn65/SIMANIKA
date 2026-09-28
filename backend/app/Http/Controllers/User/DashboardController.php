@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\EventRegistration;
+use App\Models\Oprec;
 use App\Models\OprecRegistration;
 use App\Models\Team;
 use Illuminate\Http\JsonResponse;
@@ -75,11 +76,14 @@ class DashboardController extends Controller
         $completedIds = $events->pluck("eventId")->concat($teams->pluck("eventId"))->all();
         $enrollments = EventEnrollmentDashboard::items($userId, $completedIds);
         $completedOprecIds = OprecRegistration::where('user_id', $userId)->pluck('oprec_id')->all();
+        $currentOprecId = Oprec::where('status', '!=', 'draft')->latest('created_at')->latest('id')->value('id');
         $oprecEnrollments = DB::table('oprec_enrollments')
             ->join('oprecs', 'oprecs.id', '=', 'oprec_enrollments.oprec_id')
             ->where('oprec_enrollments.user_id', $userId)
+            ->where('oprecs.id', $currentOprecId)
             ->where('oprecs.status', 'open')
-            ->whereDate('oprecs.tanggal_tutup', '>=', today())
+            ->where('oprecs.tanggal_buka', '<=', now())
+            ->where('oprecs.tanggal_tutup', '>', now())
             ->when($completedOprecIds, fn ($query) => $query->whereNotIn('oprecs.id', $completedOprecIds))
             ->select('oprec_enrollments.id', 'oprec_enrollments.oprec_id', 'oprec_enrollments.created_at',
                 'oprecs.headline', 'oprecs.periode', 'oprecs.tanggal_buka', 'oprecs.tanggal_tutup')
@@ -91,7 +95,7 @@ class DashboardController extends Controller
                 'title' => $enrollment->headline ?: 'Open Recruitment HIMANIKA',
                 'subtitle' => 'Periode '.$enrollment->periode,
                 'status' => 'incomplete',
-                'href' => '/dashboard/oprec',
+                'href' => '/dashboard/oprec?oprec_id='.$enrollment->oprec_id,
                 'date' => null,
                 'registeredAt' => $enrollment->created_at,
                 'actionRequired' => true,
@@ -100,13 +104,14 @@ class DashboardController extends Controller
 
         $oprecs = OprecRegistration::query()
             ->where('user_id', $userId)
-            ->with('oprec:id,periode,headline,pengumuman_published,pengumuman_tanggal')
+            ->with('oprec:id,periode,headline,status,tanggal_tutup,pengumuman_published,pengumuman_tanggal')
             ->latest()
             ->get()
             ->filter(fn ($registration) => $registration->oprec !== null)
             ->map(function ($registration) {
                 $oprec = $registration->oprec;
-                $announced = $oprec->pengumuman_published
+                $announced = ($oprec->status === 'closed' || ($oprec->tanggal_tutup && $oprec->tanggal_tutup->isPast()))
+                    && $oprec->pengumuman_published
                     && (!$oprec->pengumuman_tanggal || $oprec->pengumuman_tanggal->isPast());
 
                 return [
@@ -115,7 +120,7 @@ class DashboardController extends Controller
                     'title' => $oprec->headline ?: 'Open Recruitment HIMANIKA',
                     'subtitle' => 'Periode '.$oprec->periode,
                     'status' => $announced ? $registration->status : 'pending',
-                    'href' => '/dashboard/oprec',
+                    'href' => '/dashboard/oprec?oprec_id='.$oprec->id,
                     'date' => $announced ? $oprec->pengumuman_tanggal?->toIso8601String() : null,
                     'registeredAt' => $registration->created_at?->toIso8601String(),
                 ];

@@ -14,10 +14,20 @@
 - [x] Dialog `window.confirm` untuk hapus pendaftaran diganti popup dashboard dengan periode sasaran, backdrop, Escape, tombol Batal, dan status proses hapus untuk mencegah klik ganda.
 - [ ] Uji visual popup hapus pada browser desktop dan mobile dengan sesi admin nyata.
 
+## Aksi pendaftar OPREC (28 September 2026)
+
+- [x] Kolom tabel “Verifikasi Formulir” diubah menjadi “Aksi”; tombol detail menggunakan label Edit, dan tombol Hapus memakai popup konfirmasi sebelum menghapus pendaftar serta berkas privatnya.
+- [ ] Uji manual Edit/detail dan Hapus pendaftar, termasuk berkas terlampir, dengan sesi admin nyata.
+
 ## Konfirmasi kirim formulir OPREC (27 September 2026)
 
 - [x] Form peserta memvalidasi data sebelum membuka popup konfirmasi; pengguna dapat kembali memeriksa jawaban atau mengirim, dengan penegasan bahwa data tidak dapat diedit setelah tersimpan.
 - [ ] Uji visual dan alur kirim popup pada browser desktop dan mobile dengan sesi peserta nyata.
+
+## Draft formulir OPREC (27 September 2026)
+
+- [x] Jawaban teks, pilihan divisi, dan jabatan dipulihkan setelah refresh dalam tab yang sama melalui `sessionStorage` dengan kunci pengguna/periode/schema; draft dihapus setelah kirim berhasil. Berkas unggahan sengaja tidak dipulihkan karena browser tidak mengizinkan rekonstruksi berkas lokal setelah refresh.
+- [ ] Uji refresh, logout/login akun berbeda pada tab yang sama, serta restore draft dengan upload berkas pada browser nyata.
 
 ## Tabel pendaftar OPREC dinamis (27 September 2026)
 
@@ -163,6 +173,11 @@
 - [ ] Uji dua permintaan create-team simultan pada PostgreSQL nyata dan smoke test browser admin setelah deploy; tes SQLite tidak membuktikan perilaku lock PostgreSQL di bawah beban.
 
 Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis berarti sudah teruji.
+
+### Admin edit pendaftar OPREC (28 September 2026)
+
+- [x] Admin dapat mengubah jawaban non-berkas, tiga pilihan divisi, dan jabatan dari modal pendaftar. API terpisah memvalidasi ulang seluruh skema formulir, NIM E31, tanggal lahir, pilihan divisi, jabatan, serta melindungi status penerimaan. Regresi backend (3 tes/28 assertion) dan build produksi frontend lulus.
+- [ ] Penggantian berkas privat tidak termasuk fitur edit ini; tetap gunakan alur berkas khusus yang dapat diaudit bila diperlukan.
 
 | Area | Status | Yang perlu diverifikasi/diselesaikan |
 |---|---|---|
@@ -808,3 +823,13 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 | 2026-09-27 | Warna merah tanda wajib (*) formulir OPREC | Seluruh simbol asterisk (*) penanda kolom wajib diisi pada form builder OPREC (OprecBuilder) dan dialog tambah tahap OPREC (OprecCreateDialog) diberi warna merah tegas (#ef4444 / rose-500) melalui class scoped .oprec-builder__required dan .oprec-dialog__required. Verifikasi lulus: tes frontend 20/20 lulus dan Next.js production build lulus 26/26 routes. | AI |
 | 2026-09-27 | Upload gambar/logo divisi OPREC | Input teks URL logo divisi (/images/divisi/...) di OprecBuilder diganti total dengan komponen upload gambar interaktif: dilengkapi tombol upload eksplisit "Pilih Berkas" (.oprec-builder__logo-pick-btn), drag-and-drop & file picker, batas 5MB, format JPG/PNG/WebP, endpoint backend POST /api/admin/oprec/upload-logo, thumbnail pratinjau 32x32px, nama logo mono, tombol Ganti & Hapus, serta rendering dinamis di Live Preview. Dropzone poster juga dilengkapi tombol "Pilih Berkas Poster". Verifikasi lulus: tes frontend 20/20, backend Oprec 4 test/32 assertions, dan Next.js production build 26/26 routes. | AI |
 | 2026-09-27 | Perombakan OPREC: Pendaftaran Tunggal Tanpa Tahapan Terpisah | Seluruh alur OPREC dirombak untuk murni mengelola pendaftaran periode rekrutmen: modal tambah tahap 3-opsi (Pendaftaran, Tes tulis, Pengumuman) diganti langsung dengan formulir Buat Pendaftaran Baru; bagian tahapan berikutnya di overview admin dihilangkan; submenu sidebar dihilangkan agar Kelola OPREC mengarah langsung ke /admin/oprec; deadcode frontend (test, announcement, stages form, OprecStageOverview, OprecTestBuilder, oprec-review.css) dan deadcode backend (OprecStageController, OprecTestController, OprecStagesTest, dan route stages) dihapus tuntas. Verifikasi: 40 tes backend (307 assertions) lulus 100%, dan Next.js production build 24/24 routes lulus tanpa error. | AI |
+
+### Audit OPREC menyeluruh — 28 September 2026
+- [x] Periode publik, dashboard, enrollment, workspace, dan submit memakai periode non-draft terbaru secara konsisten; akses periode lama dibatasi untuk pemilik. Jadwal dan minimal tiga divisi dijaga di backend, bukan hanya UI.
+- [x] Tautan grup privat dan pesan pengumuman yang belum rilis tidak bocor melalui API publik; lookup hasil dan rate-limit NIM memakai normalisasi kapital yang sama.
+- [x] Edit jawaban admin menolak skema usang; operasi ubah/hapus periode diserialisasi dengan pendaftaran melalui row lock; modal OPREC memulihkan fokus keyboard.
+- [x] Komponen countdown/hasil dipulihkan, draft workspace stabil saat render ulang, formulir tidak tampil ketika periode tutup; CSS aksi/popup admin diselaraskan dengan komponen aktif.
+- [x] Hapus model tahap yang tak dipakai, cabang UI tahap yatim, CSS yatim, dan dependency `date-fns` dari manifest/lockfile.
+- [ ] Smoke test browser nyata 320–1440px, keyboard/modal, sesi Sanctum, dan PostgreSQL concurrency sebelum rilis; tes unit/build tidak menggantikan pengujian ini.
+- [ ] Tinjau pembatas laju lookup hasil pada topologi produksi: bila Laravel melihat semua permintaan melalui satu IP proxy Next, batas IP global dapat dibagi semua pengguna. Jangan percaya header IP dari klien tanpa konfigurasi proxy tepercaya.
+- [ ] Audit isi tabel historis `oprec_stages`, `oprec_test_submissions`, dan `oprec_test_scores` sebelum merencanakan migrasi penghapusan. Jangan menghapus migrasi yang telah Ran atau data lama secara langsung.

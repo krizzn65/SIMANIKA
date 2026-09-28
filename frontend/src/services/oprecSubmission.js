@@ -127,7 +127,7 @@ export async function lookupOprecResult(request) {
     if (!request.headers.get("content-type")?.startsWith("application/json")) return reply({ message: "Format permintaan tidak valid." }, 415);
     const bounded = await readBody(request, 4096);
     const body = await bounded.json().catch(() => { throw new RequestError("Data tidak valid.", 400); });
-    const nim = typeof body?.nim === "string" ? body.nim.trim() : "";
+    const nim = normalizeOprecNim(body?.nim);
     if (!/^[a-zA-Z0-9.-]{3,32}$/.test(nim) || !validBirthDate(body?.tanggal_lahir)) return reply({ message: "Periksa NIM dan tanggal lahirmu." }, 422);
     const oprec = await getOprec();
     if (!oprec || oprecState(oprec).key !== "announcement" || body.oprec_id !== oprec.id) return reply({ message: "Pengumuman belum tersedia untuk periode ini." }, 409);

@@ -10,10 +10,10 @@
   .simanika-pixel-corner { width: 125px; opacity: .75; }
 }
 .simanika-signin-box { width: 100%; max-width: 440px; position: relative; z-index: 2; }
-.simanika-signin-brand-link { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; gap: .65rem; padding: .5rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); color: var(--ink); font-size: .875rem; font-weight: 500; text-decoration: none; margin-bottom: 1.5rem; transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease; position: relative; z-index: 2; }
-.simanika-signin-brand-link:hover, .simanika-signin-brand-link:focus-visible { color: var(--blue-dark); border-color: #cbd5e1; background-color: #f8fafc; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06); transform: none; }
+.simanika-signin-brand-link { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; gap: .65rem; padding: .65rem 1rem; border: 2px dashed #c0ccdd; border-radius: 4px; background: #fff; box-shadow: 5px 5px 0 #dce5f4; color: var(--ink); font-size: .875rem; font-weight: 600; text-decoration: none; margin-bottom: 1.5rem; transition: color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease; position: relative; z-index: 2; }
+.simanika-signin-brand-link:hover, .simanika-signin-brand-link:focus-visible { color: var(--blue-dark); border-color: var(--blue); box-shadow: 3px 3px 0 #c9d9f7; transform: translate(2px, 2px); }
 .simanika-signin-back-icon { width: 19px; height: 19px; flex: none; transition: transform 240ms cubic-bezier(.2,.8,.2,1); }
-.simanika-signin-brand-link:hover .simanika-signin-back-icon, .simanika-signin-brand-link:focus-visible .simanika-signin-back-icon { transform: translateX(-3px); }
+.simanika-signin-brand-link:hover .simanika-signin-back-icon, .simanika-signin-brand-link:focus-visible .simanika-signin-back-icon { transform: translateX(-4px); }
 @media (prefers-reduced-motion: reduce) { .simanika-signin-brand-link:hover, .simanika-signin-brand-link:focus-visible, .simanika-signin-brand-link:hover .simanika-signin-back-icon, .simanika-signin-brand-link:focus-visible .simanika-signin-back-icon { transform: none; } }
 .simanika-signin-eyebrow { display: inline-flex; align-items: center; gap: .55rem; margin-bottom: .8rem; color: var(--blue-dark); }
 .simanika-signin-eyebrow__dot { width: 7px; height: 7px; background: var(--blue); flex: none; }
@@ -21,10 +21,10 @@
 .simanika-signin-title { font-family: "Press Start 2P", "IBM Plex Mono", monospace; font-size: clamp(1.18rem, 2.4vw, 1.9rem); font-weight: 400; letter-spacing: -.055em; line-height: 1.58; margin: 0 0 .75rem; color: var(--ink); text-shadow: .45px 0 currentColor; }
 .simanika-signin-title em { font-style: normal; color: var(--blue); }
 .simanika-signin-desc { color: var(--ink-muted); font-size: 1rem; line-height: 1.65; margin: 0 0 1.75rem; }
-.simanika-glass-input { display: flex; align-items: center; position: relative; border-radius: 10px; border: 1px solid #cbd5e1; background: #fff; transition: border-color 180ms ease, box-shadow 180ms ease; }
+.simanika-glass-input { display: flex; align-items: center; position: relative; border-radius: 6px; border: 1px solid #aebdd0; background: #fff; transition: border-color 180ms ease, box-shadow 180ms ease; }
 .simanika-glass-input:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(21,94,239,.12); }
 .simanika-glass-input > div { position: relative; width: 100%; }
-.simanika-glass-input input { box-sizing: border-box; width: 100%; min-height: 50px; background: transparent; border: 0; border-radius: 10px; color: var(--ink); padding: .85rem 1rem; font: inherit; font-size: 1rem; }
+.simanika-glass-input input { box-sizing: border-box; width: 100%; min-height: 50px; background: transparent; border: 0; border-radius: 6px; color: var(--ink); padding: .85rem 1rem; font: inherit; font-size: 1rem; }
 .simanika-glass-input input:focus-visible { outline: none; }
 .simanika-glass-input input[name="password"] { padding-right: 3.5rem; }
 .simanika-glass-input input::placeholder { color: #68778b; }
@@ -54,9 +54,9 @@
 .simanika-link { color: var(--blue-dark); text-decoration: none; }
 .simanika-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .simanika-form-row > .simanika-link { display: inline-flex; align-items: center; min-height: 44px; }
-.simanika-btn-primary { width: 100%; min-height: 50px; display: flex; align-items: center; justify-content: center; gap: .65rem; padding: .85rem 1.5rem; border-radius: 10px; background: var(--blue); color: #fff; font: inherit; font-size: 1rem; font-weight: 600; border: 1px solid var(--blue); cursor: pointer; box-shadow: 0 2px 6px rgba(21, 94, 239, 0.2); transition: background-color 180ms ease, transform 180ms ease, box-shadow 180ms ease; }
-.simanika-btn-primary:hover { background: var(--blue-dark); box-shadow: 0 4px 12px rgba(21, 94, 239, 0.3); transform: translateY(-1px); }
-.simanika-btn-primary:active { transform: translateY(0); box-shadow: 0 2px 4px rgba(21, 94, 239, 0.2); }
+.simanika-btn-primary { width: 100%; min-height: 50px; display: flex; align-items: center; justify-content: center; gap: .65rem; padding: .85rem 1.5rem; border-radius: 6px; background: var(--blue); color: #fff; font: inherit; font-size: 1rem; font-weight: 500; border: 1px solid var(--blue); cursor: pointer; box-shadow: 3px 3px 0 #b9cfff; transition: background-color 180ms ease, transform 180ms ease; }
+.simanika-btn-primary:hover { background: var(--blue-dark); transform: translateY(-1px); }
+.simanika-btn-primary:active { transform: translateY(0); }
 .simanika-btn-icon-slot { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 19px; height: 19px; overflow: hidden; flex: none; }
 .simanika-btn-icon { width: 19px; height: 19px; flex: none; stroke: currentColor; transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), opacity 220ms ease; }
 .simanika-btn-icon--primary { transform: translateX(0); opacity: 1; }
@@ -66,8 +66,8 @@
 .simanika-divider { display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1.5rem 0 1.25rem; }
 .simanika-divider::before, .simanika-divider::after { content: ""; height: 1px; flex: 1; background: var(--border); }
 .simanika-divider span { color: var(--ink-muted); font: .65rem/1.5 "IBM Plex Mono", monospace; text-transform: uppercase; letter-spacing: .04em; }
-.simanika-btn-social { width: 100%; min-height: 50px; display: flex; align-items: center; justify-content: center; gap: .75rem; padding: .85rem 1rem; border-radius: 10px; border: 1px solid #e2e8f0; background: #fff; color: var(--ink); font: inherit; font-size: .9rem; font-weight: 500; cursor: pointer; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
-.simanika-btn-social:hover { background: #f8fafc; border-color: #cbd5e1; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06); }
+.simanika-btn-social { width: 100%; min-height: 50px; display: flex; align-items: center; justify-content: center; gap: .75rem; padding: .85rem 1rem; border-radius: 6px; border: 1px solid #aebdd0; background: #fff; color: var(--ink); font: inherit; font-size: .9rem; font-weight: 500; cursor: pointer; transition: background-color 180ms ease, border-color 180ms ease; }
+.simanika-btn-social:hover { background: var(--surface-subtle); border-color: var(--blue); }
 .simanika-btn-social svg { width: 20px; height: 20px; flex: none; }
 .simanika-foot-note { text-align: center; font-size: .85rem; color: var(--ink-muted); line-height: 1.6; margin: 1.5rem 0 0; }
 .simanika-signin-hero-col { display: none; flex: 1; min-width: 0; position: relative; padding: 1rem; box-sizing: border-box; }
@@ -75,7 +75,7 @@
 .simanika-hero-image { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: center center; }
 .simanika-hero-stage::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 75%, rgba(7,17,31,.08)); pointer-events: none; }
 .simanika-testimonials-wrap { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 1; display: flex; gap: 1rem; width: 100%; padding: 0 2rem; justify-content: center; }
-.simanika-testimonial-card { display: flex; align-items: flex-start; gap: .85rem; padding: 1.15rem 1.25rem; border-radius: 12px; background: #fff; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); max-width: 320px; width: 100%; }
+.simanika-testimonial-card { display: flex; align-items: flex-start; gap: .85rem; padding: 1.15rem 1.25rem; border-radius: 8px; background: #fff; border: 1px solid var(--border); box-shadow: 4px 4px 0 rgba(7,17,31,.15); max-width: 320px; width: 100%; }
 .simanika-testimonial-avatar { width: 42px; height: 42px; border-radius: 6px; object-fit: cover; flex: none; }
 .simanika-testimonial-body { font-size: .82rem; line-height: 1.45; min-width: 0; }
 .simanika-testimonial-name { font-weight: 600; color: var(--ink); margin: 0; }
@@ -93,9 +93,9 @@
 
 /* Auth feedback: a compact 21st.dev-inspired stateful action + toast pattern. */
 .simanika-btn-primary { position: relative; overflow: hidden; transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease, opacity 180ms ease; }
-.simanika-btn-primary[data-state="loading"] { cursor: wait; background: var(--blue-dark); box-shadow: none; }
-.simanika-btn-primary[data-state="success"] { background: #157a59; border-color: #157a59; box-shadow: 0 2px 8px rgba(21, 122, 89, 0.3); }
-.simanika-btn-primary[data-state="error"] { background: #b33a45; border-color: #b33a45; box-shadow: 0 2px 8px rgba(179, 58, 69, 0.3); }
+.simanika-btn-primary[data-state="loading"] { cursor: wait; background: var(--blue-dark); box-shadow: 2px 2px 0 #a9c1ed; }
+.simanika-btn-primary[data-state="success"] { background: #157a59; border-color: #157a59; box-shadow: 3px 3px 0 #b7dfd1; }
+.simanika-btn-primary[data-state="error"] { background: #b33a45; border-color: #b33a45; box-shadow: 3px 3px 0 #edc0c5; }
 .simanika-btn-primary:disabled { opacity: 1; }
 .simanika-btn-primary:disabled:hover { transform: none; }
 .simanika-btn-label { display: inline-flex; min-width: 8.5rem; justify-content: center; white-space: nowrap; }
@@ -103,7 +103,7 @@
 .simanika-btn-social[data-state="loading"] .simanika-btn-spinner { animation: simanika-auth-spin 820ms linear infinite; }
 .simanika-btn-icon-slot > svg:not(.simanika-btn-spinner) { width: 19px; height: 19px; flex: none; }
 .simanika-btn-social { transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease, opacity 180ms ease; }
-.simanika-btn-social[data-state="loading"] { cursor: wait; background: #f8fafc; border-color: var(--blue); box-shadow: none; }
+.simanika-btn-social[data-state="loading"] { cursor: wait; background: var(--surface-subtle); border-color: var(--blue); box-shadow: 2px 2px 0 #c9d9f7; }
 .simanika-btn-social:disabled { opacity: 1; }
 .simanika-btn-social:disabled:hover { background: var(--surface-subtle); border-color: var(--blue); }
 .simanika-btn-spinner { width: 19px; height: 19px; flex: none; }

@@ -13,13 +13,15 @@ class OprecEnrollmentController extends Controller
     public function __invoke(Request $request)
     {
         $userId = $request->user()->getKey();
-        $oprecId = $request->input('oprec_id');
-
-        $oprec = $oprecId
-            ? Oprec::find($oprecId)
-            : Oprec::where('status', 'open')->first();
-
-        abort_unless($oprec && $oprec->status === 'open', 404, 'OPREC tidak ditemukan atau belum dibuka.');
+        $data = $request->validate(['oprec_id' => ['required', 'integer', 'exists:oprecs,id']]);
+        $oprec = Oprec::withCount('divisions')->where('status', '!=', 'draft')
+            ->latest('created_at')->latest('id')->first();
+        abort_unless($oprec && $oprec->id === (int) $data['oprec_id'], 404, 'OPREC tidak ditemukan.');
+        if ($oprec->status !== 'open' || !$oprec->tanggal_buka || !$oprec->tanggal_tutup
+            || now()->lt($oprec->tanggal_buka) || now()->gte($oprec->tanggal_tutup)
+            || $oprec->divisions_count < 3) {
+            return response()->json(['message' => 'Pendaftaran belum dibuka atau sudah ditutup.'], 409);
+        }
 
         // If user already submitted registration
         $alreadySubmitted = OprecRegistration::where('oprec_id', $oprec->id)

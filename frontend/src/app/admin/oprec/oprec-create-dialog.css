@@ -21,8 +21,8 @@
   overflow: auto;
   background: #ffffff;
   border: 1px solid #cad5e5;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  border-radius: 0;
+  box-shadow: 4px 4px 0 rgba(7, 17, 31, 0.18);
   color: #0a1020;
 }
 
@@ -362,7 +362,7 @@
   box-shadow: none;
 }
 
-/* Table verification buttons */
+/* Table action buttons */
 .oprec-table-btn {
   display: inline-flex;
   align-items: center;
@@ -378,16 +378,34 @@
   white-space: nowrap;
 }
 
-.oprec-table-btn--verify {
+.oprec-table-actions {
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.oprec-table-btn--edit {
   background: #eff6ff !important;
   color: #155eef !important;
   border: 1px solid #bfdbfe !important;
 }
 
-.oprec-table-btn--verify:hover:not(:disabled) {
+.oprec-table-btn--edit:hover:not(:disabled) {
   background: #dbeafe !important;
   border-color: #155eef !important;
   color: #0f48c2 !important;
+}
+
+.oprec-table-btn--delete {
+  background: #fff7f8 !important;
+  color: #b42318 !important;
+  border: 1px solid #f0b8c0 !important;
+}
+
+.oprec-table-btn--delete:hover:not(:disabled) {
+  background: #fee4e7 !important;
+  border-color: #e68b97 !important;
+  color: #8f1710 !important;
 }
 
 .oprec-table-btn:disabled {
@@ -607,9 +625,9 @@
   width: min(100%, 420px);
   padding: 28px;
   border: 1px solid #cad5e5;
-  border-radius: 12px;
+  border-radius: 0;
   background: #fff;
-  box-shadow: 0 20px 45px rgba(7, 17, 31, .24);
+  box-shadow: 4px 4px 0 rgba(7, 17, 31, .18);
   color: #0a1020;
 }
 
@@ -620,7 +638,7 @@
   place-items: center;
   margin-bottom: 16px;
   border: 1px solid #fecdd3;
-  border-radius: 50%;
+  border-radius: 0;
   background: #fff1f2;
   color: #b42318;
 }
@@ -658,31 +676,6 @@
 .oprec-delete-dialog__actions button:last-child:hover:not(:disabled) { border-color: #8f1710; background: #8f1710; color: #fff; }
 .oprec-delete-dialog__actions button:focus-visible { outline: 2px solid #155eef; outline-offset: 2px; }
 .oprec-delete-dialog__actions button:disabled { cursor: wait; opacity: .65; }
-
-.oprec-admin-overview__stage-actions :is(a, button) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  flex: none;
-  min-height: 34px;
-  padding: 6px 12px;
-  border: 1px solid #cad5e5;
-  border-radius: 0;
-  background: #ffffff;
-  color: #0b2559;
-  font-size: 12px;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.oprec-admin-overview__stage-actions :is(a, button):hover {
-  background: #eff6ff;
-  border-color: #155eef;
-  color: #155eef;
-}
 
 .oprec-admin-overview :is(a, button):focus-visible {
   outline: 2px solid #155eef;

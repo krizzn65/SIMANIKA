@@ -42,33 +42,38 @@ class OprecController extends Controller
     public function update(SaveOprecRequest $request, Oprec $oprec)
     {
         $data = $request->validated();
-        $currentDivisions = $oprec->divisions()->get()->map(fn ($division) => [
-            'nama' => $division->nama, 'nama_lengkap' => $division->nama_lengkap,
-            'deskripsi' => $division->deskripsi, 'logo' => $division->logo, 'jabatan' => $division->jabatan ?? [],
-        ])->all();
-        $incomingDivisions = collect($data['divisi_tersedia'] ?? [])->map(fn ($division) => [
-            'nama' => $division['nama'], 'nama_lengkap' => $division['nama_lengkap'] ?? null,
-            'deskripsi' => $division['deskripsi'] ?? null, 'logo' => $division['logo'] ?? null,
-            'jabatan' => $division['jabatan'] ?? [],
-        ])->all();
-        $divisionsChanged = array_key_exists('divisi_tersedia', $data) && $incomingDivisions !== $currentDivisions;
-        if ($oprec->registrations()->exists()) {
-            if ($oprec->schema_version === $data['schema_version'] && $oprec->form_fields !== $data['form_fields']) throw ValidationException::withMessages(['schema_version' => ['Naikkan versi skema saat mengubah kolom.']]);
-            if ($divisionsChanged) throw ValidationException::withMessages(['divisi_tersedia' => ['Divisi tidak boleh diubah setelah ada pendaftar.']]);
-        }
-        DB::transaction(function () use ($oprec, $data, $divisionsChanged) {
-            $oprec->update($this->attributes($data));
-            if ($divisionsChanged) $this->syncDivisions($oprec, $data['divisi_tersedia']);
+        $updated = DB::transaction(function () use ($oprec, $data) {
+            $current = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
+            $currentDivisions = $current->divisions()->get()->map(fn ($division) => [
+                'nama' => $division->nama, 'nama_lengkap' => $division->nama_lengkap,
+                'deskripsi' => $division->deskripsi, 'logo' => $division->logo, 'jabatan' => $division->jabatan ?? [],
+            ])->all();
+            $incomingDivisions = collect($data['divisi_tersedia'] ?? [])->map(fn ($division) => [
+                'nama' => $division['nama'], 'nama_lengkap' => $division['nama_lengkap'] ?? null,
+                'deskripsi' => $division['deskripsi'] ?? null, 'logo' => $division['logo'] ?? null,
+                'jabatan' => $division['jabatan'] ?? [],
+            ])->all();
+            $divisionsChanged = array_key_exists('divisi_tersedia', $data) && $incomingDivisions !== $currentDivisions;
+            if ($current->registrations()->exists()) {
+                if ($current->schema_version === $data['schema_version'] && $current->form_fields !== $data['form_fields']) throw ValidationException::withMessages(['schema_version' => ['Naikkan versi skema saat mengubah kolom.']]);
+                if ($divisionsChanged) throw ValidationException::withMessages(['divisi_tersedia' => ['Divisi tidak boleh diubah setelah ada pendaftar.']]);
+            }
+            $current->update($this->attributes($data));
+            if ($divisionsChanged) $this->syncDivisions($current, $data['divisi_tersedia']);
+            return $current;
         });
-        return new OprecResource($oprec->fresh('divisions'));
+        return new OprecResource($updated->fresh('divisions'));
     }
 
     public function destroy(Oprec $oprec)
     {
-        if ($oprec->registrations()->exists()) {
-            return response()->json(['message' => 'Pendaftaran tidak dapat dihapus karena sudah memiliki berkas pendaftar.'], 409);
-        }
-        DB::transaction(fn () => $oprec->delete());
+        $deleted = DB::transaction(function () use ($oprec) {
+            $current = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
+            if ($current->registrations()->exists()) return false;
+            $current->delete();
+            return true;
+        });
+        if (!$deleted) return response()->json(['message' => 'Pendaftaran tidak dapat dihapus karena sudah memiliki berkas pendaftar.'], 409);
         return response()->noContent();
     }
 

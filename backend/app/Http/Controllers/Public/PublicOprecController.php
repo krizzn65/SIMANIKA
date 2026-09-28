@@ -20,12 +20,15 @@ class PublicOprecController extends Controller
 
     public function index(Request $request)
     {
-        $oprec = Oprec::with('divisions', 'stages')->where('status', '!=', 'draft')->latest('created_at')->first();
+        $oprec = Oprec::with('divisions')->where('status', '!=', 'draft')->latest('created_at')->latest('id')->first();
         return response()->json(['data' => $oprec ? (new OprecResource($oprec))->resolve($request) : null], 200, ['Cache-Control' => 'no-store']);
     }
 
     public function result(Request $request, Oprec $oprec)
     {
+        if (is_string($request->input('nim'))) {
+            $request->merge(['nim' => strtoupper(trim($request->input('nim')))]);
+        }
         $data = $request->validate(['nim' => ['required', 'string', 'regex:/^[a-zA-Z0-9.\-]{3,32}$/'], 'tanggal_lahir' => ['required', 'date_format:Y-m-d', 'before_or_equal:today']]);
         $published = $oprec->pengumuman_published && (!$oprec->pengumuman_tanggal || $oprec->pengumuman_tanggal->isPast());
         $closed = $oprec->status === 'closed' || ($oprec->tanggal_tutup && $oprec->tanggal_tutup->isPast());

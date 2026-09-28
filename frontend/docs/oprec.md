@@ -274,3 +274,11 @@ Berdasarkan keputusan pengguna, seluruh konsep pemecahan tahap bertingkat ("Tes 
 - **Ringkasan Admin**: Bagian "Tahapan berikutnya //" pada overview `/admin/oprec` telah dihapus. Halaman admin kini murni mengelola pendaftaran periode aktif dan verifikasi berkas calon anggota.
 - **Sidebar Admin**: Menu "Kelola OPREC" kini merupakan item navigasi tunggal langsung ke `/admin/oprec` tanpa dropdown submenu tahap.
 - **Pembersihan Dead Code**: Route `/admin/oprec/test`, `/admin/oprec/announcement`, `/admin/oprec/[id]/stages`, komponen `OprecStageOverview`, `OprecTestBuilder`, stylesheet `oprec-review.css`, controller backend `OprecStageController`, `OprecTestController`, dan route stages telah dihapus tuntas tanpa sisa deadcode.
+
+## Audit kontrak OPREC — 28 September 2026
+
+Bagian lama tentang endpoint tahap `/stages` di atas adalah catatan historis dan **tidak lagi berlaku**. Kontrak aktif hanya pendaftaran tunggal per periode. Periode publik dipilih deterministik dari OPREC non-draft terbaru. Workspace pengguna mengikuti periode tersebut; akses ke periode lama memerlukan `oprec_id` dan kepemilikan pendaftaran/enrollment. Kartu dashboard, enrollment, dan submit hanya membuka periode publik terbaru yang berstatus buka, berada dalam jendela tanggal, serta memiliki minimal tiga divisi. Backend menolak submit langsung ke periode lama atau skema formulir yang sudah berubah.
+
+Tautan grup WhatsApp tidak dikirim melalui resource publik. Pesan pengumuman dan hasil seleksi baru boleh tampil setelah status pengumuman terbit, tanggal rilis tercapai, dan pendaftaran telah ditutup. Lookup hasil menormalisasi NIM ke huruf kapital, konsisten dengan penyimpanan dan pembatas laju. Editor admin mengirim `schema_version` saat menyimpan perubahan jawaban agar pembaruan terhadap skema usang ditolak. Operasi ubah/hapus periode mengambil row lock agar tidak berlomba dengan pendaftaran.
+
+Komponen countdown dan hasil tetap aktif dalam modal detail. Formulir workspace hanya tampil ketika OPREC benar-benar terbuka; draft isian tidak direset oleh render ulang. Kode tahap yang tak terpakai, model `OprecStage`, aturan CSS yatim, dan dependency `date-fns` dihapus. Tabel/migrasi historis tahap dipertahankan karena mungkin sudah diterapkan pada database pengguna; pembersihan fisiknya memerlukan audit data dan rencana migrasi tersendiri.
