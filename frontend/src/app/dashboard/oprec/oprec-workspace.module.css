@@ -889,3 +889,36 @@
   .workspace :global(.oprec-submit-dialog__actions) { flex-direction: column-reverse; }
   .workspace :global(.oprec-submit-dialog__actions button) { width: 100%; }
 }
+
+.mainColumn { display: grid; gap: 22px; min-width: 0; }
+.testSchedule { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
+.testSchedule > div { display: grid; gap: 3px; padding: 12px; border: 1px solid var(--ws-border); background: #f6f8fc; }
+.testSchedule span { color: var(--ws-muted); font-size: 12px; }
+.testSchedule strong { font-size: 13px; }
+.testCountdown { display: flex; align-items: center; gap: 8px; margin: 0; color: #0f4bcb; font: 600 14px/1.5 "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+.testNote { margin: 12px 0 0; color: var(--ws-muted); }
+.testError { padding: 10px 12px; margin: 0 0 16px; border: 1px solid #e9bbb5; background: #fff5f3; color: var(--ws-red); }
+.testForm { display: grid; gap: 18px; }
+.testField { display: grid; gap: 8px; }
+.testField > label { font-weight: 600; }
+.testField b { color: var(--ws-red); }
+.testField :is(input:not([type=radio]), textarea) { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--ws-border); border-radius: 0; background: #fff; color: var(--ws-ink); font: inherit; font-size: 16px; }
+.testField textarea { resize: vertical; }
+.testChoices { display: grid; gap: 8px; }
+.testChoices label { display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 9px 12px; border: 1px solid var(--ws-border); cursor: pointer; }
+.testChoices input { accent-color: var(--ws-blue); }
+.testActions { display: flex; justify-content: flex-end; }
+.testActions button, .testDialog button { min-height: 44px; padding: 10px 16px; border: 1px solid var(--ws-blue); border-radius: 0; background: var(--ws-blue); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.testDialog { width: min(92vw, 500px); padding: 24px; border: 1px solid var(--ws-border); border-radius: 0; background: #fff; color: var(--ws-ink); box-shadow: 6px 6px 0 #dbe6f8; }
+.testDialog::backdrop { background: rgba(7, 17, 31, .68); }
+.testDialog h3 { margin: 0 0 12px; font-size: 22px; }
+.testDialog p { color: var(--ws-muted); }
+.testDialog > div { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.testDialog button:first-child { border-color: var(--ws-border); background: #fff; color: var(--ws-ink); }
+.testDialog button:disabled { opacity: .5; cursor: not-allowed; }
+.testReview { display: grid; gap: 12px; margin: 0; }
+.testReview > div { padding: 12px; border: 1px solid var(--ws-border); }
+.testReview dt { font-weight: 600; }
+.testReview dd { margin: 5px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.workspace :is(button, input, textarea, select):focus-visible, .testDialog button:focus-visible { outline: 2px solid var(--ws-blue); outline-offset: 2px; }
+@media (max-width: 600px) { .testSchedule { grid-template-columns: 1fr; } .testActions button { width: 100%; } }

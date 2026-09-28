@@ -833,3 +833,12 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 - [ ] Smoke test browser nyata 320–1440px, keyboard/modal, sesi Sanctum, dan PostgreSQL concurrency sebelum rilis; tes unit/build tidak menggantikan pengujian ini.
 - [ ] Tinjau pembatas laju lookup hasil pada topologi produksi: bila Laravel melihat semua permintaan melalui satu IP proxy Next, batas IP global dapat dibagi semua pengguna. Jangan percaya header IP dari klien tanpa konfigurasi proxy tepercaya.
 - [ ] Audit isi tabel historis `oprec_stages`, `oprec_test_submissions`, dan `oprec_test_scores` sebelum merencanakan migrasi penghapusan. Jangan menghapus migrasi yang telah Ran atau data lama secara langsung.
+
+### Perombakan Tes Tulis OPREC — 28 September 2026
+- [x] Sidebar admin tetap memisahkan Pendaftaran dan Tes Tulis. Halaman Tes Tulis memakai tombol tambah, kartu periode, dan tabel jawaban dinamis; editor soal dipisah ke `/admin/oprec/test/[period]/edit`.
+- [x] Pembuatan satu tes per periode mensyaratkan bukti pendaftaran pernah dibuka (`first_published_at`); popup meminta jadwal WIB, judul otomatis. Migrasi memberi tanda ke periode historis `open` atau yang memiliki pendaftar. Soal valid otomatis siap mengikuti jadwal, lalu soal dan jadwal terkunci setelah tes dimulai/ada jawaban.
+- [x] Peserta yang sudah mengirim pendaftaran melihat kartu Tes Tulis di bawah Data & administrasi: jadwal, countdown, soal sesuai divisi saat aktif, kirim sekali, lalu pratinjau hanya-baca. Server memvalidasi otorisasi, skema, waktu, dan jawaban; unique constraint menjaga kiriman bersamaan. Admin dapat melihat tabel soal dinamis, preview, dan menghapus jawaban agar peserta bisa kirim ulang selama aktif.
+- [x] Tes regresi Tes Tulis: 6 tes/81 assertion; suite Laravel akhir 54 tes/460 assertion dan build produksi Next.js 25/25 halaman lulus.
+- [x] Migrasi `first_published_at` dijalankan pada PostgreSQL lokal (`APP_ENV=local`, batch 25). Chrome DevTools memverifikasi halaman OPREC publik tanpa overflow pada viewport 320, 390, 768, dan 1440 px.
+- [ ] Jalankan migrasi pada lingkungan deployment; smoke test browser admin/peserta dengan sesi uji khusus, keyboard/fokus dialog, batas waktu, serta kiriman bersamaan di PostgreSQL sebelum rilis. Browser terautentikasi belum diuji karena tidak ada kredensial uji yang aman.
+- [ ] Penilaian dan pemeringkatan peserta tidak termasuk perombakan ini; rancang dan verifikasi terpisah.
