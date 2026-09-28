@@ -282,3 +282,11 @@ Bagian lama tentang endpoint tahap `/stages` di atas adalah catatan historis dan
 Tautan grup WhatsApp tidak dikirim melalui resource publik. Pesan pengumuman dan hasil seleksi baru boleh tampil setelah status pengumuman terbit, tanggal rilis tercapai, dan pendaftaran telah ditutup. Lookup hasil menormalisasi NIM ke huruf kapital, konsisten dengan penyimpanan dan pembatas laju. Editor admin mengirim `schema_version` saat menyimpan perubahan jawaban agar pembaruan terhadap skema usang ditolak. Operasi ubah/hapus periode mengambil row lock agar tidak berlomba dengan pendaftaran.
 
 Komponen countdown dan hasil tetap aktif dalam modal detail. Formulir workspace hanya tampil ketika OPREC benar-benar terbuka; draft isian tidak direset oleh render ulang. Kode tahap yang tak terpakai, model `OprecStage`, aturan CSS yatim, dan dependency `date-fns` dihapus. Tabel/migrasi historis tahap dipertahankan karena mungkin sudah diterapkan pada database pengguna; pembersihan fisiknya memerlukan audit data dan rencana migrasi tersendiri.
+
+## Subhalaman admin Pendaftaran dan Tes Tulis — 28 September 2026
+
+Instruksi terbaru pengguna mengganti keputusan “pendaftaran tunggal” di atas. Sidebar Kelola OPREC sekarang membuka subhalaman Pendaftaran (`/admin/oprec`) dan Tes Tulis (`/admin/oprec/test`). Pendaftaran yang sudah ada tidak berubah.
+
+Halaman Tes Tulis mengelola satu draf tes per periode OPREC. Admin memilih periode, mengisi judul, petunjuk, jadwal mulai/selesai dalam WIB, lalu menambah hingga 40 pertanyaan berurutan: teks singkat, paragraf, atau pilihan satu. Tiap pertanyaan bisa wajib dan bisa ditujukan untuk divisi tertentu; tanpa divisi tujuan berarti berlaku untuk semua. Pertanyaan pilihan satu harus memiliki 2–10 opsi unik. API admin `GET /api/admin/oprec/written-tests`, `GET /api/admin/oprec/{oprec}/written-test`, dan `PUT /api/admin/oprec/{oprec}/written-test` memakai sesi Sanctum + role admin dan menyimpan ke tabel `oprec_stages` historis dengan `type=test_tulis`. Soal tidak dapat diubah setelah ada jawaban peserta.
+
+Tes pada tahap ini **selalu disimpan sebagai draf** (`published=false`). Halaman peserta, pengiriman jawaban, publikasi tes, dan penilaian belum diaktifkan oleh perubahan ini; jangan menampilkan tautan tes kepada peserta sampai alur tersebut selesai dan diverifikasi.

@@ -833,3 +833,9 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 - [ ] Smoke test browser nyata 320–1440px, keyboard/modal, sesi Sanctum, dan PostgreSQL concurrency sebelum rilis; tes unit/build tidak menggantikan pengujian ini.
 - [ ] Tinjau pembatas laju lookup hasil pada topologi produksi: bila Laravel melihat semua permintaan melalui satu IP proxy Next, batas IP global dapat dibagi semua pengguna. Jangan percaya header IP dari klien tanpa konfigurasi proxy tepercaya.
 - [ ] Audit isi tabel historis `oprec_stages`, `oprec_test_submissions`, dan `oprec_test_scores` sebelum merencanakan migrasi penghapusan. Jangan menghapus migrasi yang telah Ran atau data lama secara langsung.
+
+### Subhalaman Tes Tulis OPREC — 28 September 2026
+- [x] Sidebar admin Kelola OPREC memiliki submenu Pendaftaran dan Tes Tulis; halaman Pendaftaran yang lama tetap tersedia.
+- [x] Editor Tes Tulis menyimpan draf per periode dengan jadwal WIB, soal dinamis, opsi jawaban, urutan, kewajiban isi, dan sasaran divisi. API admin memvalidasi ulang dan menahan perubahan soal setelah ada jawaban.
+- [ ] Alur peserta mengerjakan/mengirim tes, publikasi terjadwal, halaman jawaban, serta penilaian belum dibuat; draf tidak boleh ditampilkan ke peserta.
+- [ ] Smoke test browser admin desktop/mobile dan uji sesi Sanctum nyata untuk editor Tes Tulis.

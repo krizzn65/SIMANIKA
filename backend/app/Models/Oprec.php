@@ -11,6 +11,10 @@ class Oprec extends Model
     protected function casts(): array { return ['tanggal_buka' => 'datetime', 'tanggal_tutup' => 'datetime', 'pengumuman_tanggal' => 'datetime', 'pengumuman_published' => 'boolean', 'form_fields' => 'array', 'faq' => 'array']; }
     public function divisions(): HasMany { return $this->hasMany(OprecDivision::class)->orderBy('sort_order'); }
     public function registrations(): HasMany { return $this->hasMany(OprecRegistration::class); }
+    public function writtenTest(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(OprecStage::class)->where('type', 'test_tulis');
+    }
 
     /** Allow admin links to use a readable period slug while preserving legacy numeric IDs. */
     public function resolveRouteBindingQuery($query, $value, $field = null)

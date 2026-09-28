@@ -1,0 +1,57 @@
+.oprec-test { max-width: 1480px; margin: 0 auto; padding: 28px clamp(16px, 3vw, 40px) 60px; color: #0a1020; }
+.oprec-test__header, .oprec-test__section-head, .oprec-test__questions-head, .oprec-test__footer { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.oprec-test__header { align-items: center; margin-bottom: 28px; }
+.oprec-test__eyebrow { color: #155eef; font: 600 12px/1.4 "IBM Plex Mono", ui-monospace, monospace; letter-spacing: .1em; }
+.oprec-test h1 { margin: 7px 0; font-size: clamp(24px, 2.7vw, 34px); line-height: 1.2; letter-spacing: -.04em; }
+.oprec-test h2 { margin: 0; font-size: 17px; line-height: 1.35; font-weight: 650; }
+.oprec-test p { margin: 5px 0 0; color: #526176; line-height: 1.55; }
+.oprec-test__layout { display: grid; grid-template-columns: minmax(230px, 300px) minmax(0, 1fr); gap: 18px; align-items: start; }
+.oprec-test__periods, .oprec-test__editor { min-width: 0; border: 1px solid #cad5e5; background: #fff; }
+.oprec-test__periods { padding: 16px; }
+.oprec-test__editor { padding: clamp(18px, 2.5vw, 30px); }
+.oprec-test__section-head { align-items: center; margin-bottom: 20px; }
+.oprec-test__section-head > span:not(.oprec-test__badge), .oprec-test__questions-head > span { color: #64748b; font: 500 11px/1.4 "IBM Plex Mono", ui-monospace, monospace; }
+.oprec-test__period { display: block; width: 100%; margin-top: 8px; padding: 12px; border: 1px solid #dbe3ee; background: #fff; text-align: left; color: #14213a; cursor: pointer; }
+.oprec-test__period:hover, .oprec-test__period:focus-visible { border-color: #155eef; }
+.oprec-test__period.is-active { border-color: #155eef; background: #eff6ff; box-shadow: inset 3px 0 0 #155eef; }
+.oprec-test__period strong, .oprec-test__period small { display: block; }
+.oprec-test__period small { margin-top: 4px; color: #64748b; }
+.oprec-test__pager { display: flex; gap: 8px; margin-top: 16px; }
+.oprec-test__pager button, .oprec-test__secondary { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 8px 12px; border: 1px solid #cad5e5; background: #fff; color: #1d3557; cursor: pointer; }
+.oprec-test__pager button:hover:not(:disabled), .oprec-test__secondary:hover:not(:disabled) { border-color: #155eef; color: #155eef; }
+.oprec-test__badge { padding: 5px 9px; border: 1px solid #f0ca84; background: #fff8e8; color: #8a5600; font: 600 11px/1.3 "IBM Plex Mono", ui-monospace, monospace; text-transform: uppercase; }
+.oprec-test__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.oprec-test__fields label { display: grid; align-content: start; gap: 7px; color: #334155; font-size: 13px; font-weight: 600; }
+.oprec-test__fields label > span { color: #c1261a; }
+.oprec-test__fields .oprec-test__wide { grid-column: 1 / -1; }
+.oprec-test__fields input:not([type=checkbox]), .oprec-test__fields textarea, .oprec-test__fields select { display: block; width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid #cad5e5; border-radius: 0; background: #fff; color: #0a1020; font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.4; }
+.oprec-test__fields textarea { resize: vertical; }
+.oprec-test__fields small, .oprec-test__targets small { color: #64748b; font-weight: 400; }
+.oprec-test__fields .oprec-test__check { display: flex; align-items: center; align-self: end; gap: 9px; min-height: 44px; }
+.oprec-test__check input, .oprec-test__targets input { width: 17px; height: 17px; accent-color: #155eef; }
+.oprec-test__questions-head { align-items: center; margin: 34px 0 16px; padding-top: 24px; border-top: 1px solid #e2e8f0; }
+.oprec-test__question { position: relative; min-width: 0; margin: 0 0 14px; padding: 20px; border: 1px solid #cad5e5; }
+.oprec-test__question legend { padding: 0 7px; color: #155eef; font: 600 12px/1.4 "IBM Plex Mono", ui-monospace, monospace; }
+.oprec-test__question-actions { display: flex; justify-content: flex-end; gap: 5px; margin: -7px 0 14px; }
+.oprec-test__question-actions button { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid #cad5e5; background: #fff; color: #334155; cursor: pointer; }
+.oprec-test__question-actions button:hover:not(:disabled) { border-color: #155eef; color: #155eef; }
+.oprec-test__targets { margin-top: 18px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
+.oprec-test__targets strong, .oprec-test__targets small { display: block; font-size: 12px; }
+.oprec-test__targets > div { display: flex; flex-wrap: wrap; gap: 9px 16px; margin-top: 10px; }
+.oprec-test__targets label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }
+.oprec-test__add { display: inline-flex; align-items: center; gap: 7px; min-height: 42px; padding: 9px 13px; border: 1px dashed #155eef; background: #eff6ff; color: #155eef; font-weight: 600; cursor: pointer; }
+.oprec-test__footer { align-items: center; margin-top: 26px; padding-top: 22px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; }
+.oprec-test__footer button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 10px 16px; border: 1px solid #155eef; background: #155eef; color: #fff; font-weight: 600; cursor: pointer; }
+.oprec-test__footer button:hover:not(:disabled) { background: #124ed0; }
+.oprec-test__success { padding: 12px 14px; margin: 0 0 18px !important; border: 1px solid #88d9b5; background: #effcf5; color: #116342 !important; }
+.oprec-test__empty { padding: 15px 0; }
+.oprec-test :is(button, input, select, textarea):focus-visible { outline: 2px solid #155eef; outline-offset: 2px; }
+.oprec-test button:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 900px) { .oprec-test__layout { grid-template-columns: 1fr; } }
+@media (max-width: 600px) {
+  .oprec-test__header, .oprec-test__footer { align-items: stretch; flex-direction: column; }
+  .oprec-test__fields { grid-template-columns: 1fr; }
+  .oprec-test__fields .oprec-test__wide { grid-column: auto; }
+  .oprec-test__fields input:not([type=checkbox]), .oprec-test__fields textarea, .oprec-test__fields select { font-size: 16px; }
+  .oprec-test__footer button { width: 100%; }
+}

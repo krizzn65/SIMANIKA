@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\EventFormController;
 use App\Http\Controllers\Admin\EventRegistrantController;
 use App\Http\Controllers\Admin\OprecController as AdminOprecController;
 use App\Http\Controllers\Admin\OprecRegistrantController;
+use App\Http\Controllers\Admin\OprecWrittenTestController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
@@ -83,7 +84,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/events/{event}', [AdminEventController::class, 'update']);
         Route::delete('/events/{event}', [AdminEventController::class, 'destroy']);
         Route::get('/oprec', [AdminOprecController::class, 'index']);
+        Route::get('/oprec/written-tests', [OprecWrittenTestController::class, 'index']);
         Route::get('/oprec/{oprec}', [AdminOprecController::class, 'show']);
+        Route::get('/oprec/{oprec}/written-test', [OprecWrittenTestController::class, 'show']);
+        Route::put('/oprec/{oprec}/written-test', [OprecWrittenTestController::class, 'save']);
         Route::post('/oprec', [AdminOprecController::class, 'store']);
         Route::post('/oprec/upload-poster', [AdminOprecController::class, 'uploadPoster']);
         Route::post('/oprec/upload-logo', [AdminOprecController::class, 'uploadLogo']);
