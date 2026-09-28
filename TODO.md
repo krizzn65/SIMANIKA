@@ -853,3 +853,15 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 - [ ] Smoke test Super Admin lewat browser nyata masih perlu kredensial yang aman; password akun HIMANIKA tidak diubah. Otorisasi Super Admin sudah diuji pada suite backend.
 - [ ] Uji manual desktop/mobile untuk semua role dan dialog/fokus lain di perangkat nyata; uji ulang perubahan role ketika koneksi putus dan sesi kedaluwarsa.
 - [ ] Jalankan migrasi role pada deployment sebelum mengaktifkan UI role baru; pastikan `ADMIN_EMAIL` menunjuk akun HIMANIKA lama yang telah berstatus admin. Jika akun resmi masih `user`, lakukan audit/pemulihan manual, jangan promosikan otomatis akun biasa.
+
+### Transisi navigasi admin — 29 September 2026
+- [x] Pemeriksaan ulang sesi pada pindah halaman/fokus berjalan di latar belakang, tanpa menyembunyikan layout admin. Guard tetap memeriksa role dan backend tetap menolak akses area yang tidak diizinkan. Build produksi Next.js 25 halaman lulus.
+- [x] Chrome terisolasi: klik Pendaftaran → Tes Tulis pada viewport 758px dan 1440px; layout tetap terpasang pada seluruh 17 sampel tiap transisi. Akun Pengurus uji tanpa pendaftaran sudah dihapus.
+- [ ] Uji manual saat koneksi lambat/putus, sesi kedaluwarsa, dan role berubah di tab aktif tetap perlu dilakukan sebelum rilis.
+
+### Layout Tes Tulis admin — 29 September 2026
+- [x] Container Tes Tulis kini memenuhi lebar area konten admin seperti Pendaftaran; margin otomatis yang membuatnya menyusut di dalam flex layout dihapus, padding ganda diringkas, dan jarak header dipadatkan. Build produksi Next.js 25 halaman lulus.
+
+### Pratinjau editor Tes Tulis — 29 September 2026
+- [x] Editor soal menampilkan pratinjau formulir peserta secara langsung, termasuk simulasi hingga tiga divisi dan soal khusus divisi; renderer input dipakai bersama dengan formulir peserta. Tombol kirim pratinjau nonaktif. Build produksi Next.js 25 halaman dan 23 tes frontend OPREC lulus.
+- [ ] Verifikasi interaksi pratinjau pada browser terautentikasi di desktop dan mobile masih perlu dilakukan.

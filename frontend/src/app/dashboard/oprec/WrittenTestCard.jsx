@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckCircle2, Clock3, FileText } from "lucide-react";
 import { api } from "@/services/api";
+import { WrittenTestQuestions } from "@/components/oprec/WrittenTestQuestions";
 import styles from "./oprec-workspace.module.css";
 
 function formatWib(value) {
@@ -121,12 +122,11 @@ export function WrittenTestCard({ oprecId }) {
         if (missing) { setError(`Jawab pertanyaan “${missing.label}” terlebih dahulu.`); return; }
         confirmRef.current?.showModal();
       }}>
-        {questions.map((question, index) => <div className={styles.testField} key={question.id}>
-          <label htmlFor={`test-${question.id}`}>{index + 1}. {question.label} {question.required && <b aria-hidden="true">*</b>}</label>
-          {question.type === "paragraph" ? <textarea id={`test-${question.id}`} required={question.required} maxLength={5000} rows={5} value={answers[question.id] || ""} onChange={(event) => setAnswers((current) => ({ ...current, [question.id]: event.target.value }))} />
-            : question.type === "single_choice" ? <div className={styles.testChoices} id={`test-${question.id}`}>{(question.options || []).map((option) => <label key={option}><input type="radio" name={question.id} value={option} checked={answers[question.id] === option} onChange={() => setAnswers((current) => ({ ...current, [question.id]: option }))} /> {option}</label>)}</div>
-              : <input id={`test-${question.id}`} required={question.required} maxLength={500} value={answers[question.id] || ""} onChange={(event) => setAnswers((current) => ({ ...current, [question.id]: event.target.value }))} />}
-        </div>)}
+        <WrittenTestQuestions
+          questions={questions}
+          answers={answers}
+          onAnswerChange={(id, value) => setAnswers((current) => ({ ...current, [id]: value }))}
+        />
         <div className={styles.testActions}><button type="submit" disabled={saving}>Kirim jawaban</button></div>
       </form> : <p className={styles.testNote}>Tes sedang diperbarui. Silakan periksa kembali.</p>}
     <dialog ref={confirmRef} className={styles.testDialog}>

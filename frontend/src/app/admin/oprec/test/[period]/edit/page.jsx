@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { ArrowDown, ArrowLeft, ArrowUp, Plus, Save, Trash2 } from "lucide-react";
 import { api } from "@/services/api";
 import { AdminErrorNotice } from "../../../../AdminErrorNotice";
+import { WrittenTestPreview } from "./WrittenTestPreview";
 import "../../test.css";
 
 const newQuestion = () => ({
@@ -100,7 +101,7 @@ export default function EditWrittenTestPage() {
       {error && <AdminErrorNotice message={error} />}
       {success && <p className="oprec-test__success" role="status">{success}</p>}
       {loading ? <p className="oprec-test__empty" role="status">Memuat pertanyaan…</p> : test ? (
-        <form className="oprec-test__editor-panel" onSubmit={save}>
+        <div className="oprec-test__editor-layout"><form className="oprec-test__editor-panel" onSubmit={save}>
           <div className="oprec-test__schedule"><div><strong>Jadwal pelaksanaan</strong><p>{formatWib(test.tanggal_buka)} – {formatWib(test.tanggal_tutup)}</p></div><span className={`oprec-test__badge ${test.published ? "is-ready" : ""}`}>{test.published ? "Soal siap" : "Belum siap"}</span></div>
           <div className="oprec-test__questions-head"><div><h2>Pertanyaan</h2><p>Teks singkat, paragraf, atau satu pilihan jawaban.</p></div><span>{questions.length} / 40</span></div>
           {questions.map((question, index) => <fieldset className="oprec-test__question" key={question.id}>
@@ -120,7 +121,7 @@ export default function EditWrittenTestPage() {
           </fieldset>)}
           <button className="oprec-test__add" type="button" disabled={questions.length >= 40} onClick={() => setQuestions((current) => [...current, newQuestion()])}><Plus size={17} aria-hidden="true" /> Tambah pertanyaan</button>
           <footer className="oprec-test__footer"><span>Soal yang tersimpan tersedia saat jadwal tes aktif. Soal terkunci setelah tes dimulai.</span><button type="submit" disabled={saving}><Save size={16} aria-hidden="true" /> {saving ? "Menyimpan…" : "Simpan pertanyaan"}</button></footer>
-        </form>
+        </form><WrittenTestPreview questions={questions} divisions={divisions} /></div>
       ) : null}
     </div>
   );
