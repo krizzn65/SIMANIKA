@@ -77,10 +77,10 @@ function adminBreadcrumb(pathname) {
 }
 
 function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
-  // MobileSidebar provides open=true to its own drawer content. Desktop must not
-  // inherit mobileOpen: it can otherwise render footer labels inside 76px width.
-  const { open, setMobileOpen } = useSidebar();
-  const expanded = open;
+  // Mobile drawer must show labels and OPREC subpages; desktop stays collapsed
+  // when its own hover state is closed, even after a viewport resize.
+  const { open, mobileOpen, setMobileOpen } = useSidebar();
+  const expanded = open || (mobileOpen && typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches);
   const [oprecMenuOpen, setOprecMenuOpen] = useState(pathname.startsWith("/admin/oprec"));
 
   useEffect(() => {
@@ -184,12 +184,12 @@ function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
           type="button"
           onClick={handleLogout}
           className={`w-full flex items-center group/sidebar py-2.5 rounded-xl transition-all duration-150 text-red-200 hover:text-white bg-red-500/20 hover:bg-red-500/35 border border-red-400/25 cursor-pointer ${expanded ? "justify-start gap-3 px-3" : "justify-center px-0"}`}
-          title="Keluar Admin"
+          title="Keluar Akun"
         >
           <div className="flex-shrink-0 transition-transform duration-150 group-hover/sidebar:scale-110 text-red-300 group-hover/sidebar:text-white">
             <LogOut className="h-5 w-5 flex-shrink-0" />
           </div>
-          {expanded && <span className="text-sm font-semibold whitespace-pre inline-block !p-0 !m-0 tracking-tight">Keluar Admin</span>}
+          {expanded && <span className="text-sm font-semibold whitespace-pre inline-block !p-0 !m-0 tracking-tight">Keluar Akun</span>}
         </button>
       </div>
     </SidebarBody>

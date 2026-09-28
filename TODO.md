@@ -848,6 +848,8 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 - [x] Hanya Super Admin resmi dapat membuka Kelola User dan mengubah role akun lain. Akun Super Admin tidak dapat diubah/dihapus lewat API; email resminya tidak dapat diganti melalui profil. Daftar pengguna menempatkannya pada nomor 1.
 - [x] API admin memakai pemeriksaan area pada setiap grup route: admin kecuali users, pengurus (`leader`) hanya OPREC, KWU hanya merchandise. Sidebar, guard halaman, serta pengalihan login mengikuti role yang sama. Merchandise masih berupa halaman coming soon tanpa endpoint admin.
 - [x] Migrasi kompatibel dengan enum `user_role` PostgreSQL lama dan SQLite pengujian; migrasi lokal berhasil. DB lokal berisi tepat satu Super Admin resmi.
-- [x] Suite Laravel 59 tes/498 assertion dan build produksi Next.js 25 halaman lulus.
-- [ ] Smoke test browser terautentikasi untuk kelima role (desktop/mobile), termasuk akses URL langsung, pergantian role saat sesi aktif, dan fokus keyboard.
+- [x] Suite Laravel 59 tes/500 assertion dan build produksi Next.js 25 halaman lulus.
+- [x] Smoke test Chrome terisolasi untuk Admin, Pengurus, KWU, dan User: login/redirect, sidebar desktop, API lintas area (403/200), URL Kelola User langsung (konten kosong lalu redirect), serta perubahan role Pengurus→KWU saat sesi terbuka (redirect ke Merchandise dan API OPREC 403). Drawer Pengurus pada 375px menampilkan Pendaftaran/Tes Tulis, status role, tombol X 44×44px tanpa kotak, fokus keyboard, dan tanpa overflow. Empat akun uji sementara tanpa pendaftaran telah dihapus setelah tes.
+- [ ] Smoke test Super Admin lewat browser nyata masih perlu kredensial yang aman; password akun HIMANIKA tidak diubah. Otorisasi Super Admin sudah diuji pada suite backend.
+- [ ] Uji manual desktop/mobile untuk semua role dan dialog/fokus lain di perangkat nyata; uji ulang perubahan role ketika koneksi putus dan sesi kedaluwarsa.
 - [ ] Jalankan migrasi role pada deployment sebelum mengaktifkan UI role baru; pastikan `ADMIN_EMAIL` menunjuk akun HIMANIKA lama yang telah berstatus admin. Jika akun resmi masih `user`, lakukan audit/pemulihan manual, jangan promosikan otomatis akun biasa.
