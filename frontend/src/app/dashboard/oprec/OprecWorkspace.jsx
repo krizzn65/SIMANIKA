@@ -291,7 +291,7 @@ function WorkspaceContent() {
                   </div>
                 ) : (
                   normalizedOprec && (
-                    <OprecForm oprec={normalizedOprec} onSuccess={load} />
+                    <OprecForm oprec={normalizedOprec} onSuccess={load} draftScope={user?.id} />
                   )
                 )}
               </section>

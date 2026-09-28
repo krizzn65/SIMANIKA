@@ -362,7 +362,7 @@
   box-shadow: none;
 }
 
-/* Table verification buttons */
+/* Table action buttons */
 .oprec-table-btn {
   display: inline-flex;
   align-items: center;
@@ -378,17 +378,26 @@
   white-space: nowrap;
 }
 
-.oprec-table-btn--verify {
+.oprec-table-actions {
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.oprec-table-btn--edit {
   background: #eff6ff !important;
   color: #155eef !important;
   border: 1px solid #bfdbfe !important;
 }
 
-.oprec-table-btn--verify:hover:not(:disabled) {
+.oprec-table-btn--edit:hover:not(:disabled) {
   background: #dbeafe !important;
   border-color: #155eef !important;
   color: #0f48c2 !important;
 }
+
+.oprec-table-btn--delete { background: #fff7f8 !important; color: #b42318 !important; border: 1px solid #f0b8c0 !important; }
+.oprec-table-btn--delete:hover:not(:disabled) { background: #fee4e7 !important; border-color: #e68b97 !important; color: #8f1710 !important; }
 
 .oprec-table-btn:disabled {
   opacity: 0.5;

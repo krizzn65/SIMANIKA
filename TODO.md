@@ -14,10 +14,20 @@
 - [x] Dialog `window.confirm` untuk hapus pendaftaran diganti popup dashboard dengan periode sasaran, backdrop, Escape, tombol Batal, dan status proses hapus untuk mencegah klik ganda.
 - [ ] Uji visual popup hapus pada browser desktop dan mobile dengan sesi admin nyata.
 
+## Aksi pendaftar OPREC (28 September 2026)
+
+- [x] Kolom tabel “Verifikasi Formulir” diubah menjadi “Aksi”; tombol detail menggunakan label Edit, dan tombol Hapus memakai popup konfirmasi sebelum menghapus pendaftar serta berkas privatnya.
+- [ ] Uji manual Edit/detail dan Hapus pendaftar, termasuk berkas terlampir, dengan sesi admin nyata.
+
 ## Konfirmasi kirim formulir OPREC (27 September 2026)
 
 - [x] Form peserta memvalidasi data sebelum membuka popup konfirmasi; pengguna dapat kembali memeriksa jawaban atau mengirim, dengan penegasan bahwa data tidak dapat diedit setelah tersimpan.
 - [ ] Uji visual dan alur kirim popup pada browser desktop dan mobile dengan sesi peserta nyata.
+
+## Draft formulir OPREC (27 September 2026)
+
+- [x] Jawaban teks, pilihan divisi, dan jabatan dipulihkan setelah refresh dalam tab yang sama melalui `sessionStorage` dengan kunci pengguna/periode/schema; draft dihapus setelah kirim berhasil. Berkas unggahan sengaja tidak dipulihkan karena browser tidak mengizinkan rekonstruksi berkas lokal setelah refresh.
+- [ ] Uji refresh, logout/login akun berbeda pada tab yang sama, serta restore draft dengan upload berkas pada browser nyata.
 
 ## Tabel pendaftar OPREC dinamis (27 September 2026)
 
@@ -163,6 +173,11 @@
 - [ ] Uji dua permintaan create-team simultan pada PostgreSQL nyata dan smoke test browser admin setelah deploy; tes SQLite tidak membuktikan perilaku lock PostgreSQL di bawah beban.
 
 Checklist ini menjadi gerbang tiap sprint. Implementasi kode tidak otomatis berarti sudah teruji.
+
+### Admin edit pendaftar OPREC (28 September 2026)
+
+- [x] Admin dapat mengubah jawaban non-berkas, tiga pilihan divisi, dan jabatan dari modal pendaftar. API terpisah memvalidasi ulang seluruh skema formulir, NIM E31, tanggal lahir, pilihan divisi, jabatan, serta melindungi status penerimaan. Regresi backend (3 tes/28 assertion) dan build produksi frontend lulus.
+- [ ] Penggantian berkas privat tidak termasuk fitur edit ini; tetap gunakan alur berkas khusus yang dapat diaudit bila diperlukan.
 
 | Area | Status | Yang perlu diverifikasi/diselesaikan |
 |---|---|---|

@@ -90,7 +90,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/oprec/{oprec}', [AdminOprecController::class, 'update']);
         Route::delete('/oprec/{oprec}', [AdminOprecController::class, 'destroy']);
         Route::get('/oprec/{oprec}/registrants', [OprecRegistrantController::class, 'index']);
+        Route::put('/oprec/{oprec}/registrants/{registration}/form', [OprecRegistrantController::class, 'updateForm']);
         Route::put('/oprec/{oprec}/registrants/{registration}', [OprecRegistrantController::class, 'update']);
+        Route::delete('/oprec/{oprec}/registrants/{registration}', [OprecRegistrantController::class, 'destroy']);
         Route::get('/oprec/{oprec}/registrants/{registration}/files/{field}', [OprecRegistrantController::class, 'download']);
     });
 });

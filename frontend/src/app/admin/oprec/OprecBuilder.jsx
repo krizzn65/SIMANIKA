@@ -2332,7 +2332,7 @@ export default function OprecBuilder({ oprecId }) {
 
                     <div className="oprec-user-preview__form-header">
                       <span className="font-mono text-[10px] uppercase tracking-wider text-blue-600 font-semibold">
-                        // OPREC {data.periode || "2026/2027"}
+                        OPREC {data.periode || "2026/2027"}
                       </span>
                       <h3 className="text-base font-bold text-slate-900 leading-tight">
                         {data.headline || "Formulir Pendaftaran Calon Anggota"}
