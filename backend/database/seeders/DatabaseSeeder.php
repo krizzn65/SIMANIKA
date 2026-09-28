@@ -18,9 +18,9 @@ class DatabaseSeeder extends Seeder
             $admin = User::whereRaw('LOWER(email) = ?', [$email])->first();
             if (!$admin) {
                 $admin = new User;
-                $admin->forceFill(['email' => $email, 'nama' => 'Admin HIMANIKA', 'name' => 'Admin HIMANIKA', 'password' => $password, 'role' => 'admin'])->save();
-            } elseif ($admin->role !== 'admin') {
-                $admin->forceFill(['role' => 'admin'])->save();
+                $admin->forceFill(['email' => $email, 'nama' => 'Admin HIMANIKA', 'name' => 'Admin HIMANIKA', 'password' => $password, 'role' => User::ROLE_SUPER_ADMIN])->save();
+            } elseif ($admin->role === User::ROLE_ADMIN) {
+                $admin->forceFill(['role' => User::ROLE_SUPER_ADMIN])->save();
             }
         }
     }

@@ -8,6 +8,7 @@ import { SignInPage } from "@/components/ui/sign-in";
 import { login, getGoogleAuthUrl } from "@/services/authClient";
 import { loginSchema } from "@/lib/authSchemas";
 import { safeNextPath } from "@/lib/safeNextPath";
+import { STAFF_ROLES, adminHome, canAccessAdminPath } from "@/lib/roleAccess";
 import AuthFeedbackToast from "@/components/ui/AuthFeedbackToast";
 
 export const SignInPageDemo = () => {
@@ -72,8 +73,8 @@ export const SignInPageDemo = () => {
       await new Promise((resolve) => setTimeout(resolve, 520));
       const nextParam = new URLSearchParams(window.location.search).get("next");
       const safeNext = nextParam ? safeNextPath(nextParam) : null;
-      if (user?.role === "admin") {
-        router.replace(safeNext && safeNext !== "/dashboard" ? safeNext : "/admin");
+      if (STAFF_ROLES.includes(user?.role)) {
+        router.replace(safeNext && canAccessAdminPath(user?.role, safeNext) ? safeNext : adminHome(user?.role));
       } else {
         router.replace(safeNext || "/dashboard");
       }

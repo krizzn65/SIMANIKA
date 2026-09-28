@@ -23,7 +23,7 @@ Aturan kode tim terbaru (menggantikan nomor urut per-event pada PRD lama): `team
 | `/oprec`, `/oprec/detail` | `/api/public/oprec` | Payload jadwal, divisi, schema form, poster, FAQ, dan publikasi pengumuman. |
 | Form OPREC | `/api/user/oprec/register` | Next adapter `/api/oprec/register`, cookie Sanctum, validasi backend, berkas privat. |
 | Cek hasil OPREC | `/api/public/oprec/{id}/result` | Next adapter `/api/oprec/result`; NIM/tanggal lahir dikirim lewat POST, tidak di URL. |
-| Pengelolaan admin (UI belum dibuat) | `/api/admin/events`, `/api/admin/oprec`, review pendaftar | Semua route memakai `auth:sanctum` + role admin. |
+| Pengelolaan admin | `/api/admin/users`, `/api/admin/events`, `/api/admin/oprec`, dashboard | Semua route memakai `auth:sanctum` dan otorisasi area: `super_admin` semua, `admin` kecuali users, `leader` hanya OPREC, `kwu` hanya merchandise. |
 
 ## Batas tahap ini
 

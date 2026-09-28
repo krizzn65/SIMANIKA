@@ -4,6 +4,7 @@ import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { currentUser } from "@/services/authClient";
 import { safeNextPath } from "@/lib/safeNextPath";
+import { STAFF_ROLES, adminHome, canAccessAdminPath } from "@/lib/roleAccess";
 import AuthFeedbackToast from "@/components/ui/AuthFeedbackToast";
 
 function CallbackContent() {
@@ -26,8 +27,8 @@ function CallbackContent() {
           const user = response?.data;
           const nextParam = searchParams.get("next");
           const safeNext = nextParam ? safeNextPath(nextParam) : null;
-          if (user?.role === "admin") {
-            router.replace(safeNext && safeNext !== "/dashboard" ? safeNext : "/admin");
+          if (STAFF_ROLES.includes(user?.role)) {
+            router.replace(safeNext && canAccessAdminPath(user?.role, safeNext) ? safeNext : adminHome(user?.role));
           } else {
             router.replace(safeNext || "/dashboard");
           }

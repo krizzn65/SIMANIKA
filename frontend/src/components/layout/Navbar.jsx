@@ -10,6 +10,7 @@ import { CloseSmallIcon } from "@/components/ui/CloseSmallIcon";
 import { SubNavIcon } from "@/components/ui/SubNavIcon";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useAuth } from "@/hooks/useAuth";
+import { STAFF_ROLES, adminHome, ROLE_LABELS } from "@/lib/roleAccess";
 
 const links = [
   { href: "/", icon: "home", label: "Home" },
@@ -595,9 +596,9 @@ export function Navbar() {
                 <div className="nav-account-menu__divider" role="separator" />
 
                 <div className="nav-account-menu__list">
-                  {account.role === "admin" ? (
+                  {STAFF_ROLES.includes(account.role) ? (
                     <Link
-                      href="/admin"
+                      href={adminHome(account.role)}
                       className={`nav-account-menu__item nav-account-menu__item--admin ${pathname.startsWith("/admin") ? "nav-account-menu__item--active" : ""}`}
                       onClick={() => setIsAccountMenuOpen(false)}
                       role="menuitem"
@@ -609,10 +610,10 @@ export function Navbar() {
                       </span>
                       <div className="nav-account-menu__item-text">
                         <div className="nav-account-menu__title-row">
-                          <span className="nav-account-menu__item-title">Admin Console</span>
-                          <span className="nav-account-menu__admin-pill">Admin</span>
+                          <span className="nav-account-menu__item-title">{ROLE_LABELS[account.role]} Console</span>
+                          <span className="nav-account-menu__admin-pill">{ROLE_LABELS[account.role]}</span>
                         </div>
-                        <span className="nav-account-menu__item-desc">Kelola event, OPREC & sistem</span>
+                        <span className="nav-account-menu__item-desc">Buka area sesuai hak akses</span>
                       </div>
                       <span className="nav-account-menu__arrow" aria-hidden="true">→</span>
                     </Link>
@@ -839,12 +840,12 @@ export function Navbar() {
                   </button>
                 ) : account ? (
                   <div className="mobile-drawer__account-section">
-                    {account.role === "admin" ? (
+                    {STAFF_ROLES.includes(account.role) ? (
                       <Link
                         className="mobile-drawer__account-card"
-                        href="/admin"
+                        href={adminHome(account.role)}
                         onClick={handleClose}
-                        title="Buka Admin Console"
+                        title={`Buka ${ROLE_LABELS[account.role]} Console`}
                         style={{ border: "1px solid rgba(21, 94, 239, 0.3)", background: "rgba(21, 94, 239, 0.08)" }}
                       >
                         <div className="mobile-drawer__account-avatar" style={{ background: "#155eef", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
@@ -853,8 +854,8 @@ export function Navbar() {
                           </svg>
                         </div>
                         <div className="mobile-drawer__account-info">
-                          <span className="mobile-drawer__account-name" style={{ color: "#155eef", fontWeight: 700 }}>Admin Console</span>
-                          <span className="mobile-drawer__account-link">Kelola SIMANIKA System</span>
+                          <span className="mobile-drawer__account-name" style={{ color: "#155eef", fontWeight: 700 }}>{ROLE_LABELS[account.role]} Console</span>
+                          <span className="mobile-drawer__account-link">Buka area sesuai hak akses</span>
                         </div>
                         <span className="mobile-drawer__account-chevron" aria-hidden="true">
                           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">

@@ -10,6 +10,7 @@ import { EventRegistrationForm } from "@/components/events/EventRegistrationForm
 import { EventGroupForm } from "@/components/events/EventGroupForm";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
+import { STAFF_ROLES, adminHome } from "@/lib/roleAccess";
 import { eventCategoryLabel } from "@/lib/events";
 import { TeamAccessPanel } from "./TeamAccessPanel";
 import styles from "./workspace.module.css";
@@ -57,13 +58,13 @@ function WorkspaceContent({ eventId }) {
   }, [eventId]);
 
   useEffect(() => {
-    if (user?.role === "admin") { router.replace("/admin"); return; }
+    if (STAFF_ROLES.includes(user?.role)) { router.replace(adminHome(user?.role)); return; }
     if (!user) return;
     load();
     return () => requestRef.current?.abort();
   }, [load, user?.id, user?.role, router]);
 
-  if (user?.role === "admin") return null;
+  if (STAFF_ROLES.includes(user?.role)) return null;
 
   return <main className={styles.workspace}>
     <div className={styles.container}>

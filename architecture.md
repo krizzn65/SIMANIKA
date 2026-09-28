@@ -934,3 +934,10 @@ server ke Laravel. Registrasi tetap menggunakan `/api/user/oprec/register` dan
 Sanctum; lookup hasil publik memverifikasi NIM/tanggal lahir tanpa menampilkan
 daftar pendaftar. Schema form, validasi backend, unique NIM/periode, upload privat,
 publikasi hasil, dan rate limit persisten wajib diterapkan di Laravel.
+
+### Hierarki akses — 28 September 2026
+
+Role akun adalah `super_admin`, `admin`, `leader` (Pengurus), `kwu`, dan `user`.
+`super_admin` tunggal terikat `ADMIN_EMAIL` resmi HIMANIKA dan memiliki semua area konsol termasuk Kelola User.
+`admin` memiliki area konsol selain Kelola User; `leader` hanya OPREC; `kwu` hanya Merchandise.
+Sidebar dan redirect frontend mencerminkan matriks yang sama, sedangkan semua endpoint admin wajib memeriksa area di server.

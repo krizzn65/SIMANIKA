@@ -8,11 +8,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AdminMiddleware
 {
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, string $area = 'console'): Response
     {
-        // A database value alone is never sufficient. This blocks stale or
-        // accidentally promoted accounts even before the cleanup migration runs.
-        abort_unless($request->user()?->isOfficialAdmin(), 403);
+        abort_unless($request->user()?->canAccessArea($area), 403);
         return $next($request);
     }
 }

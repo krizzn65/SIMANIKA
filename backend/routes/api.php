@@ -71,40 +71,49 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/events/{event}/join-team', JoinEventTeamController::class)->middleware('throttle:auth');
 
     Route::prefix('admin')->middleware('admin')->group(function () {
-        Route::get('/dashboard', [AdminDashboardController::class, 'index']);
-        Route::get('/users', [AdminUserController::class, 'index']);
-        Route::get('/users/{id}', [AdminUserController::class, 'show']);
-        Route::put('/users/{id}', [AdminUserController::class, 'update']);
-        Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
-        Route::get('/events', [AdminEventController::class, 'index']);
-        Route::get('/events/{event}', [EventFormController::class, 'show']);
-        Route::put('/events/{event}/form', [EventFormController::class, 'save']);
-        Route::post('/events/{event}/publish', [EventFormController::class, 'publish']);
-        Route::get('/events/{event}/registrants', [EventRegistrantController::class, 'index']);
-        Route::get('/events/{event}/registrants/{kind}/{id}/files/{field}', [EventRegistrantController::class, 'download'])->name('admin.event-file');
-        Route::post('/events', [AdminEventController::class, 'store']);
-        Route::post('/events/upload-poster', [AdminEventController::class, 'uploadPoster']);
-        Route::post('/events/upload-guidebook', [EventGuidebookController::class, 'upload']);
-        Route::put('/events/{event}', [AdminEventController::class, 'update']);
-        Route::delete('/events/{event}', [AdminEventController::class, 'destroy']);
-        Route::get('/oprec', [AdminOprecController::class, 'index']);
-        Route::get('/oprec/written-tests', [OprecWrittenTestController::class, 'index']);
-        Route::get('/oprec/{oprec}', [AdminOprecController::class, 'show']);
-        Route::get('/oprec/{oprec}/written-test', [OprecWrittenTestController::class, 'show']);
-        Route::put('/oprec/{oprec}/written-test', [OprecWrittenTestController::class, 'save']);
-        Route::post('/oprec/{oprec}/written-test', [OprecWrittenTestController::class, 'create']);
-        Route::get('/oprec/{oprec}/written-test/submissions', [OprecWrittenTestSubmissionController::class, 'index']);
-        Route::get('/oprec/{oprec}/written-test/submissions/{submission}', [OprecWrittenTestSubmissionController::class, 'show']);
-        Route::delete('/oprec/{oprec}/written-test/submissions/{submission}', [OprecWrittenTestSubmissionController::class, 'destroy']);
-        Route::post('/oprec', [AdminOprecController::class, 'store']);
-        Route::post('/oprec/upload-poster', [AdminOprecController::class, 'uploadPoster']);
-        Route::post('/oprec/upload-logo', [AdminOprecController::class, 'uploadLogo']);
-        Route::put('/oprec/{oprec}', [AdminOprecController::class, 'update']);
-        Route::delete('/oprec/{oprec}', [AdminOprecController::class, 'destroy']);
-        Route::get('/oprec/{oprec}/registrants', [OprecRegistrantController::class, 'index']);
-        Route::put('/oprec/{oprec}/registrants/{registration}/form', [OprecRegistrantController::class, 'updateForm']);
-        Route::put('/oprec/{oprec}/registrants/{registration}', [OprecRegistrantController::class, 'update']);
-        Route::delete('/oprec/{oprec}/registrants/{registration}', [OprecRegistrantController::class, 'destroy']);
-        Route::get('/oprec/{oprec}/registrants/{registration}/files/{field}', [OprecRegistrantController::class, 'download']);
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->middleware('admin:dashboard');
+
+        Route::middleware('admin:users')->group(function () {
+            Route::get('/users', [AdminUserController::class, 'index']);
+            Route::get('/users/{id}', [AdminUserController::class, 'show']);
+            Route::put('/users/{id}', [AdminUserController::class, 'update']);
+            Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
+        });
+
+        Route::middleware('admin:events')->group(function () {
+            Route::get('/events', [AdminEventController::class, 'index']);
+            Route::get('/events/{event}', [EventFormController::class, 'show']);
+            Route::put('/events/{event}/form', [EventFormController::class, 'save']);
+            Route::post('/events/{event}/publish', [EventFormController::class, 'publish']);
+            Route::get('/events/{event}/registrants', [EventRegistrantController::class, 'index']);
+            Route::get('/events/{event}/registrants/{kind}/{id}/files/{field}', [EventRegistrantController::class, 'download'])->name('admin.event-file');
+            Route::post('/events', [AdminEventController::class, 'store']);
+            Route::post('/events/upload-poster', [AdminEventController::class, 'uploadPoster']);
+            Route::post('/events/upload-guidebook', [EventGuidebookController::class, 'upload']);
+            Route::put('/events/{event}', [AdminEventController::class, 'update']);
+            Route::delete('/events/{event}', [AdminEventController::class, 'destroy']);
+        });
+
+        Route::middleware('admin:oprec')->group(function () {
+            Route::get('/oprec', [AdminOprecController::class, 'index']);
+            Route::get('/oprec/written-tests', [OprecWrittenTestController::class, 'index']);
+            Route::get('/oprec/{oprec}', [AdminOprecController::class, 'show']);
+            Route::get('/oprec/{oprec}/written-test', [OprecWrittenTestController::class, 'show']);
+            Route::put('/oprec/{oprec}/written-test', [OprecWrittenTestController::class, 'save']);
+            Route::post('/oprec/{oprec}/written-test', [OprecWrittenTestController::class, 'create']);
+            Route::get('/oprec/{oprec}/written-test/submissions', [OprecWrittenTestSubmissionController::class, 'index']);
+            Route::get('/oprec/{oprec}/written-test/submissions/{submission}', [OprecWrittenTestSubmissionController::class, 'show']);
+            Route::delete('/oprec/{oprec}/written-test/submissions/{submission}', [OprecWrittenTestSubmissionController::class, 'destroy']);
+            Route::post('/oprec', [AdminOprecController::class, 'store']);
+            Route::post('/oprec/upload-poster', [AdminOprecController::class, 'uploadPoster']);
+            Route::post('/oprec/upload-logo', [AdminOprecController::class, 'uploadLogo']);
+            Route::put('/oprec/{oprec}', [AdminOprecController::class, 'update']);
+            Route::delete('/oprec/{oprec}', [AdminOprecController::class, 'destroy']);
+            Route::get('/oprec/{oprec}/registrants', [OprecRegistrantController::class, 'index']);
+            Route::put('/oprec/{oprec}/registrants/{registration}/form', [OprecRegistrantController::class, 'updateForm']);
+            Route::put('/oprec/{oprec}/registrants/{registration}', [OprecRegistrantController::class, 'update']);
+            Route::delete('/oprec/{oprec}/registrants/{registration}', [OprecRegistrantController::class, 'destroy']);
+            Route::get('/oprec/{oprec}/registrants/{registration}/files/{field}', [OprecRegistrantController::class, 'download']);
+        });
     });
 });
