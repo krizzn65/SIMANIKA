@@ -18,7 +18,7 @@ class UserResource extends JsonResource
             'namaLengkap' => $nama,
             'name' => $nama,
             'fotoProfil' => $this->foto_profil,
-            'role' => $this->isOfficialAdmin() ? 'admin' : 'user',
+            'role' => $this->effectiveRole(),
         ];
     }
 }

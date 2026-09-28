@@ -2,7 +2,8 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { UserAvatar } from "@/components/ui/UserAvatar";
-import { ShieldCheck, Server, Key, User, CheckCircle2 } from "lucide-react";
+import { Server, User, CheckCircle2 } from "lucide-react";
+import { ROLE_LABELS } from "@/lib/roleAccess";
 
 export default function AdminSettingsPage() {
   const { user } = useAuth();
@@ -41,7 +42,7 @@ export default function AdminSettingsPage() {
             <div className="text-xs font-mono text-slate-500">{user?.email}</div>
             <div className="flex items-center gap-2 mt-1">
               <span className="admin-badge admin-badge--blue text-[10px] uppercase font-mono">
-                ROLE: {user?.role || "ADMIN"}
+                ROLE: {ROLE_LABELS[user?.role] || "Pengguna"}
               </span>
               <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />

@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -30,7 +31,7 @@ class UserController extends Controller
 
         // Filter by role
         if ($role = $request->query('role')) {
-            if (in_array($role, ['admin', 'user'])) {
+            if (in_array($role, User::ASSIGNABLE_ROLES, true) || $role === User::ROLE_SUPER_ADMIN) {
                 $query->where('role', $role);
             }
         }
@@ -41,12 +42,15 @@ class UserController extends Controller
         $sortDir = strtolower($request->query('sort_dir')) === 'asc' ? 'asc' : 'desc';
 
         $perPage = min(max((int) $request->query('per_page', 10), 1), 100);
-        $paginated = $query->orderBy($sortBy, $sortDir)->paginate($perPage);
+        $paginated = $query->orderByRaw('CASE WHEN role = ? AND lower(email) = ? THEN 0 ELSE 1 END', [User::ROLE_SUPER_ADMIN, strtolower((string) config('admin.email'))])->orderBy($sortBy, $sortDir)->orderBy('id')->paginate($perPage);
 
         // Stats summary for admin dashboard overview
         $stats = [
             'totalUsers' => User::count(),
-            'totalAdmins' => User::where('role', 'admin')->count(),
+            'totalSuperAdmins' => User::where('role', User::ROLE_SUPER_ADMIN)->count(),
+            'totalAdmins' => User::where('role', User::ROLE_ADMIN)->count(),
+            'totalLeaders' => User::where('role', User::ROLE_LEADER)->count(),
+            'totalKwu' => User::where('role', User::ROLE_KWU)->count(),
             'totalRegular' => User::where('role', 'user')->count(),
             'newThisWeek' => User::where('created_at', '>=', Carbon::now()->subDays(7))->count(),
         ];
@@ -59,7 +63,7 @@ class UserController extends Controller
                 'nama' => $displayName,
                 'email' => $u->email,
                 'fotoProfil' => $u->foto_profil,
-                'role' => $u->isOfficialAdmin() ? 'admin' : 'user',
+                'role' => $u->effectiveRole(),
                 'emailVerifiedAt' => $u->email_verified_at?->toIso8601String(),
                 'createdAt' => $u->created_at?->toIso8601String(),
                 'eventRegistrationsCount' => $u->event_registrations_count ?? 0,
@@ -87,8 +91,7 @@ class UserController extends Controller
     {
         $user = User::with([
             'eventRegistrations.event:id,judul,slug,kategori,status',
-            'oprecRegistrations.oprec:id,judul,slug,status',
-            'oprecRegistrations.division:id,nama',
+            'oprecRegistrations.oprec:id,periode,headline,status',
         ])
         ->withCount(['eventRegistrations', 'oprecRegistrations'])
         ->findOrFail($id);
@@ -103,7 +106,7 @@ class UserController extends Controller
                 'nama' => $displayName,
                 'email' => $user->email,
                 'fotoProfil' => $user->foto_profil,
-                'role' => $user->isOfficialAdmin() ? 'admin' : 'user',
+                'role' => $user->effectiveRole(),
                 'emailVerifiedAt' => $user->email_verified_at?->toIso8601String(),
                 'createdAt' => $user->created_at?->toIso8601String(),
                 'eventRegistrations' => $user->eventRegistrations->map(fn ($r) => [
@@ -122,34 +125,48 @@ class UserController extends Controller
                     'id' => $r->id,
                     'status' => $r->status,
                     'createdAt' => $r->created_at?->toIso8601String(),
-                    'division' => $r->division?->nama ?? '-',
+                    'division' => null,
                     'oprec' => $r->oprec ? [
                         'id' => $r->oprec->id,
-                        'judul' => $r->oprec->judul,
-                        'slug' => $r->oprec->slug,
+                        'judul' => $r->oprec->headline,
+                        'slug' => $r->oprec->periode,
                     ] : null,
                 ]),
             ],
         ]);
     }
 
-    /** Update user details. Role is controlled by ADMIN_EMAIL. */
+    /** Only the sole official super administrator may assign staff roles. */
     public function update(Request $request, $id): JsonResponse
     {
         $user = User::findOrFail($id);
-
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'role' => ['required', Rule::in(User::ASSIGNABLE_ROLES)],
             'nim' => ['prohibited'],
             'jurusan' => ['prohibited'],
             'angkatan' => ['prohibited'],
         ]);
 
-        $user->name = $validated['name'];
-        $user->email = $validated['email'];
+        if ($user->isSuperAdmin() || $user->role === User::ROLE_SUPER_ADMIN) {
+            return response()->json(['message' => 'Akun Super Admin tidak dapat diubah.'], 422);
+        }
+        if (strcasecmp($validated['email'], (string) config('admin.email')) === 0) {
+            return response()->json(['message' => 'Email resmi HIMANIKA khusus untuk Super Admin.'], 422);
+        }
 
-        $user->save();
+        DB::transaction(function () use ($user, $validated) {
+            $locked = User::query()->lockForUpdate()->findOrFail($user->id);
+            if ($locked->role === User::ROLE_SUPER_ADMIN) {
+                abort(422, 'Akun Super Admin tidak dapat diubah.');
+            }
+            $locked->name = $validated['name'];
+            $locked->email = $validated['email'];
+            $locked->role = $validated['role'];
+            $locked->save();
+            $user->refresh();
+        });
 
         return response()->json([
             'status' => 'success',
@@ -158,7 +175,7 @@ class UserController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'role' => $user->isOfficialAdmin() ? 'admin' : 'user',
+                'role' => $user->effectiveRole(),
             ],
         ]);
     }
@@ -177,14 +194,8 @@ class UserController extends Controller
             ], 422);
         }
 
-        // Cannot delete sole admin
-        if ($targetUser->role === 'admin') {
-            $adminCount = User::where('role', 'admin')->count();
-            if ($adminCount <= 1) {
-                return response()->json([
-                    'message' => 'Tidak dapat menghapus satu-satunya akun admin.',
-                ], 422);
-            }
+        if ($targetUser->role === User::ROLE_SUPER_ADMIN || $targetUser->isSuperAdmin()) {
+            return response()->json(['message' => 'Akun Super Admin tidak dapat dihapus.'], 422);
         }
 
         $userName = $targetUser->name;

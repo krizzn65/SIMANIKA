@@ -842,3 +842,12 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 - [x] Migrasi `first_published_at` dijalankan pada PostgreSQL lokal (`APP_ENV=local`, batch 25). Chrome DevTools memverifikasi halaman OPREC publik tanpa overflow pada viewport 320, 390, 768, dan 1440 px.
 - [ ] Jalankan migrasi pada lingkungan deployment; smoke test browser admin/peserta dengan sesi uji khusus, keyboard/fokus dialog, batas waktu, serta kiriman bersamaan di PostgreSQL sebelum rilis. Browser terautentikasi belum diuji karena tidak ada kredensial uji yang aman.
 - [ ] Penilaian dan pemeringkatan peserta tidak termasuk perombakan ini; rancang dan verifikasi terpisah.
+
+### Hierarki role dan hak akses — 28 September 2026
+- [x] Satu akun HIMANIKA yang sudah menjadi admin dimigrasikan ke `super_admin`; indeks unik PostgreSQL/SQLite mencegah Super Admin kedua, sedangkan nilai `admin`, `leader`, `kwu`, dan `user` boleh dipakai oleh banyak akun.
+- [x] Hanya Super Admin resmi dapat membuka Kelola User dan mengubah role akun lain. Akun Super Admin tidak dapat diubah/dihapus lewat API; email resminya tidak dapat diganti melalui profil. Daftar pengguna menempatkannya pada nomor 1.
+- [x] API admin memakai pemeriksaan area pada setiap grup route: admin kecuali users, pengurus (`leader`) hanya OPREC, KWU hanya merchandise. Sidebar, guard halaman, serta pengalihan login mengikuti role yang sama. Merchandise masih berupa halaman coming soon tanpa endpoint admin.
+- [x] Migrasi kompatibel dengan enum `user_role` PostgreSQL lama dan SQLite pengujian; migrasi lokal berhasil. DB lokal berisi tepat satu Super Admin resmi.
+- [x] Suite Laravel 59 tes/498 assertion dan build produksi Next.js 25 halaman lulus.
+- [ ] Smoke test browser terautentikasi untuk kelima role (desktop/mobile), termasuk akses URL langsung, pergantian role saat sesi aktif, dan fokus keyboard.
+- [ ] Jalankan migrasi role pada deployment sebelum mengaktifkan UI role baru; pastikan `ADMIN_EMAIL` menunjuk akun HIMANIKA lama yang telah berstatus admin. Jika akun resmi masih `user`, lakukan audit/pemulihan manual, jangan promosikan otomatis akun biasa.

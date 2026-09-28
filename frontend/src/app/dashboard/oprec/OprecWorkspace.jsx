@@ -10,6 +10,7 @@ import { OprecForm } from "@/components/oprec/OprecForm";
 import { WrittenTestCard } from "./WrittenTestCard";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
+import { STAFF_ROLES, adminHome } from "@/lib/roleAccess";
 import { normalizeOprec, oprecState } from "@/lib/oprec";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import styles from "./oprec-workspace.module.css";
@@ -60,8 +61,8 @@ function WorkspaceContent({ oprecId }) {
   }, [oprecId]);
 
   useEffect(() => {
-    if (user?.role === "admin") {
-      router.replace("/admin");
+    if (STAFF_ROLES.includes(user?.role)) {
+      router.replace(adminHome(user?.role));
       return;
     }
     if (!user) return;
@@ -82,7 +83,7 @@ function WorkspaceContent({ oprecId }) {
     }
   }, [data?.oprec]);
 
-  if (user?.role === "admin") return null;
+  if (STAFF_ROLES.includes(user?.role)) return null;
 
   const registration = data?.registration;
   const isSubmitted = Boolean(registration);

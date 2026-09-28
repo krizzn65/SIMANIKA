@@ -7,6 +7,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
+import { STAFF_ROLES, adminHome } from "@/lib/roleAccess";
 import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
 import { UsersRound } from "lucide-react";
 import { eventCategoryLabel } from "@/lib/events";
@@ -81,13 +82,13 @@ function DashboardContent() {
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (user?.role === "admin") {
-      router.replace("/admin");
+    if (STAFF_ROLES.includes(user?.role)) {
+      router.replace(adminHome(user?.role));
     }
   }, [user?.role, router]);
 
   useEffect(() => {
-    if (!user || user?.role === "admin") return;
+    if (!user || STAFF_ROLES.includes(user?.role)) return;
     const controller = new AbortController();
     setLoading(true);
     setError(false);
@@ -105,7 +106,7 @@ function DashboardContent() {
     return () => controller.abort();
   }, [user?.id, user?.role, attempt]);
 
-  if (user?.role === "admin") {
+  if (STAFF_ROLES.includes(user?.role)) {
     return null;
   }
 

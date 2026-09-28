@@ -14,8 +14,17 @@ class UpdateProfileRequest extends FormRequest
         return [
             'nama' => ['sometimes', 'nullable', 'string', 'max:150'],
             'name' => ['sometimes', 'nullable', 'string', 'max:150'],
-            'email' => ['sometimes', 'required', 'email', 'max:254', Rule::unique('users')->ignore($this->user()->id)],
+            'email' => ['sometimes', 'required', 'email', 'max:254', Rule::unique('users')->ignore($this->user()->id), function ($attribute, $value, $fail) {
+                $official = \App\Models\User::configuredAdminEmail();
+                $normalized = mb_strtolower(trim((string) $value));
+                if ($this->user()->isSuperAdmin() && $normalized !== mb_strtolower($this->user()->email)) {
+                    $fail('Email akun Super Admin tidak dapat diubah.');
+                } elseif (!$this->user()->isSuperAdmin() && $official && $normalized === $official) {
+                    $fail('Email resmi HIMANIKA hanya untuk Super Admin.');
+                }
+            }],
             'nim' => ['prohibited'],
+            'role' => ['prohibited'],
             'jurusan' => ['prohibited'],
             'angkatan' => ['prohibited'],
             'foto_profil' => ['prohibited'],

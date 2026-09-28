@@ -7,7 +7,7 @@ use Illuminate\Validation\Rule;
 
 class SaveOprecRequest extends FormRequest
 {
-    public function authorize(): bool { return $this->user()?->role === 'admin'; }
+    public function authorize(): bool { return $this->user()?->canAccessArea('oprec'); }
 
     public function rules(): array
     {

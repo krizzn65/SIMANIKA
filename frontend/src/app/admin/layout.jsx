@@ -24,6 +24,7 @@ import {
 import { motion } from "framer-motion";
 import { Toaster } from "sonner";
 import "./admin.css";
+import { adminHome, canAccessAdminPath, ROLE_LABELS } from "@/lib/roleAccess";
 
 const adminLinks = [
   {
@@ -40,6 +41,11 @@ const adminLinks = [
     label: "Kelola Event",
     href: "/admin/events",
     icon: <Calendar className="h-5 w-5 flex-shrink-0" />,
+  },
+  {
+    label: "Kelola OPREC",
+    href: "/admin/oprec",
+    icon: <UserCheck className="h-5 w-5 flex-shrink-0" />,
   },
   {
     label: "Merchandise",
@@ -87,7 +93,7 @@ function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
         {/* Logo Header */}
         <div className="py-2 flex items-center justify-start">
           <Link
-            href="/admin"
+            href={adminHome(user?.role)}
             className="flex items-center gap-3 px-1 relative z-20 group min-w-0"
             title="SIMANIKA Admin Console"
           >
@@ -117,12 +123,12 @@ function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
 
         {/* Navigation Links */}
         <div className="mt-8 flex flex-col gap-1.5">
-          {adminLinks.map((link) => {
+          {adminLinks.filter((link) => canAccessAdminPath(user?.role, link.href)).map((link) => {
             const isActive = pathname === link.href || (link.href !== "/admin" && pathname.startsWith(link.href));
             return (
               <Fragment key={link.href}>
-                <SidebarLink link={link} active={isActive} />
-                {link.href === "/admin/events" && (
+                {link.href !== "/admin/oprec" && <SidebarLink link={link} active={isActive} />}
+                {link.href === "/admin/oprec" && canAccessAdminPath(user?.role, "/admin/oprec") && (
                   <div>
                     {expanded ? (
                       <button
@@ -169,7 +175,7 @@ function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
           {expanded && (
             <div className="flex flex-col min-w-0 flex-1">
               <span className="text-xs font-bold text-white truncate">{displayName}</span>
-              <span className="text-[10px] text-blue-100 uppercase tracking-wider font-semibold">Admin HIMANIKA</span>
+              <span className="text-[10px] text-blue-100 uppercase tracking-wider font-semibold">{ROLE_LABELS[user?.role] || "Pengguna"}</span>
             </div>
           )}
         </div>
