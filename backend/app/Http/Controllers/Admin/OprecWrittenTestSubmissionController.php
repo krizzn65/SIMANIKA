@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Oprec;
 use App\Models\OprecStage;
 use App\Models\OprecTestSubmission;
+use App\Support\OprecWrittenTestAnswers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -20,11 +21,12 @@ class OprecWrittenTestSubmissionController extends Controller
             ->latest('id')->paginate(20);
 
         return response()->json([
-            'data' => $submissions->getCollection()->map(fn (OprecTestSubmission $submission) => $this->row($submission, $divisions))->all(),
+            'data' => $submissions->getCollection()->map(fn (OprecTestSubmission $submission) => $this->row($submission, $divisions, $oprec->id))->all(),
             'questions' => $stage->form_fields ?? [],
             'current_page' => $submissions->currentPage(),
             'last_page' => $submissions->lastPage(),
             'total' => $submissions->total(),
+            'per_page' => $submissions->perPage(),
         ])->header('Cache-Control', 'private, no-store');
     }
 
@@ -33,23 +35,26 @@ class OprecWrittenTestSubmissionController extends Controller
         $stage = $oprec->writtenTest()->firstOrFail();
         abort_unless($submission->oprec_stage_id === $stage->id, 404);
         $submission->load('registration.user');
-        return response()->json(['data' => $this->row($submission, $oprec->divisions()->pluck('nama', 'id')),
+        return response()->json(['data' => $this->row($submission, $oprec->divisions()->pluck('nama', 'id'), $oprec->id),
             'questions' => $stage->form_fields ?? [],
         ])->header('Cache-Control', 'private, no-store');
     }
 
     public function destroy(Oprec $oprec, OprecTestSubmission $submission)
     {
-        DB::transaction(function () use ($oprec, $submission) {
+        $answers = DB::transaction(function () use ($oprec, $submission) {
             Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
             $stage = OprecStage::where('oprec_id', $oprec->id)->where('type', 'test_tulis')->lockForUpdate()->firstOrFail();
             $record = $stage->submissions()->whereKey($submission->id)->lockForUpdate()->firstOrFail();
+            $files = $record->answers ?? [];
             $record->delete();
+            return $files;
         });
+        OprecWrittenTestAnswers::deleteFiles($answers);
         return response()->noContent();
     }
 
-    private function row(OprecTestSubmission $submission, $divisions): array
+    private function row(OprecTestSubmission $submission, $divisions, int $oprecId): array
     {
         $registration = $submission->registration;
         $form = $registration?->form_data ?? [];
@@ -62,7 +67,8 @@ class OprecWrittenTestSubmissionController extends Controller
                 $registration?->divisi_pilihan_2,
                 $registration?->divisi_pilihan_3,
             ])->filter()->map(fn ($id) => $divisions->get($id, 'Divisi #'.$id))->values()->all(),
-            'answers' => $submission->answers ?? [],
+            'answers' => OprecWrittenTestAnswers::publicAnswers($submission->answers ?? []),
+            'files' => OprecWrittenTestAnswers::files($submission->answers ?? [], url("/api/admin/oprec/".$oprecId."/written-test/submissions/".$submission->id."/files")),
             'submitted_at' => $submission->created_at?->toIso8601String(),
         ];
     }

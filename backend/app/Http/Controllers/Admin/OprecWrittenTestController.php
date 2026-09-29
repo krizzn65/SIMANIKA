@@ -73,8 +73,9 @@ class OprecWrittenTestController extends Controller
             'questions' => ['required', 'array', 'min:1', 'max:40'],
             'questions.*.id' => ['required', 'string', 'regex:/^[a-z][a-z0-9_]{0,39}$/', 'distinct'],
             'questions.*.label' => ['required', 'string', 'max:300'],
-            'questions.*.type' => ['required', Rule::in(['short_text', 'paragraph', 'single_choice'])],
+            'questions.*.type' => ['required', Rule::in(['short_text', 'paragraph', 'email', 'tel', 'url', 'number', 'date', 'select', 'single_choice', 'checkbox', 'file'])],
             'questions.*.required' => ['required', 'boolean'],
+            'questions.*.help' => ['nullable', 'string', 'max:500'],
             'questions.*.options' => ['sometimes', 'array', 'max:10'],
             'questions.*.options.*' => ['string', 'max:200'],
             'questions.*.targetDivisions' => ['sometimes', 'array', 'max:30'],
@@ -85,7 +86,7 @@ class OprecWrittenTestController extends Controller
         $questions = [];
         foreach ($data['questions'] as $index => $question) {
             $options = array_values(array_map('trim', $question['options'] ?? []));
-            if ($question['type'] === 'single_choice') {
+            if (in_array($question['type'], ['single_choice', 'select'], true)) {
                 if (count($options) < 2 || count(array_filter($options, fn ($option) => $option !== '')) !== count($options)
                     || count(array_unique(array_map('mb_strtolower', $options))) !== count($options)) {
                     throw ValidationException::withMessages(["questions.$index.options" => ['Pilihan jawaban harus berisi 2–10 opsi unik dan tidak kosong.']]);
@@ -106,6 +107,7 @@ class OprecWrittenTestController extends Controller
                 'label' => $label,
                 'type' => $question['type'],
                 'required' => (bool) $question['required'],
+                'help' => trim($question['help'] ?? ''),
                 'options' => $options,
                 'targetDivisions' => $targets,
             ];

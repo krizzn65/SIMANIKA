@@ -848,6 +848,33 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 - [x] Hanya Super Admin resmi dapat membuka Kelola User dan mengubah role akun lain. Akun Super Admin tidak dapat diubah/dihapus lewat API; email resminya tidak dapat diganti melalui profil. Daftar pengguna menempatkannya pada nomor 1.
 - [x] API admin memakai pemeriksaan area pada setiap grup route: admin kecuali users, pengurus (`leader`) hanya OPREC, KWU hanya merchandise. Sidebar, guard halaman, serta pengalihan login mengikuti role yang sama. Merchandise masih berupa halaman coming soon tanpa endpoint admin.
 - [x] Migrasi kompatibel dengan enum `user_role` PostgreSQL lama dan SQLite pengujian; migrasi lokal berhasil. DB lokal berisi tepat satu Super Admin resmi.
-- [x] Suite Laravel 59 tes/498 assertion dan build produksi Next.js 25 halaman lulus.
-- [ ] Smoke test browser terautentikasi untuk kelima role (desktop/mobile), termasuk akses URL langsung, pergantian role saat sesi aktif, dan fokus keyboard.
+- [x] Suite Laravel 59 tes/500 assertion dan build produksi Next.js 25 halaman lulus.
+- [x] Smoke test Chrome terisolasi untuk Admin, Pengurus, KWU, dan User: login/redirect, sidebar desktop, API lintas area (403/200), URL Kelola User langsung (konten kosong lalu redirect), serta perubahan role Pengurus→KWU saat sesi terbuka (redirect ke Merchandise dan API OPREC 403). Drawer Pengurus pada 375px menampilkan Pendaftaran/Tes Tulis, status role, tombol X 44×44px tanpa kotak, fokus keyboard, dan tanpa overflow. Empat akun uji sementara tanpa pendaftaran telah dihapus setelah tes.
+- [ ] Smoke test Super Admin lewat browser nyata masih perlu kredensial yang aman; password akun HIMANIKA tidak diubah. Otorisasi Super Admin sudah diuji pada suite backend.
+- [ ] Uji manual desktop/mobile untuk semua role dan dialog/fokus lain di perangkat nyata; uji ulang perubahan role ketika koneksi putus dan sesi kedaluwarsa.
 - [ ] Jalankan migrasi role pada deployment sebelum mengaktifkan UI role baru; pastikan `ADMIN_EMAIL` menunjuk akun HIMANIKA lama yang telah berstatus admin. Jika akun resmi masih `user`, lakukan audit/pemulihan manual, jangan promosikan otomatis akun biasa.
+
+### Stabilitas dev server Next.js — 29 September 2026
+- [x] Crash loop HMR Turbopack (`VersionedContents` cell tidak lagi ada) diatasi dengan membersihkan cache `.next`, memulai ulang server, dan menjadikan webpack bundler bawaan `npm run dev`. Route Tes Tulis kembali terkompilasi dan typecheck lulus.
+
+### Transisi navigasi admin — 29 September 2026
+- [x] Pemeriksaan ulang sesi pada pindah halaman/fokus berjalan di latar belakang, tanpa menyembunyikan layout admin. Guard tetap memeriksa role dan backend tetap menolak akses area yang tidak diizinkan. Build produksi Next.js 25 halaman lulus.
+- [x] Chrome terisolasi: klik Pendaftaran → Tes Tulis pada viewport 758px dan 1440px; layout tetap terpasang pada seluruh 17 sampel tiap transisi. Akun Pengurus uji tanpa pendaftaran sudah dihapus.
+- [x] Submenu Kelola OPREC memakai pencocokan route turunan: editor formulir tetap menandai Pendaftaran dan editor Tes Tulis tetap menandai Tes Tulis. Guard otorisasi tidak diubah; typecheck frontend lulus.
+- [ ] Uji manual saat koneksi lambat/putus, sesi kedaluwarsa, dan role berubah di tab aktif tetap perlu dilakukan sebelum rilis.
+
+### Loading jawaban Tes Tulis — 29 September 2026
+- [x] Status memuat jawaban menggunakan skeleton tabel dengan tinggi stabil, indikator aksesibel, dukungan reduced motion, dan tata letak dua kolom pada layar kecil. Struktur kolom tabel tetap tampil setelah pemuatan meski belum ada jawaban; typecheck frontend lulus.
+
+### Layout Tes Tulis admin — 29 September 2026
+- [x] Container Tes Tulis kini memenuhi lebar area konten admin seperti Pendaftaran; margin otomatis yang membuatnya menyusut di dalam flex layout dihapus, padding ganda diringkas, dan jarak header dipadatkan. Build produksi Next.js 25 halaman lulus.
+- [x] Halaman daftar Tes Tulis menyamakan hierarki tipografi, skala tombol desktop, selector, dan padding kartu dengan halaman Pendaftaran; editor soal tidak terpengaruh dan kontrol layar sentuh tetap minimum 44px. Typecheck frontend lulus.
+- [x] Tabel pendaftar dan jawaban Tes Tulis kini memiliki kolom No. sebagai kolom pertama. Nomor mengikuti `current_page` dan `per_page`, sehingga tetap konsisten setelah pagination atau filter. Typecheck frontend lulus.
+
+### Pratinjau editor Tes Tulis — 29 September 2026
+- [x] Editor soal menampilkan pratinjau formulir peserta secara langsung, termasuk simulasi hingga tiga divisi dan soal khusus divisi; renderer input dipakai bersama dengan formulir peserta. Tombol kirim pratinjau nonaktif. Build produksi Next.js 25 halaman dan 23 tes frontend OPREC lulus.
+- [ ] Verifikasi interaksi pratinjau pada browser terautentikasi di desktop dan mobile masih perlu dilakukan.
+
+### Kerangka Penilaian OPREC — 29 September 2026
+- [x] Submenu Penilaian dan route `/admin/oprec/penilaian` tersedia dengan breadcrumb serta indikator sidebar aktif; akses mengikuti guard area OPREC. Typecheck dan build produksi frontend lulus (route terdaftar).
+- [ ] Implementasi kriteria, alur penjurian, sumber data, dan hak penilai menunggu rincian kebutuhan pengguna.

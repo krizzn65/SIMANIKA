@@ -20,6 +20,7 @@ import {
   ChevronDown,
   ClipboardList,
   FilePenLine,
+  ClipboardCheck,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Toaster } from "sonner";
@@ -59,11 +60,16 @@ const adminLinks = [
   },
 ];
 
+const isOprecRegistrationRoute = (pathname) => pathname === "/admin/oprec" || /^\/admin\/oprec\/[^/]+\/edit$/.test(pathname);
+const isOprecWrittenTestRoute = (pathname) => pathname === "/admin/oprec/test" || pathname.startsWith("/admin/oprec/test/");
+const isOprecAssessmentRoute = (pathname) => pathname === "/admin/oprec/penilaian" || pathname.startsWith("/admin/oprec/penilaian/");
+
 function adminBreadcrumb(pathname) {
   if (pathname === "/admin") return "Dashboard";
-  if (pathname === "/admin/oprec/test") return "Kelola OPREC > Tes Tulis";
+  if (isOprecWrittenTestRoute(pathname)) return "Kelola OPREC > Tes Tulis";
+  if (isOprecAssessmentRoute(pathname)) return "Kelola OPREC > Penilaian";
   if (pathname === "/admin/oprec") return "Kelola OPREC > Pendaftaran";
-  if (/^\/admin\/oprec\/[^/]+\/edit$/.test(pathname)) return "Kelola OPREC > Edit Formulir";
+  if (isOprecRegistrationRoute(pathname) && pathname !== "/admin/oprec") return "Kelola OPREC > Edit Formulir";
   if (/^\/admin\/events\/[^/]+$/.test(pathname)) return "Kelola Event > Formulir Event";
   const labels = {
     users: "Kelola User",
@@ -77,10 +83,10 @@ function adminBreadcrumb(pathname) {
 }
 
 function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
-  // MobileSidebar provides open=true to its own drawer content. Desktop must not
-  // inherit mobileOpen: it can otherwise render footer labels inside 76px width.
-  const { open, setMobileOpen } = useSidebar();
-  const expanded = open;
+  // Mobile drawer must show labels and OPREC subpages; desktop stays collapsed
+  // when its own hover state is closed, even after a viewport resize.
+  const { open, mobileOpen, setMobileOpen } = useSidebar();
+  const expanded = open || (mobileOpen && typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches);
   const [oprecMenuOpen, setOprecMenuOpen] = useState(pathname.startsWith("/admin/oprec"));
 
   useEffect(() => {
@@ -147,8 +153,9 @@ function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
                     )}
                     {expanded && oprecMenuOpen && (
                       <div id="admin-oprec-submenu" className="ml-5 mt-1 flex flex-col gap-1 border-l border-white/25 pl-3">
-                        <Link href="/admin/oprec" onClick={() => setMobileOpen(false)} aria-current={pathname === "/admin/oprec" ? "page" : undefined} className={`rounded-lg px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${pathname === "/admin/oprec" ? "bg-white font-semibold text-[#155eef]" : "text-blue-50 hover:bg-white/15"}`}><FilePenLine className="h-4 w-4" aria-hidden="true" /> Pendaftaran</Link>
-                        <Link href="/admin/oprec/test" onClick={() => setMobileOpen(false)} aria-current={pathname === "/admin/oprec/test" ? "page" : undefined} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${pathname === "/admin/oprec/test" ? "bg-white font-semibold text-[#155eef]" : "text-blue-50 hover:bg-white/15"}`}><ClipboardList className="h-4 w-4" aria-hidden="true" />Tes Tulis</Link>
+                        <Link href="/admin/oprec" onClick={() => setMobileOpen(false)} aria-current={isOprecRegistrationRoute(pathname) ? "page" : undefined} className={`rounded-lg px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${isOprecRegistrationRoute(pathname) ? "bg-white font-semibold text-[#155eef]" : "text-blue-50 hover:bg-white/15"}`}><FilePenLine className="h-4 w-4" aria-hidden="true" /> Pendaftaran</Link>
+                        <Link href="/admin/oprec/test" onClick={() => setMobileOpen(false)} aria-current={isOprecWrittenTestRoute(pathname) ? "page" : undefined} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${isOprecWrittenTestRoute(pathname) ? "bg-white font-semibold text-[#155eef]" : "text-blue-50 hover:bg-white/15"}`}><ClipboardList className="h-4 w-4" aria-hidden="true" />Tes Tulis</Link>
+                        <Link href="/admin/oprec/penilaian" onClick={() => setMobileOpen(false)} aria-current={isOprecAssessmentRoute(pathname) ? "page" : undefined} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${isOprecAssessmentRoute(pathname) ? "bg-white font-semibold text-[#155eef]" : "text-blue-50 hover:bg-white/15"}`}><ClipboardCheck className="h-4 w-4" aria-hidden="true" />Penilaian</Link>
                       </div>
                     )}
                   </div>
@@ -184,12 +191,12 @@ function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
           type="button"
           onClick={handleLogout}
           className={`w-full flex items-center group/sidebar py-2.5 rounded-xl transition-all duration-150 text-red-200 hover:text-white bg-red-500/20 hover:bg-red-500/35 border border-red-400/25 cursor-pointer ${expanded ? "justify-start gap-3 px-3" : "justify-center px-0"}`}
-          title="Keluar Admin"
+          title="Keluar Akun"
         >
           <div className="flex-shrink-0 transition-transform duration-150 group-hover/sidebar:scale-110 text-red-300 group-hover/sidebar:text-white">
             <LogOut className="h-5 w-5 flex-shrink-0" />
           </div>
-          {expanded && <span className="text-sm font-semibold whitespace-pre inline-block !p-0 !m-0 tracking-tight">Keluar Admin</span>}
+          {expanded && <span className="text-sm font-semibold whitespace-pre inline-block !p-0 !m-0 tracking-tight">Keluar Akun</span>}
         </button>
       </div>
     </SidebarBody>

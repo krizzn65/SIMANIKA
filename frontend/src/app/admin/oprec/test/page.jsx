@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, Eye, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { CalendarDays, Eye, LoaderCircle, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { api } from "@/services/api";
 import { AdminErrorNotice } from "../../AdminErrorNotice";
 import "./test.css";
@@ -43,6 +43,7 @@ export default function AdminOprecWrittenTestPage() {
   const [answerPage, setAnswerPage] = useState(1);
   const [answerPages, setAnswerPages] = useState(1);
   const [answerTotal, setAnswerTotal] = useState(0);
+  const [answerPerPage, setAnswerPerPage] = useState(20);
   const [loading, setLoading] = useState(true);
   const [loadingAnswers, setLoadingAnswers] = useState(false);
   const [error, setError] = useState("");
@@ -96,6 +97,7 @@ export default function AdminOprecWrittenTestPage() {
       setQuestions(response.data?.questions || []);
       setAnswerPages(Math.max(1, Number(response.data?.last_page) || 1));
       setAnswerTotal(Number(response.data?.total) || 0);
+      setAnswerPerPage(Math.max(1, Number(response.data?.per_page) || 20));
       setAnswerError("");
     } catch (cause) {
       if (signal?.aborted) return;
@@ -200,17 +202,17 @@ export default function AdminOprecWrittenTestPage() {
           <section className="oprec-test__answers" aria-labelledby="answers-title">
             <div className="oprec-test__section-head"><div><h2 id="answers-title">Jawaban Tes Tulis</h2><p>Seluruh kolom pertanyaan mengikuti soal pada tes ini.</p></div><span>{answerTotal} jawaban</span></div>
             {answerError && <AdminErrorNotice message={answerError} />}
-            {loadingAnswers ? <p role="status">Memuat jawaban…</p> : submissions.length ? (
+            {loadingAnswers ? <div className="oprec-test__answers-loading" role="status" aria-live="polite" aria-busy="true"><div className="oprec-test__answers-loading-label"><LoaderCircle size={18} aria-hidden="true" /> Memuat jawaban…</div><div className="oprec-test__answers-skeleton" aria-hidden="true"><span /><span /><span /><span /><span /><span /></div></div> : (
               <div className="oprec-test__table-scroll" tabIndex={0} aria-label="Tabel jawaban dapat digulir mendatar">
-                <table><thead><tr><th>Nama</th><th>NIM</th><th>Pilihan Divisi</th>{questions.map((question) => <th key={question.id}>{question.label}</th>)}<th>Aksi</th></tr></thead>
-                  <tbody>{submissions.map((item) => <tr key={item.id}>
-                    <td><strong>{item.name}</strong></td><td>{item.nim}</td><td>{item.divisions.join(", ") || "—"}</td>
-                    {questions.map((question) => <td key={question.id}>{item.answers?.[question.id] ? <details><summary>{String(item.answers[question.id]).slice(0, 70)}{String(item.answers[question.id]).length > 70 ? "…" : ""}</summary><p>{item.answers[question.id]}</p></details> : "Tidak berlaku / kosong"}</td>)}
+                <table><thead><tr><th>No.</th><th>Nama</th><th>NIM</th><th>Pilihan Divisi</th>{questions.map((question) => <th key={question.id}>{question.label}</th>)}<th>Aksi</th></tr></thead>
+                  <tbody>{submissions.map((item, index) => <tr key={item.id}>
+                    <td>{(answerPage - 1) * answerPerPage + index + 1}</td><td><strong>{item.name}</strong></td><td>{item.nim}</td><td>{item.divisions.join(", ") || "—"}</td>
+                    {questions.map((question) => <td key={question.id}>{item.files?.[question.id] ? <a href={item.files[question.id]} target="_blank" rel="noopener noreferrer">Unduh berkas</a> : item.answers?.[question.id] ? <details><summary>{String(item.answers[question.id]).slice(0, 70)}{String(item.answers[question.id]).length > 70 ? "…" : ""}</summary><p>{item.answers[question.id]}</p></details> : "Tidak berlaku / kosong"}</td>)}
                     <td><div className="oprec-test__row-actions"><button type="button" onClick={() => setPreview(item)}><Eye size={15} aria-hidden="true" /> Preview</button><button type="button" className="is-danger" onClick={() => setDeleteTarget(item)}><Trash2 size={15} aria-hidden="true" /> Hapus</button></div></td>
-                  </tr>)}</tbody>
+                  </tr>)}{!submissions.length && <tr className="oprec-test__empty-row"><td colSpan={questions.length + 5}>Belum ada peserta yang mengirim Tes Tulis.</td></tr>}</tbody>
                 </table>
               </div>
-            ) : <p className="oprec-test__empty">Belum ada peserta yang mengirim Tes Tulis.</p>}
+            )}
             {answerPages > 1 && <div className="oprec-test__pager"><button type="button" disabled={answerPage === 1} onClick={() => setAnswerPage((value) => value - 1)}>Sebelumnya</button><span>{answerPage} / {answerPages}</span><button type="button" disabled={answerPage === answerPages} onClick={() => setAnswerPage((value) => value + 1)}>Berikutnya</button></div>}
           </section>
         </>
@@ -231,7 +233,7 @@ export default function AdminOprecWrittenTestPage() {
       </dialog>
       <dialog ref={previewDialog.ref} onClose={previewDialog.onClose} className="oprec-test__dialog">
         {preview && <><span className="oprec-test__eyebrow">DETAIL JAWABAN</span><h2>{preview.name}</h2><p>{preview.nim} · {preview.divisions.join(", ")}</p>
-          <dl className="oprec-test__preview-list">{questions.map((question) => <div key={question.id}><dt>{question.label}</dt><dd>{preview.answers?.[question.id] || "Tidak berlaku / kosong"}</dd></div>)}</dl>
+          <dl className="oprec-test__preview-list">{questions.map((question) => <div key={question.id}><dt>{question.label}</dt><dd>{preview.files?.[question.id] ? <a href={preview.files[question.id]} target="_blank" rel="noopener noreferrer">Unduh berkas</a> : preview.answers?.[question.id] || "Tidak berlaku / kosong"}</dd></div>)}</dl>
           <div className="oprec-test__dialog-actions"><button type="button" className="oprec-test__secondary" onClick={() => setPreview(null)}>Tutup</button></div>
         </>}
       </dialog>

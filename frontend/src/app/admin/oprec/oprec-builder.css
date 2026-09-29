@@ -85,8 +85,7 @@
 }
 
 /* Alert Notices */
-.oprec-builder__error,
-.oprec-builder__success {
+.oprec-builder__error {
   padding: 12px 16px;
   font-size: 13px;
   border-radius: 0;
@@ -99,12 +98,6 @@
   background: #fff1f2;
   color: #9f1239;
   border: 1px solid #fecdd3;
-}
-
-.oprec-builder__success {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
 }
 
 /* Tab Navigation */
