@@ -46,7 +46,8 @@
 .oprec-test__table-scroll table { width: 100%; min-width: 850px; border-collapse: collapse; text-align: left; }
 .oprec-test__table-scroll th { padding: 12px 16px; background: #f6f8fc; color: #536278; font: 600 12px/1.4 "IBM Plex Mono", ui-monospace, monospace; white-space: nowrap; }
 .oprec-test__table-scroll td { min-width: 130px; max-width: 260px; padding: 14px 16px; border-top: 1px solid #e2e8f0; vertical-align: top; color: #15213a; overflow-wrap: anywhere; }
-.oprec-test__table-scroll td:first-child { min-width: 190px; }
+.oprec-test__table-scroll td:first-child { min-width: 52px; max-width: 52px; white-space: nowrap; }
+.oprec-test__table-scroll td:nth-child(2) { min-width: 190px; }
 .oprec-test__table-scroll summary { cursor: pointer; color: #15213a; }
 .oprec-test__table-scroll details p { white-space: pre-wrap; margin-top: 8px; }
 .oprec-test__empty-row td { min-width: 0; padding: 28px 16px; color: #64748b; text-align: center; }
@@ -150,6 +151,31 @@
 .oprec-test__targets label { padding: 6px 8px; border: 1px solid #cad5e5; background: #fff; }
 .oprec-test__fields .oprec-test__check { align-self: auto; justify-content: flex-start; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
 .oprec-test__file-hint { margin: 0 !important; font-size: 12px; }
+
+/* Keep the Tes Tulis list at the same visual density as the OPREC registration list.
+   The question editor intentionally retains its roomier authoring controls. */
+.oprec-test:not(.oprec-test--editor) h1 { font-size: clamp(22px, 2vw, 26px); letter-spacing: -.03em; }
+.oprec-test:not(.oprec-test--editor) h2 { font-size: 18px; }
+.oprec-test:not(.oprec-test--editor) .oprec-test__header { gap: 16px; margin-bottom: 18px; }
+.oprec-test:not(.oprec-test--editor) .oprec-test__header > div > p,
+.oprec-test:not(.oprec-test--editor) .oprec-test__section-head p,
+.oprec-test:not(.oprec-test--editor) .oprec-test__overview-main p { font-size: 14px; }
+.oprec-test:not(.oprec-test--editor) .oprec-test__selector { gap: 10px; margin-bottom: 16px; }
+.oprec-test:not(.oprec-test--editor) .oprec-test__overview-top { padding: 20px 26px 16px; }
+.oprec-test:not(.oprec-test--editor) .oprec-test__overview-main { padding: 20px 26px; }
+.oprec-test:not(.oprec-test--editor) .oprec-test__overview-main h2 { font-size: 20px; }
+.oprec-test:not(.oprec-test--editor) .oprec-test__answers { padding: 20px 0; }
+.oprec-test:not(.oprec-test--editor) .oprec-test__section-head { padding: 0 18px 16px; }
+@media (hover: hover) and (pointer: fine) {
+  .oprec-test:not(.oprec-test--editor) .oprec-test__primary,
+  .oprec-test:not(.oprec-test--editor) .oprec-test__secondary,
+  .oprec-test:not(.oprec-test--editor) .oprec-test__danger,
+  .oprec-test:not(.oprec-test--editor) .oprec-test__selector select {
+    min-height: 40px;
+    padding: 8px 13px;
+    font-size: 14px;
+  }
+}
 @media (max-width: 700px) {
   .oprec-test__question-top { align-items: flex-start; flex-direction: column; }
   .oprec-test__question-actions { flex-wrap: wrap; }

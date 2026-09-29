@@ -867,6 +867,8 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 
 ### Layout Tes Tulis admin — 29 September 2026
 - [x] Container Tes Tulis kini memenuhi lebar area konten admin seperti Pendaftaran; margin otomatis yang membuatnya menyusut di dalam flex layout dihapus, padding ganda diringkas, dan jarak header dipadatkan. Build produksi Next.js 25 halaman lulus.
+- [x] Halaman daftar Tes Tulis menyamakan hierarki tipografi, skala tombol desktop, selector, dan padding kartu dengan halaman Pendaftaran; editor soal tidak terpengaruh dan kontrol layar sentuh tetap minimum 44px. Typecheck frontend lulus.
+- [x] Tabel pendaftar dan jawaban Tes Tulis kini memiliki kolom No. sebagai kolom pertama. Nomor mengikuti `current_page` dan `per_page`, sehingga tetap konsisten setelah pagination atau filter. Typecheck frontend lulus.
 
 ### Pratinjau editor Tes Tulis — 29 September 2026
 - [x] Editor soal menampilkan pratinjau formulir peserta secara langsung, termasuk simulasi hingga tiga divisi dan soal khusus divisi; renderer input dipakai bersama dengan formulir peserta. Tombol kirim pratinjau nonaktif. Build produksi Next.js 25 halaman dan 23 tes frontend OPREC lulus.

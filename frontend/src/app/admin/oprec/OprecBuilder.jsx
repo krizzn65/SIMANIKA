@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AnimatedCheckIcon } from "@/components/ui/AnimatedCheckIcon";
 import {
   ArrowLeft,
   Plus,
@@ -30,6 +29,7 @@ import {
   Lock,
 } from "lucide-react";
 import { api } from "@/services/api";
+import { toast } from "sonner";
 import { divisionPreview } from "@/components/oprec/divisionPreview";
 import { getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
 import { OprecPeriodPicker } from "./OprecPeriodPicker";
@@ -198,7 +198,6 @@ export default function OprecBuilder({ oprecId }) {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(Boolean(oprecId));
   const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState("info");
   const [showPreview, setShowPreview] = useState(true);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -494,7 +493,6 @@ export default function OprecBuilder({ oprecId }) {
 
   const set = (key, value) => {
     setData((current) => ({ ...current, [key]: value }));
-    setSaved(false);
   };
 
   const setField = (index, patch) =>
@@ -771,7 +769,7 @@ export default function OprecBuilder({ oprecId }) {
       const response = oprecId
         ? await api.put(`/admin/oprec/${oprecId}`, payload)
         : await api.post("/admin/oprec", payload);
-      setSaved(true);
+      toast.success(nextStatus === "open" ? "Pendaftaran berhasil dipublikasikan." : "Formulir pendaftaran berhasil disimpan.", { position: "top-center" });
       setData((current) => ({ ...current, status: nextStatus }));
       if (!oprecId) router.replace(`/admin/oprec/${periodSlug(data.periode)}/edit`);
     } catch (err) {
@@ -943,12 +941,6 @@ export default function OprecBuilder({ oprecId }) {
       {error && (
         <div className="oprec-builder__error" role="alert">
           {error}
-        </div>
-      )}
-      {saved && (
-        <div className="oprec-builder__success" role="status">
-          <AnimatedCheckIcon size={16} active />
-          <span>Formulir pendaftaran berhasil disimpan.</span>
         </div>
       )}
 

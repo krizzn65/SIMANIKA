@@ -45,6 +45,7 @@ export default function AdminOprecPage() {
   const [registrantPage, setRegistrantPage] = useState(1);
   const [registrantPages, setRegistrantPages] = useState(1);
   const [registrantTotal, setRegistrantTotal] = useState(0);
+  const [registrantPerPage, setRegistrantPerPage] = useState(20);
   const requestId = useRef(0);
   const [loading, setLoading] = useState(true);
   const [loadingRegistrants, setLoadingRegistrants] = useState(false);
@@ -96,6 +97,7 @@ export default function AdminOprecPage() {
       setRegistrants(res.data?.data || []);
       setRegistrantPages(Math.max(1, Number(res.data?.last_page) || 1));
       setRegistrantTotal(Number(res.data?.total) || 0);
+      setRegistrantPerPage(Math.max(1, Number(res.data?.per_page) || 20));
     } catch (err) {
       if (currentRequest !== requestId.current) return;
       setRegistrants([]);
@@ -246,7 +248,7 @@ export default function AdminOprecPage() {
   };
 
   const tableFields = getOprecTableFields(selectedOprec?.formFields);
-  const tableColumnCount = 6 + tableFields.length;
+  const tableColumnCount = 7 + tableFields.length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -443,6 +445,7 @@ export default function AdminOprecPage() {
           <table className="w-full min-w-max text-left text-sm border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
+                <th scope="col" className="w-14 font-mono text-[11px] font-medium uppercase tracking-wider text-slate-500 py-3 px-4">No.</th>
                 <th className="font-mono text-[11px] font-medium uppercase tracking-wider text-slate-500 py-3 px-4">
                   Nama
                 </th>
@@ -478,7 +481,7 @@ export default function AdminOprecPage() {
                   </td>
                 </tr>
               ) : (
-                registrants.map((r) => {
+                registrants.map((r, index) => {
                   const div1 =
                     selectedOprec?.divisiTersedia?.find((d) => String(d.id) === String(r.divisiPilihan1))?.nama ||
                     `Divisi #${r.divisiPilihan1}`;
@@ -496,6 +499,7 @@ export default function AdminOprecPage() {
                       key={r.id}
                       className="border-b border-slate-100 hover:bg-blue-50/25 transition-colors"
                     >
+                      <td className="py-3 px-4 font-mono text-xs text-slate-500">{(registrantPage - 1) * registrantPerPage + index + 1}</td>
                       <td className="py-3 px-4">
                         <div className="font-medium text-slate-900 text-sm">
                           {getRegistrantName(r)}

@@ -26,6 +26,7 @@ class OprecWrittenTestSubmissionController extends Controller
             'current_page' => $submissions->currentPage(),
             'last_page' => $submissions->lastPage(),
             'total' => $submissions->total(),
+            'per_page' => $submissions->perPage(),
         ])->header('Cache-Control', 'private, no-store');
     }
 
