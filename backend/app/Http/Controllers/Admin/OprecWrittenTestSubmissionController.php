@@ -43,9 +43,12 @@ class OprecWrittenTestSubmissionController extends Controller
     public function destroy(Oprec $oprec, OprecTestSubmission $submission)
     {
         $answers = DB::transaction(function () use ($oprec, $submission) {
-            Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
+            $period = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
+            abort_if($period->pengumuman_published, 409, 'Jawaban terkunci setelah pengumuman dipublikasikan.');
             $stage = OprecStage::where('oprec_id', $oprec->id)->where('type', 'test_tulis')->lockForUpdate()->firstOrFail();
             $record = $stage->submissions()->whereKey($submission->id)->lockForUpdate()->firstOrFail();
+            abort_if(DB::table('oprec_assessment_reviews')->where('oprec_registration_id', $record->oprec_registration_id)->exists()
+                || $record->registration?->status !== 'pending', 409, 'Jawaban tidak dapat dihapus setelah penilaian atau keputusan dimulai.');
             $files = $record->answers ?? [];
             $record->delete();
             return $files;

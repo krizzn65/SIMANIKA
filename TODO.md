@@ -1,3 +1,11 @@
+## Penilaian OPREC — 29 September 2026
+
+- [x] Tabel gabungan pendaftaran dan kiriman Tes Tulis, panel jawaban, field dinamis dan berkas privat, paginasi/pencarian server, serta tata letak responsif telah diimplementasikan.
+- [x] Penugasan penilai per periode, hak baca/tulis server untuk lima role, nilai 0–10 satu desimal, autosave, warna skor, Total skala 100, dan Rata-rata penilai lengkap telah diimplementasikan. Tes fitur backend dan tes batas warna frontend lulus.
+- [x] Keputusan hanya Super Admin, katalog jabatan penerimaan terpisah, riwayat perubahan, penguncian publikasi, dan pengetatan jalur lama telah diimplementasikan. Migrasi aditif dijalankan pada PostgreSQL lokal.
+- [x] Verifikasi otomatis terakhir: 62 tes backend/564 assertion, 36 tes frontend, typecheck, build produksi Next.js 26 route, dan `git diff --check` lulus.
+- [ ] Smoke test browser dengan sesi Super Admin/Admin/Pengurus, desktop-mobile, fokus dialog, akses berkas, autosave pada jaringan lambat, dan dua tab bersamaan sebelum menyatakan fitur sepenuhnya selesai.
+
 # 📋 TODO — SIMANIKA Progress Tracker
 
 > **Issue Tracker Lokal & Memori Proyek**
@@ -877,4 +885,4 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 
 ### Kerangka Penilaian OPREC — 29 September 2026
 - [x] Submenu Penilaian dan route `/admin/oprec/penilaian` tersedia dengan breadcrumb serta indikator sidebar aktif; akses mengikuti guard area OPREC. Typecheck dan build produksi frontend lulus (route terdaftar).
-- [ ] Implementasi kriteria, alur penjurian, sumber data, dan hak penilai menunggu rincian kebutuhan pengguna.
+- [x] Kriteria, alur penjurian, sumber data, dan hak penilai telah diimplementasikan; rincian dan verifikasi tersisa dicatat pada bagian Penilaian OPREC di awal dokumen.
