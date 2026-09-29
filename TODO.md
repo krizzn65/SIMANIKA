@@ -860,6 +860,7 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 ### Transisi navigasi admin — 29 September 2026
 - [x] Pemeriksaan ulang sesi pada pindah halaman/fokus berjalan di latar belakang, tanpa menyembunyikan layout admin. Guard tetap memeriksa role dan backend tetap menolak akses area yang tidak diizinkan. Build produksi Next.js 25 halaman lulus.
 - [x] Chrome terisolasi: klik Pendaftaran → Tes Tulis pada viewport 758px dan 1440px; layout tetap terpasang pada seluruh 17 sampel tiap transisi. Akun Pengurus uji tanpa pendaftaran sudah dihapus.
+- [x] Submenu Kelola OPREC memakai pencocokan route turunan: editor formulir tetap menandai Pendaftaran dan editor Tes Tulis tetap menandai Tes Tulis. Guard otorisasi tidak diubah; typecheck frontend lulus.
 - [ ] Uji manual saat koneksi lambat/putus, sesi kedaluwarsa, dan role berubah di tab aktif tetap perlu dilakukan sebelum rilis.
 
 ### Loading jawaban Tes Tulis — 29 September 2026
