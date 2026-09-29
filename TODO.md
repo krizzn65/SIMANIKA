@@ -854,10 +854,16 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 - [ ] Uji manual desktop/mobile untuk semua role dan dialog/fokus lain di perangkat nyata; uji ulang perubahan role ketika koneksi putus dan sesi kedaluwarsa.
 - [ ] Jalankan migrasi role pada deployment sebelum mengaktifkan UI role baru; pastikan `ADMIN_EMAIL` menunjuk akun HIMANIKA lama yang telah berstatus admin. Jika akun resmi masih `user`, lakukan audit/pemulihan manual, jangan promosikan otomatis akun biasa.
 
+### Stabilitas dev server Next.js — 29 September 2026
+- [x] Crash loop HMR Turbopack (`VersionedContents` cell tidak lagi ada) diatasi dengan membersihkan cache `.next`, memulai ulang server, dan menjadikan webpack bundler bawaan `npm run dev`. Route Tes Tulis kembali terkompilasi dan typecheck lulus.
+
 ### Transisi navigasi admin — 29 September 2026
 - [x] Pemeriksaan ulang sesi pada pindah halaman/fokus berjalan di latar belakang, tanpa menyembunyikan layout admin. Guard tetap memeriksa role dan backend tetap menolak akses area yang tidak diizinkan. Build produksi Next.js 25 halaman lulus.
 - [x] Chrome terisolasi: klik Pendaftaran → Tes Tulis pada viewport 758px dan 1440px; layout tetap terpasang pada seluruh 17 sampel tiap transisi. Akun Pengurus uji tanpa pendaftaran sudah dihapus.
 - [ ] Uji manual saat koneksi lambat/putus, sesi kedaluwarsa, dan role berubah di tab aktif tetap perlu dilakukan sebelum rilis.
+
+### Loading jawaban Tes Tulis — 29 September 2026
+- [x] Status memuat jawaban menggunakan skeleton tabel dengan tinggi stabil, indikator aksesibel, dukungan reduced motion, dan tata letak dua kolom pada layar kecil. Struktur kolom tabel tetap tampil setelah pemuatan meski belum ada jawaban; typecheck frontend lulus.
 
 ### Layout Tes Tulis admin — 29 September 2026
 - [x] Container Tes Tulis kini memenuhi lebar area konten admin seperti Pendaftaran; margin otomatis yang membuatnya menyusut di dalam flex layout dihapus, padding ganda diringkas, dan jarak header dipadatkan. Build produksi Next.js 25 halaman lulus.

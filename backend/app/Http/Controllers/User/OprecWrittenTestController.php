@@ -6,10 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Oprec;
 use App\Models\OprecRegistration;
 use App\Models\OprecStage;
+use App\Support\OprecWrittenTestAnswers;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class OprecWrittenTestController extends Controller
 {
@@ -35,7 +36,8 @@ class OprecWrittenTestController extends Controller
             'active' => $active,
             'questions' => $questions,
             'submission' => $submission ? [
-                'answers' => $submission->answers,
+                'answers' => OprecWrittenTestAnswers::publicAnswers($submission->answers ?? []),
+                'files' => OprecWrittenTestAnswers::files($submission->answers ?? [], url("/api/user/oprec/".$oprec->id."/written-test/files")),
                 'submitted_at' => $submission->created_at?->toIso8601String(),
             ] : null,
         ]])->header('Cache-Control', 'private, no-store');
@@ -44,50 +46,30 @@ class OprecWrittenTestController extends Controller
     public function submit(Request $request, Oprec $oprec): JsonResponse
     {
         $input = $request->validate(['answers' => ['present', 'array', 'max:40']]);
-        $submission = DB::transaction(function () use ($request, $oprec, $input) {
-            Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
-            $stage = OprecStage::where('oprec_id', $oprec->id)->where('type', 'test_tulis')->lockForUpdate()->firstOrFail();
-            $registration = $this->registration($oprec, $request->user()->id, true);
-            abort_unless($stage->published && count($stage->form_fields ?? []) > 0, 409, 'Soal tes tulis belum siap.');
-            $now = now();
-            abort_unless($now->gte($stage->tanggal_buka) && $now->lt($stage->tanggal_tutup), 409, 'Tes tulis belum dibuka atau sudah ditutup.');
-            abort_if($stage->submissions()->where('user_id', $request->user()->id)->exists(), 409, 'Jawaban tes tulis sudah dikirim.');
+        $stored = [];
+        try {
+            $submission = DB::transaction(function () use ($request, $oprec, $input, &$stored) {
+                Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
+                $stage = OprecStage::where('oprec_id', $oprec->id)->where('type', 'test_tulis')->lockForUpdate()->firstOrFail();
+                $registration = $this->registration($oprec, $request->user()->id, true);
+                abort_unless($stage->published && count($stage->form_fields ?? []) > 0, 409, 'Soal tes tulis belum siap.');
+                $now = now();
+                abort_unless($now->gte($stage->tanggal_buka) && $now->lt($stage->tanggal_tutup), 409, 'Tes tulis belum dibuka atau sudah ditutup.');
+                abort_if($stage->submissions()->where('user_id', $request->user()->id)->exists(), 409, 'Jawaban tes tulis sudah dikirim.');
 
-            $questions = $this->applicableQuestions($stage, $registration);
-            $allowed = array_column($questions, 'id');
-            $raw = $input['answers'];
-            if (array_diff(array_keys($raw), $allowed)) {
-                throw ValidationException::withMessages(['answers' => ['Jawaban memuat pertanyaan yang tidak berlaku.']]);
-            }
+                $questions = $this->applicableQuestions($stage, $registration);
+                $answers = OprecWrittenTestAnswers::validateAndStore($questions, $input['answers'], $stage->id, $stored);
 
-            $answers = [];
-            foreach ($questions as $question) {
-                $id = $question['id'];
-                $value = $raw[$id] ?? null;
-                if ($value === null || $value === '') {
-                    if ($question['required']) throw ValidationException::withMessages(["answers.$id" => ['Pertanyaan ini wajib dijawab.']]);
-                    continue;
-                }
-                if (!is_string($value)) throw ValidationException::withMessages(["answers.$id" => ['Jawaban harus berupa teks.']]);
-                $value = trim($value);
-                if ($value === '') {
-                    if ($question['required']) throw ValidationException::withMessages(["answers.$id" => ['Pertanyaan ini wajib dijawab.']]);
-                    continue;
-                }
-                $limit = $question['type'] === 'paragraph' ? 5000 : ($question['type'] === 'short_text' ? 500 : 200);
-                if (mb_strlen($value) > $limit) throw ValidationException::withMessages(["answers.$id" => ["Jawaban maksimal $limit karakter."]]);
-                if ($question['type'] === 'single_choice' && !in_array($value, $question['options'] ?? [], true)) {
-                    throw ValidationException::withMessages(["answers.$id" => ['Pilihan jawaban tidak tersedia.']]);
-                }
-                $answers[$id] = $value;
-            }
-
-            return $stage->submissions()->create([
-                'oprec_registration_id' => $registration->id,
-                'user_id' => $request->user()->id,
-                'answers' => $answers,
-            ]);
-        });
+                return $stage->submissions()->create([
+                    'oprec_registration_id' => $registration->id,
+                    'user_id' => $request->user()->id,
+                    'answers' => $answers,
+                ]);
+            });
+        } catch (\Throwable $error) {
+            Storage::disk('local')->delete($stored);
+            throw $error;
+        }
 
         return response()->json(['data' => [
             'submitted' => true,

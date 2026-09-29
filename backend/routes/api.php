@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\EventGuidebookController;
+use App\Http\Controllers\OprecWrittenTestFileController;
 use App\Http\Controllers\Admin\EventFormController;
 use App\Http\Controllers\Admin\EventRegistrantController;
 use App\Http\Controllers\Admin\OprecController as AdminOprecController;
@@ -64,6 +65,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/oprec/enroll', OprecEnrollmentController::class)->middleware('throttle:auth');
     Route::get('/user/oprec/workspace', [OprecWorkspaceController::class, 'show']);
     Route::get('/user/oprec/{oprec}/written-test', [UserOprecWrittenTestController::class, 'show']);
+    Route::get('/user/oprec/{oprec}/written-test/files/{field}', [OprecWrittenTestFileController::class, 'user']);
     Route::post('/user/oprec/{oprec}/written-test', [UserOprecWrittenTestController::class, 'submit'])->middleware('throttle:auth');
     Route::post('/user/events/{event}/register', [EventRegistrationController::class, 'store'])->middleware('throttle:auth');
     Route::post('/user/events/{event}/enroll', EventEnrollmentController::class)->middleware('throttle:auth');
@@ -103,6 +105,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/oprec/{oprec}/written-test', [OprecWrittenTestController::class, 'create']);
             Route::get('/oprec/{oprec}/written-test/submissions', [OprecWrittenTestSubmissionController::class, 'index']);
             Route::get('/oprec/{oprec}/written-test/submissions/{submission}', [OprecWrittenTestSubmissionController::class, 'show']);
+            Route::get('/oprec/{oprec}/written-test/submissions/{submission}/files/{field}', [OprecWrittenTestFileController::class, 'admin']);
             Route::delete('/oprec/{oprec}/written-test/submissions/{submission}', [OprecWrittenTestSubmissionController::class, 'destroy']);
             Route::post('/oprec', [AdminOprecController::class, 'store']);
             Route::post('/oprec/upload-poster', [AdminOprecController::class, 'uploadPoster']);

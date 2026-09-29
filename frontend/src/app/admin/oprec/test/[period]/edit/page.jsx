@@ -3,15 +3,16 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowDown, ArrowLeft, ArrowUp, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Save } from "lucide-react";
 import { api } from "@/services/api";
 import { AdminErrorNotice } from "../../../../AdminErrorNotice";
 import { WrittenTestPreview } from "./WrittenTestPreview";
+import { WrittenTestQuestionEditor } from "./WrittenTestQuestionEditor";
 import "../../test.css";
 
 const newQuestion = () => ({
   id: `q_${crypto.randomUUID().replaceAll("-", "").slice(0, 24)}`,
-  label: "", type: "paragraph", required: true, options: [], targetDivisions: [],
+  label: "", type: "short_text", required: false, help: "", options: [], targetDivisions: [],
 });
 const errorText = (error) => Object.values(error.response?.data?.errors || {}).flat()[0] || error.response?.data?.message || error.message || "Tes Tulis gagal disimpan.";
 const formatWib = (value) => value ? new Intl.DateTimeFormat("id-ID", {
@@ -65,7 +66,7 @@ export default function EditWrittenTestPage() {
     if (!test || !questions.length) { setError("Tambahkan minimal satu pertanyaan."); return; }
     for (const [index, question] of questions.entries()) {
       if (!question.label.trim()) { setError(`Isi pertanyaan nomor ${index + 1}.`); return; }
-      if (question.type === "single_choice") {
+      if (["single_choice", "select"].includes(question.type)) {
         const options = question.options.map((option) => option.trim()).filter(Boolean);
         if (options.length < 2 || new Set(options.map((option) => option.toLowerCase())).size !== options.length) {
           setError(`Pertanyaan nomor ${index + 1} memerlukan dua opsi berbeda.`); return;
@@ -82,7 +83,7 @@ export default function EditWrittenTestPage() {
         questions: questions.map((question) => ({
           ...question,
           label: question.label.trim(),
-          options: question.type === "single_choice" ? question.options.map((option) => option.trim()).filter(Boolean) : [],
+          options: ["single_choice", "select"].includes(question.type) ? question.options.map((option) => option.trim()).filter(Boolean) : [],
         })),
       });
       setTest(response.data.data);
@@ -104,21 +105,7 @@ export default function EditWrittenTestPage() {
         <div className="oprec-test__editor-layout"><form className="oprec-test__editor-panel" onSubmit={save}>
           <div className="oprec-test__schedule"><div><strong>Jadwal pelaksanaan</strong><p>{formatWib(test.tanggal_buka)} – {formatWib(test.tanggal_tutup)}</p></div><span className={`oprec-test__badge ${test.published ? "is-ready" : ""}`}>{test.published ? "Soal siap" : "Belum siap"}</span></div>
           <div className="oprec-test__questions-head"><div><h2>Pertanyaan</h2><p>Teks singkat, paragraf, atau satu pilihan jawaban.</p></div><span>{questions.length} / 40</span></div>
-          {questions.map((question, index) => <fieldset className="oprec-test__question" key={question.id}>
-            <legend>Pertanyaan {index + 1}</legend>
-            <div className="oprec-test__question-actions">
-              <button type="button" aria-label={`Naikkan pertanyaan ${index + 1}`} disabled={index === 0} onClick={() => move(index, -1)}><ArrowUp size={16} /></button>
-              <button type="button" aria-label={`Turunkan pertanyaan ${index + 1}`} disabled={index === questions.length - 1} onClick={() => move(index, 1)}><ArrowDown size={16} /></button>
-              <button type="button" aria-label={`Hapus pertanyaan ${index + 1}`} onClick={() => setQuestions((current) => current.filter((_, i) => i !== index))}><Trash2 size={16} /></button>
-            </div>
-            <div className="oprec-test__fields">
-              <label className="oprec-test__wide">Teks pertanyaan <span aria-hidden="true">*</span><input required maxLength={300} value={question.label} onChange={(event) => update(index, { label: event.target.value })} /></label>
-              <label>Tipe jawaban<select value={question.type} onChange={(event) => update(index, { type: event.target.value, options: event.target.value === "single_choice" ? ["", ""] : [] })}><option value="short_text">Teks singkat</option><option value="paragraph">Paragraf</option><option value="single_choice">Pilihan satu</option></select></label>
-              <label className="oprec-test__check"><input type="checkbox" checked={question.required} onChange={(event) => update(index, { required: event.target.checked })} /> Wajib dijawab</label>
-              {question.type === "single_choice" && <label className="oprec-test__wide">Opsi jawaban <small>Satu opsi per baris, minimal dua opsi berbeda.</small><textarea rows={4} value={question.options.join("\n")} onChange={(event) => update(index, { options: event.target.value.split("\n") })} /></label>}
-            </div>
-            {divisions.length > 0 && <div className="oprec-test__targets"><strong>Ditujukan untuk divisi</strong><small>Tanpa pilihan berarti berlaku untuk semua divisi.</small><div>{divisions.map((division) => <label key={division.id}><input type="checkbox" checked={question.targetDivisions.includes(Number(division.id))} onChange={(event) => update(index, { targetDivisions: event.target.checked ? [...question.targetDivisions, Number(division.id)] : question.targetDivisions.filter((id) => id !== Number(division.id)) })} /> {division.nama}</label>)}</div></div>}
-          </fieldset>)}
+          {questions.map((question, index) => <WrittenTestQuestionEditor key={question.id} question={question} index={index} count={questions.length} divisions={divisions} update={update} move={move} remove={(target) => setQuestions((current) => current.filter((_, i) => i !== target))} />)}
           <button className="oprec-test__add" type="button" disabled={questions.length >= 40} onClick={() => setQuestions((current) => [...current, newQuestion()])}><Plus size={17} aria-hidden="true" /> Tambah pertanyaan</button>
           <footer className="oprec-test__footer"><span>Soal yang tersimpan tersedia saat jadwal tes aktif. Soal terkunci setelah tes dimulai.</span><button type="submit" disabled={saving}><Save size={16} aria-hidden="true" /> {saving ? "Menyimpan…" : "Simpan pertanyaan"}</button></footer>
         </form><WrittenTestPreview questions={questions} divisions={divisions} /></div>

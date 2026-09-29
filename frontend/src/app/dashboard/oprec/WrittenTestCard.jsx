@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckCircle2, Clock3, FileText } from "lucide-react";
 import { api } from "@/services/api";
-import { WrittenTestQuestions } from "@/components/oprec/WrittenTestQuestions";
+import { WrittenTestFields } from "@/components/oprec/WrittenTestFields";
 import styles from "./oprec-workspace.module.css";
 
 function formatWib(value) {
@@ -78,7 +78,10 @@ export function WrittenTestCard({ oprecId }) {
     if (!test || saving) return;
     setSaving(true); setError("");
     try {
-      await api.post(`/user/oprec/${oprecId}/written-test`, { answers });
+      const hasFile = Object.values(answers).some((value) => value instanceof File);
+      const payload = hasFile ? new FormData() : { answers };
+      if (hasFile) Object.entries(answers).forEach(([id, value]) => { if (value !== null && value !== "") payload.append(`answers[${id}]`, value); });
+      await api.post(`/user/oprec/${oprecId}/written-test`, payload);
       confirmRef.current?.close();
       await load();
     } catch (cause) {
@@ -110,7 +113,7 @@ export function WrittenTestCard({ oprecId }) {
     {error && <p className={styles.testError} role="alert">{error}</p>}
     {submitted ? <>
       <div className={styles.notice}><CheckCircle2 size={20} aria-hidden="true" /><div><h3>Jawaban Tes Tulis Terkirim</h3><p>Dikirim pada {formatWib(test.submission.submitted_at)}. Jawaban tidak dapat diubah.</p></div></div>
-      <dl className={styles.testReview}>{questions.map((question) => <div key={question.id}><dt>{question.label}</dt><dd>{test.submission.answers?.[question.id] || "Tidak dijawab"}</dd></div>)}</dl>
+      <dl className={styles.testReview}>{questions.map((question) => <div key={question.id}><dt>{question.label}</dt><dd>{test.submission.files?.[question.id] ? <a href={test.submission.files[question.id]} target="_blank" rel="noopener noreferrer">Unduh berkas</a> : test.submission.answers?.[question.id] || "Tidak dijawab"}</dd></div>)}</dl>
     </> : phase === "upcoming" ? <>
       <p className={styles.testCountdown}><Clock3 size={17} aria-hidden="true" /> Dibuka dalam {countdown(start - now)}</p>
       {!test.ready && <p className={styles.testNote}>Soal sedang disiapkan oleh admin.</p>}
@@ -122,7 +125,7 @@ export function WrittenTestCard({ oprecId }) {
         if (missing) { setError(`Jawab pertanyaan “${missing.label}” terlebih dahulu.`); return; }
         confirmRef.current?.showModal();
       }}>
-        <WrittenTestQuestions
+        <WrittenTestFields
           questions={questions}
           answers={answers}
           onAnswerChange={(id, value) => setAnswers((current) => ({ ...current, [id]: value }))}
