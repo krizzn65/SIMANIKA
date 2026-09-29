@@ -874,3 +874,7 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 ### Pratinjau editor Tes Tulis — 29 September 2026
 - [x] Editor soal menampilkan pratinjau formulir peserta secara langsung, termasuk simulasi hingga tiga divisi dan soal khusus divisi; renderer input dipakai bersama dengan formulir peserta. Tombol kirim pratinjau nonaktif. Build produksi Next.js 25 halaman dan 23 tes frontend OPREC lulus.
 - [ ] Verifikasi interaksi pratinjau pada browser terautentikasi di desktop dan mobile masih perlu dilakukan.
+
+### Kerangka Penilaian OPREC — 29 September 2026
+- [x] Submenu Penilaian dan route `/admin/oprec/penilaian` tersedia dengan breadcrumb serta indikator sidebar aktif; akses mengikuti guard area OPREC. Typecheck dan build produksi frontend lulus (route terdaftar).
+- [ ] Implementasi kriteria, alur penjurian, sumber data, dan hak penilai menunggu rincian kebutuhan pengguna.
