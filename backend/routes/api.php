@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\EventFormController;
 use App\Http\Controllers\Admin\EventRegistrantController;
 use App\Http\Controllers\Admin\OprecController as AdminOprecController;
 use App\Http\Controllers\Admin\OprecRegistrantController;
+use App\Http\Controllers\Admin\OprecAssessmentController;
 use App\Http\Controllers\Admin\OprecWrittenTestController;
 use App\Http\Controllers\Admin\OprecWrittenTestSubmissionController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -98,6 +99,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::middleware('admin:oprec')->group(function () {
             Route::get('/oprec', [AdminOprecController::class, 'index']);
+            Route::get('/oprec/assessments', [OprecAssessmentController::class, 'periods']);
+            Route::get('/oprec/{oprec}/assessment', [OprecAssessmentController::class, 'index']);
+            Route::get('/oprec/{oprec}/assessment/assignments', [OprecAssessmentController::class, 'assignments']);
+            Route::put('/oprec/{oprec}/assessment/assignments/{reviewer}', [OprecAssessmentController::class, 'setAssignment']);
+            Route::delete('/oprec/{oprec}/assessment/assignments/{reviewer}', [OprecAssessmentController::class, 'revokeAssignment']);
+            Route::patch('/oprec/{oprec}/assessment/registrations/{registration}/review', [OprecAssessmentController::class, 'saveReview']);
+            Route::put('/oprec/{oprec}/assessment/registrations/{registration}/decision', [OprecAssessmentController::class, 'decide']);
+            Route::get('/oprec/{oprec}/assessment/{submission}', [OprecAssessmentController::class, 'show']);
+            Route::get('/oprec/{oprec}/assessment/{submission}/test-files/{field}', [OprecAssessmentController::class, 'testFile']);
+            Route::get('/oprec/{oprec}/assessment/{submission}/registration-files/{field}', [OprecAssessmentController::class, 'registrationFile']);
             Route::get('/oprec/written-tests', [OprecWrittenTestController::class, 'index']);
             Route::get('/oprec/{oprec}', [AdminOprecController::class, 'show']);
             Route::get('/oprec/{oprec}/written-test', [OprecWrittenTestController::class, 'show']);

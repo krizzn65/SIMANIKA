@@ -46,6 +46,7 @@ class OprecController extends Controller
         $data = $request->validated();
         $updated = DB::transaction(function () use ($oprec, $data) {
             $current = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
+            if ($current->pengumuman_published && !$data['pengumuman']['published']) throw ValidationException::withMessages(['pengumuman.published' => ['Pengumuman yang sudah terbit tidak dapat ditarik kembali.']]);
             $currentDivisions = $current->divisions()->get()->map(fn ($division) => [
                 'nama' => $division->nama, 'nama_lengkap' => $division->nama_lengkap,
                 'deskripsi' => $division->deskripsi, 'logo' => $division->logo, 'jabatan' => $division->jabatan ?? [],

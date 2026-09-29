@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Oprec;
 use App\Models\OprecRegistration;
+use App\Services\OprecAssessmentService;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -76,26 +77,15 @@ class OprecRegistrantController extends Controller
         }));
     }
 
-    public function update(Request $request, Oprec $oprec, OprecRegistration $registration)
+    public function update(Request $request, Oprec $oprec, OprecRegistration $registration, OprecAssessmentService $assessment)
     {
-        abort_unless($registration->oprec_id === $oprec->id, 404);
         $data = $request->validate([
-            'status' => ['required', Rule::in(['pending', 'accepted', 'rejected'])],
+            'status' => ['required', Rule::in(['accepted', 'rejected'])],
             'accepted_division_id' => ['nullable', 'integer'],
-            'catatan' => ['nullable', 'string', 'max:2000'],
+            'accepted_position' => ['required_if:status,accepted', 'nullable', 'string', 'max:150'],
         ]);
-        if ($data['status'] === 'accepted' && (empty($data['accepted_division_id']) || !$oprec->divisions()->whereKey($data['accepted_division_id'])->exists())) {
-            throw ValidationException::withMessages(['accepted_division_id' => ['Pilih divisi yang tersedia.']]);
-        }
-        if ($data['status'] === 'accepted' && !in_array((int) $data['accepted_division_id'], array_filter([(int) $registration->divisi_pilihan_1, (int) $registration->divisi_pilihan_2, (int) $registration->divisi_pilihan_3]), true)) {
-            throw ValidationException::withMessages(['accepted_division_id' => ['Divisi penerimaan harus termasuk pilihan peserta.']]);
-        }
-        $registration->update([
-            'status' => $data['status'],
-            'accepted_division_id' => $data['status'] === 'accepted' ? $data['accepted_division_id'] : null,
-            'catatan' => $data['catatan'] ?? null,
-        ]);
-        return response()->json(['data' => ['id' => $registration->id, 'status' => $registration->status]]);
+        $updated = $assessment->decide($request->user(), $oprec, $registration, $data);
+        return response()->json(['data' => ['id' => $updated->id, 'status' => $updated->status]]);
     }
 
     /**
@@ -214,6 +204,7 @@ class OprecRegistrantController extends Controller
 
         $updated = DB::transaction(function () use ($oprec, $registration, $data, $inactiveTargetFields) {
             $currentOprec = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
+            abort_if($currentOprec->pengumuman_published, 409, 'Formulir terkunci setelah pengumuman dipublikasikan.');
             if ($currentOprec->schema_version !== $oprec->schema_version) {
                 throw new HttpResponseException(response()->json(['message' => 'Formulir telah berubah. Muat ulang halaman sebelum menyimpan.'], 409));
             }
@@ -257,11 +248,19 @@ class OprecRegistrantController extends Controller
     public function destroy(Oprec $oprec, OprecRegistration $registration)
     {
         abort_unless($registration->oprec_id === $oprec->id, 404);
-        $paths = collect($registration->file_uploads ?? [])
-            ->filter(fn ($path) => is_string($path) && str_starts_with($path, "oprec/{$oprec->id}/"))
-            ->values();
-
-        $registration->delete();
+        $paths = DB::transaction(function () use ($oprec, $registration) {
+            $period = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
+            $current = OprecRegistration::whereKey($registration->id)->lockForUpdate()->firstOrFail();
+            abort_unless($current->oprec_id === $period->id, 404);
+            abort_if($period->pengumuman_published || $current->status !== 'pending'
+                || DB::table('oprec_assessment_reviews')->where('oprec_registration_id', $current->id)->exists(), 409,
+                'Pendaftaran tidak dapat dihapus setelah penilaian atau pengumuman dimulai.');
+            $files = collect($current->file_uploads ?? [])
+                ->filter(fn ($path) => is_string($path) && str_starts_with($path, "oprec/{$period->id}/"))
+                ->values();
+            $current->delete();
+            return $files;
+        });
         foreach ($paths as $path) Storage::disk('local')->delete($path);
 
         return response()->noContent();

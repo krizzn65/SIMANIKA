@@ -215,7 +215,7 @@ animasi dari komponen 21st.dev yang sudah ada dan transisi tahap yang
 diadaptasi dari React Bits Animated Content, dengan reduced-motion fallback.
 
 Alur tahap terbaru telah menggantikan tab editor ini. Jadwal, skema, dan
-penyimpanan jawaban tes sudah tersedia; penilaian tes masih perlu dibuat.
+penyimpanan jawaban tes sudah tersedia; penilaian tes kini tersedia melalui ruang kerja Penilaian OPREC yang dijelaskan pada bagian terbaru dokumen ini.
 Alur pencarian hasil pengumuman publik tetap mengikuti kontrak sebelumnya.
 
 ## Alur tahap admin dan kartu publik — 25 September 2026
@@ -297,6 +297,14 @@ Kontrak API memakai sesi Sanctum: `GET /api/admin/oprec/written-tests` (termasuk
 
 Verifikasi otomatis: suite Laravel (54 tes/460 assertion) dan build produksi Next.js (25 halaman) lulus. Migrasi telah Ran pada PostgreSQL lokal (batch 25). Chrome DevTools menunjukkan tidak ada overflow halaman OPREC publik pada viewport 320, 390, 768, dan 1440 px. Smoke test browser admin/peserta terautentikasi, keyboard/fokus dialog, dan concurrency PostgreSQL masih perlu dilakukan sebelum rilis.
 
-## Halaman Penilaian admin
+## Halaman Penilaian admin — 29 September 2026
 
-Subhalaman `/admin/oprec/penilaian` tersedia di submenu Kelola OPREC untuk Super Admin, Admin, dan Pengurus sesuai guard area OPREC. Saat ini halaman berisi kerangka dan status belum dikonfigurasi. Kriteria, alur penjurian, sumber data, dan hak penilai akan ditetapkan setelah kebutuhan lanjutan dijelaskan; halaman ini belum membaca atau mengubah nilai peserta.
+Subhalaman `/admin/oprec/penilaian` menampilkan peserta yang sudah mengirim Tes Tulis saja. Tabel memuat identitas, tiga pilihan divisi beserta jabatan yang dilamar, angkatan, jawaban pendaftaran dinamis tanpa tanggal lahir, tombol detail Tes Tulis, nilai, total, komentar, rata-rata, dan keputusan. Jawaban Tes Tulis tampil pada panel kanan; tabel bergulir horizontal pada layar sempit. Tautan berkas memakai endpoint privat dengan pemeriksaan akses per periode.
+
+Super Admin menunjuk akun Pengurus per periode. Pengurus tanpa penugasan tidak dapat membaca/menulis endpoint penilaian periode itu; Admin hanya membaca, sedangkan KWU/User ditolak. Pengurus baru melihat nilai dan komentar penilai lain setelah enam aspeknya lengkap. Pencabutan akses tidak menghapus nilai historis. Nilai masing-masing aspek (Pemahaman, Kepribadian, Public Speaking, Kejujuran, Problem Solving, Kerja Sama) berkisar 0–10 dengan satu desimal dan menerima koma/titik. Kosong berbeda dari nol. Warna kotak: kurang dari 5 merah, 5–kurang dari 8 kuning, 8–kurang dari 10 hijau, tepat 10 biru. Total penilai = jumlah enam aspek / 60 × 100; Rata-rata = rerata Total semua penilai lengkap. Server menghitung dengan presisi; tampilan dibulatkan dua angka.
+
+Keputusan Terima/Tolak hanya dapat ditetapkan Super Admin sebelum `pengumuman_published`. Penerimaan wajib memilih satu dari tiga divisi pendaftar dan jabatan penerimaan dari katalog organisasi, terpisah dari jabatan yang dilamar. Data penerimaan lama tanpa jabatan tetap ditampilkan sebagai belum ditetapkan. Koreksi keputusan dicatat pada tabel audit; status, nilai, komentar, dan penugasan terkunci setelah publikasi. Jalur keputusan lama dilindungi aturan yang sama; jawaban Tes Tulis dan pendaftaran yang sudah dinilai tidak bisa dihapus.
+
+Endpoint admin baru: `GET /api/admin/oprec/assessments`, `GET /api/admin/oprec/{oprec}/assessment`, `GET /api/admin/oprec/{oprec}/assessment/{submission}`, `PATCH /api/admin/oprec/{oprec}/assessment/registrations/{registration}/review`, `PUT /api/admin/oprec/{oprec}/assessment/registrations/{registration}/decision`, `GET|PUT|DELETE /api/admin/oprec/{oprec}/assessment/assignments[/{reviewer}]`, dan endpoint unduh privat di bawah `assessment/{submission}`. Daftar terpaginasi 20 baris, pencarian dilakukan server sebelum pagination. Migrasi aditif `2026_09_29_000001_create_oprec_assessments` menambah penugasan, ulasan, audit, dan `accepted_position`.
+
+Verifikasi: tes backend dan frontend, typecheck, serta build produksi. Browser desktop/mobile dan keyboard/sesi nyata tetap perlu smoke test terpisah sebelum rilis.
