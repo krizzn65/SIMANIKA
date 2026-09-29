@@ -24,7 +24,6 @@ export function WrittenTestQuestionEditor({ question, index, count, divisions, u
       <div className="oprec-test__question-title"><span className="oprec-test__question-number">{String(index + 1).padStart(2, "0")}</span><strong>{question.label.trim() || `Pertanyaan ${index + 1}`}</strong></div>
       <div className="oprec-test__question-actions">
         <span className="oprec-test__question-tag">{targeted ? "DIVISI TERTENTU" : "SEMUA DIVISI"}</span>
-        <span className="oprec-test__question-tag is-blue">TAMBAHAN</span>
         <button type="button" aria-label={`Naikkan pertanyaan ${index + 1}`} disabled={index === 0} onClick={() => move(index, -1)}><ArrowUp size={16} aria-hidden="true" /></button>
         <button type="button" aria-label={`Turunkan pertanyaan ${index + 1}`} disabled={index === count - 1} onClick={() => move(index, 1)}><ArrowDown size={16} aria-hidden="true" /></button>
         <button type="button" aria-label={`Hapus pertanyaan ${index + 1}`} onClick={() => remove(index)}><Trash2 size={16} aria-hidden="true" /></button>

@@ -65,7 +65,6 @@
 @keyframes oprec-test-spin { to { transform: rotate(360deg); } }
 @keyframes oprec-test-shimmer { to { background-position: -130% 0; } }
 @media (prefers-reduced-motion: reduce) { .oprec-test__answers-loading-label svg, .oprec-test__answers-skeleton span { animation: none; } }
-.oprec-test__success { padding: 12px 14px; margin: 0 0 18px !important; border: 1px solid #88d9b5; background: #effcf5; color: #116342 !important; }
 .oprec-test__dialog { width: min(94vw, 620px); max-height: min(86vh, 780px); padding: 28px; border: 1px solid #cad5e5; border-radius: 0; background: #fff; color: #0a1020; box-shadow: 8px 8px 0 #dbe6f8; }
 .oprec-test__dialog::backdrop { background: rgba(7, 17, 31, .7); }
 .oprec-test__dialog h2 { margin: 8px 0; font-size: 25px; }

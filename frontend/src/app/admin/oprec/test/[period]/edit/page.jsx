@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { ArrowLeft, Plus, Save } from "lucide-react";
 import { api } from "@/services/api";
 import { AdminErrorNotice } from "../../../../AdminErrorNotice";
+import { toast } from "sonner";
 import { WrittenTestPreview } from "./WrittenTestPreview";
 import { WrittenTestQuestionEditor } from "./WrittenTestQuestionEditor";
 import "../../test.css";
@@ -30,7 +31,6 @@ export default function EditWrittenTestPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -73,7 +73,7 @@ export default function EditWrittenTestPage() {
         }
       }
     }
-    setSaving(true); setError(""); setSuccess("");
+    setSaving(true); setError("");
     try {
       const response = await api.put(`/admin/oprec/${encodeURIComponent(period)}/written-test`, {
         headline: test.headline,
@@ -87,7 +87,7 @@ export default function EditWrittenTestPage() {
         })),
       });
       setTest(response.data.data);
-      setSuccess("Soal tersimpan. Tes akan dibuka otomatis sesuai jadwal.");
+      toast.success("Soal Tes Tulis berhasil disimpan.", { position: "top-center", description: "Tes akan dibuka otomatis sesuai jadwal." });
     } catch (cause) {
       setError(errorText(cause));
     } finally {
@@ -100,7 +100,6 @@ export default function EditWrittenTestPage() {
       <Link href="/admin/oprec/test" className="oprec-test__back"><ArrowLeft size={16} aria-hidden="true" /> Kembali ke Tes Tulis</Link>
       <header className="oprec-test__header"><div><span className="oprec-test__eyebrow">OPREC · PERIODE {oprec?.periode || ""}</span><h1>Kelola Pertanyaan Tes Tulis</h1><p>Susun soal yang akan dijawab peserta sesuai pilihan divisinya.</p></div></header>
       {error && <AdminErrorNotice message={error} />}
-      {success && <p className="oprec-test__success" role="status">{success}</p>}
       {loading ? <p className="oprec-test__empty" role="status">Memuat pertanyaan…</p> : test ? (
         <div className="oprec-test__editor-layout"><form className="oprec-test__editor-panel" onSubmit={save}>
           <div className="oprec-test__schedule"><div><strong>Jadwal pelaksanaan</strong><p>{formatWib(test.tanggal_buka)} – {formatWib(test.tanggal_tutup)}</p></div><span className={`oprec-test__badge ${test.published ? "is-ready" : ""}`}>{test.published ? "Soal siap" : "Belum siap"}</span></div>
