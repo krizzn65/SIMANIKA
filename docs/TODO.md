@@ -1,3 +1,12 @@
+## Audit Penilaian OPREC — 30 September 2026
+
+- [x] API daftar hanya mengirim field formulir yang ditampilkan; tanggal lahir, field usang, nilai mentah berkas, dan email akun yang tidak diperlukan tidak dimuat. Query daftar tidak memuat JSON jawaban Tes Tulis.
+- [x] Payload skor bertipe array/object/boolean ditolak dengan 422. Pencarian mencakup variasi nama lama dan nama akun. Input invalid selalu berwarna merah.
+- [x] Detail jawaban dan unduhan berkas dibatasi pada soal/field aktif; Pengurus tanpa penugasan ditolak juga pada URL berkas langsung.
+- [x] Pemeriksaan komponen, import, helper, dan selector CSS Penilaian tidak menemukan kode mati yang terbukti; class warna/status dibentuk dinamis.
+- [x] Tes Penilaian 8/123 assertion, tes jalur terkait 14/150 assertion, tes frontend terkait 4/4, seluruh 36 tes frontend, suite backend lintas fitur 67 tes/623 assertion, dan typecheck lulus. Browser fixture Penilaian diuji pada turn sebelumnya.
+- [ ] Smoke test sesi akun asli di desktop/mobile, dua tab penilai yang sama, dan berkas privat pada server terpasang tetap perlu sebelum rilis.
+
 ## UI/UX Penilaian OPREC — 30 September 2026
 
 - [x] Area Penilaian diperluas; tabel memiliki kelompok kolom, identitas sticky, panduan warna/nilai, penanda peserta aktif, dan navigasi cepat ke kolom nilai.

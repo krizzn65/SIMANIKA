@@ -40,15 +40,19 @@ class OprecAssessmentController extends Controller
             'decision' => ['nullable', Rule::in(['all', 'pending', 'accepted', 'rejected'])],
         ]);
         $stage = $oprec->writtenTest()->firstOrFail();
-        $query = OprecTestSubmission::query()->where('oprec_stage_id', $stage->id)
+        $query = OprecTestSubmission::query()->select(['id', 'oprec_stage_id', 'oprec_registration_id', 'user_id'])
+            ->where('oprec_stage_id', $stage->id)
             ->whereHas('registration', fn ($q) => $q->where('oprec_id', $oprec->id))
-            ->with('registration.user:id,name,email');
+            ->with('registration.user:id,name');
         if (trim($filters['search'] ?? '') !== '') {
             $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower(trim($filters['search'])));
             $pattern = '%'.$escaped.'%';
             $query->whereHas('registration', fn ($q) => $q->where(function ($search) use ($pattern) {
                 $search->whereRaw("LOWER(nim) LIKE ? ESCAPE '\\'", [$pattern])
-                    ->orWhereRaw("LOWER(form_data->>'nama') LIKE ? ESCAPE '\\'", [$pattern]);
+                    ->orWhereRaw("LOWER(form_data->>'nama') LIKE ? ESCAPE '\\'", [$pattern])
+                    ->orWhereRaw("LOWER(form_data->>'nama_lengkap') LIKE ? ESCAPE '\\'", [$pattern])
+                    ->orWhereRaw("LOWER(form_data->>'namaLengkap') LIKE ? ESCAPE '\\'", [$pattern])
+                    ->orWhereHas('user', fn ($user) => $user->whereRaw("LOWER(name) LIKE ? ESCAPE '\\'", [$pattern]));
             }));
         }
         if (($filters['decision'] ?? 'all') !== 'all') {
@@ -64,8 +68,18 @@ class OprecAssessmentController extends Controller
         $ids = $page->getCollection()->pluck('oprec_registration_id')->all();
         $reviews = DB::table('oprec_assessment_reviews')->whereIn('oprec_registration_id', $ids)->get()->groupBy('oprec_registration_id');
         $divisions = $oprec->divisions()->get(['id', 'nama'])->keyBy('id');
+        $visibleFormFields = collect($oprec->form_fields ?? [])
+            ->filter(fn ($field) => is_array($field) && ($field['type'] ?? null) !== 'file')
+            ->pluck('name')->filter(fn ($name) => is_string($name) && !in_array($name, [
+                'nama', 'nama_lengkap', 'namaLengkap', 'nim', 'tanggal_lahir', 'angkatan',
+                'divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3',
+                'jabatan_pilihan_1', 'jabatan_pilihan_2', 'jabatan_pilihan_3',
+            ], true))->flip()->all();
+        $visibleFileFields = collect($oprec->form_fields ?? [])
+            ->filter(fn ($field) => is_array($field) && ($field['type'] ?? null) === 'file')
+            ->pluck('name')->filter(fn ($name) => is_string($name))->flip()->all();
         $user = $request->user();
-        $rows = $page->getCollection()->map(function ($submission) use ($reviews, $divisions, $user, $oprec) {
+        $rows = $page->getCollection()->map(function ($submission) use ($reviews, $divisions, $visibleFormFields, $visibleFileFields, $user, $oprec) {
             $registration = $submission->registration;
             $form = $registration->form_data ?? [];
             $own = $reviews->get($registration->id, collect())->firstWhere('reviewer_id', $user->id);
@@ -78,13 +92,13 @@ class OprecAssessmentController extends Controller
             ])->all();
             $uploads = [];
             foreach ($registration->file_uploads ?? [] as $field => $path) {
-                if (is_string($path) && $path !== '') $uploads[$field] = ['downloadUrl' => url("/api/admin/oprec/{$oprec->id}/assessment/{$submission->id}/registration-files/".rawurlencode($field))];
+                if (isset($visibleFileFields[$field]) && is_string($path) && $path !== '') $uploads[$field] = ['downloadUrl' => url("/api/admin/oprec/{$oprec->id}/assessment/{$submission->id}/registration-files/".rawurlencode($field))];
             }
             return [
                 'id' => $submission->id, 'registration_id' => $registration->id,
-                'name' => $form['nama'] ?? $form['nama_lengkap'] ?? $registration->user?->name ?? 'Peserta',
+                'name' => $form['nama'] ?? $form['nama_lengkap'] ?? $form['namaLengkap'] ?? $registration->user?->name ?? 'Peserta',
                 'nim' => $registration->nim, 'angkatan' => $form['angkatan'] ?? null,
-                'formData' => $form, 'fileUploads' => $uploads, 'choices' => $choices,
+                'formData' => array_intersect_key($form, $visibleFormFields), 'fileUploads' => $uploads, 'choices' => $choices,
                 'review' => $this->reviewData($own),
                 'reviews' => $visible->map(fn ($review) => $this->reviewData($review))->values()->all(),
                 'average' => $canSeeAll ? OprecAssessmentService::average($reviews->get($registration->id, collect())) : null,
@@ -109,9 +123,11 @@ class OprecAssessmentController extends Controller
         $this->assessment->authorize($request->user(), $oprec);
         $stage = $oprec->writtenTest()->firstOrFail();
         abort_unless($submission->oprec_stage_id === $stage->id && $submission->registration?->oprec_id === $oprec->id, 404);
+        $questionIds = collect($stage->form_fields ?? [])->pluck('id')->filter(fn ($id) => is_string($id))->flip()->all();
+        $answers = array_intersect_key($submission->answers ?? [], $questionIds);
         return response()->json(['data' => ['id' => $submission->id,
-            'answers' => OprecWrittenTestAnswers::publicAnswers($submission->answers ?? []),
-            'files' => OprecWrittenTestAnswers::files($submission->answers ?? [], url("/api/admin/oprec/{$oprec->id}/assessment/{$submission->id}/test-files")),
+            'answers' => OprecWrittenTestAnswers::publicAnswers($answers),
+            'files' => OprecWrittenTestAnswers::files($answers, url("/api/admin/oprec/{$oprec->id}/assessment/{$submission->id}/test-files")),
             'questions' => $stage->form_fields ?? [],
         ]])->header('Cache-Control', 'private, no-store');
     }
@@ -133,6 +149,9 @@ class OprecAssessmentController extends Controller
             $raw = $data['value'];
             if ($raw === null || $raw === '') $value = null;
             else {
+                if (!is_string($raw) && !is_int($raw) && !is_float($raw)) {
+                    throw ValidationException::withMessages(['value' => ['Nilai harus berupa angka 0–10.']]);
+                }
                 $normalized = is_string($raw) ? str_replace(',', '.', $raw) : (string) $raw;
                 if (!preg_match('/^(?:10(?:\.0)?|[0-9](?:\.[0-9])?)$/D', $normalized)) {
                     throw ValidationException::withMessages(['value' => ['Nilai harus 0–10 dengan maksimal satu angka desimal.']]);
@@ -228,8 +247,10 @@ class OprecAssessmentController extends Controller
         $this->assessment->authorize($request->user(), $oprec);
         $stage = $oprec->writtenTest()->firstOrFail();
         abort_unless($submission->oprec_stage_id === $stage->id && $submission->registration?->oprec_id === $oprec->id, 404);
-        $path = ($submission->registration->file_uploads ?? [])[$field] ?? null;
         abort_unless(preg_match('/^[a-z][a-z0-9_]{0,49}$/D', $field), 404);
+        abort_unless(collect($oprec->form_fields ?? [])->contains(fn ($item) => is_array($item)
+            && ($item['name'] ?? null) === $field && ($item['type'] ?? null) === 'file'), 404);
+        $path = ($submission->registration->file_uploads ?? [])[$field] ?? null;
         abort_unless(is_string($path) && str_starts_with($path, "oprec/{$oprec->id}/") && Storage::disk('local')->exists($path), 404);
         return Storage::disk('local')->download($path, basename($path), ['Cache-Control' => 'private, no-store']);
     }

@@ -26,7 +26,7 @@ export default function AssessmentTable({ data, loading, error, filtered, select
   const headers = ['No.', 'Nama', 'NIM', 'Pilihan 1', 'Pilihan 2', 'Pilihan 3', 'Angkatan', ...fields.map((field) => field.label), 'Tes Tulis', ...CRITERIA.map(([, label]) => label), 'Total', 'Komentar', 'Rata-rata', 'Keputusan'];
   const fieldValue = (row, field) => getRegistrantFieldValue({ ...row, divisiPilihan1: row.choices[0]?.id, divisiPilihan2: row.choices[1]?.id, divisiPilihan3: row.choices[2]?.id }, field, row.choices.map((choice) => ({ id: String(choice.id), nama: choice.division })));
   return <section className="assessment-table-card" aria-labelledby="assessment-table-title" aria-busy={loading}>
-    <header className="assessment-table-card__header"><div><h2 id="assessment-table-title">Daftar peserta <span className="assessment-count">{data?.total ?? "—"}</span></h2><p>Geser tabel untuk melihat seluruh data dan aspek penilaian.</p></div>
+    <header className="assessment-table-card__header"><div><h2 id="assessment-table-title">Daftar peserta <span className="assessment-count">{data?.total ?? "—"}</span></h2><p>Klik baris peserta untuk melihat jawaban Tes Tulis. Geser tabel untuk melihat seluruh data dan nilai.</p></div>
       <span className="assessment-table-activity" role="status">{loading ? <><Loader2 size={14} className="assessment-spin" /> Memuat…</> : data?.period?.locked ? <><LockKeyhole size={14} /> Terkunci</> : data?.can_review ? "Nilai tersimpan otomatis" : "Mode hanya baca"}</span>
       <div className="assessment-table-navigation"><button type="button" className="assessment-button assessment-button--small" onClick={() => scroll.current?.scrollTo({ left: 0 })}>Data pendaftaran</button><button type="button" className="assessment-button assessment-button--small assessment-button--selected" onClick={goToScores}>Ke kolom nilai →</button></div>
     </header>
@@ -38,7 +38,16 @@ export default function AssessmentTable({ data, loading, error, filtered, select
       </thead><tbody>
         {!data && loading ? [1, 2, 3, 4].map((n) => <tr key={n}><td colSpan={headers.length}><div className="assessment-skeleton assessment-skeleton--row" /></td></tr>) : rows.map((row, index) => {
           const completed = CRITERIA.filter(([field]) => row.review?.scores?.[field] !== null && row.review?.scores?.[field] !== undefined).length;
-          return <tr key={row.id} className={selectedId === row.id ? "assessment-row--selected" : ""}>
+          return <tr key={row.id} tabIndex={0} aria-selected={selectedId === row.id} aria-label={`${row.name}, ${row.nim}; buka jawaban Tes Tulis`} className={`assessment-row--selectable ${selectedId === row.id ? "assessment-row--selected" : ""}`}
+            onClick={(event) => {
+              if (event.target.closest('button, a, input, textarea, select, summary, details, [contenteditable="true"]')) return;
+              onSelect(row, event.currentTarget);
+            }}
+            onKeyDown={(event) => {
+              if (event.target !== event.currentTarget || !["Enter", " "].includes(event.key)) return;
+              event.preventDefault();
+              onSelect(row, event.currentTarget);
+            }}>
             <td className="assessment-pin assessment-pin--0">{(data.current_page - 1) * data.per_page + index + 1}</td>
             <td className="assessment-pin assessment-pin--1"><strong className="assessment-participant-name">{row.name}</strong><span className="assessment-participant-meta">{data.is_reviewer === false ? "Hanya baca" : row.review ? `${completed}/6 aspek terisi` : "Belum dinilai oleh Anda"}</span>{selectedId === row.id && <span className="assessment-selected-label">Jawaban dibuka</span>}</td>
             <td className="assessment-pin assessment-pin--2"><span className="assessment-nim">{row.nim}</span></td>

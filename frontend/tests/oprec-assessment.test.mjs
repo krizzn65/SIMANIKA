@@ -8,6 +8,7 @@ test("warna skor mengikuti seluruh batas interval desimal", () => {
   for (const value of ["8", "9,5", "9,9"]) assert.match(scoreTone(value), /border-green-300/);
   assert.match(scoreTone("10"), /border-blue-400/);
   assert.match(scoreTone(""), /border-slate-300/);
+  for (const value of ["7,25", "10,1", "abc"]) assert.match(scoreTone(value), /bg-red-50/);
 });
 
 test("skor menerima koma atau titik dengan satu desimal tanpa membulatkan input tidak sah", () => {

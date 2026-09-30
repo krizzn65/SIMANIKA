@@ -85,6 +85,14 @@ async function main() {
     await waitFor(`document.querySelectorAll('.assessment-table tbody tr').length===3`);
     assert.equal(await evaluate(`document.querySelectorAll('.assessment-band').length`), 5);
     await screenshot('desktop');
+    await evaluate(`document.querySelectorAll('.assessment-row--selectable')[0].querySelectorAll('td')[1].click()`);
+    await waitFor(`document.querySelectorAll('.assessment-row--selected').length===1 && document.querySelector('.assessment-answer__body')?.textContent.includes('Jawaban peserta 1')`);
+    assert.equal(await evaluate(`document.querySelector('.assessment-row--selected .assessment-participant-name').textContent`), 'Nadia Putri');
+    await evaluate(`document.querySelectorAll('.assessment-row--selectable')[1].querySelectorAll('td')[1].click()`);
+    await waitFor(`document.querySelector('.assessment-row--selected .assessment-participant-name')?.textContent==='Raka Aditya' && document.querySelector('.assessment-answer__body')?.textContent.includes('Jawaban peserta 2')`);
+    await evaluate(`document.querySelector('button[aria-label="Tutup jawaban"]').click()`);
+    await evaluate(`document.querySelector('input[aria-label="Pemahaman untuk Nadia Putri"]').click()`);
+    assert.equal(await evaluate(`document.querySelectorAll('.assessment-row--selected').length`), 0);
     for (const width of [320, 390, 768, 1280, 1440]) {
       await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: false });
       assert.equal(await evaluate(`document.documentElement.scrollWidth > innerWidth`), false, `Page overflow at ${width}`);

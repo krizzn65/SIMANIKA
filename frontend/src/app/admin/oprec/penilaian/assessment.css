@@ -56,7 +56,10 @@
 .assessment-table .assessment-table__groups th { top: 0; height: 32px; padding: 6px 12px; color: #334155; background: #edf2f8; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
 .assessment-table tbody tr { --assessment-row-bg: white; }
 .assessment-table tbody tr:hover { --assessment-row-bg: #f8fafc; }
-.assessment-table tbody tr.assessment-row--selected { --assessment-row-bg: #eff6ff; }
+.assessment-table tbody tr.assessment-row--selectable { cursor: pointer; }
+.assessment-table tbody tr.assessment-row--selectable:focus-visible { outline: 2px solid var(--admin-blue-primary); outline-offset: -2px; }
+.assessment-table tbody tr.assessment-row--selected { --assessment-row-bg: #eaf2ff; }
+.assessment-table tbody tr.assessment-row--selected td:first-child { box-shadow: inset 3px 0 0 var(--admin-blue-primary); }
 .assessment-table tbody td { background: var(--assessment-row-bg); }
 .assessment-table .assessment-pin { position: sticky; z-index: 2; }
 .assessment-table thead .assessment-pin { z-index: 4; }

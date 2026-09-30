@@ -165,4 +165,65 @@ class OprecAssessmentTest extends TestCase
             ->assertJsonPath('summary.reviews_hidden', true)->assertJsonCount(1, 'summary.reviews');
     }
 
+    public function test_review_rejects_non_scalar_score_values_without_creating_a_review(): void
+    {
+        $f = $this->fixture();
+        $url = "/api/admin/oprec/{$f['period']->id}/assessment/registrations/{$f['registration']->id}/review";
+        $this->actingAs($f['super'], 'sanctum');
+        foreach ([[5], ['score' => 5], true, false] as $invalid) {
+            $this->patchJson($url, ['field' => 'pemahaman', 'value' => $invalid])->assertUnprocessable();
+        }
+        $this->assertDatabaseCount('oprec_assessment_reviews', 0);
+    }
+
+    public function test_assessment_list_exposes_only_displayed_form_fields_and_finds_legacy_names(): void
+    {
+        $f = $this->fixture();
+        $f['period']->update(['form_fields' => [
+            ['name' => 'nama_lengkap', 'label' => 'Nama', 'type' => 'text'],
+            ['name' => 'tanggal_lahir', 'label' => 'Tanggal lahir', 'type' => 'date'],
+            ['name' => 'alasan', 'label' => 'Alasan', 'type' => 'textarea'],
+            ['name' => 'dokumen', 'label' => 'Dokumen', 'type' => 'file'],
+        ]]);
+        $f['registration']->update(['form_data' => [
+            'nama_lengkap' => 'Nama Riwayat', 'tanggal_lahir' => '2004-01-01',
+            'nim' => 'E312345', 'alasan' => 'Ingin berkontribusi', 'dokumen' => 'path-internal', 'catatan_rahasia' => 'jangan tampil',
+        ], 'file_uploads' => ['dokumen' => 'oprec/'.$f['period']->id.'/contoh.pdf', 'lama' => 'oprec/'.$f['period']->id.'/lama.pdf']]);
+        $url = "/api/admin/oprec/{$f['period']->id}/assessment?search=riwayat";
+        $response = $this->actingAs($f['admin'], 'sanctum')->getJson($url)->assertOk()
+            ->assertJsonPath('total', 1)->assertJsonPath('data.0.name', 'Nama Riwayat')
+            ->assertJsonPath('data.0.formData.alasan', 'Ingin berkontribusi');
+        $response->assertJsonMissingPath('data.0.formData.tanggal_lahir')
+            ->assertJsonMissingPath('data.0.formData.nim')
+            ->assertJsonMissingPath('data.0.formData.catatan_rahasia')
+            ->assertJsonMissingPath('data.0.formData.dokumen')
+            ->assertJsonMissingPath('data.0.fileUploads.lama');
+    }
+
+    public function test_answer_and_private_files_require_assignment_for_the_same_period(): void
+    {
+        $f = $this->fixture();
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $f['period']->update(['form_fields' => [['name' => 'dokumen', 'type' => 'file']]]);
+        $stage = $f['period']->writtenTest;
+        $stage->update(['form_fields' => [['id' => 'q_file', 'label' => 'Berkas tes', 'type' => 'file', 'required' => false]]]);
+        $testPath = "oprec/test/{$stage->id}/jawaban.pdf";
+        $registrationPath = "oprec/{$f['period']->id}/pendaftaran.pdf";
+        \Illuminate\Support\Facades\Storage::disk('local')->put($testPath, 'isi tes');
+        \Illuminate\Support\Facades\Storage::disk('local')->put($registrationPath, 'isi pendaftaran');
+        $f['submission']->update(['answers' => ['q_file' => ['path' => $testPath, 'name' => 'jawaban.pdf'], 'q_old' => 'rahasia lama']]);
+        $f['registration']->update(['file_uploads' => ['dokumen' => $registrationPath, 'lama' => $registrationPath]]);
+        $base = "/api/admin/oprec/{$f['period']->id}/assessment/{$f['submission']->id}";
+
+        $this->actingAs($f['leader'], 'sanctum')->getJson($base)->assertForbidden();
+        $this->get($base.'/test-files/q_file')->assertForbidden();
+        $this->get($base.'/registration-files/dokumen')->assertForbidden();
+        $this->actingAs($f['super'], 'sanctum')->putJson("/api/admin/oprec/{$f['period']->id}/assessment/assignments/{$f['leader']->id}")->assertNoContent();
+        $this->actingAs($f['leader'], 'sanctum')->getJson($base)->assertOk()->assertJsonMissingPath('data.answers.q_old');
+        $this->get($base.'/test-files/q_file')->assertOk();
+        $this->get($base.'/registration-files/dokumen')->assertOk();
+        $this->get($base.'/registration-files/lama')->assertNotFound();
+        $this->get($base.'/test-files/unknown')->assertNotFound();
+    }
+
 }
