@@ -78,4 +78,58 @@ class OprecAnnouncementTest extends TestCase
         $oprec->writtenTest->submissions()->delete();
         $this->postJson($base.'/verify', ['nim' => 'E312345', 'tanggal_lahir' => '2004-01-01'])->assertNotFound();
     }
+
+    public function test_readiness_rejects_draft_open_unfinished_and_incomplete_placement(): void
+    {
+        [$oprec, $registration] = $this->fixture();
+        $service = app(OprecAnnouncementService::class);
+        $this->assertSame([], $service->blockers($oprec));
+        $oprec->update(['status' => 'draft']);
+        $this->assertNotEmpty($service->blockers($oprec->fresh()));
+        $oprec->update(['status' => 'open', 'tanggal_tutup' => now()->addDay()]);
+        $this->assertNotEmpty($service->blockers($oprec->fresh()));
+        $oprec->update(['status' => 'closed']);
+        $oprec->writtenTest->update(['tanggal_tutup' => now()->addDay()]);
+        $this->assertNotEmpty($service->blockers($oprec->fresh()));
+        $oprec->writtenTest->update(['tanggal_tutup' => now()->subDay()]);
+        $registration->update(['accepted_position' => '   ']);
+        $this->assertNotEmpty($service->blockers($oprec->fresh()));
+        $other = Oprec::create(['periode' => '2027/2028', 'status' => 'closed']);
+        $division = $other->divisions()->create(['nama' => 'Humas', 'sort_order' => 0]);
+        $registration->update(['accepted_position' => 'Staff', 'accepted_division_id' => $division->id]);
+        $this->assertNotEmpty($service->blockers($oprec->fresh()));
+    }
+
+    public function test_malformed_identity_and_ticket_are_validation_errors_not_server_errors(): void
+    {
+        [$oprec] = $this->fixture();
+        $oprec->forceFill(['pengumuman_published' => true, 'pengumuman_tanggal' => now()])->save();
+        $base = "/api/public/oprec/{$oprec->id}/announcement";
+        $this->postJson($base.'/verify', ['nim' => ['E312345'], 'tanggal_lahir' => '2004-01-01'])->assertUnprocessable();
+        $this->postJson($base.'/result', ['ticket' => ['forged']])->assertUnprocessable();
+    }
+
+    public function test_accepted_table_sorts_division_then_position_and_excludes_private_identity(): void
+    {
+        [$oprec] = $this->fixture();
+        $bph = $oprec->divisions()->create(['nama' => 'BPH', 'sort_order' => 9]);
+        foreach (['Wakil Ketua Umum', 'Ketua Umum'] as $index => $position) {
+            $user = User::create(['email' => "bph{$index}@example.test", 'password' => 'testing-password']);
+            $registration = $oprec->registrations()->create(['user_id' => $user->id, 'nim' => 'E31999'.$index, 'tanggal_lahir' => '2004-01-01', 'form_data' => ['nama' => 'BPH '.$index], 'status' => 'accepted', 'accepted_division_id' => $bph->id, 'accepted_position' => $position]);
+            $oprec->writtenTest->submissions()->create(['oprec_registration_id' => $registration->id, 'user_id' => $user->id, 'answers' => ['private_answer' => 'private']]);
+        }
+        $actor = User::create(['email' => 'reader@example.test', 'password' => 'testing-password']);
+        foreach (['kwu', 'user'] as $role) {
+            $actor->forceFill(['role' => $role])->save();
+            $this->actingAs($actor, 'sanctum')->getJson("/api/admin/oprec/{$oprec->id}/announcement")->assertForbidden();
+        }
+        $actor->forceFill(['role' => 'leader'])->save();
+        $this->actingAs($actor, 'sanctum')->getJson("/api/admin/oprec/{$oprec->id}/announcement")->assertOk()
+            ->assertJsonPath('participants.data.0.position', 'Ketua Umum')
+            ->assertJsonPath('participants.data.1.position', 'Wakil Ketua Umum')
+            ->assertJsonPath('participants.data.2.division', 'Humas')
+            ->assertJsonMissingPath('participants.data.0.tanggal_lahir')
+            ->assertJsonMissingPath('participants.data.0.form_data')
+            ->assertJsonMissingPath('participants.data.0.answers');
+    }
 }

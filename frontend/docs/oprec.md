@@ -144,31 +144,19 @@ NIM per periode dalam transaksi. Sukses hanya setelah tersimpan:
 berubah; 429: rate limit. Timeout tidak di-retry otomatis untuk mencegah duplikasi.
 Backend harus memastikan retry tidak membuat registrasi kedua untuk periode/NIM sama.
 
-## Pengumuman
+## Pengumuman — kontrak terbaru 30 September 2026
 
-Browser `POST /api/oprec/result` JSON `{ oprec_id, nim, tanggal_lahir }` diteruskan
-ke **endpoint Laravel baru** `POST /api/public/oprec/{id}/result`.
-Tidak memerlukan login; kecocokan NIM + tanggal lahir digunakan sesuai arahan user.
-Data tidak dimasukkan ke URL, localStorage, daftar peserta publik, atau log aplikasi.
-Next memeriksa periode sudah dalam mode pengumuman sebelum meneruskan permintaan.
+Subhalaman admin adalah `/admin/oprec/pengumuman`. Super Admin/Admin membuat dan memperbarui metadata; Pengurus membaca saja, KWU/User ditolak. Periode harus pernah dibuka, pendaftaran sudah ditutup, Tes Tulis selesai, ada kiriman tes, dan semua pengirim tes telah diputuskan. Peserta diterima harus mempunyai divisi dari periode yang sama dan jabatan penerimaan. Semua pemeriksaan diulang di transaksi dengan row lock periode.
 
-Respons 200:
+Popup meminta judul, poster JPG/PNG/WebP maksimal 5 MB, tanggal-jam WIB, deskripsi, dan undangan `https://chat.whatsapp.com/...`. Metadata disimpan pada periode yang sama, sehingga tidak membuat pengumuman ganda. Penjadwalan mengunci penilaian/keputusan; metadata masih bisa diedit sebelum waktu rilis, lalu terkunci. Poster disimpan di disk privat; endpoint publik hanya melayaninya setelah rilis. Migrasi aditif `2026_09_30_000001_add_oprec_announcement_metadata` menambah judul, poster, dan tautan grup pengumuman.
 
-```json
-{ "data": { "status": "accepted", "divisi": "Kominfo", "pesan": "Petunjuk selanjutnya dari admin." } }
-```
+Kartu merah muncul di bawah kartu Pendaftaran pada `/oprec`. Sebelum rilis, countdown hari–jam–menit–detik memakai animasi digit ke atas yang diadaptasi dari React Bits Counter, waktu server, dan fallback reduced-motion. Tidak ada polling API setiap detik: status diperiksa saat countdown berakhir atau tab kembali aktif. Primitives popup/kartu/tombol mengadaptasi shadcn/ui yang tersedia melalui 21st.dev, dengan lisensi dan sumber di `src/components/oprec/announcement/SOURCES.md`.
 
-Status: `accepted`, `rejected`, `pending`, `not_found`. Kombinasi identitas salah
-atau NIM tidak ada menggunakan respons `not_found` yang sama. HTTP 404 dari endpoint
-bukan hasil seleksi dan diperlakukan sebagai layanan gagal. Tidak ada hasil simulasi.
-Next hanya meneruskan status, divisi untuk accepted, dan pesan; identitas lengkap
-serta data internal lain dibuang. Semua respons no-store/private.
+Browser mengirim `POST /api/oprec/result` dengan `{ oprec_id, nim, tanggal_lahir }`. Proxy Next meneruskan ke `POST /api/public/oprec/{id}/announcement/verify`. Laravel menormalisasi NIM, memeriksa jadwal dan kecocokan identitas **pengirim Tes Tulis**, kemudian menerbitkan tiket terenkripsi selama 30 menit. Identitas salah dan bukan pengirim tes sama-sama menghasilkan 404 generik. Tiket hanya disimpan dalam cookie HttpOnly, SameSite=Lax, Secure pada HTTPS, terbatas path hasil periode; respons browser hanya `{ verified: true }`. Tidak ada NIM, tanggal lahir, atau tiket pada URL/localStorage.
 
-Backend **wajib** menerapkan rate limit persisten per periode/identitas serta batas
-keseluruhan endpoint, membandingkan pasangan identitas secara tepat, dan mengecek
-publication timestamp sebelum merespons. Jangan mengandalkan IP dari header browser;
-proxy deployment harus dikonfigurasi sebelum menggunakan forwarded IP. NIM/tanggal
-lahir harus di-redact dari access/error/APM logs. Cookie tidak diteruskan untuk lookup.
+Halaman `/oprec/pengumuman/{id}` membaca tiket server-side melalui `POST /api/public/oprec/{id}/announcement/result` dan tetap bekerja setelah refresh selama tiket berlaku. Hasil tidak memuat poster. Peserta diterima melihat nama, NIM, divisi, jabatan, dan tautan grup; peserta ditolak mendapat pesan penyemangat tanpa tautan grup. Respons pribadi no-store, halaman noindex. Tiket palsu, kedaluwarsa, beda periode, atau pendaftaran yang tidak memenuhi syarat ditolak. Endpoint hasil lama menerapkan verifikasi baru untuk pengumuman bermetadata baru; data historis lama tetap kompatibel.
+
+API metadata publik: `GET /api/public/oprec/{id}/announcement` (tanpa tautan grup). API admin: `GET /api/admin/oprec/announcements`, `GET|POST /api/admin/oprec/{id}/announcement`, dan endpoint poster privat. Tabel penerimaan hanya memuat pengirim Tes Tulis yang diterima, 20 per halaman, diurutkan BPH/Humas/PSDM/Kominfo/KWU/Ristek lalu katalog jabatan, nama, dan ID. Tidak mengirim tanggal lahir maupun jawaban tes pada daftar.
 
 ## Implementasi dan verifikasi
 
@@ -216,7 +204,7 @@ diadaptasi dari React Bits Animated Content, dengan reduced-motion fallback.
 
 Alur tahap terbaru telah menggantikan tab editor ini. Jadwal, skema, dan
 penyimpanan jawaban tes sudah tersedia; penilaian tes kini tersedia melalui ruang kerja Penilaian OPREC yang dijelaskan pada bagian terbaru dokumen ini.
-Alur pencarian hasil pengumuman publik tetap mengikuti kontrak sebelumnya.
+Alur pencarian hasil pengumuman publik kini mengikuti kontrak tiket HttpOnly pada bagian Pengumuman.
 
 ## Alur tahap admin dan kartu publik — 25 September 2026
 

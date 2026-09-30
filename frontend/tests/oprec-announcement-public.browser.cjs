@@ -24,10 +24,14 @@ async function main() {
     res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(data));
   });
   await new Promise(resolve => backend.listen(19091, '127.0.0.1', resolve));
-  const next = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'start', '--port', '3008'], { env: { ...process.env, NEXT_DIST_DIR: '.next-announcement-check', API_BASE_URL: 'http://127.0.0.1:19091/api' }, stdio: 'ignore' });
+  const next = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'start', '--port', '3008'], { env: { ...process.env, NEXT_DIST_DIR: '.next-announcement-production', API_BASE_URL: 'http://127.0.0.1:19091/api' }, stdio: ['ignore', 'pipe', 'pipe'] });
   let socket;
+  next.stderr.on("data", data => process.stderr.write(data));
+  next.on("error", error => console.error(error.message));
   try {
-    for (let i = 0; i < 50; i++) { try { if ((await fetch('http://localhost:3008/oprec')).ok) break; } catch {} await new Promise(r => setTimeout(r, 100)); }
+    let ready = false;
+    for (let i = 0; i < 150; i++) { if (next.exitCode !== null) throw Error('Next test server exited: '+next.exitCode); try { if ((await fetch('http://localhost:3008/oprec', { signal: AbortSignal.timeout(2000) })).ok) { ready = true; break; } } catch {} await new Promise(r => setTimeout(r, 100)); }
+    assert.ok(ready, 'Next test server must be ready before browser navigation');
     const targets = await fetch('http://127.0.0.1:9335/json').then(r => r.json());
     socket = new WebSocket(targets.find(t => t.type === 'page').webSocketDebuggerUrl);
     await new Promise(resolve => socket.addEventListener('open', resolve, { once: true }));
@@ -68,7 +72,9 @@ async function main() {
     await send('Page.reload'); await waitFor(`document.querySelector('.oa-result-grid')?.textContent.includes('Nadia Putri')`);
     for (const width of [320, 390, 768, 1280, 1440]) {
       await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false });
+      await evaluate('window.scrollTo(0, 0)');
       assert.equal(await evaluate('document.documentElement.scrollWidth > innerWidth'), false, `Result overflow ${width}`);
+      assert.equal(await evaluate("document.querySelector('.oa-result-card').getBoundingClientRect().top >= document.querySelector('.site-header').getBoundingClientRect().bottom"), true, `Result must clear navbar ${width}`);
       const shot = await send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(`.next-announcement-check/result-${width}.png`, Buffer.from(shot.data, 'base64'));
     }
     assert.deepEqual(errors, []);

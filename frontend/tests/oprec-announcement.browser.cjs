@@ -47,6 +47,7 @@ async function main() {
       await waitFor(`document.querySelector('[role="dialog"]')`);
       assert.equal(await evaluate(`document.querySelector('[role="dialog"]').contains(document.activeElement)`), true);
       assert.equal(await evaluate(`document.querySelector('[role="dialog"]').getBoundingClientRect().right <= innerWidth`), true);
+      await new Promise(resolve => setTimeout(resolve, 200));
       const screenshot = await send('Page.captureScreenshot', { format: 'png' });
       fs.writeFileSync(`.next-announcement-check/announcement-${width}.png`, Buffer.from(screenshot.data, 'base64'));
       await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
