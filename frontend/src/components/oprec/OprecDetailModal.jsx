@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
 import { oprecState } from "@/lib/oprec";
 import { OprecCountdown } from "./OprecCountdown";
-import { OprecResult } from "./OprecResult";
+import Link from "next/link";
 
 function formatOprecDate(value) {
   if (!value) return null;
@@ -250,7 +250,7 @@ export function OprecDetailModal({ isOpen, onClose, oprec }) {
                   )}
                 </button>
               ) : state.key === "announcement" ? (
-                <OprecResult oprecId={oprec.id} />
+                <Link className="oprec-modal-cta-btn" href="/oprec#pengumuman" onClick={onClose}>Lihat pengumuman <ArrowRight size={18} aria-hidden="true" /></Link>
               ) : state.key === "soon" ? (
                 <div className="oprec-modal-notice oprec-modal-notice--soon">
                   <Calendar size={18} aria-hidden="true" />

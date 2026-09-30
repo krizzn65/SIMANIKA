@@ -42,6 +42,10 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::prefix('public')->group(function () {
+    Route::get('/oprec/{oprec}/announcement', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'show']);
+    Route::get('/oprec/{oprec}/announcement/poster', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'poster']);
+    Route::post('/oprec/{oprec}/announcement/verify', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'verify'])->middleware('throttle:oprec-announcement');
+    Route::post('/oprec/{oprec}/announcement/result', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'result'])->middleware('throttle:oprec-result-view');
     Route::get('/events/posters/{filename}', [PublicEventController::class, 'poster'])->name('public.event-poster');
     Route::get('/events/guidebooks/{filename}', [EventGuidebookController::class, 'download'])->name('public.event-guidebook');
     Route::get('/events', [PublicEventController::class, 'index']);
@@ -98,6 +102,10 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
         Route::middleware('admin:oprec')->group(function () {
+            Route::get('/oprec/announcements', [\App\Http\Controllers\Admin\OprecAnnouncementController::class, 'index']);
+            Route::get('/oprec/{oprec}/announcement', [\App\Http\Controllers\Admin\OprecAnnouncementController::class, 'show']);
+            Route::post('/oprec/{oprec}/announcement', [\App\Http\Controllers\Admin\OprecAnnouncementController::class, 'save']);
+            Route::get('/oprec/{oprec}/announcement/poster', [\App\Http\Controllers\Admin\OprecAnnouncementController::class, 'poster']);
             Route::get('/oprec', [AdminOprecController::class, 'index']);
             Route::get('/oprec/assessments', [OprecAssessmentController::class, 'periods']);
             Route::get('/oprec/{oprec}/assessment', [OprecAssessmentController::class, 'index']);

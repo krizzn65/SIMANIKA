@@ -1,4 +1,5 @@
 import "server-only";
+import { NextResponse } from "next/server";
 import { getOprec } from "./oprecService";
 import { normalizeOprecNim, oprecState, validBirthDate, validateOprecForm } from "@/lib/oprec";
 
@@ -32,11 +33,11 @@ async function readBody(request, limit) {
   return new Response(bytes, { headers: { "Content-Type": request.headers.get("content-type") || "application/octet-stream" } });
 }
 
-async function forward(oprec, action, body, request) {
+async function forwardRegistration(body, request) {
   const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
   if (!base) throw new RequestError("Layanan belum tersedia. Coba lagi nanti.", 503);
   const authHeaders = {};
-  if (action === "register") {
+  {
     const cookie = request.headers.get("cookie") || "";
     if (cookie) authHeaders.Cookie = cookie;
     const token = cookie.split(";").map((part) => part.trim()).find((part) => part.startsWith("XSRF-TOKEN="));
@@ -44,9 +45,9 @@ async function forward(oprec, action, body, request) {
     authHeaders.Origin = new URL(request.url).origin;
     authHeaders.Referer = `${new URL(request.url).origin}/oprec`;
   }
-  const path = action === "register" ? "/user/oprec/register" : `/public/oprec/${encodeURIComponent(oprec.id)}/result`;
+  const path = "/user/oprec/register";
   return fetch(`${base.replace(/\/+$/, "")}${path}`, {
-    method: "POST", headers: { Accept: "application/json", ...authHeaders, ...(action === "result" ? { "Content-Type": "application/json" } : {}) },
+    method: "POST", headers: { Accept: "application/json", ...authHeaders },
     body, cache: "no-store", signal: AbortSignal.timeout(15000), redirect: "error",
   });
 }
@@ -112,7 +113,7 @@ export async function registerOprec(request) {
       const value = form.get(`jabatan_pilihan_${rank}`);
       if (value !== null && value !== "") body.set(`jabatan_pilihan_${rank}`, typeof value === "string" ? value.trim() : value);
     }
-    const response = await forward(oprec, "register", body, request);
+    const response = await forwardRegistration(body, request);
     if (!response.ok) return await upstreamError(response, oprec);
     const result = await response.json();
     if (result.data?.submitted !== true) throw new Error("Invalid registration response");
@@ -128,19 +129,25 @@ export async function lookupOprecResult(request) {
     const bounded = await readBody(request, 4096);
     const body = await bounded.json().catch(() => { throw new RequestError("Data tidak valid.", 400); });
     const nim = normalizeOprecNim(body?.nim);
-    if (!/^[a-zA-Z0-9.-]{3,32}$/.test(nim) || !validBirthDate(body?.tanggal_lahir)) return reply({ message: "Periksa NIM dan tanggal lahirmu." }, 422);
-    const oprec = await getOprec();
-    if (!oprec || oprecState(oprec).key !== "announcement" || body.oprec_id !== oprec.id) return reply({ message: "Pengumuman belum tersedia untuk periode ini." }, 409);
-    const response = await forward(oprec, "result", JSON.stringify({ nim, tanggal_lahir: body.tanggal_lahir }));
-    if (!response.ok) return await upstreamError(response, oprec);
-    const result = await response.json();
-    const status = result.data?.status;
-    if (!["accepted", "rejected", "pending", "not_found"].includes(status)) throw new Error("Invalid selection result");
-    return reply({ data: {
-      status,
-      divisi: status === "accepted" && typeof result.data.divisi === "string" ? result.data.divisi.slice(0, 150) : "",
-      pesan: ["accepted", "rejected", "pending"].includes(status) && typeof result.data.pesan === "string" ? result.data.pesan.slice(0, 1500) : "",
-    } });
+    const id = String(body?.oprec_id || "");
+    if (!/^\d+$/.test(id) || !/^E31[A-Z0-9.\-]{0,29}$/.test(nim) || !validBirthDate(body?.tanggal_lahir)) return reply({ message: "Periksa NIM dan tanggal lahirmu." }, 422);
+    const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (!base) return reply({ message: "Layanan belum tersedia." }, 503);
+    const response = await fetch(base.replace(/\/+$/, "") + "/public/oprec/" + id + "/announcement/verify", {
+      method: "POST", headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ nim, tanggal_lahir: body.tanggal_lahir }), cache: "no-store", redirect: "error", signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok) {
+      const messages = { 404: "Data tidak ditemukan. Periksa NIM dan tanggal lahir sesuai pendaftaran.", 409: "Pengumuman belum dibuka. Periksa jadwal kembali.", 422: "Periksa NIM dan tanggal lahirmu.", 429: "Terlalu banyak percobaan. Tunggu satu menit sebelum mencoba lagi." };
+      const result = NextResponse.json({ message: messages[response.status] || "Layanan sedang sibuk. Silakan coba lagi." }, { status: messages[response.status] ? response.status : 503, headers });
+      if (response.status === 429) result.headers.set("Retry-After", response.headers.get("Retry-After") || "60");
+      return result;
+    }
+    const data = await response.json();
+    if (typeof data.ticket !== "string" || data.ticket.length > 4096) throw new Error("Invalid ticket");
+    const result = NextResponse.json({ verified: true }, { headers });
+    result.cookies.set("oprec_result_" + id, data.ticket, { httpOnly: true, sameSite: "lax", secure: new URL(request.url).protocol === "https:", path: "/oprec/pengumuman/" + id, maxAge: 1800 });
+    return result;
   } catch (error) {
     return reply({ message: error instanceof RequestError ? error.message : "Hasil belum bisa diperiksa. Coba lagi sebentar." }, error instanceof RequestError ? error.status : 503);
   }

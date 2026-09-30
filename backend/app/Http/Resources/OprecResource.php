@@ -40,6 +40,8 @@ class OprecResource extends JsonResource
                     && (!$this->pengumuman_tanggal || $this->pengumuman_tanggal->isPast())))
                     ? ($this->pengumuman_pesan ?? '') : '',
             ],
+            'announcement' => $this->pengumuman_published ? app(\App\Services\OprecAnnouncementService::class)->metadata($this->resource) : null,
+            'serverNow' => now()->toIso8601String(),
             'faq' => $this->faq ?? [],
         ];
     }

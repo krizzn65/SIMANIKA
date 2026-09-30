@@ -26,6 +26,7 @@ class PublicOprecController extends Controller
 
     public function result(Request $request, Oprec $oprec)
     {
+        if ($oprec->pengumuman_judul) return app(OprecAnnouncementController::class)->verify($request, $oprec);
         if (is_string($request->input('nim'))) {
             $request->merge(['nim' => strtoupper(trim($request->input('nim')))]);
         }

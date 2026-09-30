@@ -21,6 +21,7 @@ import {
   ClipboardList,
   FilePenLine,
   ClipboardCheck,
+  Megaphone,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Toaster } from "sonner";
@@ -64,10 +65,13 @@ const isOprecRegistrationRoute = (pathname) => pathname === "/admin/oprec" || /^
 const isOprecWrittenTestRoute = (pathname) => pathname === "/admin/oprec/test" || pathname.startsWith("/admin/oprec/test/");
 const isOprecAssessmentRoute = (pathname) => pathname === "/admin/oprec/penilaian" || pathname.startsWith("/admin/oprec/penilaian/");
 
+const isOprecAnnouncementRoute = (pathname) => pathname === "/admin/oprec/pengumuman" || pathname.startsWith("/admin/oprec/pengumuman/");
+
 function adminBreadcrumb(pathname) {
   if (pathname === "/admin") return "Dashboard";
   if (isOprecWrittenTestRoute(pathname)) return "Kelola OPREC > Tes Tulis";
   if (isOprecAssessmentRoute(pathname)) return "Kelola OPREC > Penilaian";
+  if (isOprecAnnouncementRoute(pathname)) return "Kelola OPREC > Pengumuman";
   if (pathname === "/admin/oprec") return "Kelola OPREC > Pendaftaran";
   if (isOprecRegistrationRoute(pathname) && pathname !== "/admin/oprec") return "Kelola OPREC > Edit Formulir";
   if (/^\/admin\/events\/[^/]+$/.test(pathname)) return "Kelola Event > Formulir Event";
@@ -156,6 +160,7 @@ function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
                         <Link href="/admin/oprec" onClick={() => setMobileOpen(false)} aria-current={isOprecRegistrationRoute(pathname) ? "page" : undefined} className={`rounded-lg px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${isOprecRegistrationRoute(pathname) ? "bg-white font-semibold text-[#155eef]" : "text-blue-50 hover:bg-white/15"}`}><FilePenLine className="h-4 w-4" aria-hidden="true" /> Pendaftaran</Link>
                         <Link href="/admin/oprec/test" onClick={() => setMobileOpen(false)} aria-current={isOprecWrittenTestRoute(pathname) ? "page" : undefined} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${isOprecWrittenTestRoute(pathname) ? "bg-white font-semibold text-[#155eef]" : "text-blue-50 hover:bg-white/15"}`}><ClipboardList className="h-4 w-4" aria-hidden="true" />Tes Tulis</Link>
                         <Link href="/admin/oprec/penilaian" onClick={() => setMobileOpen(false)} aria-current={isOprecAssessmentRoute(pathname) ? "page" : undefined} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${isOprecAssessmentRoute(pathname) ? "bg-white font-semibold text-[#155eef]" : "text-blue-50 hover:bg-white/15"}`}><ClipboardCheck className="h-4 w-4" aria-hidden="true" />Penilaian</Link>
+                        <Link href="/admin/oprec/pengumuman" onClick={() => setMobileOpen(false)} aria-current={isOprecAnnouncementRoute(pathname) ? "page" : undefined} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${isOprecAnnouncementRoute(pathname) ? "bg-white font-semibold text-[#155eef]" : "text-blue-50 hover:bg-white/15"}`}><Megaphone className="h-4 w-4" aria-hidden="true" />Pengumuman</Link>
                       </div>
                     )}
                   </div>

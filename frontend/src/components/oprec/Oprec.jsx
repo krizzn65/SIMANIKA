@@ -1,3 +1,4 @@
+import { AnnouncementCard } from "./announcement/AnnouncementCard";
 import { OprecPreview } from "./OprecPreview";
 import { OprecFaq } from "./OprecFaq";
 import { divisionPreview } from "./divisionPreview";
@@ -5,7 +6,7 @@ import { divisionPreview } from "./divisionPreview";
 const defaultFaq = [
   { pertanyaan: "Bagaimana cara mendaftar OPREC?", jawaban: "Saat pendaftaran dibuka, formulir akan tampil di bagian pendaftaran pada halaman ini. Lengkapi kolom yang diminta, unggah berkas jika diperlukan, lalu kirim. Pastikan kamu melihat konfirmasi bahwa pendaftaran berhasil diterima." },
   { pertanyaan: "Apa yang perlu saya siapkan?", jawaban: "Gunakan NIM dan tanggal lahir yang benar karena keduanya digunakan untuk mengecek hasil seleksi. Data dan berkas lainnya mengikuti formulir untuk periode rekrutmen yang sedang dibuka." },
-  { pertanyaan: "Bagaimana cara melihat hasil seleksi?", jawaban: "Setelah pengumuman dibuka, bagian pendaftaran berubah menjadi tempat pengecekan hasil. Masukkan NIM dan tanggal lahir yang sama dengan data saat mendaftar untuk melihat hasil seleksimu." },
+  { pertanyaan: "Bagaimana cara melihat hasil seleksi?", jawaban: "Setelah jadwal pengumuman tiba, tekan Lihat Pengumuman pada kartu merah di bawah Pendaftaran. Masukkan NIM dan tanggal lahir yang sama dengan data saat mendaftar untuk melihat hasil seleksimu." },
 ];
 
 const divisionLogos = new Map(divisionPreview.filter((division) => division.logo).map((division) => [division.nama.toLowerCase(), division.logo]));
@@ -48,7 +49,8 @@ export function Oprec({ oprec }) {
     </section>
     <section className="oprec-registration-section" id="pendaftaran" aria-labelledby="registration-heading"><div className="oprec-container">
       <div className="oprec-section-heading"><div><h2 id="registration-heading">Pendaftaran & pengumuman.</h2></div></div>
-      <OprecPreview key={oprec?.poster || "no-poster"} oprec={oprec} initialNow={Date.now()} />
+      <OprecPreview key={oprec?.poster || "no-poster"} oprec={oprec ? { ...oprec, pengumuman: { published: false, tanggal: null, pesan: "" } } : null} initialNow={Date.now()} />
+      {oprec?.announcement && <AnnouncementCard key={oprec.id} periodId={oprec.id} period={oprec.periode} announcement={oprec.announcement} serverNow={oprec.serverNow || new Date().toISOString()} />}
     </div></section>
     <section className="oprec-faq-section oprec-container" id="faq-oprec" aria-labelledby="faq-heading"><div><h2 id="faq-heading">Masih penasaran?</h2><p>Hal-hal yang perlu kamu tahu<br />sebelum mengambil langkah pertama.</p></div><OprecFaq faq={faq} /></section>
   </>;
