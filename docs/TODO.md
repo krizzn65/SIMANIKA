@@ -1,3 +1,18 @@
+## Urutan Peserta Penilaian OPREC — 30 September 2026
+
+- [x] Urutan daftar Penilaian ditetapkan server sebelum pagination berdasarkan Pilihan 1: BPH, Humas, PSDM, Kominfo, KWU, Ristek; divisi tidak dikenal di akhir. Dalam kelompok yang sama, ID pendaftaran menjadi urutan tetap.
+- [x] Tes regresi mencakup urutan identik untuk Super Admin, Admin, dan Pengurus pada halaman 1–2 serta pencarian dan filter keputusan. Tes Penilaian 9 tes/155 assertion lulus.
+- [x] Suite backend lintas fitur lulus: 68 tes/655 assertion, termasuk Pendaftaran, Tes Tulis, akses role, dan event.
+
+## Audit Penilaian OPREC — 30 September 2026
+
+- [x] API daftar hanya mengirim field formulir yang ditampilkan; tanggal lahir, field usang, nilai mentah berkas, dan email akun yang tidak diperlukan tidak dimuat. Query daftar tidak memuat JSON jawaban Tes Tulis.
+- [x] Payload skor bertipe array/object/boolean ditolak dengan 422. Pencarian mencakup variasi nama lama dan nama akun. Input invalid selalu berwarna merah.
+- [x] Detail jawaban dan unduhan berkas dibatasi pada soal/field aktif; Pengurus tanpa penugasan ditolak juga pada URL berkas langsung.
+- [x] Pemeriksaan komponen, import, helper, dan selector CSS Penilaian tidak menemukan kode mati yang terbukti; class warna/status dibentuk dinamis.
+- [x] Tes Penilaian 8/123 assertion, tes jalur terkait 14/150 assertion, tes frontend terkait 4/4, seluruh 36 tes frontend, suite backend lintas fitur 67 tes/623 assertion, dan typecheck lulus. Browser fixture Penilaian diuji pada turn sebelumnya.
+- [ ] Smoke test sesi akun asli di desktop/mobile, dua tab penilai yang sama, dan berkas privat pada server terpasang tetap perlu sebelum rilis.
+
 ## UI/UX Penilaian OPREC — 30 September 2026
 
 - [x] Area Penilaian diperluas; tabel memiliki kelompok kolom, identitas sticky, panduan warna/nilai, penanda peserta aktif, dan navigasi cepat ke kolom nilai.

@@ -510,7 +510,7 @@
 .oprec-button { display: inline-flex; align-items: center; justify-content: center; gap: 1.5rem; min-height: 48px; padding: .85rem 1.25rem; border: 1px solid var(--blue); border-radius: 8px; background: var(--blue); color: white; font-weight: 500; transition: background-color 180ms; }
 .oprec-button:hover:not(:disabled) { background: var(--blue-dark); }
 .oprec-button:disabled { cursor: wait; opacity: .7; }
-.oprec-form, .oprec-result { margin-top: 2rem; }
+.oprec-form { margin-top: 2rem; }
 .oprec-form__intro, .oprec-form__foot { color: var(--ink-muted); line-height: 1.6; font-size: .9rem; }
 .oprec-form__intro { margin-bottom: 1.5rem; white-space: pre-wrap; }
 .oprec-form__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 1rem; padding: 0; border: 0; margin: 0 0 1.5rem; min-width: 0; }
@@ -519,7 +519,7 @@
 .oprec-field > label, .oprec-field > legend { font-weight: 500; line-height: 1.5; }
 .oprec-field > legend { padding: 0; margin-bottom: .5rem; }
 .oprec-field small { color: var(--ink-muted); line-height: 1.5; }
-.oprec-field :is(input:not([type=checkbox]):not([type=radio]),textarea,select), .oprec-result input { display: block; width: 100%; min-width: 0; min-height: 48px; padding: .75rem; border: 1px solid #aebccf; border-radius: 7px; background: white; color: var(--ink); }
+.oprec-field :is(input:not([type=checkbox]):not([type=radio]),textarea,select) { display: block; width: 100%; min-width: 0; min-height: 48px; padding: .75rem; border: 1px solid #aebccf; border-radius: 7px; background: white; color: var(--ink); }
 .oprec-field textarea { resize: vertical; }
 .oprec-field input[type=file] { font-size: .85rem; padding: .6rem; }
 .oprec-field input::file-selector-button { border: 0; border-radius: 4px; padding: .6rem; margin-right: .5rem; background: var(--surface-subtle); color: var(--blue-dark); cursor: pointer; }
@@ -529,7 +529,7 @@
 .oprec-choice { display: flex; align-items: center; gap: .75rem; min-height: 48px; padding: .65rem .75rem; border: 1px solid var(--border); border-radius: 7px; cursor: pointer; line-height: 1.5; }
 .oprec-choice:has(input:checked) { border-color: var(--blue); background: var(--surface-subtle); }
 .oprec-choice input { flex-shrink: 0; width: 18px; height: 18px; accent-color: var(--blue); }
-.oprec-form > .oprec-button, .oprec-result .oprec-button { width: 100%; }
+.oprec-form > .oprec-button { width: 100%; }
 .oprec-feedback { padding: 1.25rem; border: 1px solid var(--border); border-radius: 8px; line-height: 1.65; margin-bottom: 1.5rem; }
 .oprec-feedback h3 { font-size: 1.5rem; line-height: 1.2; margin-block: .75rem; font-weight: 500; }
 .oprec-feedback p { margin: .5rem 0; }
@@ -538,9 +538,6 @@
 .oprec-feedback--error { background: #fff1f0; border-color: #f1b7b2; color: #912018; }
 .oprec-feedback--success { background: #effaf4; border-color: #a6d1b7; color: #155c38; }
 .oprec-feedback--neutral { background: var(--surface-subtle); color: var(--ink); }
-.oprec-result fieldset { padding: 0; margin: 0 0 1.5rem; border: 0; display: grid; gap: 1.25rem; min-width: 0; }
-.oprec-result label { display: grid; gap: .5rem; font-weight: 500; }
-.oprec-result > .oprec-feedback { margin-top: 1.5rem; margin-bottom: 0; }
 .oprec-preserve-lines { white-space: pre-wrap; }
 .oprec-inline-note { border-top: 1px solid var(--border); padding-top: 1.5rem; margin-top: 2rem; }
 .oprec-inline-note h3 { font-size: 1.2rem; font-weight: 500; }

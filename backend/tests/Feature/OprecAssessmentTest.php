@@ -110,6 +110,54 @@ class OprecAssessmentTest extends TestCase
         $this->deleteJson("/api/admin/oprec/{$f['period']->id}/written-test/submissions/{$f['submission']->id}")->assertStatus(409);
         $this->deleteJson($legacy)->assertStatus(409);
     }
+
+    public function test_first_choice_order_is_stable_across_roles_filters_and_pages(): void
+    {
+        $f = $this->fixture();
+        $url = "/api/admin/oprec/{$f['period']->id}/assessment";
+        $divisions = $f['divisions']->keyBy('nama');
+        foreach (['Ristek', 'KWU', 'Kominfo'] as $name) {
+            $divisions[$name] = $f['period']->divisions()->create(['nama' => $name, 'sort_order' => $divisions->count()]);
+        }
+        $groups = ['BPH' => [$f['registration']->id], 'Humas' => [], 'PSDM' => [],
+            'Kominfo' => [], 'KWU' => [], 'Ristek' => [], 'unknown' => []];
+        $choices = ['KWU', 'Ristek', 'PSDM', 'Kominfo', 'Humas', 'BPH', null];
+        foreach (range(1, 21) as $index) {
+            $choice = $choices[($index - 1) % count($choices)];
+            $registration = $f['registration']->replicate();
+            $registration->user_id = $this->account('user', "sort{$index}@example.test")->id;
+            $registration->nim = 'E31800'.$index;
+            $registration->form_data = ['nama' => "Urut {$index}"];
+            $registration->divisi_pilihan_1 = $choice ? $divisions[$choice]->id : null;
+            $registration->status = in_array($index, [1, 6], true) ? 'accepted' : 'pending';
+            $registration->save();
+            $submission = $f['submission']->replicate();
+            $submission->oprec_registration_id = $registration->id;
+            $submission->user_id = $registration->user_id;
+            $submission->save();
+            $groups[$choice ?? 'unknown'][] = $registration->id;
+        }
+        $expected = array_merge(...array_values($groups));
+        $this->actingAs($f['super'], 'sanctum')->putJson($url."/assignments/{$f['leader']->id}")->assertNoContent();
+        foreach ([$f['super'], $f['admin'], $f['leader']] as $viewer) {
+            $this->actingAs($viewer, 'sanctum');
+            $first = $this->getJson($url)->assertOk()->assertJsonPath('total', 22);
+            $second = $this->getJson($url.'?page=2')->assertOk();
+            $this->assertSame($expected, array_merge(
+                array_column($first->json('data'), 'registration_id'),
+                array_column($second->json('data'), 'registration_id')
+            ));
+            $this->assertCount(20, $first->json('data'));
+            $this->assertCount(2, $second->json('data'));
+            $filtered = $this->getJson($url.'?search=Urut')->assertOk();
+            $this->assertSame(array_slice(array_values(array_filter($expected, fn ($id) => $id !== $f['registration']->id)), 0, 20),
+                array_column($filtered->json('data'), 'registration_id'));
+            $accepted = $this->getJson($url.'?decision=accepted')->assertOk();
+            $this->assertSame([$groups['BPH'][1], $groups['KWU'][0]],
+                array_column($accepted->json('data'), 'registration_id'));
+        }
+    }
+
     public function test_filters_apply_before_pagination_and_use_only_the_current_reviewers_scores(): void
     {
         $f = $this->fixture();
@@ -163,6 +211,67 @@ class OprecAssessmentTest extends TestCase
         $this->patchJson($url."/registrations/{$f['registration']->id}/review", ['field' => 'kejujuran', 'value' => null])
             ->assertOk()->assertJsonPath('data.total', null)->assertJsonPath('summary.average', null)
             ->assertJsonPath('summary.reviews_hidden', true)->assertJsonCount(1, 'summary.reviews');
+    }
+
+    public function test_review_rejects_non_scalar_score_values_without_creating_a_review(): void
+    {
+        $f = $this->fixture();
+        $url = "/api/admin/oprec/{$f['period']->id}/assessment/registrations/{$f['registration']->id}/review";
+        $this->actingAs($f['super'], 'sanctum');
+        foreach ([[5], ['score' => 5], true, false] as $invalid) {
+            $this->patchJson($url, ['field' => 'pemahaman', 'value' => $invalid])->assertUnprocessable();
+        }
+        $this->assertDatabaseCount('oprec_assessment_reviews', 0);
+    }
+
+    public function test_assessment_list_exposes_only_displayed_form_fields_and_finds_legacy_names(): void
+    {
+        $f = $this->fixture();
+        $f['period']->update(['form_fields' => [
+            ['name' => 'nama_lengkap', 'label' => 'Nama', 'type' => 'text'],
+            ['name' => 'tanggal_lahir', 'label' => 'Tanggal lahir', 'type' => 'date'],
+            ['name' => 'alasan', 'label' => 'Alasan', 'type' => 'textarea'],
+            ['name' => 'dokumen', 'label' => 'Dokumen', 'type' => 'file'],
+        ]]);
+        $f['registration']->update(['form_data' => [
+            'nama_lengkap' => 'Nama Riwayat', 'tanggal_lahir' => '2004-01-01',
+            'nim' => 'E312345', 'alasan' => 'Ingin berkontribusi', 'dokumen' => 'path-internal', 'catatan_rahasia' => 'jangan tampil',
+        ], 'file_uploads' => ['dokumen' => 'oprec/'.$f['period']->id.'/contoh.pdf', 'lama' => 'oprec/'.$f['period']->id.'/lama.pdf']]);
+        $url = "/api/admin/oprec/{$f['period']->id}/assessment?search=riwayat";
+        $response = $this->actingAs($f['admin'], 'sanctum')->getJson($url)->assertOk()
+            ->assertJsonPath('total', 1)->assertJsonPath('data.0.name', 'Nama Riwayat')
+            ->assertJsonPath('data.0.formData.alasan', 'Ingin berkontribusi');
+        $response->assertJsonMissingPath('data.0.formData.tanggal_lahir')
+            ->assertJsonMissingPath('data.0.formData.nim')
+            ->assertJsonMissingPath('data.0.formData.catatan_rahasia')
+            ->assertJsonMissingPath('data.0.formData.dokumen')
+            ->assertJsonMissingPath('data.0.fileUploads.lama');
+    }
+
+    public function test_answer_and_private_files_require_assignment_for_the_same_period(): void
+    {
+        $f = $this->fixture();
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $f['period']->update(['form_fields' => [['name' => 'dokumen', 'type' => 'file']]]);
+        $stage = $f['period']->writtenTest;
+        $stage->update(['form_fields' => [['id' => 'q_file', 'label' => 'Berkas tes', 'type' => 'file', 'required' => false]]]);
+        $testPath = "oprec/test/{$stage->id}/jawaban.pdf";
+        $registrationPath = "oprec/{$f['period']->id}/pendaftaran.pdf";
+        \Illuminate\Support\Facades\Storage::disk('local')->put($testPath, 'isi tes');
+        \Illuminate\Support\Facades\Storage::disk('local')->put($registrationPath, 'isi pendaftaran');
+        $f['submission']->update(['answers' => ['q_file' => ['path' => $testPath, 'name' => 'jawaban.pdf'], 'q_old' => 'rahasia lama']]);
+        $f['registration']->update(['file_uploads' => ['dokumen' => $registrationPath, 'lama' => $registrationPath]]);
+        $base = "/api/admin/oprec/{$f['period']->id}/assessment/{$f['submission']->id}";
+
+        $this->actingAs($f['leader'], 'sanctum')->getJson($base)->assertForbidden();
+        $this->get($base.'/test-files/q_file')->assertForbidden();
+        $this->get($base.'/registration-files/dokumen')->assertForbidden();
+        $this->actingAs($f['super'], 'sanctum')->putJson("/api/admin/oprec/{$f['period']->id}/assessment/assignments/{$f['leader']->id}")->assertNoContent();
+        $this->actingAs($f['leader'], 'sanctum')->getJson($base)->assertOk()->assertJsonMissingPath('data.answers.q_old');
+        $this->get($base.'/test-files/q_file')->assertOk();
+        $this->get($base.'/registration-files/dokumen')->assertOk();
+        $this->get($base.'/registration-files/lama')->assertNotFound();
+        $this->get($base.'/test-files/unknown')->assertNotFound();
     }
 
 }

@@ -110,6 +110,12 @@ export function normalizeOprec(raw) {
         : getDefaultJabatan(nama);
       return { id: String(item.id ?? index), nama, namaLengkap: text(item.namaLengkap ?? item.nama_lengkap), deskripsi: text(item.deskripsi), logo: safePosterUrl(item.logo), jabatan };
     }),
+    announcement: raw.announcement?.exists === true ? {
+      exists: true, title: text(raw.announcement.title), release_at: date(raw.announcement.release_at),
+      description: text(raw.announcement.description), released: raw.announcement.released === true,
+      poster_url: safePosterUrl(raw.announcement.poster_url),
+    } : null,
+    serverNow: date(raw.serverNow),
     pengumuman: { published: announcement.published === true, tanggal: date(announcement.tanggal), pesan: text(announcement.pesan) },
     faq: (Array.isArray(raw.faq) ? raw.faq : []).filter((item) => item && text(item.pertanyaan) && text(item.jawaban)).map((item) => ({ pertanyaan: text(item.pertanyaan), jawaban: text(item.jawaban) })),
   };

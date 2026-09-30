@@ -33,6 +33,9 @@ class OprecController extends Controller
         $data = $request->validated();
         $oprec = DB::transaction(function () use ($data) {
             $attributes = $this->attributes($data);
+            $attributes['pengumuman_published'] = false;
+            $attributes['pengumuman_tanggal'] = null;
+            $attributes['pengumuman_pesan'] = null;
             if ($data['status'] === 'open') $attributes['first_published_at'] = now();
             $oprec = Oprec::create($attributes);
             $this->syncDivisions($oprec, $data['divisi_tersedia'] ?? []);
@@ -46,7 +49,7 @@ class OprecController extends Controller
         $data = $request->validated();
         $updated = DB::transaction(function () use ($oprec, $data) {
             $current = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
-            if ($current->pengumuman_published && !$data['pengumuman']['published']) throw ValidationException::withMessages(['pengumuman.published' => ['Pengumuman yang sudah terbit tidak dapat ditarik kembali.']]);
+            if ($current->pengumuman_published && $data['status'] !== 'closed') throw ValidationException::withMessages(['status' => ['Pendaftaran tetap ditutup setelah pengumuman dijadwalkan.']]);
             $currentDivisions = $current->divisions()->get()->map(fn ($division) => [
                 'nama' => $division->nama, 'nama_lengkap' => $division->nama_lengkap,
                 'deskripsi' => $division->deskripsi, 'logo' => $division->logo, 'jabatan' => $division->jabatan ?? [],
@@ -62,6 +65,7 @@ class OprecController extends Controller
                 if ($divisionsChanged) throw ValidationException::withMessages(['divisi_tersedia' => ['Divisi tidak boleh diubah setelah ada pendaftar.']]);
             }
             $attributes = $this->attributes($data);
+            unset($attributes['pengumuman_published'], $attributes['pengumuman_tanggal'], $attributes['pengumuman_pesan']);
             if ($data['status'] === 'open' && !$current->first_published_at) $attributes['first_published_at'] = now();
             $current->update($attributes);
             if ($divisionsChanged) $this->syncDivisions($current, $data['divisi_tersedia']);
