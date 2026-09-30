@@ -1,3 +1,9 @@
+## Urutan Peserta Penilaian OPREC — 30 September 2026
+
+- [x] Urutan daftar Penilaian ditetapkan server sebelum pagination berdasarkan Pilihan 1: BPH, Humas, PSDM, Kominfo, KWU, Ristek; divisi tidak dikenal di akhir. Dalam kelompok yang sama, ID pendaftaran menjadi urutan tetap.
+- [x] Tes regresi mencakup urutan identik untuk Super Admin, Admin, dan Pengurus pada halaman 1–2 serta pencarian dan filter keputusan. Tes Penilaian 9 tes/155 assertion lulus.
+- [x] Suite backend lintas fitur lulus: 68 tes/655 assertion, termasuk Pendaftaran, Tes Tulis, akses role, dan event.
+
 ## Audit Penilaian OPREC — 30 September 2026
 
 - [x] API daftar hanya mengirim field formulir yang ditampilkan; tanggal lahir, field usang, nilai mentah berkas, dan email akun yang tidak diperlukan tidak dimuat. Query daftar tidak memuat JSON jawaban Tes Tulis.

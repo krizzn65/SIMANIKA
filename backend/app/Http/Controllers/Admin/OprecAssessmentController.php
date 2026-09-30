@@ -40,7 +40,15 @@ class OprecAssessmentController extends Controller
             'decision' => ['nullable', Rule::in(['all', 'pending', 'accepted', 'rejected'])],
         ]);
         $stage = $oprec->writtenTest()->firstOrFail();
-        $query = OprecTestSubmission::query()->select(['id', 'oprec_stage_id', 'oprec_registration_id', 'user_id'])
+        $query = OprecTestSubmission::query()->select([
+                'oprec_test_submissions.id', 'oprec_test_submissions.oprec_stage_id',
+                'oprec_test_submissions.oprec_registration_id', 'oprec_test_submissions.user_id',
+            ])
+            ->join('oprec_registrations as ranked_registrations', 'ranked_registrations.id', '=', 'oprec_test_submissions.oprec_registration_id')
+            ->leftJoin('oprec_divisions as first_divisions', function ($join) {
+                $join->on('first_divisions.id', '=', 'ranked_registrations.divisi_pilihan_1')
+                    ->on('first_divisions.oprec_id', '=', 'ranked_registrations.oprec_id');
+            })
             ->where('oprec_stage_id', $stage->id)
             ->whereHas('registration', fn ($q) => $q->where('oprec_id', $oprec->id))
             ->with('registration.user:id,name');
@@ -64,7 +72,12 @@ class OprecAssessmentController extends Controller
             foreach (OprecAssessmentService::CRITERIA as $criterion) $complete->whereNotNull($criterion);
             $query->whereIn('oprec_registration_id', $complete, 'and', $filters['review'] === 'incomplete');
         }
-        $page = $query->orderBy('id')->paginate(20);
+        $page = $query->orderByRaw("CASE LOWER(TRIM(first_divisions.nama))
+                WHEN 'bph' THEN 0 WHEN 'humas' THEN 1 WHEN 'psdm' THEN 2
+                WHEN 'kominfo' THEN 3 WHEN 'kwu' THEN 4 WHEN 'ristek' THEN 5 ELSE 6 END")
+            ->orderBy('ranked_registrations.id')
+            ->orderBy('oprec_test_submissions.id')
+            ->paginate(20);
         $ids = $page->getCollection()->pluck('oprec_registration_id')->all();
         $reviews = DB::table('oprec_assessment_reviews')->whereIn('oprec_registration_id', $ids)->get()->groupBy('oprec_registration_id');
         $divisions = $oprec->divisions()->get(['id', 'nama'])->keyBy('id');

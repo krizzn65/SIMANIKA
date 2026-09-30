@@ -110,6 +110,54 @@ class OprecAssessmentTest extends TestCase
         $this->deleteJson("/api/admin/oprec/{$f['period']->id}/written-test/submissions/{$f['submission']->id}")->assertStatus(409);
         $this->deleteJson($legacy)->assertStatus(409);
     }
+
+    public function test_first_choice_order_is_stable_across_roles_filters_and_pages(): void
+    {
+        $f = $this->fixture();
+        $url = "/api/admin/oprec/{$f['period']->id}/assessment";
+        $divisions = $f['divisions']->keyBy('nama');
+        foreach (['Ristek', 'KWU', 'Kominfo'] as $name) {
+            $divisions[$name] = $f['period']->divisions()->create(['nama' => $name, 'sort_order' => $divisions->count()]);
+        }
+        $groups = ['BPH' => [$f['registration']->id], 'Humas' => [], 'PSDM' => [],
+            'Kominfo' => [], 'KWU' => [], 'Ristek' => [], 'unknown' => []];
+        $choices = ['KWU', 'Ristek', 'PSDM', 'Kominfo', 'Humas', 'BPH', null];
+        foreach (range(1, 21) as $index) {
+            $choice = $choices[($index - 1) % count($choices)];
+            $registration = $f['registration']->replicate();
+            $registration->user_id = $this->account('user', "sort{$index}@example.test")->id;
+            $registration->nim = 'E31800'.$index;
+            $registration->form_data = ['nama' => "Urut {$index}"];
+            $registration->divisi_pilihan_1 = $choice ? $divisions[$choice]->id : null;
+            $registration->status = in_array($index, [1, 6], true) ? 'accepted' : 'pending';
+            $registration->save();
+            $submission = $f['submission']->replicate();
+            $submission->oprec_registration_id = $registration->id;
+            $submission->user_id = $registration->user_id;
+            $submission->save();
+            $groups[$choice ?? 'unknown'][] = $registration->id;
+        }
+        $expected = array_merge(...array_values($groups));
+        $this->actingAs($f['super'], 'sanctum')->putJson($url."/assignments/{$f['leader']->id}")->assertNoContent();
+        foreach ([$f['super'], $f['admin'], $f['leader']] as $viewer) {
+            $this->actingAs($viewer, 'sanctum');
+            $first = $this->getJson($url)->assertOk()->assertJsonPath('total', 22);
+            $second = $this->getJson($url.'?page=2')->assertOk();
+            $this->assertSame($expected, array_merge(
+                array_column($first->json('data'), 'registration_id'),
+                array_column($second->json('data'), 'registration_id')
+            ));
+            $this->assertCount(20, $first->json('data'));
+            $this->assertCount(2, $second->json('data'));
+            $filtered = $this->getJson($url.'?search=Urut')->assertOk();
+            $this->assertSame(array_slice(array_values(array_filter($expected, fn ($id) => $id !== $f['registration']->id)), 0, 20),
+                array_column($filtered->json('data'), 'registration_id'));
+            $accepted = $this->getJson($url.'?decision=accepted')->assertOk();
+            $this->assertSame([$groups['BPH'][1], $groups['KWU'][0]],
+                array_column($accepted->json('data'), 'registration_id'));
+        }
+    }
+
     public function test_filters_apply_before_pagination_and_use_only_the_current_reviewers_scores(): void
     {
         $f = $this->fixture();
