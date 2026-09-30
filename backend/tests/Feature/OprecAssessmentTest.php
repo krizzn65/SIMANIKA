@@ -110,4 +110,59 @@ class OprecAssessmentTest extends TestCase
         $this->deleteJson("/api/admin/oprec/{$f['period']->id}/written-test/submissions/{$f['submission']->id}")->assertStatus(409);
         $this->deleteJson($legacy)->assertStatus(409);
     }
+    public function test_filters_apply_before_pagination_and_use_only_the_current_reviewers_scores(): void
+    {
+        $f = $this->fixture();
+        $url = "/api/admin/oprec/{$f['period']->id}/assessment";
+        foreach (range(1, 21) as $index) {
+            $registration = $f['registration']->replicate();
+            $registration->user_id = $this->account('user', "filter{$index}@example.test")->id;
+            $registration->nim = 'E31900'.$index;
+            $registration->status = $index === 1 ? 'accepted' : 'pending';
+            $registration->save();
+            $submission = $f['submission']->replicate();
+            $submission->oprec_registration_id = $registration->id;
+            $submission->user_id = $registration->user_id;
+            $submission->save();
+            $scores = array_fill_keys(\App\Services\OprecAssessmentService::CRITERIA, $index <= 20 ? 0 : null);
+            $scores['pemahaman'] = 0;
+            DB::table('oprec_assessment_reviews')->insert($scores + [
+                'oprec_registration_id' => $registration->id, 'reviewer_id' => $f['super']->id,
+                'reviewer_name' => 'Super Admin', 'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
+        DB::table('oprec_assessment_reviews')->insert(array_fill_keys(\App\Services\OprecAssessmentService::CRITERIA, 10) + [
+            'oprec_registration_id' => $f['registration']->id, 'reviewer_id' => $f['leader2']->id,
+            'reviewer_name' => 'Penilai lain', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $this->actingAs($f['super'], 'sanctum')->getJson($url.'?page=2')->assertOk()->assertJsonPath('total', 22)->assertJsonCount(2, 'data');
+        $this->getJson($url.'?review=complete')->assertOk()->assertJsonPath('total', 20)->assertJsonPath('data.0.review.total', 0);
+        $this->getJson($url.'?review=incomplete')->assertOk()->assertJsonPath('total', 2);
+        $this->getJson($url.'?review=complete&decision=accepted')->assertOk()->assertJsonPath('total', 1);
+        $this->getJson($url.'?decision=pending')->assertOk()->assertJsonPath('total', 21);
+        $this->getJson($url.'?review=invalid')->assertUnprocessable();
+        $this->getJson($url.'?decision=invalid')->assertUnprocessable();
+        $this->actingAs($f['admin'], 'sanctum')->getJson($url.'?review=complete')->assertForbidden();
+        $this->getJson($url.'?decision=accepted')->assertOk()->assertJsonPath('is_reviewer', false)->assertJsonPath('total', 1);
+    }
+
+    public function test_save_summary_hides_other_reviews_when_own_scores_become_incomplete(): void
+    {
+        $f = $this->fixture();
+        $url = "/api/admin/oprec/{$f['period']->id}/assessment";
+        $this->actingAs($f['super'], 'sanctum')->putJson($url."/assignments/{$f['leader']->id}")->assertNoContent();
+        DB::table('oprec_assessment_reviews')->insert(array_fill_keys(\App\Services\OprecAssessmentService::CRITERIA, 10) + [
+            'oprec_registration_id' => $f['registration']->id, 'reviewer_id' => $f['super']->id,
+            'reviewer_name' => 'Super Admin', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $this->actingAs($f['leader'], 'sanctum');
+        foreach (\App\Services\OprecAssessmentService::CRITERIA as $field) {
+            $response = $this->patchJson($url."/registrations/{$f['registration']->id}/review", ['field' => $field, 'value' => '7,5'])->assertOk();
+        }
+        $response->assertJsonPath('summary.average', 87.5)->assertJsonPath('summary.reviews_hidden', false)->assertJsonCount(2, 'summary.reviews');
+        $this->patchJson($url."/registrations/{$f['registration']->id}/review", ['field' => 'kejujuran', 'value' => null])
+            ->assertOk()->assertJsonPath('data.total', null)->assertJsonPath('summary.average', null)
+            ->assertJsonPath('summary.reviews_hidden', true)->assertJsonCount(1, 'summary.reviews');
+    }
+
 }

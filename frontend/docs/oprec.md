@@ -308,3 +308,12 @@ Keputusan Terima/Tolak hanya dapat ditetapkan Super Admin sebelum `pengumuman_pu
 Endpoint admin baru: `GET /api/admin/oprec/assessments`, `GET /api/admin/oprec/{oprec}/assessment`, `GET /api/admin/oprec/{oprec}/assessment/{submission}`, `PATCH /api/admin/oprec/{oprec}/assessment/registrations/{registration}/review`, `PUT /api/admin/oprec/{oprec}/assessment/registrations/{registration}/decision`, `GET|PUT|DELETE /api/admin/oprec/{oprec}/assessment/assignments[/{reviewer}]`, dan endpoint unduh privat di bawah `assessment/{submission}`. Daftar terpaginasi 20 baris, pencarian dilakukan server sebelum pagination. Migrasi aditif `2026_09_29_000001_create_oprec_assessments` menambah penugasan, ulasan, audit, dan `accepted_position`.
 
 Verifikasi: tes backend dan frontend, typecheck, serta build produksi. Browser desktop/mobile dan keyboard/sesi nyata tetap perlu smoke test terpisah sebelum rilis.
+
+
+## UI/UX ruang kerja Penilaian — 30 September 2026
+
+Halaman Penilaian memakai lebar area admin khusus, tabel dengan header dan identitas tetap terlihat saat digulir, tombol menuju kolom nilai, serta panduan warna 0–<5 merah, 5–<8 kuning, 8–<10 hijau, dan tepat 10 biru. Nilai kosong belum dinilai; nol tetap dihitung. Desktop mulai 1280 px menampilkan jawaban pada panel kanan. Pada lebar di bawah 1280 px, jawaban memakai dialog; pada HP di bawah 640 px dialog memenuhi layar dan memulihkan fokus tombol pemicu saat ditutup.
+
+Endpoint daftar penilaian menerima filter allowlist `review=all|incomplete|complete` dan `decision=all|pending|accepted|rejected` bersama pencarian dan paginasi. Filter review selalu mengacu penilai yang sedang login, menganggap nol sebagai terisi, dan tidak tersedia bagi Admin hanya-baca. Pengurus tetap memerlukan penugasan periode. Respons PATCH review menambahkan `summary` berisi ulasan yang boleh terlihat, rata-rata, dan status penyembunyian, sehingga penyimpanan memperbarui baris tanpa memuat ulang tabel atau menghilangkan fokus. Keanggotaan hasil filter diterapkan ulang ketika daftar disegarkan atau filter berubah.
+
+Popup penugasan menampilkan kartu nama/inisial/email Pengurus, pencarian, jumlah penilai aktif, status penugasan, serta pending/error per orang. Perubahan langsung tersimpan; pencabutan membutuhkan konfirmasi dalam kartu dan tidak menghapus nilai terdahulu. Pengujian browser fixture tersedia di `frontend/tests/oprec-assessment.browser.cjs`; sesi serta respons API disimulasikan sehingga pengujian tidak mengubah data aplikasi.

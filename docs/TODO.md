@@ -1,3 +1,12 @@
+## UI/UX Penilaian OPREC — 30 September 2026
+
+- [x] Area Penilaian diperluas; tabel memiliki kelompok kolom, identitas sticky, panduan warna/nilai, penanda peserta aktif, dan navigasi cepat ke kolom nilai.
+- [x] Pencarian, filter keputusan, dan kelengkapan penilaian saya diproses server sebelum paginasi. Autosave mempertahankan isian saat gagal dan menyediakan coba ulang tanpa memuat ulang tabel.
+- [x] Popup penugasan memakai kartu Pengurus, pencarian, jumlah penilai aktif, status proses/error per orang, dan konfirmasi pencabutan.
+- [x] Panel jawaban desktop menjadi popup di bawah 1280 px dan layar penuh di HP, dengan pengabaian respons lama, Escape, serta pengembalian fokus.
+- [x] Verifikasi terbaru: 5 tes fitur backend/98 assertion, 36 tes frontend, TypeScript, build produksi webpack, dan browser fixture pada 320/390/768/1280/1440 px lulus. Browser mencakup autosave cepat/gagal/retry, penugasan/pencabutan, fokus dialog, pergantian jawaban, filter, dan Admin baca saja.
+- [ ] Smoke test browser dengan sesi terautentikasi dan API/data asli, termasuk berkas privat serta dua tab bersamaan. Browser fixture tidak menggantikan verifikasi integrasi ini.
+
 ## Penilaian OPREC — 29 September 2026
 
 - [x] Tabel gabungan pendaftaran dan kiriman Tes Tulis, panel jawaban, field dinamis dan berkas privat, paginasi/pencarian server, serta tata letak responsif telah diimplementasikan.

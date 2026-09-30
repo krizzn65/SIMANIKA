@@ -251,7 +251,7 @@ export default function AdminLayout({ children }) {
             </div>
           </header>
 
-          <main className="admin-content-stage">
+          <main className={`admin-content-stage${isOprecAssessmentRoute(pathname) ? " admin-content-stage--assessment" : ""}`}>
             {children}
           </main>
         </div>
