@@ -34,7 +34,11 @@ class OprecAssessmentController extends Controller
     public function index(Request $request, Oprec $oprec)
     {
         $this->assessment->authorize($request->user(), $oprec);
-        $filters = $request->validate(['page' => ['nullable', 'integer', 'min:1'], 'search' => ['nullable', 'string', 'max:100']]);
+        $filters = $request->validate([
+            'page' => ['nullable', 'integer', 'min:1'], 'search' => ['nullable', 'string', 'max:100'],
+            'review' => ['nullable', Rule::in(['all', 'incomplete', 'complete'])],
+            'decision' => ['nullable', Rule::in(['all', 'pending', 'accepted', 'rejected'])],
+        ]);
         $stage = $oprec->writtenTest()->firstOrFail();
         $query = OprecTestSubmission::query()->where('oprec_stage_id', $stage->id)
             ->whereHas('registration', fn ($q) => $q->where('oprec_id', $oprec->id))
@@ -46,6 +50,15 @@ class OprecAssessmentController extends Controller
                 $search->whereRaw("LOWER(nim) LIKE ? ESCAPE '\\'", [$pattern])
                     ->orWhereRaw("LOWER(form_data->>'nama') LIKE ? ESCAPE '\\'", [$pattern]);
             }));
+        }
+        if (($filters['decision'] ?? 'all') !== 'all') {
+            $query->whereHas('registration', fn ($q) => $q->where('status', $filters['decision']));
+        }
+        if (($filters['review'] ?? 'all') !== 'all') {
+            abort_unless(in_array($request->user()->effectiveRole(), [User::ROLE_SUPER_ADMIN, User::ROLE_LEADER], true), 403);
+            $complete = DB::table('oprec_assessment_reviews')->select('oprec_registration_id')->where('reviewer_id', $request->user()->id);
+            foreach (OprecAssessmentService::CRITERIA as $criterion) $complete->whereNotNull($criterion);
+            $query->whereIn('oprec_registration_id', $complete, 'and', $filters['review'] === 'incomplete');
         }
         $page = $query->orderBy('id')->paginate(20);
         $ids = $page->getCollection()->pluck('oprec_registration_id')->all();
@@ -85,6 +98,7 @@ class OprecAssessmentController extends Controller
             'last_page' => $page->lastPage(), 'per_page' => $page->perPage(), 'total' => $page->total(),
             'form_fields' => $oprec->form_fields ?? [], 'period' => ['id' => $oprec->id, 'periode' => $oprec->periode,
                 'locked' => (bool) $oprec->pengumuman_published],
+            'is_reviewer' => in_array($user->effectiveRole(), [User::ROLE_SUPER_ADMIN, User::ROLE_LEADER], true),
             'can_review' => in_array($user->effectiveRole(), [User::ROLE_SUPER_ADMIN, User::ROLE_LEADER], true) && !$oprec->pengumuman_published,
             'can_decide' => $user->isSuperAdmin() && !$oprec->pengumuman_published,
         ])->header('Cache-Control', 'private, no-store');
@@ -141,7 +155,14 @@ class OprecAssessmentController extends Controller
             return DB::table('oprec_assessment_reviews')->where('oprec_registration_id', $registration->id)
                 ->where('reviewer_id', $request->user()->id)->first();
         });
-        return response()->json(['data' => $this->reviewData($review)])->header('Cache-Control', 'private, no-store');
+        $reviews = DB::table('oprec_assessment_reviews')->where('oprec_registration_id', $registration->id)->get();
+        $canSeeAll = $request->user()->effectiveRole() !== User::ROLE_LEADER || OprecAssessmentService::total($review) !== null;
+        $visible = $canSeeAll ? $reviews : collect([$review]);
+        return response()->json(['data' => $this->reviewData($review), 'summary' => [
+            'reviews' => $visible->map(fn ($item) => $this->reviewData($item))->values()->all(),
+            'average' => $canSeeAll ? OprecAssessmentService::average($reviews) : null,
+            'reviews_hidden' => !$canSeeAll,
+        ]])->header('Cache-Control', 'private, no-store');
     }
 
     public function assignments(Request $request, Oprec $oprec)
