@@ -11,6 +11,8 @@ async function main() {
   let registrationAttempts = 0; let testAttempts = 0; let resultStatus = 'accepted';
   const requests = []; const errors = [];
   const enrollmentOnly = process.argv.includes('--enrollment-only');
+  const scheduleOnly = process.argv.includes('--schedule-only');
+  let scheduleLocked = false; let savedSchedule; if (scheduleOnly) role = 'admin';
   let releaseProfile; let enrollmentAttempts = 0;
   const profileGate = enrollmentOnly ? new Promise(resolve => { releaseProfile = resolve; }) : Promise.resolve();
   const period = { id: 900, periode: '2026/2027', status: 'open', headline: 'OPREC Uji', schemaVersion: '1',
@@ -85,8 +87,16 @@ async function main() {
         if (role === 'expired') { status = 401; payload = { message: 'Unauthenticated' }; }
         else payload = { data: { id: 50, name: 'Peserta Uji', role } };
       }
+      else if (url.pathname.includes('/admin/oprec/') && url.pathname.endsWith('/written-test') && scheduleOnly) {
+        const stage = { id: 901, headline: 'Tes Jadwal', published: scheduleLocked, submissions_count: scheduleLocked ? 1 : 0,
+          tanggal_buka: scheduleLocked ? '2000-01-01T00:00:00Z' : '2099-10-02T00:00:00Z',
+          tanggal_tutup: scheduleLocked ? '2000-01-01T01:00:00Z' : '2099-10-02T01:00:00Z',
+          questions: [{ id: 'reason', label: 'Alasan bergabung', type: 'paragraph', required: true, targetDivisions: [], options: [] }] };
+        if (request.method === 'PUT') { savedSchedule = JSON.parse(request.postData); payload = { data: { ...stage, ...savedSchedule, published: true } }; }
+        else payload = { data: { oprec: period, test: stage, divisions: period.divisiTersedia } };
+      }
       else if (url.pathname.endsWith('/user/oprec/enroll')) {
-        assert.equal(JSON.parse(request.postData).oprec_id, 900); enrollmentAttempts++; payload = { data: { enrolled: true } };
+        assert.equal(Number(JSON.parse(request.postData).oprec_id), 900); enrollmentAttempts++; payload = { data: { enrolled: true } };
       }
       else if (url.pathname.endsWith('/user/dashboard')) payload = { data: { items: [] } };
       else if (url.pathname.endsWith('/user/oprec/workspace')) payload = { data: { oprec: period, enrolled: true, registration: registration(), announced: released } };
@@ -116,17 +126,32 @@ async function main() {
       else if (event.method === 'Fetch.requestPaused') intercept(event.params).catch(error => errors.push(error.message));
     });
     const evaluate = async expression => { const r = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }); if (r.exceptionDetails) throw Error(JSON.stringify(r.exceptionDetails)); return r.result.value; };
-    const waitFor = async expression => { for (let i = 0; i < 150; i++) { if (await evaluate(`Boolean(${expression})`)) return; await new Promise(resolve => setTimeout(resolve, 100)); } throw Error('Missing: ' + expression + '; page: ' + await evaluate('document.body.innerText.slice(-1400)') + '; errors: ' + errors.join(',') + '; paths: ' + requests.slice(-12).join(',')); };
+    const waitFor = async expression => { for (let i = 0; i < 150; i++) { if (await evaluate(`Boolean(${expression})`)) return; await new Promise(resolve => setTimeout(resolve, 100)); } throw Error('Missing: ' + expression + '; page: ' + await evaluate('document.body?.innerText.slice(-1400)') + '; errors: ' + errors.join(',') + '; paths: ' + requests.slice(-12).join(',')); };
     const click = text => evaluate(`Array.from(document.querySelectorAll('button')).find(el => el.textContent.trim() === ${JSON.stringify(text)})?.click()`);
     const fill = async (selector, value) => { await evaluate(`document.querySelector(${JSON.stringify(selector)}).focus()`); await send('Input.insertText', { text: value }); };
     await send('Page.enable'); await send('Runtime.enable'); await send('Network.enable');
     await send('Fetch.enable', { patterns: [{ urlPattern: '*api/*' }] });
     await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+    if (scheduleOnly) {
+      await send('Page.navigate', { url: origin + '/admin/oprec/test/900/edit' });
+      await waitFor(`document.querySelectorAll('.oprec-test__editor-panel input[type=datetime-local]').length === 2`);
+      assert.equal(await evaluate(`document.querySelector('.oprec-test__editor-panel input[type=datetime-local]').value`), '2099-10-02T07:00');
+      for(const width of [320,390,768,1440]){await send('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:false});assert.equal(await evaluate('document.documentElement.scrollWidth > innerWidth'),false,'schedule editor width '+width);}
+      await evaluate(`{const inputs=document.querySelectorAll('.oprec-test__editor-panel input[type=datetime-local]');for(const [index,value] of ['2099-10-02T08:00','2099-10-02T09:00'].entries()){Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(inputs[index],value);inputs[index].dispatchEvent(new Event('input',{bubbles:true}));inputs[index].dispatchEvent(new Event('change',{bubbles:true}));}}`);
+      await click('Simpan pertanyaan'); await waitFor(`document.body?.innerText.toLowerCase().includes('soal siap')`);
+      assert.equal(Date.parse(savedSchedule.tanggal_buka), Date.parse('2099-10-02T01:00:00Z'));
+      assert.equal(Date.parse(savedSchedule.tanggal_tutup), Date.parse('2099-10-02T02:00:00Z'));
+      scheduleLocked = true; await send('Page.reload');
+      await waitFor(`document.body?.innerText.includes('Jadwal dan soal terkunci')`);
+      assert.equal(await evaluate(`Array.from(document.querySelectorAll('.oprec-test__editor-panel input')).every(input=>input.disabled || input.closest('fieldset')?.disabled)`), true);
+      assert.equal(await evaluate(`document.querySelector('.oprec-test__footer button').disabled`), true);
+      assert.deepEqual(errors, []); console.log('PASS: schedule edited through UI in WIB, saved as the correct instant, and locked with questions after the test starts.'); return;
+    }
     if (enrollmentOnly) {
       await send('Page.navigate', { url: origin + '/oprec' });
       await waitFor(`Array.from(document.querySelectorAll('button')).some(el => el.textContent.includes('Lihat detail'))`);
       await waitFor(`(() => { if (!document.querySelector('.oprec-modal-cta-btn')) Array.from(document.querySelectorAll('button')).find(el => el.textContent.trim() === 'Lihat detail')?.click(); return !!document.querySelector('.oprec-modal-cta-btn'); })()`);
-      await waitFor(`document.querySelector('.oprec-modal-cta-btn')?.disabled && document.body.innerText.includes('Memeriksa sesi')`);
+      await waitFor(`document.querySelector('.oprec-modal-cta-btn')?.disabled && document.body?.innerText.includes('Memeriksa sesi')`);
       await evaluate(`document.querySelector('.oprec-modal-cta-btn').click()`);
       assert.equal(await evaluate('location.pathname'), '/oprec'); assert.equal(enrollmentAttempts, 0);
       releaseProfile();

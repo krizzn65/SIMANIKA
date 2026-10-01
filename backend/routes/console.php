@@ -13,7 +13,11 @@ Artisan::command('oprec:simulation-cleanup {run : ID skenario} {--dry-run : Hany
     $directory = 'oprec-simulation/'.$run;
     $storage = Storage::disk('local');
     if (!$storage->exists($directory.'/manifest.json')) {
-        $this->info('Skenario sudah bersih atau tidak ditemukan.');
+        if ($storage->directoryExists($directory) && !$this->option('dry-run')) {
+            $storage->deleteDirectory($directory);
+            if ($storage->directoryExists($directory)) throw new RuntimeException('Artefak lokal masih terkunci; tutup proses browser/server skenario lalu ulangi.');
+        }
+        $this->info('Manifest tidak ditemukan; tidak ada data database yang diubah.');
         return;
     }
     $manifest = json_decode($storage->get($directory.'/manifest.json'), true, 512, JSON_THROW_ON_ERROR);
@@ -34,10 +38,13 @@ Artisan::command('oprec:simulation-cleanup {run : ID skenario} {--dry-run : Hany
         if (!$admin->isSuperAdmin()) throw new RuntimeException('Identitas Super Admin berubah.');
         DB::table('users')->where('id', $admin->id)->update($original['attributes']);
     }
+    $baseline = $cleanup->snapshot($manifest['original_user_ids'] ?? []);
     $cleanup->purge($periods, $accounts, $files, $run);
+    if ($cleanup->snapshot($manifest['original_user_ids'] ?? []) !== $baseline) throw new RuntimeException('Data akun asli atau modul lain berubah saat pembersihan; manifest dipertahankan untuk pemeriksaan.');
     if (DB::table('oprecs')->whereIn('id', $periods)->exists() || DB::table('users')->whereIn('id', array_column($accounts, 'id'))->exists()) {
         throw new RuntimeException('Pembersihan database belum lengkap.');
     }
     $storage->deleteDirectory($directory);
+    if ($storage->directoryExists($directory)) throw new RuntimeException('Artefak lokal masih terkunci; tutup proses browser/server skenario lalu ulangi.');
     $this->info('Data, akun, sesi, berkas, dan artefak skenario berhasil dibersihkan.');
 })->purpose('Membersihkan skenario OPREC lokal beserta akun dan berkas yang tercatat pada manifest');

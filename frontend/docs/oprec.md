@@ -1,5 +1,15 @@
 # OPREC — alur dinamis revisi 21 September 2026
 
+## Perbaikan perjalanan simulasi — 2 Oktober 2026
+
+Tombol pendaftaran menunggu pemeriksaan sesi selesai. Bila pemeriksaan sesi gagal, peserta dapat mencoba pemeriksaan ulang tanpa diarahkan sebagai pengunjung yang belum login. Regresi browser terisolasi dapat dijalankan dengan `node tests/oprec-user.browser.cjs --enrollment-only`.
+
+Editor formulir menyediakan pertanyaan/jawaban FAQ. Pertanyaan tambahan yang diubah menjadi paragraf menggunakan batas 3.000 karakter, mengikuti kontrak validasi backend. Perbandingan skema di backend mengabaikan urutan properti objek JSONB PostgreSQL, tetapi mempertahankan urutan kolom/soal dan tipe nilainya; status pendaftaran dapat ditutup tanpa menaikkan versi bila skema tidak berubah. Editor Tes Tulis menyediakan kontrol mulai–selesai dalam WIB; jadwal dapat disesuaikan bersama soal sebelum tes dimulai. Jadwal, soal, dan tombol simpan menjadi nonaktif setelah tes dimulai atau sudah ada kiriman peserta. Server tetap memeriksa lock di transaksi. Regresi editor jadwal tersedia melalui `node tests/oprec-user.browser.cjs --schedule-only`.
+
+Detail Tes Tulis pada Penilaian mengikuti tiga pilihan divisi peserta, memakai aturan penyaringan yang sama dengan formulir peserta. Soal divisi lain tidak ditampilkan sebagai “Tidak dijawab”; soal opsional yang memang berlaku tetap terlihat. Jawaban dan tautan berkas yang tidak berlaku dikeluarkan dari respons, dan URL unduh langsungnya ditolak. Regresi API mencakup Super Admin, Admin, serta Pengurus yang ditugaskan.
+
+Simulasi nyata menggunakan PostgreSQL, sesi Sanctum, upload CV PDF, dan UI aplikasi; skrip serta kredensial berada pada storage privat yang diabaikan git. Data skenario dipertahankan sampai pengguna meminta pembersihan. Perintah lokal `php artisan oprec:simulation-cleanup oprec-20261002 --dry-run` menampilkan target tanpa menghapus. Pembersihan nyata memakai manifest ID, memulihkan cadangan sandi terenkripsi bila diperlukan, menghapus relasi/account/session/file/artefak skenario, dan membandingkan checksum data akun asli serta modul lain sebelum–sesudah penghapusan. Tutup proses browser/server milik skenario sebelum menghapus direktori artefak. Perintah tersedia hanya pada local/testing dan tidak mempunyai endpoint HTTP.
+
 ## Audit menyeluruh — 2 Oktober 2026
 
 Keputusan terbaru pada bagian ini menggantikan hak Pengurus yang lebih luas dalam catatan lama. Audit mencakup Super Admin, Admin, Pengurus, pengguna biasa, dan pengunjung tanpa sesi. Tidak ada perubahan role KWU atau modul lain.

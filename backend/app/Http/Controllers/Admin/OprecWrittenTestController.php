@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Oprec;
+use App\Support\OprecSchema;
 use App\Models\OprecStage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -121,7 +122,7 @@ class OprecWrittenTestController extends Controller
                 ->where('type', 'test_tulis')->lockForUpdate()->first();
             abort_unless($stage, 404, 'Tes tulis belum dibuat.');
             $locked = ($stage->published && $stage->tanggal_buka->isPast()) || $stage->submissions()->exists();
-            if ($locked && $stage->form_fields !== $questions) {
+            if ($locked && !OprecSchema::same($stage->form_fields, $questions)) {
                 throw ValidationException::withMessages(['questions' => ['Soal tidak dapat diubah setelah tes dimulai atau ada jawaban peserta.']]);
             }
             if ($locked && (

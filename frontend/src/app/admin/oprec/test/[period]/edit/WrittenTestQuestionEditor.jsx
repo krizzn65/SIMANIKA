@@ -10,7 +10,7 @@ const fieldTypes = [
   ["checkbox", "Persetujuan"], ["file", "Unggah berkas"],
 ];
 
-export function WrittenTestQuestionEditor({ question, index, count, divisions, update, move, remove }) {
+export function WrittenTestQuestionEditor({ question, index, count, divisions, update, move, remove, disabled = false }) {
   const targeted = question.targetDivisions.length > 0;
   const setTarget = (id, checked) => update(index, {
     targetDivisions: checked
@@ -18,7 +18,7 @@ export function WrittenTestQuestionEditor({ question, index, count, divisions, u
       : question.targetDivisions.filter((value) => value !== id),
   });
 
-  return <fieldset className="oprec-test__question">
+  return <fieldset className="oprec-test__question" disabled={disabled}>
     <legend className="oprec-test__sr-only">Pertanyaan {index + 1}</legend>
     <div className="oprec-test__question-top">
       <div className="oprec-test__question-title"><span className="oprec-test__question-number">{String(index + 1).padStart(2, "0")}</span><strong>{question.label.trim() || `Pertanyaan ${index + 1}`}</strong></div>

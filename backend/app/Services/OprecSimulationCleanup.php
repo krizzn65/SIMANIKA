@@ -12,6 +12,21 @@ use RuntimeException;
 /** Local simulation maintenance; never exposed through the application API. */
 class OprecSimulationCleanup
 {
+    public function snapshot(array $originalUserIds): array
+    {
+        $snapshot = [];
+        foreach (DB::getSchemaBuilder()->getTables() as $metadata) {
+            $table = $metadata['name'];
+            if (str_starts_with($table, 'oprec') || in_array($table, ['cache', 'cache_locks', 'sessions', 'migrations',
+                'password_reset_tokens', 'personal_access_tokens', 'jobs', 'job_batches', 'failed_jobs'], true)) continue;
+            $query = DB::table($table);
+            if ($table === 'users') $query->whereIn('id', $originalUserIds);
+            $rows = $query->get()->map(fn ($row) => json_encode($row, JSON_THROW_ON_ERROR))->sort()->values()->all();
+            $snapshot[$table] = ['count' => count($rows), 'sha256' => hash('sha256', json_encode($rows, JSON_THROW_ON_ERROR))];
+        }
+        return $snapshot;
+    }
+
     public function inventory(array $periodIds): array
     {
         $files = ['local' => [], 'public' => []];
@@ -53,7 +68,7 @@ class OprecSimulationCleanup
                 }
             }
         }
-        DB::transaction(function () use ($periodIds, $accounts, $runId) {
+        $registrationRateKeys = DB::transaction(function () use ($periodIds, $accounts, $runId) {
             Oprec::whereIn('id', $periodIds)->lockForUpdate()->get();
             foreach ($accounts as $account) {
                 $user = User::whereKey($account['id'])->lockForUpdate()->first();
@@ -63,12 +78,19 @@ class OprecSimulationCleanup
                     throw new RuntimeException('Identitas akun simulasi tidak cocok; pembersihan dibatalkan.');
                 }
                 if ($user->oprecRegistrations()->whereNotIn('oprec_id', $periodIds)->exists()
+                    || DB::table('oprec_assessment_assignments')->whereNotIn('oprec_id', $periodIds)
+                        ->where(fn ($query) => $query->where('user_id', $user->id)->orWhere('assigned_by', $user->id))->exists()
+                    || DB::table('oprec_assessment_reviews')->join('oprec_registrations', 'oprec_registrations.id', '=', 'oprec_assessment_reviews.oprec_registration_id')
+                        ->where('reviewer_id', $user->id)->whereNotIn('oprec_registrations.oprec_id', $periodIds)->exists()
+                    || DB::table('oprec_assessment_decision_logs')->join('oprec_registrations', 'oprec_registrations.id', '=', 'oprec_assessment_decision_logs.oprec_registration_id')
+                        ->where('actor_id', $user->id)->whereNotIn('oprec_registrations.oprec_id', $periodIds)->exists()
                     || $user->eventRegistrations()->exists()
                     || DB::table('team_members')->where('user_id', $user->id)->exists()) {
                     throw new RuntimeException('Akun memiliki partisipasi di luar skenario; pembersihan dibatalkan.');
                 }
             }
-            $registrationIds = DB::table('oprec_registrations')->whereIn('oprec_id', $periodIds)->pluck('id');
+            $registrations = DB::table('oprec_registrations')->whereIn('oprec_id', $periodIds)->get(['id', 'oprec_id', 'nim']);
+            $registrationIds = $registrations->pluck('id');
             DB::table('file_uploads')->where('owner_type', 'oprec')->whereIn('owner_id', $registrationIds)->delete();
             Oprec::whereIn('id', $periodIds)->delete();
             $userIds = array_column($accounts, 'id');
@@ -77,10 +99,18 @@ class OprecSimulationCleanup
             DB::table('personal_access_tokens')->where('tokenable_type', User::class)->whereIn('tokenable_id', $userIds)->delete();
             DB::table('password_reset_tokens')->whereIn('email', array_column($accounts, 'email'))->delete();
             User::whereIn('id', $userIds)->delete();
+            return $registrations->map(fn ($registration) => hash('sha256', $registration->oprec_id.'|'.$registration->nim))->all();
         });
+        foreach ($registrationRateKeys as $key) {
+            RateLimiter::clear(md5('oprec-announcement'.'announcement-nim:'.$key));
+            RateLimiter::clear(md5('oprec-result'.$key));
+        }
         foreach ($accounts as $account) {
-            RateLimiter::clear('oprec-user:'.$account['id']);
-            foreach (['127.0.0.1', '::1'] as $ip) RateLimiter::clear(hash('sha256', $ip.'|'.$account['email']));
+            RateLimiter::clear(md5('oprec-submission'.'oprec-user:'.$account['id']));
+            foreach (['127.0.0.1', '::1'] as $ip) {
+                $key = hash('sha256', $ip.'|'.strtolower($account['email']));
+                foreach (['auth', 'password'] as $limiter) RateLimiter::clear(md5($limiter.$key));
+            }
         }
         foreach ($files as $disk => $entries) {
             foreach ($entries as $entry) {

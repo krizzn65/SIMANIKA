@@ -24,7 +24,7 @@ class OprecWrittenTestController extends Controller
         $ready = $stage->published && count($stage->form_fields ?? []) > 0;
         $now = now();
         $active = $ready && $now->gte($stage->tanggal_buka) && $now->lt($stage->tanggal_tutup);
-        $questions = ($active || $submission) ? $this->applicableQuestions($stage, $registration) : [];
+        $questions = ($active || $submission) ? OprecWrittenTestAnswers::applicableQuestions($stage->form_fields ?? [], $registration) : [];
 
         return response()->json(['data' => [
             'id' => $stage->id,
@@ -58,7 +58,7 @@ class OprecWrittenTestController extends Controller
                 abort_unless($now->gte($stage->tanggal_buka) && $now->lt($stage->tanggal_tutup), 409, 'Tes tulis belum dibuka atau sudah ditutup.');
                 abort_if($stage->submissions()->where('user_id', $request->user()->id)->exists(), 409, 'Jawaban tes tulis sudah dikirim.');
 
-                $questions = $this->applicableQuestions($stage, $registration);
+                $questions = OprecWrittenTestAnswers::applicableQuestions($stage->form_fields ?? [], $registration);
                 $answers = OprecWrittenTestAnswers::validateAndStore($questions, $input['answers'], $stage->id, $stored);
 
                 return $stage->submissions()->create([
@@ -84,16 +84,4 @@ class OprecWrittenTestController extends Controller
         return ($lock ? $query->lockForUpdate() : $query)->firstOrFail();
     }
 
-    private function applicableQuestions(OprecStage $stage, OprecRegistration $registration): array
-    {
-        $selected = array_map('intval', array_filter([
-            $registration->divisi_pilihan_1,
-            $registration->divisi_pilihan_2,
-            $registration->divisi_pilihan_3,
-        ]));
-        return array_values(array_filter($stage->form_fields ?? [], function ($question) use ($selected) {
-            $targets = array_map('intval', $question['targetDivisions'] ?? []);
-            return !$targets || (bool) array_intersect($targets, $selected);
-        }));
-    }
 }

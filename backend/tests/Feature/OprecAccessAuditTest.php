@@ -232,4 +232,31 @@ class OprecAccessAuditTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors('form_fields');
         $this->assertSame('1', $f['period']->fresh()->schema_version);
     }
+    public function test_closing_registration_ignores_json_object_key_order_but_keeps_schema_changes_locked(): void
+    {
+        $f = $this->fixture();
+        $fields = array_map(fn ($field) => [...$field, 'label' => $field['name']], $f['period']->form_fields);
+        $f['period']->update(['form_fields' => $fields]);
+        $admin = User::create(['email' => 'schema-admin@audit.test', 'password' => 'audit-password']);
+        $admin->forceFill(['role' => User::ROLE_ADMIN])->save();
+        $payload = ['periode' => $f['period']->periode, 'status' => 'closed', 'schema_version' => '1',
+            'form_fields' => array_map(fn ($field) => array_reverse($field, true), $fields),
+            'divisi_tersedia' => $f['divisions']->map(fn ($division) => $division->only(['nama', 'jabatan']))->all(),
+            'faq' => [], 'pengumuman' => ['published' => false]];
+        // Nested option objects have the same JSONB reordering behavior.
+        $payload['form_fields'][3]['options'][0] = array_reverse($payload['form_fields'][3]['options'][0], true);
+        $url = "/api/admin/oprec/{$f['period']->id}";
+        $this->actingAs($admin, 'sanctum')->putJson($url, $payload)->assertOk();
+        $this->assertSame('closed', $f['period']->fresh()->status);
+        $changed = $payload;
+        $changed['form_fields'][0]['label'] = 'Different question';
+        $this->putJson($url, $changed)->assertUnprocessable()->assertJsonValidationErrors('schema_version');
+        $f['period']->update(['pengumuman_published' => true]);
+        $this->putJson($url, $payload)->assertOk();
+        $reordered = $payload;
+        $reordered['schema_version'] = '2';
+        $reordered['form_fields'] = array_reverse($payload['form_fields']);
+        $this->putJson($url, $reordered)->assertUnprocessable()->assertJsonValidationErrors('form_fields');
+    }
+
 }

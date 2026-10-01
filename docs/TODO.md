@@ -2,9 +2,19 @@
 
 - [x] Reset seluruh OPREC lama; 16 akun awal serta data modul lain dipertahankan.
 - [x] Prosedur pembersihan lokal berbasis manifest tersedia melalui `php artisan oprec:simulation-cleanup oprec-20261002 --dry-run`; pembersihan nyata hanya setelah perintah pengguna.
-- [x] Tes pembersihan berulang dan perlindungan akun asli lulus; suite backend 84 tes/852 assertion dan frontend 44 tes lulus. Build produksi lulus.
-- [ ] Verifikasi perbaikan batas paragraf baru menjadi 3.000 karakter dan editor FAQ melalui browser nyata.
-- [ ] Lengkapi 60 pendaftaran, 60 Tes Tulis, 15 Pengurus, dan 900 ulasan enam aspek melalui UI, tanpa fixture API/sesi.
+- [x] Tes pembersihan berulang, dry-run, pemulihan hash sandi, poster bersama, dan perlindungan akun asli lulus; suite backend 90 tes/914 assertion dan frontend 44 tes lulus. Build produksi lulus.
+- [x] Formulir terbit melalui UI dengan 10 paragraf berbatas 3.000 karakter, tiga FAQ, dan katalog jabatan enam divisi.
+- [x] Perbaikan sesi tombol enrollment lulus regresi browser dengan pemeriksaan profil ditahan.
+- [x] Build/typecheck editor jadwal WIB lulus; pengubahan waktu melalui UI dan penguncian jadwal/soal lulus regresi browser.
+- [x] Seluruh 60 pendaftaran dan 60 CV PDF privat terverifikasi; masing-masing 10 pilihan pertama per divisi.
+- [x] Pendaftaran ditutup melalui Admin; 16 soal tersimpan dan tes dijadwalkan 2 Oktober 2026 pukul 05.58–06.58 WIB.
+- [x] Akses sebelum tes, penolakan kiriman prematur, serta kerahasiaan hasil lulus melalui browser/API nyata.
+- [x] Regresi JSONB lulus: urutan properti tidak menghalangi simpan; perubahan label, urutan soal, dan jadwal tetap terkunci. Suite backend 89 tes/891 assertion lulus.
+- [x] Lima belas Pengurus ditugaskan melalui UI; pencabutan sementara memberi 403, penugasan dikembalikan, dan sandi Super Admin dipulihkan.
+- [x] Seluruh 60 Tes Tulis tersimpan dan dibaca ulang; pemeriksaan Admin/Pengurus serta unduhan CV privat nyata lulus.
+- [x] Detail penilaian hanya menampilkan soal sesuai pilihan peserta; regresi tiga peran dan berkas divisi lain lulus.
+- [x] Ulasan awal lengkap lulus: 13 jawaban, enam nilai, komentar, total, autosave, dan refresh.
+- [ ] Lengkapi 900 ulasan enam aspek melalui UI dari 15 Pengurus, tanpa fixture API/sesi.
 - [ ] Tetapkan 50 diterima/10 ditolak: BPH 6, Humas 9, PSDM 9, Kominfo 9, KWU 9, Ristek 8; semua jabatan petinggi unik sesuai katalog.
 - [ ] Terbitkan pengumuman tanggal 2 Oktober 2026 WIB dengan jam fleksibel; periksa hasil melalui 60 akun dan pulihkan sandi Super Admin.
 - [ ] Sesudah pengguna meminta pembersihan: hapus seluruh data, 76 akun buatan, sesi, berkas, profil browser, kredensial, dan artefak skenario; verifikasi baseline kembali.
