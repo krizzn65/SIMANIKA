@@ -13,7 +13,7 @@ class OprecAnnouncementService
 
     public function released(Oprec $oprec): bool
     {
-        return $oprec->pengumuman_published
+        return $oprec->status !== 'draft' && $oprec->pengumuman_published
             && (!$oprec->pengumuman_tanggal || $oprec->pengumuman_tanggal->lte(now()))
             && ($oprec->status === 'closed' || $oprec->tanggal_tutup?->lte(now()));
     }
@@ -27,14 +27,14 @@ class OprecAnnouncementService
     {
         $reasons = [];
         if (!$oprec->first_published_at) $reasons[] = 'Pendaftaran belum pernah dibuka.';
-        if ($oprec->status !== 'closed' && !$oprec->tanggal_tutup?->lte(now())) $reasons[] = 'Pendaftaran harus ditutup terlebih dahulu.';
+        if ($oprec->status === 'draft' || ($oprec->status !== 'closed' && !$oprec->tanggal_tutup?->lte(now()))) $reasons[] = 'Pendaftaran harus ditutup terlebih dahulu.';
         $stage = $oprec->writtenTest;
         if (!$stage || !$stage->published || !$stage->tanggal_tutup?->lte(now())) $reasons[] = 'Tes Tulis belum selesai.';
         $participants = $this->participants($oprec);
         if (!(clone $participants)->exists()) $reasons[] = 'Belum ada peserta yang mengirim Tes Tulis.';
         if ((clone $participants)->whereNotIn('status', ['accepted', 'rejected'])->exists()) $reasons[] = 'Putuskan Terima atau Tolak untuk seluruh pengirim Tes Tulis.';
-        if ((clone $participants)->where('status', 'accepted')->where(function ($q) {
-            $q->whereNull('accepted_division_id')->orWhereNull('accepted_position')->orWhere('accepted_position', '');
+        if ((clone $participants)->where('status', 'accepted')->where(function ($q) use ($oprec) {
+            $q->whereNull('accepted_division_id')->orWhereNotIn('accepted_division_id', $oprec->divisions()->select('id'))->orWhereNull('accepted_position')->orWhereRaw("TRIM(accepted_position) = ''");
         })->exists()) $reasons[] = 'Lengkapi divisi dan jabatan penerimaan peserta yang diterima.';
         return $reasons;
     }

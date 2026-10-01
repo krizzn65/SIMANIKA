@@ -5,3 +5,5 @@ npm-debug.log*
 .DS_Store
 
 .next-announcement-check/
+
+.next-announcement-production/

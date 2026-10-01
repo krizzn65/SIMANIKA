@@ -1,3 +1,13 @@
+## Pengumuman OPREC — 30 September 2026
+
+- [x] Subhalaman admin, popup metadata/jadwal WIB/poster privat, tabel penerimaan 20 per halaman dengan urutan divisi dan jabatan, serta guard Super Admin/Admin untuk perubahan.
+- [x] Publikasi memeriksa seluruh tahapan dan keputusan, mengambil lock periode, mengunci nilai/keputusan, dan menolak pengubahan metadata setelah rilis. Divisi penerimaan lintas periode ditolak.
+- [x] Kartu pengumuman merah, countdown digit naik (adaptasi React Bits), popup NIM kapital/tanggal lahir, serta halaman hasil tanpa poster. Hasil memakai tiket terenkripsi 30 menit melalui cookie HttpOnly yang terbatas pada periode.
+- [x] Endpoint hasil lama mengikuti kontrak baru untuk pengumuman baru; komponen OprecResult dan selector CSS lamanya dihapus. Atribusi React Bits/shadcn dari 21st.dev disertakan. Konfigurasi dan stylesheet fitur dibatasi agar tidak mengubah halaman lain.
+- [x] Migrasi aditif telah dijalankan pada database lokal. Backend final: 74 tes/701 assertion lulus; unit frontend: 38 tes lulus. Typecheck dan build produksi lulus.
+- [x] Browser fixture admin: 320/390/768/1280/1440 px, popup, Escape, pemulihan fokus, tanpa overflow. Browser peserta dengan proxy Next nyata + backend fixture: countdown rilis tanpa polling per detik, NIM kapital, HttpOnly cookie, hasil dapat di-refresh, tanpa poster/identitas dalam URL.
+- [ ] Smoke test dengan akun/data asli, unggahan poster aktual, dan uji beban/concurrency pada konfigurasi produksi. Fixture browser tidak menggantikan pengujian integrasi ini.
+
 ## Urutan Peserta Penilaian OPREC — 30 September 2026
 
 - [x] Urutan daftar Penilaian ditetapkan server sebelum pagination berdasarkan Pilihan 1: BPH, Humas, PSDM, Kominfo, KWU, Ristek; divisi tidak dikenal di akhir. Dalam kelompok yang sama, ID pendaftaran menjadi urutan tetap.
