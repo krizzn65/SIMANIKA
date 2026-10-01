@@ -9,6 +9,22 @@ const oprec = normalizeOprec(raw);
 const start = Date.parse(raw.tanggalBuka);
 const end = Date.parse(raw.tanggalTutup);
 
+test("birth date uses the current WIB date at the UTC day boundary", () => {
+  const now = Date.parse("2026-10-01T17:01:00Z");
+  assert.equal(validBirthDate("2026-10-02", now), true);
+  assert.equal(validBirthDate("2026-10-03", now), false);
+});
+
+test("positions must belong to the selected division", () => {
+  const divisions = [{ id: "1", nama: "BPH", jabatan: ["Sekretaris 2"] }, { id: "2", nama: "Humas" }, { id: "3", nama: "PSDM" }];
+  const form = new FormData();
+  ["1", "2", "3"].forEach((id, index) => form.set(`divisi_pilihan_${index + 1}`, id));
+  form.set("jabatan_pilihan_1", "Ketua Palsu");
+  assert.ok(validateOprecForm([], form, Date.now(), divisions).jabatan_pilihan_1);
+  form.set("jabatan_pilihan_1", "Sekretaris 2");
+  assert.deepEqual(validateOprecForm([], form, Date.now(), divisions), {});
+});
+
 test("registration boundaries: empty, countdown, open, closed", () => {
   assert.equal(oprecState(null).key, "empty");
   assert.equal(oprecState(oprec, start - 1).key, "soon");

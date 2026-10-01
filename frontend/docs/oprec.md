@@ -1,5 +1,42 @@
 # OPREC — alur dinamis revisi 21 September 2026
 
+## Audit menyeluruh — 2 Oktober 2026
+
+Keputusan terbaru pada bagian ini menggantikan hak Pengurus yang lebih luas dalam catatan lama. Audit mencakup Super Admin, Admin, Pengurus, pengguna biasa, dan pengunjung tanpa sesi. Tidak ada perubahan role KWU atau modul lain.
+
+### Akses dan kontrak
+
+- Super Admin mengelola OPREC, penugasan, nilai, dan keputusan akhir. Admin mengelola pendaftaran/tes/pengumuman, tetapi penilaian hanya baca dan keputusan akhir ditolak.
+- Pengurus membaca ringkasan pendaftaran, jadwal tes, dan pengumuman. Peserta, jawaban, berkas, serta penilaian dibuka melalui endpoint `assessment` setelah ditugaskan pada periode tersebut; pencabutan langsung menolak akses berikutnya tanpa menghapus nilai historis.
+- Endpoint pengelolaan/berkas lama tetap tersedia bagi admin untuk kompatibilitas, tetapi ditolak untuk Pengurus, termasuk Pengurus yang ditugaskan. Jalur ini tidak boleh menjadi jalan pintas terhadap penyaringan data pada Penilaian.
+- `GET /api/admin/oprec/{id}/announcement` menambah `can_read_participants`; bagi Pengurus tanpa penugasan, pagination peserta kosong dan UI menjelaskan perlunya penugasan. Undangan penerimaan tidak dikirim kepada Pengurus. Ringkasan Tes Tulis tidak mengirim `form_fields` kepada Pengurus; editor frontend ditolak.
+- Kiriman pendaftaran, masuk periode, dan Tes Tulis memakai rate limit khusus 10 permintaan/menit per akun. IP proxy Next dan email formulir tidak menjadi identitas pembatas, sehingga peserta berbeda tidak saling memblokir.
+
+### Temuan yang diperbaiki
+
+- Pengurus sebelumnya dapat memanggil operasi pengelolaan dan endpoint peserta/berkas di luar pemeriksaan penugasan. Middleware khusus OPREC membatasi jalur tersebut; tombol serta editor frontend mengikuti izin yang sama.
+- Jawaban pertanyaan khusus divisi yang tidak dipilih sebelumnya memakai aturan `nullable` saja. Sekarang jawaban tersebut dikeluarkan dari validasi/penyimpanan Laravel dan tidak diteruskan proxy Next, termasuk kiriman array atau berkas palsu.
+- Jabatan yang dikirim peserta divalidasi terhadap divisi pilihannya. Tiga pilihan divisi tetap divalidasi meskipun skema terbaru tidak memuat field divisi lama.
+- Validasi tanggal lahir frontend menggunakan tanggal WIB, termasuk batas pergantian hari UTC. Batas tahun minimum pendaftaran dan koreksi admin diselaraskan dengan frontend.
+- Submit mengulang pemeriksaan skema dan data divisi dalam transaksi; enrollment mengambil lock periode agar konsisten dengan submit. Perubahan formulir setelah pengumuman dijadwalkan ditolak, termasuk ketika versi skema dinaikkan.
+- Koreksi NIM duplikat oleh admin mengembalikan 409 dengan rollback, bukan error 500. Menghapus pendaftaran juga membersihkan berkas Tes Tulis yang sebelumnya tertinggal setelah cascade database.
+- Hasil di workspace/dashboard memakai aturan rilis bersama dan tidak terbuka pada periode draft. Respons workspace yang sudah dibatalkan tidak lagi menimpa data terbaru.
+- Batas gabungan berkas 11 MB diperiksa di backend pendaftaran dan Tes Tulis; Tes Tulis juga menolak request dengan Content-Length di atas 12 MB.
+
+### Pembersihan dan verifikasi
+
+Import ikon `AlertCircle` yang tidak dipakai pada workspace peserta dihapus. Pemeriksaan referensi import/deklarasi OPREC lintas sumber tidak menemukan helper/komponen lain yang terbukti mati; entrypoint App Router, selector dinamis, migrasi historis, lisensi, dan endpoint kompatibilitas dipertahankan.
+
+- Baseline OPREC: 27 tes frontend; 32 tes backend/371 assertion, lulus.
+- Suite frontend final: 44 tes lulus. Typecheck dan production build webpack lulus.
+- Suite backend final: 82 tes/837 assertion lulus. Database pengujian menggunakan SQLite in-memory; tidak menjalankan migrasi pada database aplikasi.
+- Regresi baru `OprecAccessAuditTest` mencakup akses langsung Pengurus, penugasan/pencabutan, login pengguna, perjalanan pendaftaran–tes–keputusan–pengumuman, NIM duplikat, MIME isi upload, batas ukuran, pembersihan berkas, rate limit antar akun, dan penguncian skema.
+- `node tests/oprec-user.browser.cjs` menjalankan Chrome terisolasi, production Next, dan API sintetis: validasi/upload pendaftaran, gagal/coba ulang, Tes Tulis gagal/coba ulang/refresh, cookie hasil HttpOnly, diterima/ditolak, sesi kedaluwarsa, dan mode Pengurus hanya baca. Halaman peserta/Pengurus diperiksa pada 320/390/768/1440 px tanpa overflow/error runtime.
+- Regresi browser Penilaian dan Pengumuman admin lulus pada 320/390/768/1280/1440 px, termasuk autosave, gagal/coba ulang, penugasan/pencabutan, Escape, pemulihan fokus, dan Admin hanya baca. Skrip lama dijalankan dari salinan artefak dengan port terisolasi; tidak memakai profil browser terlacak.
+- Regresi browser Pengumuman publik juga lulus dengan proxy Next nyata/API sintetis: countdown membuka hasil pada batas jadwal tanpa polling API per detik, NIM kapital, cookie HttpOnly, hasil tetap tersedia setelah refresh, tidak ada poster/identitas pada URL, dan lima viewport tanpa overflow.
+
+Runtime Node/PHP Windows tersedia melalui eksekusi di luar sandbox; ekstensi PHP diarahkan lewat argumen proses, tanpa mengubah konfigurasi sistem. Pengujian browser memakai sesi/API fixture, sedangkan pengujian login dan otorisasi Laravel memakai aplikasi testing. Cookie/CSRF antar-origin dengan server terpasang, akses berkas aktual di staging, dan kiriman serentak dengan row lock PostgreSQL tetap memerlukan verifikasi integrasi. Kelulusan SQLite dan fixture browser tidak membuktikan kondisi produksi tersebut.
+
 Arahan pengguna menggantikan susunan halaman lama. Urutannya hanya:
 
 1. Headline dan penjelasan singkat (dapat diisi admin).

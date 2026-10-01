@@ -14,20 +14,22 @@ use Illuminate\Validation\ValidationException;
 
 class OprecWrittenTestController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $periods = Oprec::query()
             ->with(['writtenTest' => fn ($query) => $query->withCount('submissions')])
             ->latest('created_at')->latest('id')
             ->paginate(20, ['id', 'periode', 'headline', 'status', 'first_published_at', 'created_at']);
 
-        $periods->getCollection()->transform(function (Oprec $period) {
-            $period->can_create_test = $period->first_published_at !== null && $period->writtenTest === null;
+        $canManage = in_array($request->user()->effectiveRole(), ['super_admin', 'admin'], true);
+        $periods->getCollection()->transform(function (Oprec $period) use ($canManage) {
+            $period->can_create_test = $canManage && $period->first_published_at !== null && $period->writtenTest === null;
+            if (!$canManage && $period->writtenTest) $period->writtenTest->makeHidden(['form_fields']);
             return $period;
         });
         $response = $periods->toArray();
-        $response['eligible_periods'] = Oprec::query()->whereNotNull('first_published_at')
-            ->whereDoesntHave('writtenTest')->latest('created_at')->get(['id', 'periode']);
+        $response['eligible_periods'] = $canManage ? Oprec::query()->whereNotNull('first_published_at')
+            ->whereDoesntHave('writtenTest')->latest('created_at')->get(['id', 'periode']) : [];
         return response()->json($response);
     }
 

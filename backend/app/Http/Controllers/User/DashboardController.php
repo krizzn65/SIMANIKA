@@ -110,9 +110,7 @@ class DashboardController extends Controller
             ->filter(fn ($registration) => $registration->oprec !== null)
             ->map(function ($registration) {
                 $oprec = $registration->oprec;
-                $announced = ($oprec->status === 'closed' || ($oprec->tanggal_tutup && $oprec->tanggal_tutup->isPast()))
-                    && $oprec->pengumuman_published
-                    && (!$oprec->pengumuman_tanggal || $oprec->pengumuman_tanggal->isPast());
+                $announced = app(\App\Services\OprecAnnouncementService::class)->released($oprec);
 
                 return [
                     'key' => 'oprec-'.$registration->id,

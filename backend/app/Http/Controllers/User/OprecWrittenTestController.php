@@ -45,6 +45,7 @@ class OprecWrittenTestController extends Controller
 
     public function submit(Request $request, Oprec $oprec): JsonResponse
     {
+        if ((int) $request->server('CONTENT_LENGTH', 0) > 12 * 1024 * 1024) return response()->json(['message' => 'Ukuran formulir terlalu besar.'], 413);
         $input = $request->validate(['answers' => ['present', 'array', 'max:40']]);
         $stored = [];
         try {

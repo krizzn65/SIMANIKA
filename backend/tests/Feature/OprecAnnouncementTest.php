@@ -124,6 +124,10 @@ class OprecAnnouncementTest extends TestCase
             $this->actingAs($actor, 'sanctum')->getJson("/api/admin/oprec/{$oprec->id}/announcement")->assertForbidden();
         }
         $actor->forceFill(['role' => 'leader'])->save();
+        \Illuminate\Support\Facades\DB::table('oprec_assessment_assignments')->insert([
+            'oprec_id' => $oprec->id, 'user_id' => $actor->id, 'assigned_by' => null,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
         $this->actingAs($actor, 'sanctum')->getJson("/api/admin/oprec/{$oprec->id}/announcement")->assertOk()
             ->assertJsonPath('participants.data.0.position', 'Ketua Umum')
             ->assertJsonPath('participants.data.1.position', 'Wakil Ketua Umum')

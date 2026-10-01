@@ -5,6 +5,7 @@ import Link from "next/link";
 import OprecCreateDialog from "./OprecCreateDialog";
 import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
 import { api } from "@/services/api";
+import { useAuth } from "@/hooks/useAuth";
 import { getOprecTableFields, getRegistrantFieldValue, getRegistrantFormData } from "@/lib/oprecRegistrants";
 import { AdminErrorNotice } from "../AdminErrorNotice";
 import { Search, X, RefreshCw, Calendar, Pencil, Trash2, AlertTriangle } from "lucide-react";
@@ -39,6 +40,8 @@ function getRegistrantName(r) {
 }
 
 export default function AdminOprecPage() {
+  const { user } = useAuth();
+  const canManage = ["super_admin", "admin"].includes(user?.role);
   const [oprecs, setOprecs] = useState([]);
   const [selectedOprec, setSelectedOprec] = useState(null);
   const [registrants, setRegistrants] = useState([]);
@@ -87,7 +90,7 @@ export default function AdminOprecPage() {
   };
 
   const fetchRegistrants = async (oprecId, page = registrantPage, term = search, division = divisionFilter) => {
-    if (!oprecId) return;
+    if (!oprecId || !canManage) return;
     const currentRequest = ++requestId.current;
     setLoadingRegistrants(true);
     setRegistrantError("");
@@ -113,11 +116,17 @@ export default function AdminOprecPage() {
   }, []);
 
   useEffect(() => {
-    if (!selectedOprec?.id) return;
+    if (!selectedOprec?.id || !canManage) {
+      requestId.current += 1;
+      setRegistrants([]);
+      setRegistrantTotal(0);
+      setLoadingRegistrants(false);
+      return;
+    }
     setLoadingRegistrants(true);
     const timer = setTimeout(() => fetchRegistrants(selectedOprec.id, registrantPage, search, divisionFilter), 250);
     return () => { clearTimeout(timer); requestId.current += 1; };
-  }, [selectedOprec?.id, registrantPage, search, divisionFilter]);
+  }, [selectedOprec?.id, registrantPage, search, divisionFilter, canManage]);
 
   useEffect(() => {
     if (!deleteTarget) return;
@@ -282,14 +291,14 @@ export default function AdminOprecPage() {
               </select>
             </label>
           )}
-          <button
+          {canManage && <button
             type="button"
             onClick={() => setCreateOpen(true)}
             className="oprec-btn oprec-btn--primary"
           >
             <CalendarPlusIcon size={16} loopDelay={2300} />
             <span>Tambah pendaftaran</span>
-          </button>
+          </button>}
           <button
             type="button"
             onClick={() => {
@@ -318,10 +327,10 @@ export default function AdminOprecPage() {
               <h2 id="oprec-overview-title">Pendaftaran Calon Anggota</h2>
               <p>Informasi pendaftaran dan tahapan seleksi calon anggota HIMANIKA.</p>
             </div>
-            <div className="oprec-admin-overview__count">
+            {canManage && <div className="oprec-admin-overview__count">
               <strong>{registrantTotal}</strong>
               <span>{search || divisionFilter !== "all" ? "Hasil filter" : "Berkas masuk"}</span>
-            </div>
+            </div>}
           </div>
 
           <div className="oprec-admin-overview__registration">
@@ -348,7 +357,7 @@ export default function AdminOprecPage() {
                 )}
               </div>
             </div>
-            <div className="oprec-admin-overview__actions">
+            {canManage && <div className="oprec-admin-overview__actions">
               <Link href={oprecEditHref(selectedOprec)} className="oprec-admin-overview__edit">
                 <Pencil size={14} aria-hidden="true" />
                 <span>Kelola formulir</span>
@@ -357,7 +366,7 @@ export default function AdminOprecPage() {
                 <Trash2 size={14} aria-hidden="true" />
                 <span>Hapus pendaftaran</span>
               </button>
-            </div>
+            </div>}
           </div>
 
           {selectedOprec.divisiTersedia?.length > 0 && (
@@ -402,7 +411,7 @@ export default function AdminOprecPage() {
       <AdminErrorNotice message={registrantError} onRetry={() => fetchRegistrants(selectedOprec?.id)} />
 
       {/* Filter and Registrants Table (Minimalist Boxy Layout) */}
-      <div className="border border-slate-300 bg-white rounded-none">
+      {canManage ? <div className="border border-slate-300 bg-white rounded-none">
         <div className="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-slate-900">
@@ -564,13 +573,13 @@ export default function AdminOprecPage() {
           <button type="button" className="oprec-btn oprec-btn--secondary" disabled={registrantPage <= 1 || loadingRegistrants} onClick={() => setRegistrantPage((page) => page - 1)}>Sebelumnya</button>
           <button type="button" className="oprec-btn oprec-btn--secondary" disabled={registrantPage >= registrantPages || loadingRegistrants} onClick={() => setRegistrantPage((page) => page + 1)}>Berikutnya</button>
         </div>}
-      </div>
+      </div> : <p className="border border-slate-300 bg-white p-4 text-sm text-slate-600">Mode hanya baca. Data peserta dan berkas tersedia melalui <Link href="/admin/oprec/penilaian" className="text-blue-700 underline">Penilaian</Link> untuk periode yang ditugaskan.</p>}
 
-      <OprecCreateDialog
+      {canManage && <OprecCreateDialog
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onCreated={fetchOprecs}
-      />
+      />}
 
       {deleteRegistrant && (
         <div className="oprec-delete-dialog__overlay" role="presentation" onMouseDown={(event) => {

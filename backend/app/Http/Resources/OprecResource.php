@@ -16,7 +16,7 @@ class OprecResource extends JsonResource
             'tanggalBuka' => $this->tanggal_buka?->toIso8601String(),
             'tanggalTutup' => $this->tanggal_tutup?->toIso8601String(),
             'schemaVersion' => $this->schema_version, 'formIntro' => $this->form_intro ?? '',
-            'linkGrupWa' => $request->is('api/admin/*') ? $this->link_grup_wa : null,
+            'linkGrupWa' => $request->is('api/admin/*') && in_array($request->user()?->effectiveRole(), ['super_admin', 'admin'], true) ? $this->link_grup_wa : null,
             'formFields' => collect($this->form_fields ?? [])
                 ->reject(fn ($field) => in_array($field['name'] ?? '', ['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'], true))
                 ->map(fn ($field) => array_merge($field, [

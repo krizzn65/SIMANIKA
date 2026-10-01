@@ -27,6 +27,10 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(5)->by(hash('sha256', ($request->ip() ?? 'unknown').'|'.strtolower((string) $request->input('email', '')))),
         ]);
         RateLimiter::for('oauth', fn ($request) => Limit::perMinute(20)->by('ip:'.($request->ip() ?? 'unknown')));
+        // OPREC requests can share the Next proxy's IP. Limit the authenticated
+        // account, not a form email or the common proxy address.
+        RateLimiter::for('oprec-submission', fn ($request) => Limit::perMinute(10)
+            ->by('oprec-user:'.($request->user()?->getAuthIdentifier() ?? $request->ip() ?? 'unknown')));
         RateLimiter::for('oprec-announcement', fn ($request) => [
             Limit::perMinute(600)->by('announcement-ip:'.($request->ip() ?? 'unknown')),
             Limit::perMinute(5)->by('announcement-nim:'.self::oprecRateKey($request, 'nim')),

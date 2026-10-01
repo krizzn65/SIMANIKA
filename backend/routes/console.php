@@ -1,1 +1,43 @@
 <?php
+
+use App\Services\OprecSimulationCleanup;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+
+Artisan::command('oprec:simulation-cleanup {run : ID skenario} {--dry-run : Hanya tampilkan jumlah target}', function () {
+    if (!app()->environment('local', 'testing')) throw new RuntimeException('Perintah hanya tersedia pada local/testing.');
+    $run = $this->argument('run');
+    if (!preg_match('/^oprec-[a-zA-Z0-9-]+$/', $run)) throw new RuntimeException('ID skenario tidak valid.');
+    $directory = 'oprec-simulation/'.$run;
+    $storage = Storage::disk('local');
+    if (!$storage->exists($directory.'/manifest.json')) {
+        $this->info('Skenario sudah bersih atau tidak ditemukan.');
+        return;
+    }
+    $manifest = json_decode($storage->get($directory.'/manifest.json'), true, 512, JSON_THROW_ON_ERROR);
+    if (($manifest['run_id'] ?? null) !== $run) throw new RuntimeException('Manifest skenario tidak cocok.');
+    $periods = $manifest['period_ids'] ?? [];
+    $accounts = $manifest['accounts'] ?? [];
+    if (array_intersect(array_column($accounts, 'id'), $manifest['original_user_ids'] ?? [])) throw new RuntimeException('Manifest memuat akun asli.');
+    $this->info(count($periods).' periode dan '.count($accounts).' akun simulasi.');
+    if ($this->option('dry-run')) return;
+    $cleanup = app(OprecSimulationCleanup::class);
+    $files = $manifest['files'] ?? ['local' => [], 'public' => []];
+    foreach ($cleanup->inventory($periods) as $disk => $entries) $files[$disk] = array_merge($files[$disk] ?? [], $entries);
+    $manifest['files'] = $files;
+    $storage->put($directory.'/manifest.json', json_encode($manifest, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+    if ($storage->exists($directory.'/superadmin-backup.enc')) {
+        $original = json_decode(Crypt::decryptString($storage->get($directory.'/superadmin-backup.enc')), true, 512, JSON_THROW_ON_ERROR);
+        $admin = \App\Models\User::findOrFail($original['id']);
+        if (!$admin->isSuperAdmin()) throw new RuntimeException('Identitas Super Admin berubah.');
+        DB::table('users')->where('id', $admin->id)->update($original['attributes']);
+    }
+    $cleanup->purge($periods, $accounts, $files, $run);
+    if (DB::table('oprecs')->whereIn('id', $periods)->exists() || DB::table('users')->whereIn('id', array_column($accounts, 'id'))->exists()) {
+        throw new RuntimeException('Pembersihan database belum lengkap.');
+    }
+    $storage->deleteDirectory($directory);
+    $this->info('Data, akun, sesi, berkas, dan artefak skenario berhasil dibersihkan.');
+})->purpose('Membersihkan skenario OPREC lokal beserta akun dan berkas yang tercatat pada manifest');

@@ -679,6 +679,8 @@ export default function OprecBuilder({ oprecId }) {
     if (data.form_fields[3].options.some((option) => !/^(19|20)\d{2}$/.test(option.value)))
       return "Pilihan angkatan harus tahun empat digit, misalnya 2024.";
     if (data.form_fields.length > 40) return "Maksimal 40 kolom.";
+    if (data.faq.some((item) => !item.pertanyaan?.trim() || !item.jawaban?.trim()))
+      return "Lengkapi pertanyaan dan jawaban FAQ, atau hapus FAQ yang kosong.";
     const names = new Set();
     for (let i = 0; i < data.form_fields.length; i++) {
       const field = data.form_fields[i];
@@ -1232,6 +1234,25 @@ export default function OprecBuilder({ oprecId }) {
 
 
               {/* Advanced Technical Settings */}
+              <section aria-labelledby="oprec-faq-editor-title" className="oprec-builder__advanced">
+                <h3 id="oprec-faq-editor-title">Pertanyaan umum (FAQ)</h3>
+                <p className="text-sm text-slate-600">Informasi ini tampil pada halaman OPREC untuk membantu calon anggota.</p>
+                {data.faq.map((item, index) => (
+                  <fieldset key={index} className="oprec-builder__field oprec-builder__faq-item">
+                    <legend className="text-sm font-semibold">FAQ {index + 1}</legend>
+                    <div className="oprec-builder__grid">
+                      <label className="wide">Pertanyaan
+                        <input maxLength={500} value={item.pertanyaan} onChange={(event) => set("faq", data.faq.map((faq, i) => i === index ? { ...faq, pertanyaan: event.target.value } : faq))} />
+                      </label>
+                      <label className="wide">Jawaban
+                        <textarea rows={3} maxLength={2000} value={item.jawaban} onChange={(event) => set("faq", data.faq.map((faq, i) => i === index ? { ...faq, jawaban: event.target.value } : faq))} />
+                      </label>
+                    </div>
+                    <button type="button" className="oprec-btn oprec-btn--danger oprec-btn--sm" aria-label={`Hapus FAQ ${index + 1}`} onClick={() => set("faq", data.faq.filter((_, i) => i !== index))}>Hapus FAQ</button>
+                  </fieldset>
+                ))}
+                <button type="button" className="oprec-btn oprec-btn--secondary oprec-btn--sm" disabled={data.faq.length >= 40} onClick={() => set("faq", [...data.faq, { pertanyaan: "", jawaban: "" }])}>Tambah FAQ</button>
+              </section>
               <div className="oprec-builder__advanced">
                 <button
                   type="button"
@@ -1856,6 +1877,7 @@ export default function OprecBuilder({ oprecId }) {
                             onChange={(e) =>
                               setField(actualIndex, {
                                 type: e.target.value,
+                                maxLength: e.target.value === "textarea" ? 3000 : 255,
                                 options: ["select", "radio"].includes(e.target.value)
                                   ? []
                                   : undefined,

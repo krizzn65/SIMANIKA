@@ -1,3 +1,26 @@
+## Simulasi OPREC nyata — 2 Oktober 2026
+
+- [x] Reset seluruh OPREC lama; 16 akun awal serta data modul lain dipertahankan.
+- [x] Prosedur pembersihan lokal berbasis manifest tersedia melalui `php artisan oprec:simulation-cleanup oprec-20261002 --dry-run`; pembersihan nyata hanya setelah perintah pengguna.
+- [x] Tes pembersihan berulang dan perlindungan akun asli lulus; suite backend 84 tes/852 assertion dan frontend 44 tes lulus. Build produksi lulus.
+- [ ] Verifikasi perbaikan batas paragraf baru menjadi 3.000 karakter dan editor FAQ melalui browser nyata.
+- [ ] Lengkapi 60 pendaftaran, 60 Tes Tulis, 15 Pengurus, dan 900 ulasan enam aspek melalui UI, tanpa fixture API/sesi.
+- [ ] Tetapkan 50 diterima/10 ditolak: BPH 6, Humas 9, PSDM 9, Kominfo 9, KWU 9, Ristek 8; semua jabatan petinggi unik sesuai katalog.
+- [ ] Terbitkan pengumuman tanggal 2 Oktober 2026 WIB dengan jam fleksibel; periksa hasil melalui 60 akun dan pulihkan sandi Super Admin.
+- [ ] Sesudah pengguna meminta pembersihan: hapus seluruh data, 76 akun buatan, sesi, berkas, profil browser, kredensial, dan artefak skenario; verifikasi baseline kembali.
+
+## Audit seluruh OPREC — 2 Oktober 2026
+
+Rincian temuan, perubahan, dan bukti pengujian: [Laporan audit OPREC](AUDIT_OPREC_2026-10-02.md).
+
+- [x] Hak Pengurus menjadi baca ringkasan/pengumuman dan nilai pada periode yang ditugaskan; jalur pengelolaan dan berkas lama ditolak. Admin tetap tidak dapat memberi nilai atau keputusan akhir.
+- [x] Validasi pertanyaan khusus divisi, tiga pilihan, jabatan, tanggal WIB, batas upload, rate limit per akun, transaksi enrollment/submit, hasil draft, NIM duplikat, pembersihan berkas tes, dan lock skema setelah penjadwalan pengumuman diperbaiki.
+- [x] Import mati `AlertCircle` pada workspace peserta dihapus; pemeriksaan referensi tidak membuktikan komponen/helper lain aman dihapus. Tidak mengubah role KWU, migrasi historis, lisensi, atau kontrak endpoint kompatibilitas.
+- [x] 44 tes frontend, typecheck, production build, browser perjalanan peserta/Pengurus (4 viewport), serta regresi browser Penilaian/Pengumuman admin (5 viewport) lulus. Data browser sintetis dan profil terisolasi.
+- [x] Suite backend final lulus: 82 tes/837 assertion, menggunakan SQLite in-memory.
+- [x] Browser Pengumuman publik lulus: countdown rilis, proxy Next, HttpOnly cookie, refresh hasil, serta lima viewport tanpa overflow.
+- [ ] Verifikasi staging: sesi Sanctum/cookie/CSRF antar-origin, berkas aktual, dan concurrency PostgreSQL. Tidak diuji dengan data produksi; SQLite in-memory serta browser fixture tidak menggantikan pemeriksaan ini.
+
 ## Pengumuman OPREC — 30 September 2026
 
 - [x] Subhalaman admin, popup metadata/jadwal WIB/poster privat, tabel penerimaan 20 per halaman dengan urutan divisi dan jabatan, serta guard Super Admin/Admin untuk perubahan.

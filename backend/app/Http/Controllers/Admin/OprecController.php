@@ -50,6 +50,9 @@ class OprecController extends Controller
         $updated = DB::transaction(function () use ($oprec, $data) {
             $current = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
             if ($current->pengumuman_published && $data['status'] !== 'closed') throw ValidationException::withMessages(['status' => ['Pendaftaran tetap ditutup setelah pengumuman dijadwalkan.']]);
+            if ($current->pengumuman_published && $current->form_fields !== $data['form_fields']) {
+                throw ValidationException::withMessages(['form_fields' => ['Formulir terkunci setelah pengumuman dijadwalkan.']]);
+            }
             $currentDivisions = $current->divisions()->get()->map(fn ($division) => [
                 'nama' => $division->nama, 'nama_lengkap' => $division->nama_lengkap,
                 'deskripsi' => $division->deskripsi, 'logo' => $division->logo, 'jabatan' => $division->jabatan ?? [],

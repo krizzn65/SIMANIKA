@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowUpRight, RefreshCw, User, CheckCircle2, FileText, Calendar, AlertCircle, Clock3 } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, RefreshCw, User, CheckCircle2, FileText, Calendar, Clock3 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { OprecForm } from "@/components/oprec/OprecForm";
@@ -44,6 +44,7 @@ function WorkspaceContent({ oprecId }) {
     setRefreshing(true);
     try {
       const response = await api.get("/user/oprec/workspace", { signal: controller.signal, params: oprecId ? { oprec_id: oprecId } : undefined });
+      if (controller.signal.aborted) return;
       if (!response.data?.data?.oprec) throw new Error("Data OPREC belum dapat dimuat.");
       setData(response.data.data);
       setError("");

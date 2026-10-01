@@ -143,7 +143,8 @@ export function oprecDate(value) {
 export function validBirthDate(value, now = Date.now()) {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const time = Date.parse(`${value}T00:00:00Z`);
-  return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) === value && value >= "1900-01-01" && time <= now;
+  const todayWib = new Date(now + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) === value && value >= "1900-01-01" && value <= todayWib;
 }
 
 export function isFieldApplicable(field, choices = [], divisions = []) {
@@ -197,7 +198,7 @@ export function oprecNimError(value, partial = false) {
 export function validateOprecForm(fields, form, now = Date.now(), divisions = []) {
   const errors = {};
   const choices = [1, 2, 3].map((rank) => form.get(`divisi_pilihan_${rank}`));
-  const hasDivisionField = fields.some((field) => field.name === "divisi_pilihan_1") || form.has("divisi_pilihan_1");
+  const hasDivisionField = fields.some((field) => field.name === "divisi_pilihan_1") || form.has("divisi_pilihan_1") || divisions.length > 0;
   let divisionOptions = fields.find((field) => field.name === "divisi_pilihan_1")?.options || [];
   if (!divisionOptions.length && hasDivisionField && Array.isArray(divisions) && divisions.length > 0) {
     divisionOptions = divisions.map((item, idx) => ({
@@ -218,6 +219,10 @@ export function validateOprecForm(fields, form, now = Date.now(), divisions = []
       const val = form.get(`jabatan_pilihan_${rank}`);
       if (!val || (typeof val === "string" && !val.trim())) {
         errors[`jabatan_pilihan_${rank}`] = `Pilih jabatan untuk Divisi Pilihan ${rank}.`;
+      } else {
+        const division = divisions.find((item) => String(item.id) === choices[index]);
+        const positions = division?.jabatan?.length ? division.jabatan : getDefaultJabatan(division?.nama || "");
+        if (division && (typeof val !== "string" || !positions.includes(val.trim()))) errors[`jabatan_pilihan_${rank}`] = "Jabatan harus tersedia pada divisi yang dipilih.";
       }
     }
   }

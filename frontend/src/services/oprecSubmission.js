@@ -1,7 +1,7 @@
 import "server-only";
 import { NextResponse } from "next/server";
 import { getOprec } from "./oprecService";
-import { normalizeOprecNim, oprecState, validBirthDate, validateOprecForm } from "@/lib/oprec";
+import { normalizeOprecNim, oprecState, validBirthDate, validateOprecForm, isFieldApplicable } from "@/lib/oprec";
 
 const headers = { "Cache-Control": "private, no-store, max-age=0", "X-Content-Type-Options": "nosniff" };
 const reply = (body, status = 200) => Response.json(body, { status, headers });
@@ -102,6 +102,7 @@ export async function registerOprec(request) {
     body.set("schema_version", oprec.schemaVersion);
     body.set("oprec_id", oprec.id);
     for (const field of oprec.formFields) {
+      if (!isFieldApplicable(field, [1, 2, 3].map((rank) => form.get(`divisi_pilihan_${rank}`)), oprec.divisiTersedia)) continue;
       const value = form.get(field.name);
       if (value !== null && !(field.type === "file" && !value.size)) body.set(field.name, typeof value === "string" ? value.trim() : value);
     }

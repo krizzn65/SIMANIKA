@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Oprec;
 use App\Models\OprecRegistration;
+use App\Models\OprecTestSubmission;
+use Illuminate\Database\UniqueConstraintViolationException;
 use App\Services\OprecAssessmentService;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
@@ -186,6 +188,7 @@ class OprecRegistrantController extends Controller
         }
         $rules['nim'][] = 'regex:/^E31[A-Za-z0-9.\-]{0,29}$/D';
         $rules['tanggal_lahir'][] = 'before_or_equal:today';
+        $rules['tanggal_lahir'][] = 'after_or_equal:1900-01-01';
         $data = Validator::make($request->all(), $rules, [
             'nim.regex' => 'NIM tidak valid.',
         ])->validate();
@@ -202,37 +205,41 @@ class OprecRegistrantController extends Controller
             }
         }
 
-        $updated = DB::transaction(function () use ($oprec, $registration, $data, $inactiveTargetFields) {
-            $currentOprec = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
-            abort_if($currentOprec->pengumuman_published, 409, 'Formulir terkunci setelah pengumuman dipublikasikan.');
-            if ($currentOprec->schema_version !== $oprec->schema_version) {
-                throw new HttpResponseException(response()->json(['message' => 'Formulir telah berubah. Muat ulang halaman sebelum menyimpan.'], 409));
-            }
-            $current = OprecRegistration::whereKey($registration->id)->lockForUpdate()->firstOrFail();
-            abort_unless($current->oprec_id === $oprec->id, 404);
-            $newChoices = array_map('intval', [$data['divisi_pilihan_1'], $data['divisi_pilihan_2'], $data['divisi_pilihan_3']]);
-            if ($current->status === 'accepted' && $current->accepted_division_id && !in_array((int) $current->accepted_division_id, $newChoices, true)) {
-                throw ValidationException::withMessages(['divisi_pilihan_1' => ['Pilihan tidak boleh menghapus divisi penerimaan peserta.']]);
-            }
-
-            $formData = is_array($current->form_data) ? $current->form_data : [];
-            foreach ($inactiveTargetFields as $name) unset($formData[$name]);
-            foreach ($data as $name => $value) {
-                if (!str_starts_with($name, 'divisi_pilihan_')) {
-                    $formData[$name] = is_string($value) ? trim($value) : $value;
+        try {
+            $updated = DB::transaction(function () use ($oprec, $registration, $data, $inactiveTargetFields) {
+                $currentOprec = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
+                abort_if($currentOprec->pengumuman_published, 409, 'Formulir terkunci setelah pengumuman dipublikasikan.');
+                if ($currentOprec->schema_version !== $oprec->schema_version) {
+                    throw new HttpResponseException(response()->json(['message' => 'Formulir telah berubah. Muat ulang halaman sebelum menyimpan.'], 409));
                 }
-            }
-            $current->update([
-                'nim' => $data['nim'],
-                'tanggal_lahir' => $data['tanggal_lahir'],
-                'form_data' => $formData,
-                'divisi_pilihan_1' => $newChoices[0],
-                'divisi_pilihan_2' => $newChoices[1],
-                'divisi_pilihan_3' => $newChoices[2],
-            ]);
+                $current = OprecRegistration::whereKey($registration->id)->lockForUpdate()->firstOrFail();
+                abort_unless($current->oprec_id === $oprec->id, 404);
+                $newChoices = array_map('intval', [$data['divisi_pilihan_1'], $data['divisi_pilihan_2'], $data['divisi_pilihan_3']]);
+                if ($current->status === 'accepted' && $current->accepted_division_id && !in_array((int) $current->accepted_division_id, $newChoices, true)) {
+                    throw ValidationException::withMessages(['divisi_pilihan_1' => ['Pilihan tidak boleh menghapus divisi penerimaan peserta.']]);
+                }
 
-            return $current->fresh('user');
-        });
+                $formData = is_array($current->form_data) ? $current->form_data : [];
+                foreach ($inactiveTargetFields as $name) unset($formData[$name]);
+                foreach ($data as $name => $value) {
+                    if (!str_starts_with($name, 'divisi_pilihan_')) {
+                        $formData[$name] = is_string($value) ? trim($value) : $value;
+                    }
+                }
+                $current->update([
+                    'nim' => $data['nim'],
+                    'tanggal_lahir' => $data['tanggal_lahir'],
+                    'form_data' => $formData,
+                    'divisi_pilihan_1' => $newChoices[0],
+                    'divisi_pilihan_2' => $newChoices[1],
+                    'divisi_pilihan_3' => $newChoices[2],
+                ]);
+
+                return $current->fresh('user');
+            });
+        } catch (UniqueConstraintViolationException $error) {
+            return response()->json(['message' => 'NIM sudah terdaftar pada periode ini.'], 409);
+        }
 
         return response()->json(['data' => [
             'id' => $updated->id,
@@ -258,6 +265,12 @@ class OprecRegistrantController extends Controller
             $files = collect($current->file_uploads ?? [])
                 ->filter(fn ($path) => is_string($path) && str_starts_with($path, "oprec/{$period->id}/"))
                 ->values();
+            foreach (OprecTestSubmission::where('oprec_registration_id', $current->id)->get() as $submission) {
+                foreach ($submission->answers ?? [] as $value) {
+                    $path = is_array($value) ? ($value['path'] ?? null) : null;
+                    if (is_string($path) && str_starts_with($path, "oprec/test/{$submission->oprec_stage_id}/")) $files->push($path);
+                }
+            }
             $current->delete();
             return $files;
         });

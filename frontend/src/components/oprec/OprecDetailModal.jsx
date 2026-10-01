@@ -30,7 +30,7 @@ const statusBadgeLabels = {
 
 export function OprecDetailModal({ isOpen, onClose, oprec }) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, checked, checkError, retryCheck } = useAuth();
   const [enrolling, setEnrolling] = useState(false);
   const [error, setError] = useState("");
   const [posterFailed, setPosterFailed] = useState(false);
@@ -100,7 +100,8 @@ export function OprecDetailModal({ isOpen, onClose, oprec }) {
   const divisions = oprec?.divisiTersedia || [];
 
   async function handleDaftar() {
-    if (enrolling) return;
+    if (enrolling || !checked) return;
+    if (checkError) { retryCheck(); return; }
 
     if (!user) {
       router.push(`/login?next=${encodeURIComponent("/dashboard/oprec")}`);
@@ -235,9 +236,13 @@ export function OprecDetailModal({ isOpen, onClose, oprec }) {
                   type="button"
                   className="oprec-modal-cta-btn"
                   onClick={handleDaftar}
-                  disabled={enrolling}
+                  disabled={enrolling || !checked}
                 >
-                  {enrolling ? (
+                  {!checked ? (
+                    <span role="status">Memeriksa sesi…</span>
+                  ) : checkError ? (
+                    <span>Coba periksa sesi lagi</span>
+                  ) : enrolling ? (
                     <>
                       <Loader2 size={18} className="oprec-spin-icon" aria-hidden="true" />
                       <span>Mempersiapkan pendaftaran…</span>

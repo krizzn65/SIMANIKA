@@ -59,7 +59,7 @@ class OprecRegistrationController extends Controller
                 }
             }
             if ($isTargeted && !$matchesDivision) {
-                $rules[$name] = ['nullable'];
+                $rules[$name] = ['exclude'];
                 continue;
             }
             $isRequired = !empty($field['required']);
@@ -98,20 +98,33 @@ class OprecRegistrationController extends Controller
         }
         $rules['nim'][] = 'regex:/^E31[A-Za-z0-9.\-]{0,29}$/D';
         $rules['tanggal_lahir'][] = 'before_or_equal:today';
+        $rules['tanggal_lahir'][] = 'after_or_equal:1900-01-01';
         $data = Validator::make($request->all(), $rules, [
             'nim.regex' => 'NIM tidak valid.',
         ])->validate();
+        $uploadBytes = array_sum(array_map(fn ($value) => $value instanceof \Illuminate\Http\UploadedFile ? $value->getSize() : 0, $data));
+        if ($uploadBytes > 11 * 1024 * 1024) return response()->json(['message' => 'Ukuran total berkas maksimal 11 MB.'], 413);
 
         foreach (['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'] as $key) {
             if (!empty($data[$key]) && !$oprec->divisions->contains('id', (int) $data[$key])) throw ValidationException::withMessages([$key => ['Divisi tidak tersedia pada periode ini.']]);
         }
         if (count(array_unique(array_intersect_key($data, array_flip(['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'])))) !== 3) throw ValidationException::withMessages(['divisi_pilihan_1' => ['Pilih tepat 3 divisi yang berbeda.']]);
+        foreach ([1, 2, 3] as $rank) {
+            $division = $oprec->divisions->firstWhere('id', (int) $data["divisi_pilihan_{$rank}"]);
+            $position = trim((string) ($data["jabatan_pilihan_{$rank}"] ?? ''));
+            if ($position !== '' && !in_array($position, $division->jabatan ?? [], true)) {
+                throw ValidationException::withMessages(["jabatan_pilihan_{$rank}" => ['Jabatan harus tersedia pada divisi yang dipilih.']]);
+            }
+        }
 
         $stored = [];
         try {
             DB::transaction(function () use ($oprec, $request, $data, &$stored) {
                 $current = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
-                if ($current->schema_version !== $oprec->schema_version || $current->status !== 'open' || !$current->tanggal_buka || !$current->tanggal_tutup || now()->lt($current->tanggal_buka) || now()->gte($current->tanggal_tutup)) {
+                $divisionSnapshot = fn ($divisions) => $divisions->map(fn ($division) => $division->only(['id', 'nama', 'nama_lengkap', 'jabatan']))->all();
+                if ($current->schema_version !== $oprec->schema_version || $current->form_fields !== $oprec->form_fields
+                    || $divisionSnapshot($current->divisions) !== $divisionSnapshot($oprec->divisions)
+                    || $current->status !== 'open' || !$current->tanggal_buka || !$current->tanggal_tutup || now()->lt($current->tanggal_buka) || now()->gte($current->tanggal_tutup)) {
                     throw new HttpResponseException(response()->json(['message' => 'Pendaftaran atau formulir telah berubah. Muat ulang halaman.'], 409));
                 }
                 $divisionId = !empty($data['divisi_pilihan_1']) ? (int) $data['divisi_pilihan_1'] : null;
