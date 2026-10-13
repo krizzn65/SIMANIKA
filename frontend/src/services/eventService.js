@@ -5,7 +5,7 @@ import { eventFilters, normalizeEvent } from "@/lib/events";
 const PAGE_SIZE = 9;
 
 async function requestEvents(path, query) {
-  const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+  const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
   if (!base) return { kind: "unconfigured" };
   const url = new URL(`${base.replace(/\/+$/, "")}/public/events${path}`);
   if (query) url.search = query.toString();

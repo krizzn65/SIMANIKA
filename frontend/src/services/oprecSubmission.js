@@ -34,7 +34,7 @@ async function readBody(request, limit) {
 }
 
 async function forwardRegistration(body, request) {
-  const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+  const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
   if (!base) throw new RequestError("Layanan belum tersedia. Coba lagi nanti.", 503);
   const authHeaders = {};
   {
@@ -132,7 +132,7 @@ export async function lookupOprecResult(request) {
     const nim = normalizeOprecNim(body?.nim);
     const id = String(body?.oprec_id || "");
     if (!/^\d+$/.test(id) || !/^E31[A-Z0-9.\-]{0,29}$/.test(nim) || !validBirthDate(body?.tanggal_lahir)) return reply({ message: "Periksa NIM dan tanggal lahirmu." }, 422);
-    const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+    const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
     if (!base) return reply({ message: "Layanan belum tersedia." }, 503);
     const response = await fetch(base.replace(/\/+$/, "") + "/public/oprec/" + id + "/announcement/verify", {
       method: "POST", headers: { Accept: "application/json", "Content-Type": "application/json" },
