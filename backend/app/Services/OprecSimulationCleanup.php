@@ -48,10 +48,13 @@ class OprecSimulationCleanup
         return $files;
     }
 
-    public function purge(array $periodIds, array $accounts, array $files, ?string $runId = null): void
+    public function purge(array $periodIds, array $accounts, array $files, ?string $runId = null, array $resultTicketHashes = []): void
     {
         if (!app()->environment('local', 'testing')) {
             throw new RuntimeException('Pembersihan simulasi hanya tersedia pada local/testing.');
+        }
+        foreach ($resultTicketHashes as $hash) {
+            if (!is_string($hash) || !preg_match('/^[a-f0-9]{64}$/D', $hash)) throw new RuntimeException('Hash tiket hasil tidak valid.');
         }
         // Validate every file target before deleting database rows, so an invalid
         // manifest cannot leave a partially removed scenario.
@@ -105,6 +108,7 @@ class OprecSimulationCleanup
             RateLimiter::clear(md5('oprec-announcement'.'announcement-nim:'.$key));
             RateLimiter::clear(md5('oprec-result'.$key));
         }
+        foreach ($resultTicketHashes as $hash) RateLimiter::clear(md5('oprec-result-view'.'result-ticket:'.$hash));
         foreach ($accounts as $account) {
             RateLimiter::clear(md5('oprec-submission'.'oprec-user:'.$account['id']));
             foreach (['127.0.0.1', '::1'] as $ip) {

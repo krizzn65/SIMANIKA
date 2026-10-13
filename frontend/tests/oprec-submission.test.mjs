@@ -80,6 +80,8 @@ test("registration forwards exactly three ranked division choices", async () => 
   const request = () => new Request("https://site.test/api/oprec/register", { method: "POST", body: form });
   assert.equal((await submit(request())).status, 422);
   form.set("divisi_pilihan_3", "3");
+  assert.equal((await submit(request())).status, 422);
+  form.set("jabatan_pilihan_1", "Sekretaris 2");
   assert.equal((await submit(request())).status, 201);
 });
 test("closed period and stale schema reject before forwarding", async () => {

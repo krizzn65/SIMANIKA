@@ -111,10 +111,7 @@ class OprecRegistrationController extends Controller
         if (count(array_unique(array_intersect_key($data, array_flip(['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'])))) !== 3) throw ValidationException::withMessages(['divisi_pilihan_1' => ['Pilih tepat 3 divisi yang berbeda.']]);
         foreach ([1, 2, 3] as $rank) {
             $division = $oprec->divisions->firstWhere('id', (int) $data["divisi_pilihan_{$rank}"]);
-            $position = trim((string) ($data["jabatan_pilihan_{$rank}"] ?? ''));
-            if ($position !== '' && !in_array($position, $division->jabatan ?? [], true)) {
-                throw ValidationException::withMessages(["jabatan_pilihan_{$rank}" => ['Jabatan harus tersedia pada divisi yang dipilih.']]);
-            }
+            $data["jabatan_pilihan_{$rank}"] = $division->registrationPosition($data["jabatan_pilihan_{$rank}"] ?? null, $rank);
         }
 
         $stored = [];

@@ -4,10 +4,23 @@ namespace App\Http\Requests\Oprec;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Models\OprecDivision;
 
 class SaveOprecRequest extends FormRequest
 {
     public function authorize(): bool { return in_array($this->user()?->effectiveRole(), ['super_admin', 'admin'], true); }
+
+    protected function prepareForValidation(): void
+    {
+        $divisions = $this->input('divisi_tersedia');
+        if (!is_array($divisions)) return;
+        foreach ($divisions as &$division) {
+            if (is_array($division) && is_string($division['nama'] ?? null) && !isset($division['jabatan'])) {
+                $division['jabatan'] = OprecDivision::defaultJabatan($division['nama']);
+            }
+        }
+        $this->merge(['divisi_tersedia' => $divisions]);
+    }
 
     public function rules(): array
     {
@@ -47,6 +60,15 @@ class SaveOprecRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            $divisions = $this->input('divisi_tersedia', []);
+            foreach (is_array($divisions) ? $divisions : [] as $index => $division) {
+                if (!is_array($division) || !is_string($division['nama'] ?? null) || !is_array($division['jabatan'] ?? null)) continue;
+                $positions = $division['jabatan'];
+                if (count(array_filter($positions, 'is_string')) !== count($positions)) continue;
+                $allowed = OprecDivision::defaultJabatan($division['nama']);
+                sort($positions); sort($allowed);
+                if ($positions !== $allowed) $validator->errors()->add("divisi_tersedia.{$index}.jabatan", 'Jabatan pendaftaran mengikuti daftar tetap; jabatan penerimaan diatur saat seleksi.');
+            }
             $fields = $this->input('form_fields', []);
             if (!is_array($fields)) return;
             $names = array_column($fields, 'name');

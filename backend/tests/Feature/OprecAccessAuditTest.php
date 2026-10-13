@@ -99,12 +99,13 @@ class OprecAccessAuditTest extends TestCase
         $payload = ['oprec_id' => $id, 'schema_version' => '1', 'nim' => ' e319999 ', 'tanggal_lahir' => '2004-01-01',
             'nama' => 'Peserta Baru', 'angkatan' => '2024', 'conditional_file' => ['forged' => 'unvalidated-array']];
         foreach ([1, 2, 3] as $rank) $payload["divisi_pilihan_$rank"] = (string) $f['divisions'][$rank - 1]->id;
+        $payload['jabatan_pilihan_1'] = 'Sekretaris 2';
         $this->actingAs($user, 'sanctum')->getJson('/api/admin/oprec')->assertForbidden();
         $this->getJson("/api/user/oprec/$id/written-test")->assertNotFound();
         $this->getJson("/api/user/oprec/workspace?oprec_id=$id")->assertNotFound();
         $this->postJson('/api/user/oprec/enroll', ['oprec_id' => $id])->assertCreated();
         $this->postJson('/api/user/oprec/enroll', ['oprec_id' => $id])->assertOk();
-        $this->postJson('/api/user/oprec/register', $payload + ['jabatan_pilihan_1' => 'Ketua Palsu'])->assertUnprocessable()->assertJsonValidationErrors('jabatan_pilihan_1');
+        $this->postJson('/api/user/oprec/register', array_replace($payload, ['jabatan_pilihan_1' => 'Ketua Palsu']))->assertUnprocessable()->assertJsonValidationErrors('jabatan_pilihan_1');
         $this->postJson('/api/user/oprec/register', array_replace($payload, ['schema_version' => 'old']))->assertConflict();
         $this->postJson('/api/user/oprec/register', $payload)->assertCreated();
         $registration = $f['period']->registrations()->where('user_id', $user->id)->firstOrFail();
@@ -153,6 +154,7 @@ class OprecAccessAuditTest extends TestCase
         $url = "/api/admin/oprec/{$f['period']->id}/registrants/{$f['registration']->id}";
         $payload = ['schema_version' => '1', 'nim' => 'E319999', 'tanggal_lahir' => '2004-01-01', 'nama' => 'Peserta Audit', 'angkatan' => '2024'];
         foreach ([1, 2, 3] as $rank) $payload["divisi_pilihan_$rank"] = (string) $f['divisions'][$rank - 1]->id;
+        $payload['jabatan_pilihan_1'] = 'Sekretaris 2';
         $this->actingAs($admin, 'sanctum')->putJson($url.'/form', $payload)->assertConflict();
         $this->assertDatabaseHas('oprec_registrations', ['id' => $f['registration']->id, 'nim' => 'E312345']);
         $path = "oprec/test/{$f['stage']->id}/document.pdf";
@@ -174,6 +176,7 @@ class OprecAccessAuditTest extends TestCase
         $payload = ['oprec_id' => $f['period']->id, 'schema_version' => '1', 'nim' => 'E318888',
             'tanggal_lahir' => '2004-01-01', 'nama' => 'Peserta Upload', 'angkatan' => '2024'];
         foreach ([1, 2, 3] as $rank) $payload["divisi_pilihan_$rank"] = (string) $f['divisions'][$rank - 1]->id;
+        $payload['jabatan_pilihan_1'] = 'Sekretaris 2';
         // Laravel's fake file reports MIME from its filename. Use a real test
         // upload here so fileinfo must inspect the bytes despite the claimed MIME.
         $forged = UploadedFile::fake()->createWithContent('cv.pdf', '<?php echo "forged";');

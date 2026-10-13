@@ -104,10 +104,7 @@ export default function OprecCreateDialog({ open, onClose, onCreated }) {
           nama_lengkap: item.namaLengkap,
           deskripsi: item.deskripsi,
           logo: item.logo || null,
-          jabatan:
-            Array.isArray(item.jabatan) && item.jabatan.length > 0
-              ? item.jabatan
-              : getDefaultJabatan(item.nama),
+          jabatan: getDefaultJabatan(item.nama),
         })),
         faq: [],
         pengumuman: { published: false, tanggal: null, pesan: "" },

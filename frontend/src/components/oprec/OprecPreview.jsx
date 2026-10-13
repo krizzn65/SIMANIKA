@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { oprecState } from "@/lib/oprec";
+import { OprecPoster } from "./OprecPoster";
 import { OprecEmptyState } from "./OprecEmptyState";
 import { OprecDetailModal } from "./OprecDetailModal";
 
@@ -18,33 +19,6 @@ function formatOprecDate(value) {
     timeZone: "Asia/Jakarta",
   }).format(dateObj);
 }
-
-// IFEST-style curtain grid: 20 columns x 9 rows.
-// Left (cols 0-3: 0%, 5%, 10%, 15%) and Right (cols 16-19: 80%, 85%, 90%, 95%) have solid blue blocks.
-// Center (cols 4-15: 20% to 80%) remains open to showcase the poster.
-// On hover, blocks fade out sequentially like a curtain per row & column.
-const CURTAIN_BLOCKS = (() => {
-  const blocks = [];
-  let key = 0;
-  for (let row = 0; row < 9; row++) {
-    for (let col = 0; col < 20; col++) {
-      if (col >= 4 && col < 16) continue;
-      const distFromInner = col < 4 ? 3 - col : col - 16;
-      // Stagger: distinct row-by-row cascade (75ms per row) + inner-to-outer flow (55ms per col)
-      // Provides a smooth, luxurious, highly visible curtain blinds dissolve effect
-      const delay = Number((row * 0.075 + distFromInner * 0.055).toFixed(3));
-      blocks.push({
-        key: key++,
-        top: (row / 9) * 100,
-        left: (col / 20) * 100,
-        width: 5,
-        height: 100 / 9,
-        delay,
-      });
-    }
-  }
-  return blocks;
-})();
 
 const previewStatus = {
   soon: "Segera Dibuka",
@@ -91,7 +65,6 @@ function ArrowRightIcon({ size = 14 }) {
 
 export function OprecPreview({ oprec, initialNow }) {
   const [now, setNow] = useState(initialNow);
-  const [posterFailed, setPosterFailed] = useState(false);
   const [active, setActive] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const router = useRouter();
@@ -200,54 +173,14 @@ export function OprecPreview({ oprec, initialNow }) {
         </div>
       </div>
 
-      {/* RIGHT: Poster with crop, blue pixel dissolve & on-hover text reveal */}
-      <div className="oprec-preview__art">
-        {image && !posterFailed ? (
-          <img
-            src={image}
-            alt={title}
-            className="oprec-preview__poster-img"
-            loading="lazy"
-            decoding="async"
-            onError={() => setPosterFailed(true)}
-          />
-        ) : (
-          <div className="oprec-preview__fallback-wrap">
-            <div className="oprec-preview__placeholder">
-              <span className="oprec-mono">HIMPUNAN MAHASISWA<br />MANAJEMEN INFORMATIKA</span>
-              <strong>OP<span>REC.</span></strong>
-              <span className="oprec-preview__poster-note">Ruang untuk tumbuh.<br />Tempat untuk berkontribusi.</span>
-              <span className="oprec-mono">{oprec?.periode || "COMING SOON"}</span>
-            </div>
-          </div>
-        )}
-
-        {/* IFEST gradient & radial glow overlay */}
-        <div className="oprec-preview__art-vignette" aria-hidden="true" />
-        <div className="oprec-preview__art-glow" aria-hidden="true" />
-
-        {/* IFEST-style Curtain Grid (left & right blue blocks that fade on hover) */}
-        <div className="oprec-preview__curtain" aria-hidden="true">
-          {CURTAIN_BLOCKS.map((block) => (
-            <div
-              key={block.key}
-              className="oprec-curtain-block"
-              style={{
-                top: `${block.top}%`,
-                left: `${block.left}%`,
-                width: `${block.width}%`,
-                height: `${block.height}%`,
-                transitionDelay: active ? `${block.delay}s` : `${Number((block.delay * 0.25).toFixed(3))}s`,
-              }}
-            />
-          ))}
+      <OprecPoster src={image} title={title} active={active}>
+        <div className="oprec-preview__placeholder">
+          <span className="oprec-mono">HIMPUNAN MAHASISWA<br />MANAJEMEN INFORMATIKA</span>
+          <strong>OP<span>REC.</span></strong>
+          <span className="oprec-preview__poster-note">Ruang untuk tumbuh.<br />Tempat untuk berkontribusi.</span>
+          <span className="oprec-mono">{oprec?.periode || "COMING SOON"}</span>
         </div>
-
-        {/* Text appears on hover over the poster (like IFEST) */}
-        <div className="oprec-preview__art-overlay" aria-hidden="true">
-          <h4 className="oprec-preview__art-title">{title}</h4>
-        </div>
-      </div>
+      </OprecPoster>
     </article>
     <OprecDetailModal
       isOpen={modalOpen}

@@ -1,10 +1,18 @@
 <?php
 
 use App\Services\OprecSimulationCleanup;
+use App\Services\OprecRegistrationPositionCorrection;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+
+Artisan::command('oprec:normalize-registration-positions {period : ID periode} {--dry-run : Periksa tanpa mengubah data}', function () {
+    $period = (string) $this->argument('period');
+    if (!ctype_digit($period) || (int) $period < 1) throw new RuntimeException('ID periode tidak valid.');
+    $report = app(OprecRegistrationPositionCorrection::class)->correct((int) $period, $this->option('dry-run'));
+    $this->info(json_encode($report, JSON_THROW_ON_ERROR));
+})->purpose('Menyesuaikan jabatan pendaftaran lama ke katalog tetap tanpa mengubah penerimaan');
 
 Artisan::command('oprec:simulation-cleanup {run : ID skenario} {--dry-run : Hanya tampilkan jumlah target}', function () {
     if (!app()->environment('local', 'testing')) throw new RuntimeException('Perintah hanya tersedia pada local/testing.');
@@ -39,7 +47,7 @@ Artisan::command('oprec:simulation-cleanup {run : ID skenario} {--dry-run : Hany
         DB::table('users')->where('id', $admin->id)->update($original['attributes']);
     }
     $baseline = $cleanup->snapshot($manifest['original_user_ids'] ?? []);
-    $cleanup->purge($periods, $accounts, $files, $run);
+    $cleanup->purge($periods, $accounts, $files, $run, $manifest['result_ticket_hashes'] ?? []);
     if ($cleanup->snapshot($manifest['original_user_ids'] ?? []) !== $baseline) throw new RuntimeException('Data akun asli atau modul lain berubah saat pembersihan; manifest dipertahankan untuk pemeriksaan.');
     if (DB::table('oprecs')->whereIn('id', $periods)->exists() || DB::table('users')->whereIn('id', array_column($accounts, 'id'))->exists()) {
         throw new RuntimeException('Pembersihan database belum lengkap.');

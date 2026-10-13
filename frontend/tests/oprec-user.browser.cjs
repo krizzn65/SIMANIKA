@@ -12,12 +12,17 @@ async function main() {
   const requests = []; const errors = [];
   const enrollmentOnly = process.argv.includes('--enrollment-only');
   const scheduleOnly = process.argv.includes('--schedule-only');
-  let scheduleLocked = false; let savedSchedule; if (scheduleOnly) role = 'admin';
+  const positionsOnly = process.argv.includes('--positions-only');
+  const adminFormsOnly = process.argv.includes('--admin-forms-only');
+  let builderSaveAttempts = 0; let editAttempts = 0; let savedEdit;
+  let releaseBuilderResponse; let builderResponseGate = Promise.resolve();
+  let scheduleLocked = false; let savedSchedule; if (scheduleOnly || positionsOnly || adminFormsOnly) role = 'admin';
   let releaseProfile; let enrollmentAttempts = 0;
   const profileGate = enrollmentOnly ? new Promise(resolve => { releaseProfile = resolve; }) : Promise.resolve();
   const period = { id: 900, periode: '2026/2027', status: 'open', headline: 'OPREC Uji', schemaVersion: '1',
     tanggalBuka: '2000-01-01T00:00:00+07:00', tanggalTutup: '2099-01-01T00:00:00+07:00',
-    divisiTersedia: ['Humas', 'PSDM', 'Kominfo'].map((nama, i) => ({ id: i + 1, nama, jabatan: ['Staff Divisi ' + nama] })),
+    divisiTersedia: (positionsOnly ? ['BPH', 'Humas', 'PSDM', 'Kominfo', 'KWU', 'Ristek'] : ['Humas', 'PSDM', 'Kominfo']).map((nama, i) => ({ id: i + 1, nama,
+      jabatan: positionsOnly ? (nama === 'BPH' ? ['Ketua Umum', 'Sekretaris 1', 'Bendahara 1'] : ['Ketua Divisi ' + nama, 'Staff Bidang Lama']) : ['Staff Divisi ' + nama] })),
     formFields: [{ name: 'nama', label: 'Nama', type: 'text', required: true }, { name: 'nim', label: 'NIM', type: 'text', required: true },
       { name: 'tanggal_lahir', label: 'Tanggal lahir', type: 'date', required: true },
       { name: 'angkatan', label: 'Angkatan', type: 'select', required: true, options: [{ value: '2024', label: '2024' }] },
@@ -109,7 +114,29 @@ async function main() {
         testAttempts++; assert.equal(JSON.parse(request.postData).answers.reason, 'Ingin berkontribusi');
         if (testAttempts === 1) { status = 503; payload = { message: 'Jawaban gagal disimpan. Coba lagi.' }; }
         else { testSubmitted = true; status = 201; payload = { data: { submitted: true } }; }
-      } else if (url.pathname.endsWith('/admin/oprec')) payload = { data: [period] };
+      } else if (adminFormsOnly && url.pathname.endsWith('/admin/oprec/900')) {
+        if (request.method === 'PUT') {
+          builderSaveAttempts++;
+          const input = JSON.parse(request.postData);
+          assert.equal(input.periode, period.periode);
+          assert.deepEqual(input.divisi_tersedia.map(d => d.jabatan), period.divisiTersedia.map(d => d.jabatan));
+          await builderResponseGate;
+          if (builderSaveAttempts === 1) { status = 503; payload = { message: 'Penyimpanan builder gagal sementara.' }; }
+          else payload = { data: period };
+        } else payload = { data: period };
+      } else if (adminFormsOnly && url.pathname.endsWith('/registrants')) payload = { data: [{
+        id: 100, name: 'Peserta Uji', nim: 'E3124001', tanggalLahir: '2004-01-01',
+        divisiPilihan1: 1, divisiPilihan2: 2, divisiPilihan3: 3,
+        formData: { nama: 'Peserta Uji', angkatan: '2024' }, fileUploads: {},
+      }], current_page: 1, last_page: 1, total: 1, per_page: 20 };
+      else if (adminFormsOnly && url.pathname.endsWith('/registrants/100/form') && request.method === 'PUT') {
+        editAttempts++; savedEdit = JSON.parse(request.postData);
+        assert.equal(savedEdit.nim, 'E3124001'); assert.equal(savedEdit.tanggal_lahir, '2004-01-01');
+        assert.equal(savedEdit.schema_version, '1'); assert.equal(savedEdit.status, undefined);
+        if (editAttempts === 1) { status = 503; payload = { message: 'Koreksi gagal sementara.' }; }
+        else payload = { data: { nim: savedEdit.nim, tanggalLahir: savedEdit.tanggal_lahir } };
+      } else if (positionsOnly && url.pathname.endsWith('/admin/oprec/900')) payload = { data: period };
+      else if (url.pathname.endsWith('/admin/oprec')) payload = { data: [period] };
       else if (url.pathname.endsWith('/admin/oprec/written-tests')) payload = { data: [{ ...period, written_test: {
         id: 901, headline: 'Tes Uji', published: true, tanggal_buka: period.tanggalBuka, tanggal_tutup: period.tanggalTutup, submissions_count: 1 } }], eligible_periods: [], last_page: 1 };
       else { status = 404; }
@@ -132,6 +159,100 @@ async function main() {
     await send('Page.enable'); await send('Runtime.enable'); await send('Network.enable');
     await send('Fetch.enable', { patterns: [{ urlPattern: '*api/*' }] });
     await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+    if (adminFormsOnly) {
+      const waitForFixture = async condition => {
+        for (let i = 0; i < 100; i++) {
+          if (condition()) return;
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+        throw Error('Fixture request was not received');
+      };
+      const setInput = (selector, value) => evaluate(`{
+        const input = document.querySelector(${JSON.stringify(selector)});
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, ${JSON.stringify(value)});
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }`);
+      await send('Page.navigate', { url: origin + '/admin/oprec/900/edit' });
+      await waitFor(`document.querySelector('.oprec-builder__tabs')`);
+      builderResponseGate = new Promise(resolve => { releaseBuilderResponse = resolve; });
+      await evaluate(`{
+        const buttons = Array.from(document.querySelectorAll('button')).filter(el => el.textContent.trim() === 'Simpan Formulir');
+        for (let i = 0; i < 3; i++) for (const button of buttons) button.click();
+      }`);
+      await waitForFixture(() => builderSaveAttempts === 1);
+      await waitFor(`document.querySelector('.oprec-builder__hero-actions .oprec-btn--primary')?.disabled`);
+      await evaluate(`document.querySelector('.oprec-builder__hero-actions .oprec-btn--primary').click()`);
+      releaseBuilderResponse();
+      await waitFor(`document.body.innerText.includes('belum tersimpan') && !document.querySelector('.oprec-builder__hero-actions .oprec-btn--primary').disabled`);
+      assert.equal(builderSaveAttempts, 1, 'one request while the builder save is pending');
+      builderResponseGate = Promise.resolve();
+      await click('Simpan Formulir'); await waitForFixture(() => builderSaveAttempts === 2);
+      await waitFor(`!document.querySelector('.oprec-builder__hero-actions .oprec-btn--primary').disabled`);
+
+      await send('Page.navigate', { url: origin + '/admin/oprec' });
+      await waitFor(`document.querySelector('.oprec-table-btn--edit')`); await click('Edit');
+      await waitFor(`document.querySelector('#oprec-registrant-nim')`);
+      await setInput('#oprec-registrant-nim', 'A3124001'); await click('Simpan perubahan');
+      await waitFor(`document.querySelector('#oprec-registrant-nim-error')`);
+      assert.equal(await evaluate(`document.activeElement.id`), 'oprec-registrant-nim');
+      assert.equal(await evaluate(`document.querySelector('#oprec-registrant-nim').getAttribute('aria-invalid')`), 'true');
+      assert.equal(editAttempts, 0);
+      await setInput('#oprec-registrant-nim', ' e3124001 ');
+      for (const invalidDate of ['', '1899-12-31', '2099-01-01']) {
+        await setInput('#oprec-registrant-birth-date', invalidDate); await click('Simpan perubahan');
+        await waitFor(`document.querySelector('#oprec-registrant-birth-date-error')`);
+        assert.equal(await evaluate(`document.activeElement.id`), 'oprec-registrant-birth-date');
+        assert.equal(editAttempts, 0, 'invalid identity must not call the correction API');
+      }
+      for (const width of [320, 390, 768, 1440]) {
+        await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: false });
+        assert.equal(await evaluate('document.documentElement.scrollWidth > innerWidth'), false, 'admin correction width ' + width);
+      }
+      await setInput('#oprec-registrant-birth-date', '2004-01-01'); await click('Simpan perubahan');
+      await waitFor(`document.body.innerText.includes('Koreksi gagal sementara.')`);
+      assert.equal(editAttempts, 1); assert.equal(savedEdit.nim, 'E3124001');
+      assert.equal(await evaluate(`document.querySelector('#oprec-registrant-birth-date').value`), '2004-01-01');
+      await click('Simpan perubahan'); await waitForFixture(() => editAttempts === 2);
+      await waitFor(`document.querySelector('#oprec-registrant-nim').value === 'E3124001'`);
+      assert.deepEqual(errors, []);
+      console.log('PASS: builder repeated clicks/delayed request/failure/retry; Admin inline identity validation, no invalid requests, normalization, correction failure/retry; 4 viewports.');
+      return;
+    }
+    if (positionsOnly) {
+      await send('Page.navigate', { url: origin + '/admin/oprec/900/edit' });
+      await waitFor(`document.querySelector('.oprec-builder__tabs')`);
+      await evaluate(`Array.from(document.querySelectorAll('button')).find(el=>el.textContent.includes('2. Kelola Divisi'))?.click()`);
+      await waitFor(`document.querySelectorAll('.oprec-builder__jabatan-section').length === 6`);
+      const expected = [['Wakil Ketua Umum','Sekretaris 2','Bendahara 2'], ...['Humas','PSDM','Kominfo','KWU','Ristek'].map(name=>['Staff Divisi '+name])];
+      assert.deepEqual(await evaluate(`Array.from(document.querySelectorAll('.oprec-builder__jabatan-section')).map(el=>Array.from(el.querySelectorAll('.oprec-builder__jabatan-chip-text')).map(chip=>chip.textContent))`), expected);
+      assert.equal(await evaluate(`Boolean(document.querySelector('.oprec-builder__jabatan-input,.oprec-builder__jabatan-chip-del,.oprec-builder__jabatan-add-btn'))`), false);
+      assert.equal(await evaluate(`document.body.innerText.includes('Reset Default')`), false);
+      for(const width of [320,390,768,1440]) {
+        await send('Emulation.setDeviceMetricsOverride',{width,height:1100,deviceScaleFactor:1,mobile:false});
+        assert.equal(await evaluate('document.documentElement.scrollWidth > innerWidth'), false, 'fixed catalog editor width '+width);
+      }
+      await click('Form Pendaftaran');
+      await waitFor(`document.querySelectorAll('.oprec-user-preview .oprec-division-choice').length === 6`);
+      const expectedLogos = ['bph', 'humas', 'psdm', 'kominfo', 'kwu'].map(name => '/images/divisi/' + name + '.webp').concat(null);
+      assert.deepEqual(await evaluate(`Array.from(document.querySelectorAll('.oprec-user-preview .oprec-division-choice')).map(el => el.querySelector('img')?.getAttribute('src') || null)`), expectedLogos);
+      for(const index of [0,1,2]) await evaluate(`document.querySelectorAll('.oprec-user-preview .oprec-division-choice')[${index}].click()`);
+      await waitFor(`document.querySelectorAll('.oprec-user-preview .oprec-jabatan-slot__select').length === 3`);
+      assert.deepEqual(await evaluate(`Array.from(document.querySelectorAll('.oprec-user-preview .oprec-jabatan-slot__select')).map(el=>Array.from(el.options).map(option=>option.value).filter(Boolean))`),expected.slice(0,3));
+      role = 'user'; await send('Page.navigate',{url:origin+'/dashboard/oprec'});
+      await waitFor(`document.querySelector('.event-dynamic-form')`);
+      assert.deepEqual(await evaluate(`Array.from(document.querySelectorAll('.event-dynamic-form .oprec-division-choice')).map(el => el.querySelector('img')?.getAttribute('src') || null)`), expectedLogos);
+      for(const id of [1,2,3]) await evaluate(`document.querySelector('#oprec-divisi-'+${id}).click()`);
+      await waitFor(`document.querySelector('#oprec-jabatan-select-1')?.options.length === 4`);
+      assert.deepEqual(await evaluate(`Array.from(document.querySelector('#oprec-jabatan-select-1').options).map(option=>option.value).filter(Boolean)`),expected[0]);
+      assert.equal(await evaluate(`document.querySelector('#oprec-jabatan-select-2').value`),'Staff Divisi Humas');
+      assert.equal(await evaluate(`document.querySelector('#oprec-jabatan-select-3').value`),'Staff Divisi PSDM');
+      for(const width of [320,390,768,1440]) {
+        await send('Emulation.setDeviceMetricsOverride',{width,height:1100,deviceScaleFactor:1,mobile:false});
+        assert.equal(await evaluate('document.documentElement.scrollWidth > innerWidth'),false,'fixed catalog participant width '+width);
+      }
+      assert.deepEqual(errors,[]); console.log('PASS: fixed registration catalogs in Admin editor, preview, and participant form; shared default logos and fallback; no custom-position controls; 4 viewports.'); return;
+    }
     if (scheduleOnly) {
       await send('Page.navigate', { url: origin + '/admin/oprec/test/900/edit' });
       await waitFor(`document.querySelectorAll('.oprec-test__editor-panel input[type=datetime-local]').length === 2`);

@@ -199,10 +199,7 @@ class OprecRegistrantController extends Controller
         }
         foreach ([1, 2, 3] as $rank) {
             $division = $oprec->divisions->firstWhere('id', (int) $data["divisi_pilihan_{$rank}"]);
-            $jabatan = trim((string) ($data["jabatan_pilihan_{$rank}"] ?? ''));
-            if ($jabatan !== '' && $division && !in_array($jabatan, $division->jabatan, true)) {
-                throw ValidationException::withMessages(["jabatan_pilihan_{$rank}" => ['Jabatan harus tersedia pada divisi yang dipilih.']]);
-            }
+            $data["jabatan_pilihan_{$rank}"] = $division->registrationPosition($data["jabatan_pilihan_{$rank}"] ?? null, $rank);
         }
 
         try {

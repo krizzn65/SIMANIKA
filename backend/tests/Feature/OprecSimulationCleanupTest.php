@@ -118,16 +118,21 @@ class OprecSimulationCleanupTest extends TestCase
         $originalAttributes = array_intersect_key($original->getAttributes(), array_flip(['password', 'remember_token', 'updated_at']));
         $original->forceFill(['password' => 'temporary-password'])->save();
         $directory = 'oprec-simulation/oprec-console-test';
+        $ticketHash = hash('sha256', $period->id.'|private-test-ticket');
+        $ticketLimitKey = md5('oprec-result-view'.'result-ticket:'.$ticketHash);
+        RateLimiter::hit($ticketLimitKey);
         Storage::disk('local')->put($directory.'/manifest.json', json_encode([
             'run_id' => 'oprec-console-test', 'original_user_ids' => [$original->id],
             'period_ids' => [$period->id], 'accounts' => [['id' => $user->id, 'email' => $user->email]],
             'files' => ['local' => [], 'public' => []],
+            'result_ticket_hashes' => [$ticketHash],
         ], JSON_THROW_ON_ERROR));
         Storage::disk('local')->put($directory.'/superadmin-backup.enc', Crypt::encryptString(json_encode(['id' => $original->id, 'attributes' => $originalAttributes], JSON_THROW_ON_ERROR)));
         Storage::disk('local')->put($directory.'/credentials.json', 'private simulation artifact');
         $this->artisan('oprec:simulation-cleanup', ['run' => 'oprec-console-test', '--dry-run' => true])->assertSuccessful();
         $this->assertDatabaseHas('oprecs', ['id' => $period->id]);
         Storage::disk('local')->assertExists($directory.'/manifest.json');
+        $this->assertSame(1, RateLimiter::attempts($ticketLimitKey));
         $this->artisan('oprec:simulation-cleanup', ['run' => 'oprec-console-test'])->assertSuccessful();
         $this->artisan('oprec:simulation-cleanup', ['run' => 'oprec-console-test'])->assertSuccessful();
         $this->assertDatabaseMissing('users', ['id' => $user->id]);
@@ -135,6 +140,7 @@ class OprecSimulationCleanupTest extends TestCase
         $this->assertDatabaseMissing('oprecs', ['id' => $period->id]);
         $this->assertFalse(Storage::disk('local')->directoryExists($directory));
         $this->assertSame($originalAttributes['password'], $original->fresh()->getRawOriginal('password'));
+        $this->assertSame(0, RateLimiter::attempts($ticketLimitKey));
     }
 
     public function test_reviewer_used_in_another_period_aborts_cleanup_before_deletion(): void

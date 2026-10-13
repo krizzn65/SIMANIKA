@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 
 class OprecDivision extends Model
 {
@@ -10,13 +11,20 @@ class OprecDivision extends Model
     protected $fillable = ['oprec_id', 'nama', 'nama_lengkap', 'deskripsi', 'logo', 'jabatan', 'sort_order'];
     protected function casts(): array { return ['jabatan' => 'array']; }
 
-    public function getJabatanAttribute($value): array
+    public function getJabatanAttribute(): array
     {
-        $decoded = is_string($value) ? json_decode($value, true) : $value;
-        if (is_array($decoded) && count($decoded) > 0) {
-            return array_values(array_filter(array_map('trim', $decoded)));
-        }
         return self::defaultJabatan($this->nama ?? '');
+    }
+
+    public function registrationPosition(?string $value, int $rank): string
+    {
+        $positions = $this->jabatan;
+        $position = trim($value ?? '');
+        if ($position === '' && count($positions) === 1) return $positions[0];
+        if (!in_array($position, $positions, true)) {
+            throw ValidationException::withMessages(["jabatan_pilihan_{$rank}" => ['Pilih jabatan pendaftaran yang tersedia pada divisi ini.']]);
+        }
+        return $position;
     }
 
     public static function defaultJabatan(?string $nama): array

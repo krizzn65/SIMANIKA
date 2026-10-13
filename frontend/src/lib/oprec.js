@@ -1,3 +1,11 @@
+export const DEFAULT_DIVISION_LOGOS = Object.freeze({
+  bph: "/images/divisi/bph.webp",
+  humas: "/images/divisi/humas.webp",
+  psdm: "/images/divisi/psdm.webp",
+  kominfo: "/images/divisi/kominfo.webp",
+  kwu: "/images/divisi/kwu.webp",
+});
+
 export function getDefaultJabatan(nama) {
   const clean = (nama || "").trim();
   if (!clean) return [];
@@ -105,9 +113,7 @@ export function normalizeOprec(raw) {
     divisiTersedia: divisions.map((item, index) => {
       if (!item || !text(item.nama)) throw new Error("Invalid OPREC division");
       const nama = text(item.nama);
-      const jabatan = Array.isArray(item.jabatan) && item.jabatan.length > 0
-        ? item.jabatan.map(String).filter(Boolean)
-        : getDefaultJabatan(nama);
+      const jabatan = getDefaultJabatan(nama);
       return { id: String(item.id ?? index), nama, namaLengkap: text(item.namaLengkap ?? item.nama_lengkap), deskripsi: text(item.deskripsi), logo: safePosterUrl(item.logo), jabatan };
     }),
     announcement: raw.announcement?.exists === true ? {
@@ -215,13 +221,13 @@ export function validateOprecForm(fields, form, now = Date.now(), divisions = []
   }
   for (let index = 0; index < 3; index++) {
     const rank = index + 1;
-    if (choices[index] && form.has(`jabatan_pilihan_${rank}`)) {
+    const division = divisions.find((item) => String(item.id) === choices[index]);
+    const positions = getDefaultJabatan(division?.nama || "");
+    if (choices[index] && (form.has(`jabatan_pilihan_${rank}`) || positions.length > 1)) {
       const val = form.get(`jabatan_pilihan_${rank}`);
       if (!val || (typeof val === "string" && !val.trim())) {
         errors[`jabatan_pilihan_${rank}`] = `Pilih jabatan untuk Divisi Pilihan ${rank}.`;
       } else {
-        const division = divisions.find((item) => String(item.id) === choices[index]);
-        const positions = division?.jabatan?.length ? division.jabatan : getDefaultJabatan(division?.nama || "");
         if (division && (typeof val !== "string" || !positions.includes(val.trim()))) errors[`jabatan_pilihan_${rank}`] = "Jabatan harus tersedia pada divisi yang dipilih.";
       }
     }

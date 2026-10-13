@@ -1,5 +1,29 @@
 # OPREC — alur dinamis revisi 21 September 2026
 
+## Frame dan hover kartu pengumuman — 5 Oktober 2026
+
+Tombol Lihat Pengumuman memakai glow merah 20 px yang menguat menjadi 26 px, naik 1 px, dan panah bergeser 3 px pada hover/fokus keyboard; durasi 200 ms mengikuti tombol pendaftaran. Efek dibatasi ke tombol kartu publik. Tombol sebelum rilis tetap nonaktif tanpa glow/gerakan, dan preferensi pengurangan animasi menonaktifkan transisi/pergeseran. Build produksi/TypeScript serta browser hover/fokus/reset, kondisi nonaktif, pengurangan animasi, dan empat viewport lulus.
+
+Informasi jadwal kartu pengumuman ditampilkan pada dua baris: ikon kalender dengan tanggal, lalu ikon jam dengan waktu WIB. Ikon berukuran 14 px mengikuti gaya pendaftaran dengan warna merah; teks, jarak, dan alignment mengikuti baris fakta pendaftaran. Format tanggal/jam tetap memakai zona `Asia/Jakarta`. Build produksi/TypeScript dan pemeriksaan browser pada 320/390/768/1440 px lulus, termasuk dua baris terpisah dan tanpa overflow.
+
+Kartu pengumuman publik mengikuti kartu pendaftaran: garis putus-putus 2 px, sudut kotak, bayangan kotak, aksen atas, dan sedikit terangkat saat hover/fokus. Pengumuman tetap memakai merah, sedangkan pendaftaran memakai biru. Kolom pamflet dan breakpoint 760 px mengikuti pendaftaran.
+
+Kedua kartu memakai komponen `OprecPoster` dan stylesheet bersama. Grid sisi 20 × 9 dengan 72 blok menghilang bertahap pada hover atau fokus keyboard, disertai zoom pamflet dan judul overlay. Preferensi `prefers-reduced-motion` menonaktifkan transisi. Pamflet kosong/gagal memakai placeholder; gambar yang gagal sebelum hydration juga dideteksi setelah komponen aktif.
+
+Verifikasi: 45 tes frontend serta build produksi/TypeScript lulus. Smoke check browser build produksi memakai API sintetis dan profil terisolasi: frame, hover/fokus/reset, pengurangan animasi, popup/pemulihan fokus, pamflet kosong/gagal, dan tombol pengumuman terjadwal lulus. Viewport 320/390/768/1280/1440 px tanpa overflow; screenshot diperiksa. Skrip dan screenshot sementara berada di `.next`, diabaikan git. Kontrak API, jadwal rilis, lookup hasil, dan kewenangan tetap mengikuti peraturan OPREC.
+
+## Jabatan pendaftaran dan penerimaan — 3 Oktober 2026
+
+Jabatan pendaftaran mengikuti katalog tetap: BPH menyediakan Wakil Ketua Umum, Sekretaris 2, dan Bendahara 2; divisi selain BPH hanya menyediakan `Staff Divisi {nama divisi}`. Ketua Umum, Sekretaris 1, Bendahara 1, petinggi divisi, dan bidang staf tersedia saat penerimaan. Katalog penerimaan tetap terpisah, dan jabatan penerimaan tidak harus sama dengan jabatan saat mendaftar.
+
+Editor Admin menampilkan pilihan jabatan sebagai informasi tanpa kontrol tambah/hapus/reset. Pratinjau, formulir peserta, dan koreksi Admin memakai daftar tetap yang sama. Respons API `jabatan` selalu menurunkan katalog dari nama divisi, termasuk saat membaca metadata lama. Payload pengelolaan yang menyediakan daftar berbeda ditolak 422; daftar yang tidak dikirim memakai default. Pilihan BPH wajib diisi pada submit/koreksi, sedangkan staf umum yang tidak dikirim diisi backend secara otomatis. Jabatan lain yang dikirim ditolak, termasuk bidang staf penerimaan.
+
+Perintah `php artisan oprec:normalize-registration-positions {period} --dry-run` memeriksa koreksi historis tanpa menulis database atau cadangan. Tanpa `--dry-run`, perintah local/testing mengunci periode, memeriksa seluruh pilihan, membuat cadangan terenkripsi pada `oprec/{period}/maintenance`, lalu memperbarui katalog dan tiga field pilihan jabatan dalam transaksi. Pemetaan BPH: Ketua Umum menjadi Wakil Ketua Umum, Sekretaris 1 menjadi Sekretaris 2, dan Bendahara 1 menjadi Bendahara 2. Divisi lain menjadi staf umum. Pemetaan BPH yang tidak dikenal atau referensi divisi yang rusak membatalkan koreksi. Pelaksanaan ulang tidak membuat perubahan atau cadangan tambahan.
+
+Koreksi simulasi pada 3 Oktober memperbarui enam katalog dan 60 formulir; 155 dari 180 pilihan berubah. Nilai, jawaban tes, keputusan 50 diterima/10 ditolak, jabatan penerimaan, jadwal pengumuman, akun asli, modul lain, dan berkas lama tetap identik. CV dan jawaban naratif tetap menjadi dokumen historis sebelum revisi. Waktu koreksi dicatat sesuai waktu sebenarnya. Cadangan berada dalam direktori periode yang sudah tercakup oleh inventory pembersihan; manifest dan laporan privat mencatat koreksi.
+
+Regresi backend mencakup validasi katalog dan submit, koreksi Admin, dry-run, target periode, cadangan terenkripsi, pengulangan, serta penghapusan cadangan saat pembersihan. Regresi browser `node tests/oprec-user.browser.cjs --positions-only` memeriksa editor, pratinjau, formulir peserta, dan empat viewport tanpa memakai akun/database aplikasi.
+
 ## Perbaikan perjalanan simulasi — 2 Oktober 2026
 
 Tombol pendaftaran menunggu pemeriksaan sesi selesai. Bila pemeriksaan sesi gagal, peserta dapat mencoba pemeriksaan ulang tanpa diarahkan sebagai pengunjung yang belum login. Regresi browser terisolasi dapat dijalankan dengan `node tests/oprec-user.browser.cjs --enrollment-only`.
@@ -8,7 +32,11 @@ Editor formulir menyediakan pertanyaan/jawaban FAQ. Pertanyaan tambahan yang diu
 
 Detail Tes Tulis pada Penilaian mengikuti tiga pilihan divisi peserta, memakai aturan penyaringan yang sama dengan formulir peserta. Soal divisi lain tidak ditampilkan sebagai “Tidak dijawab”; soal opsional yang memang berlaku tetap terlihat. Jawaban dan tautan berkas yang tidak berlaku dikeluarkan dari respons, dan URL unduh langsungnya ditolak. Regresi API mencakup Super Admin, Admin, serta Pengurus yang ditugaskan.
 
+Jadwal pengumuman mempertahankan offset ISO saat dikirim ke PostgreSQL. Model menormalisasi instan ke UTC dengan offset eksplisit; PostgreSQL dapat menyajikannya sesuai zona koneksi tanpa menggeser waktu rilis. Input UTC dari frontend dan input WIB menghasilkan instan yang sama setelah reload. Regresi memeriksa kerahasiaan satu detik sebelum rilis, akses pada batas rilis, serta penguncian sesudahnya. Integrasi browser PostgreSQL lokal juga memeriksa jadwal yang benar, pagination 50 penerimaan, dan penguncian nilai/keputusan.
+
 Simulasi nyata menggunakan PostgreSQL, sesi Sanctum, upload CV PDF, dan UI aplikasi; skrip serta kredensial berada pada storage privat yang diabaikan git. Data skenario dipertahankan sampai pengguna meminta pembersihan. Perintah lokal `php artisan oprec:simulation-cleanup oprec-20261002 --dry-run` menampilkan target tanpa menghapus. Pembersihan nyata memakai manifest ID, memulihkan cadangan sandi terenkripsi bila diperlukan, menghapus relasi/account/session/file/artefak skenario, dan membandingkan checksum data akun asli serta modul lain sebelum–sesudah penghapusan. Tutup proses browser/server milik skenario sebelum menghapus direktori artefak. Perintah tersedia hanya pada local/testing dan tidak mempunyai endpoint HTTP.
+
+Manifest juga dapat mencatat hash tiket hasil untuk menghapus cache pembatas permintaannya saat pembersihan, tanpa menyimpan tiket mentah. Cache modul lain dan pembatas IP bersama tetap dipertahankan. Dry-run serta penghapusan berulang atas cache tiket diuji pada database pengujian.
 
 ## Audit menyeluruh — 2 Oktober 2026
 

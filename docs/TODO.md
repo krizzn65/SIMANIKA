@@ -1,8 +1,44 @@
+## Pemulihan pemeriksaan sesi lokal — 5 Oktober 2026
+
+- [x] Telusuri navbar “Coba lagi”: label muncul ketika pemeriksaan akun gagal, bukan ketika API mengonfirmasi pengunjung tanpa sesi. Dua listener backend ditemukan; listener development IPv4 tidak merespons, sedangkan backend localhost IPv6 merespons 401/200 secara normal.
+- [x] Browser aplikasi lokal menemukan aset CSS/JavaScript 500 pada frontend yang masih berjalan setelah artefak build diganti. Listener backend SIMANIKA yang macet dihentikan dan frontend lokal dimulai ulang dengan build terbaru; backend localhost yang sehat serta data/akun dipertahankan.
+- [x] Browser profil baru tanpa cookie mengonfirmasi `/auth/me` 401, navbar Login, dan tanpa exception runtime; halaman OPREC merespons 200. Verifikasi ini tidak menguji ulang sesi akun yang sudah login pada profil pengguna.
+- Untuk build verifikasi berikutnya ketika server aplikasi aktif, gunakan `NEXT_DIST_DIR` terpisah dan jalankan server pemeriksaan dengan direktori yang sama. Jangan mengganti artefak `.next` yang sedang dipakai server aplikasi.
+
+## Frame dan hover kartu pengumuman OPREC — 5 Oktober 2026
+
+- [x] Animasi tombol pengumuman mengikuti pendaftaran dengan glow merah, naik 1 px, panah bergeser 3 px, dan durasi 200 ms. Hover/fokus keyboard, reset, pengurangan animasi, serta tombol terkunci lulus pemeriksaan browser pada empat viewport; build produksi/TypeScript lulus. Efek dibatasi ke tombol kartu publik.
+- [x] Jadwal pengumuman dipisah menjadi baris tanggal (ikon kalender) dan jam WIB (ikon jam). Gaya ikon 14 px/alignment mengikuti pendaftaran, dengan warna merah. Build produksi/TypeScript dan browser pada 320/390/768/1440 px lulus; tidak ada overflow.
+- [x] Frame mengikuti kartu pendaftaran: garis putus-putus, bayangan kotak, aksen atas, dan hover/fokus; warna pengumuman tetap merah.
+- [x] Pamflet kedua kartu memakai komponen bersama dengan blok menghilang bertahap, zoom, judul overlay, dukungan keyboard/pengurangan animasi, serta fallback gambar kosong/gagal termasuk kegagalan sebelum hydration.
+- [x] 45 tes frontend dan build produksi/TypeScript lulus. Browser sintetis pada 320/390/768/1280/1440 px memverifikasi frame, hover/fokus/reset, popup, fallback, tombol sebelum rilis, dan tanpa overflow; screenshot desktop/mobile diperiksa. Tidak mengubah kontrak API atau peraturan OPREC.
+
+## Debugging OPREC sesuai peraturan — 5 Oktober 2026
+
+- [x] Analisis [debugging OPREC](tolong-kamu-lakukan-debuging-elegant-flamingo.md) dikoreksi: B2 penguatan guard, B3 melengkapi tes yang sudah ada, B4 query historis dipertahankan, B5 penomoran dipertahankan. Pengguna mengotorisasi eksekusi perbaikan yang valid.
+- [x] B1/B2/B3/B6/B7 diterapkan: fixture waktu deterministik, guard sinkron builder, regresi keputusan lama, logo bersama, serta validasi identitas inline pada koreksi Admin. Backend 98 tes/1.034 assertion, frontend 45 tes, typecheck, build produksi, dan dua mode browser terisolasi pada 320/390/768/1440 px lulus; hasil terperinci dicatat pada dokumen debugging.
+- [x] Diff dan tautan diperiksa; route API, model User/divisi, layanan penilaian/pengumuman, serta cleanup tetap sama dengan snapshot awal. Hak akses, katalog jabatan, penguncian, endpoint kompatibilitas, database aplikasi, dan data simulasi tetap mengikuti peraturan. Verifikasi staging yang sudah tertunda di bagian audit tetap terpisah.
+
+## Konsolidasi peraturan OPREC — 5 Oktober 2026
+
+- [x] Aturan OPREC sejak rancangan awal sampai revisi 3 Oktober dihimpun dalam [PERATURAN_OPREC.md](PERATURAN_OPREC.md), dicocokkan dengan dokumentasi dan implementasi. Mencakup pengangkatan role Pengurus khusus Super Admin, penugasan penilai per periode, matriks izin, pendaftaran, jabatan, Tes Tulis, penilaian, keputusan, pengumuman, privasi, penguncian, dan aturan historis yang telah diganti.
+- [x] Penyusunan hanya mengubah dokumentasi; referensi relatif dan format diff diperiksa. Tidak mengubah kode, akun, database, atau jadwal.
+
+## Revisi jabatan pendaftaran — 3 Oktober 2026
+
+- [x] Pendaftaran BPH dibatasi Wakil Ketua Umum, Sekretaris 2, Bendahara 2; divisi lain hanya Staff Divisi. Katalog penerimaan tetap terpisah dan lengkap.
+- [x] Backend/frontend menolak jabatan petinggi pada pendaftaran; BPH wajib dipilih, staf umum otomatis terisi. Admin tidak dapat menambahkan katalog bebas.
+- [x] Kontrol tambah/hapus/reset jabatan, komponen adder, handler, import X yang kehilangan pemakaiannya, serta CSS khususnya dihapus; RotateCcw tetap dipakai untuk reset pilihan divisi.
+- [x] Maintenance lokal dry-run/koreksi diuji sebelum PostgreSQL: scoped, transaksional, cadangan terenkripsi, gagal tanpa perubahan parsial, berulang tanpa perubahan tambahan, dan cadangan ikut pembersihan.
+- [x] Koreksi periode simulasi memperbarui enam katalog dan 60 formulir (155 pilihan berubah; 180 sah). Checksum nilai, jawaban tes, keputusan 50/10, jabatan penerimaan, akun asli, modul lain, dan berkas lama tetap identik.
+- [x] Backend 97 tes/1.010 assertion, frontend 45 tes, typecheck, dan build produksi lulus. Browser fixture editor/pratinjau/formulir serta perjalanan peserta sampai pengumuman lulus pada empat viewport.
+- [x] Browser aplikasi lokal dengan sesi nyata: Admin membaca 60 formulir/180 pilihan; empat hasil petinggi/staf/ditolak dan refresh lulus. Laporan/manifest diperbarui dan skrip koreksi sementara dihapus.
+
 ## Simulasi OPREC nyata — 2 Oktober 2026
 
 - [x] Reset seluruh OPREC lama; 16 akun awal serta data modul lain dipertahankan.
 - [x] Prosedur pembersihan lokal berbasis manifest tersedia melalui `php artisan oprec:simulation-cleanup oprec-20261002 --dry-run`; pembersihan nyata hanya setelah perintah pengguna.
-- [x] Tes pembersihan berulang, dry-run, pemulihan hash sandi, poster bersama, dan perlindungan akun asli lulus; suite backend 90 tes/914 assertion dan frontend 44 tes lulus. Build produksi lulus.
+- [x] Tes pembersihan berulang, dry-run, pemulihan hash sandi, poster bersama, cache tiket hasil, dan perlindungan akun asli lulus; suite backend 91 tes/931 assertion dan frontend 44 tes lulus. Build produksi lulus.
 - [x] Formulir terbit melalui UI dengan 10 paragraf berbatas 3.000 karakter, tiga FAQ, dan katalog jabatan enam divisi.
 - [x] Perbaikan sesi tombol enrollment lulus regresi browser dengan pemeriksaan profil ditahan.
 - [x] Build/typecheck editor jadwal WIB lulus; pengubahan waktu melalui UI dan penguncian jadwal/soal lulus regresi browser.
@@ -14,9 +50,10 @@
 - [x] Seluruh 60 Tes Tulis tersimpan dan dibaca ulang; pemeriksaan Admin/Pengurus serta unduhan CV privat nyata lulus.
 - [x] Detail penilaian hanya menampilkan soal sesuai pilihan peserta; regresi tiga peran dan berkas divisi lain lulus.
 - [x] Ulasan awal lengkap lulus: 13 jawaban, enam nilai, komentar, total, autosave, dan refresh.
-- [ ] Lengkapi 900 ulasan enam aspek melalui UI dari 15 Pengurus, tanpa fixture API/sesi.
-- [ ] Tetapkan 50 diterima/10 ditolak: BPH 6, Humas 9, PSDM 9, Kominfo 9, KWU 9, Ristek 8; semua jabatan petinggi unik sesuai katalog.
-- [ ] Terbitkan pengumuman tanggal 2 Oktober 2026 WIB dengan jam fleksibel; periksa hasil melalui 60 akun dan pulihkan sandi Super Admin.
+- [x] Lengkap 900 ulasan enam aspek melalui UI dari 15 Pengurus, tanpa fixture API/sesi; 5.400 nilai dan komentar dicocokkan dengan jawaban tersimpan.
+- [x] Tetapkan 50 diterima/10 ditolak: BPH 6, Humas 9, PSDM 9, Kominfo 9, KWU 9, Ristek 8; semua jabatan petinggi unik sesuai katalog.
+- [x] Bug offset PostgreSQL pada jadwal pengumuman diperbaiki; publikasi gagal dipulihkan ke checkpoint dengan checksum ulasan/keputusan tetap identik, lalu Admin menjadwalkan ulang melalui UI untuk 17.58 WIB.
+- [x] Pengumuman rilis 2 Oktober 2026 pukul 17.58 WIB; seluruh 60 akun memeriksa hasil dan refresh, 50 diterima/10 ditolak, sandi Super Admin dipulihkan dan baseline 16 akun/modul lain identik.
 - [ ] Sesudah pengguna meminta pembersihan: hapus seluruh data, 76 akun buatan, sesi, berkas, profil browser, kredensial, dan artefak skenario; verifikasi baseline kembali.
 
 ## Audit seluruh OPREC — 2 Oktober 2026

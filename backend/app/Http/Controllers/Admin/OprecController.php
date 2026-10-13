@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Oprec\SaveOprecRequest;
 use App\Http\Resources\OprecResource;
 use App\Models\Oprec;
+use App\Models\OprecDivision;
 use App\Support\OprecSchema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -61,7 +62,7 @@ class OprecController extends Controller
             $incomingDivisions = collect($data['divisi_tersedia'] ?? [])->map(fn ($division) => [
                 'nama' => $division['nama'], 'nama_lengkap' => $division['nama_lengkap'] ?? null,
                 'deskripsi' => $division['deskripsi'] ?? null, 'logo' => $division['logo'] ?? null,
-                'jabatan' => $division['jabatan'] ?? [],
+                'jabatan' => OprecDivision::defaultJabatan($division['nama']),
             ])->all();
             $divisionsChanged = array_key_exists('divisi_tersedia', $data) && $incomingDivisions !== $currentDivisions;
             if ($current->registrations()->exists()) {
@@ -100,6 +101,6 @@ class OprecController extends Controller
     private function syncDivisions(Oprec $oprec, array $divisions): void
     {
         $oprec->divisions()->delete();
-        foreach ($divisions as $index => $division) $oprec->divisions()->create(array_merge($division, ['sort_order' => $index]));
+        foreach ($divisions as $index => $division) $oprec->divisions()->create(array_merge($division, ['jabatan' => OprecDivision::defaultJabatan($division['nama']), 'sort_order' => $index]));
     }
 }

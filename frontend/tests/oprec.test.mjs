@@ -6,6 +6,26 @@ const { normalizeOprec, normalizeFields, oprecState, oprecDate, validBirthDate, 
 const identity = [{ name: "nim", type: "text", label: "NIM", required: true }, { name: "tanggal_lahir", type: "date", label: "Tanggal lahir", required: true }];
 const raw = { id: 1, periode: "2026/2027", status: "open", tanggalBuka: "2026-10-01T08:00:00+07:00", tanggalTutup: "2026-10-14T23:59:00+07:00", divisiTersedia: [{ nama: "Kominfo", jabatan: ["Staff Divisi Kominfo"] }, { nama: "Humas" }, { nama: "PSDM" }], formFields: identity };
 const oprec = normalizeOprec(raw);
+
+test("registration catalog is fixed even when an old payload contains acceptance positions", () => {
+  const period = normalizeOprec({ ...raw, divisiTersedia: [
+    { id: 1, nama: "BPH", jabatan: ["Ketua Umum", "Sekretaris 1", "Bendahara 1"] },
+    { id: 2, nama: "Humas", jabatan: ["Ketua Divisi Humas", "Staff Bidang Internal"] },
+    { id: 3, nama: "Kominfo", jabatan: ["Koordinator Kominfo", "Staff Copywriting"] },
+  ] });
+  assert.deepEqual(period.divisiTersedia.map(item => item.jabatan), [
+    ["Wakil Ketua Umum", "Sekretaris 2", "Bendahara 2"], ["Staff Divisi Humas"], ["Staff Divisi Kominfo"],
+  ]);
+  const form = new FormData();
+  [1, 2, 3].forEach(rank => form.set(`divisi_pilihan_${rank}`, String(rank)));
+  assert.ok(validateOprecForm([], form, Date.now(), period.divisiTersedia).jabatan_pilihan_1);
+  for (const forbidden of ["Ketua Umum", "Sekretaris 1", "Bendahara 1"]) {
+    form.set("jabatan_pilihan_1", forbidden);
+    assert.ok(validateOprecForm([], form, Date.now(), period.divisiTersedia).jabatan_pilihan_1);
+  }
+  form.set("jabatan_pilihan_1", "Bendahara 2");
+  assert.equal(validateOprecForm([], form, Date.now(), period.divisiTersedia).jabatan_pilihan_1, undefined);
+});
 const start = Date.parse(raw.tanggalBuka);
 const end = Date.parse(raw.tanggalTutup);
 
@@ -155,6 +175,7 @@ test("conditional division questions only apply and validate when matching divis
   formWithoutKominfo.set("nim", "E312345");
   formWithoutKominfo.set("tanggal_lahir", "2004-01-01");
   formWithoutKominfo.set("divisi_pilihan_1", "1");
+  formWithoutKominfo.set("jabatan_pilihan_1", "Sekretaris 2");
   formWithoutKominfo.set("divisi_pilihan_2", "2");
   formWithoutKominfo.set("divisi_pilihan_3", "4");
   // portofolio_kominfo is empty, but KOMINFO is not chosen -> passes validation!
@@ -166,6 +187,7 @@ test("conditional division questions only apply and validate when matching divis
   formWithKominfo.set("nim", "E312345");
   formWithKominfo.set("tanggal_lahir", "2004-01-01");
   formWithKominfo.set("divisi_pilihan_1", "1");
+  formWithKominfo.set("jabatan_pilihan_1", "Sekretaris 2");
   formWithKominfo.set("divisi_pilihan_2", "3");
   formWithKominfo.set("divisi_pilihan_3", "4");
   assert.equal(isFieldApplicable(fields.find(f => f.name === "portofolio_kominfo"), ["1", "3", "4"], divisions), true);
