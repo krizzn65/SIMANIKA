@@ -2,23 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { RotateCcw, Lock, AlertTriangle } from "lucide-react";
-import { validateOprecForm, normalizeOprecNim, oprecNimProgramWarning, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
+import { DEFAULT_DIVISION_LOGOS, validateOprecForm, normalizeOprecNim, oprecNimProgramWarning, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
 
 function getDivisionPositions(division) {
   if (!division) return [];
-  if (Array.isArray(division.jabatan) && division.jabatan.length > 0) {
-    return division.jabatan;
-  }
   return getDefaultJabatan(division.nama);
 }
-
-const DEFAULT_DIVISION_LOGOS = {
-  bph: "/images/divisi/bph.webp",
-  humas: "/images/divisi/humas.webp",
-  psdm: "/images/divisi/psdm.webp",
-  kominfo: "/images/divisi/kominfo.webp",
-  kwu: "/images/divisi/kwu.webp",
-};
 
 const SYSTEM_IDENTIFIERS = ["nama", "nim", "tanggal_lahir", "angkatan"];
 const isSystemField = (name) => SYSTEM_IDENTIFIERS.includes(name);

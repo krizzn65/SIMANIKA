@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Oprec\SaveOprecRequest;
 use App\Http\Resources\OprecResource;
 use App\Models\Oprec;
+use App\Models\OprecDivision;
+use App\Support\OprecSchema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -50,6 +52,9 @@ class OprecController extends Controller
         $updated = DB::transaction(function () use ($oprec, $data) {
             $current = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
             if ($current->pengumuman_published && $data['status'] !== 'closed') throw ValidationException::withMessages(['status' => ['Pendaftaran tetap ditutup setelah pengumuman dijadwalkan.']]);
+            if ($current->pengumuman_published && !OprecSchema::same($current->form_fields, $data['form_fields'])) {
+                throw ValidationException::withMessages(['form_fields' => ['Formulir terkunci setelah pengumuman dijadwalkan.']]);
+            }
             $currentDivisions = $current->divisions()->get()->map(fn ($division) => [
                 'nama' => $division->nama, 'nama_lengkap' => $division->nama_lengkap,
                 'deskripsi' => $division->deskripsi, 'logo' => $division->logo, 'jabatan' => $division->jabatan ?? [],
@@ -57,11 +62,11 @@ class OprecController extends Controller
             $incomingDivisions = collect($data['divisi_tersedia'] ?? [])->map(fn ($division) => [
                 'nama' => $division['nama'], 'nama_lengkap' => $division['nama_lengkap'] ?? null,
                 'deskripsi' => $division['deskripsi'] ?? null, 'logo' => $division['logo'] ?? null,
-                'jabatan' => $division['jabatan'] ?? [],
+                'jabatan' => OprecDivision::defaultJabatan($division['nama']),
             ])->all();
             $divisionsChanged = array_key_exists('divisi_tersedia', $data) && $incomingDivisions !== $currentDivisions;
             if ($current->registrations()->exists()) {
-                if ($current->schema_version === $data['schema_version'] && $current->form_fields !== $data['form_fields']) throw ValidationException::withMessages(['schema_version' => ['Naikkan versi skema saat mengubah kolom.']]);
+                if ($current->schema_version === $data['schema_version'] && !OprecSchema::same($current->form_fields, $data['form_fields'])) throw ValidationException::withMessages(['schema_version' => ['Naikkan versi skema saat mengubah kolom.']]);
                 if ($divisionsChanged) throw ValidationException::withMessages(['divisi_tersedia' => ['Divisi tidak boleh diubah setelah ada pendaftar.']]);
             }
             $attributes = $this->attributes($data);
@@ -96,6 +101,6 @@ class OprecController extends Controller
     private function syncDivisions(Oprec $oprec, array $divisions): void
     {
         $oprec->divisions()->delete();
-        foreach ($divisions as $index => $division) $oprec->divisions()->create(array_merge($division, ['sort_order' => $index]));
+        foreach ($divisions as $index => $division) $oprec->divisions()->create(array_merge($division, ['jabatan' => OprecDivision::defaultJabatan($division['nama']), 'sort_order' => $index]));
     }
 }

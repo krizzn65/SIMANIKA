@@ -111,6 +111,53 @@ class OprecAssessmentTest extends TestCase
         $this->deleteJson($legacy)->assertStatus(409);
     }
 
+    public function test_legacy_decision_requires_super_admin_valid_placement_and_unpublished_announcement(): void
+    {
+        $f = $this->fixture();
+        $url = "/api/admin/oprec/{$f['period']->id}/registrants/{$f['registration']->id}";
+        $payload = ['status' => 'accepted', 'accepted_division_id' => $f['divisions'][1]->id,
+            'accepted_position' => 'Staff Bidang Internal'];
+        $kwu = $this->account('kwu', 'kwu@example.test');
+        foreach ([$f['admin'], $f['leader'], $kwu, $f['user']] as $actor) {
+            $this->actingAs($actor, 'sanctum')->putJson($url, $payload)->assertForbidden();
+        }
+        $this->actingAs($f['super'], 'sanctum')->putJson(
+            "/api/admin/oprec/{$f['period']->id}/assessment/assignments/{$f['leader']->id}"
+        )->assertNoContent();
+        $this->actingAs($f['leader'], 'sanctum')->putJson($url, $payload)->assertForbidden();
+        $this->assertDatabaseHas('oprec_registrations', ['id' => $f['registration']->id, 'status' => 'pending']);
+        $this->assertDatabaseCount('oprec_assessment_decision_logs', 0);
+
+        $this->actingAs($f['super'], 'sanctum');
+        $this->putJson($url, [...$payload, 'accepted_position' => 'Sekretaris 2'])->assertUnprocessable();
+        $unselected = $f['period']->divisions()->create(['nama' => 'Kominfo', 'sort_order' => 3]);
+        $this->putJson($url, [...$payload, 'accepted_division_id' => $unselected->id,
+            'accepted_position' => 'Koordinator Kominfo'])->assertUnprocessable();
+        $other = Oprec::create(['periode' => '2027/2028', 'status' => 'closed']);
+        $foreign = $other->divisions()->create(['nama' => 'Humas', 'sort_order' => 0]);
+        $this->putJson($url, [...$payload, 'accepted_division_id' => $foreign->id])->assertUnprocessable();
+        $this->assertDatabaseCount('oprec_assessment_decision_logs', 0);
+
+        $this->putJson($url, $payload)->assertOk()->assertJsonPath('data.status', 'accepted');
+        $this->assertDatabaseHas('oprec_registrations', ['id' => $f['registration']->id,
+            'status' => 'accepted', 'accepted_division_id' => $f['divisions'][1]->id,
+            'accepted_position' => 'Staff Bidang Internal']);
+        $this->assertDatabaseHas('oprec_assessment_decision_logs', [
+            'oprec_registration_id' => $f['registration']->id, 'actor_id' => $f['super']->id,
+            'old_status' => 'pending', 'new_status' => 'accepted', 'new_position' => 'Staff Bidang Internal',
+        ]);
+        $this->assertSame('user', $f['user']->fresh()->role);
+        $this->putJson($url, ['status' => 'rejected'])->assertOk();
+        $this->assertDatabaseHas('oprec_registrations', ['id' => $f['registration']->id,
+            'status' => 'rejected', 'accepted_division_id' => null, 'accepted_position' => null]);
+        $this->assertDatabaseCount('oprec_assessment_decision_logs', 2);
+
+        $f['period']->update(['pengumuman_published' => true, 'pengumuman_tanggal' => now()->addDay()]);
+        $this->putJson($url, $payload)->assertConflict();
+        $this->assertDatabaseHas('oprec_registrations', ['id' => $f['registration']->id, 'status' => 'rejected']);
+        $this->assertDatabaseCount('oprec_assessment_decision_logs', 2);
+    }
+
     public function test_first_choice_order_is_stable_across_roles_filters_and_pages(): void
     {
         $f = $this->fixture();
@@ -272,6 +319,34 @@ class OprecAssessmentTest extends TestCase
         $this->get($base.'/registration-files/dokumen')->assertOk();
         $this->get($base.'/registration-files/lama')->assertNotFound();
         $this->get($base.'/test-files/unknown')->assertNotFound();
+    }
+
+    public function test_assessment_questions_match_the_participants_division_choices(): void
+    {
+        $f = $this->fixture();
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $other = $f['period']->divisions()->create(['nama' => 'Ristek', 'sort_order' => 3]);
+        $stage = $f['period']->writtenTest;
+        $questions = [
+            ['id' => 'general', 'label' => 'Integritas', 'type' => 'paragraph', 'targetDivisions' => []],
+            ['id' => 'selected', 'label' => 'Kasus Humas', 'type' => 'paragraph', 'targetDivisions' => [(string) $f['divisions'][1]->id]],
+            ['id' => 'optional', 'label' => 'Contoh tambahan', 'type' => 'paragraph', 'targetDivisions' => [$f['divisions'][2]->id]],
+            ['id' => 'foreign', 'label' => 'Kasus Ristek', 'type' => 'file', 'targetDivisions' => [$other->id]],
+        ];
+        $stage->update(['form_fields' => $questions]);
+        $path = "oprec/test/{$stage->id}/foreign.pdf";
+        \Illuminate\Support\Facades\Storage::disk('local')->put($path, 'berkas tidak berlaku');
+        $f['submission']->update(['answers' => ['general' => 'Jawaban umum', 'selected' => 'Jawaban Humas',
+            'foreign' => ['path' => $path, 'name' => 'foreign.pdf']]]);
+        $base = "/api/admin/oprec/{$f['period']->id}/assessment/{$f['submission']->id}";
+        $this->actingAs($f['super'], 'sanctum')->putJson("/api/admin/oprec/{$f['period']->id}/assessment/assignments/{$f['leader']->id}")->assertNoContent();
+        foreach ([$f['super'], $f['admin'], $f['leader']] as $reviewer) {
+            $this->actingAs($reviewer, 'sanctum')->getJson($base)->assertOk()
+                ->assertJsonCount(3, 'data.questions')->assertJsonPath('data.questions', array_slice($questions, 0, 3))
+                ->assertJsonPath('data.answers.selected', 'Jawaban Humas')->assertJsonMissingPath('data.answers.foreign')
+                ->assertJsonMissingPath('data.files.foreign');
+            $this->get($base.'/test-files/foreign')->assertNotFound();
+        }
     }
 
 }

@@ -26,12 +26,18 @@ class OprecAnnouncementController extends Controller
     public function show(Request $request, Oprec $oprec)
     {
         $request->validate(['page' => ['nullable', 'integer', 'min:1']]);
+        $leader = $request->user()->effectiveRole() === 'leader';
+        $canReadParticipants = !$leader || DB::table('oprec_assessment_assignments')
+            ->where('oprec_id', $oprec->id)->where('user_id', $request->user()->id)->whereNull('revoked_at')->exists();
         $query = $this->announcements->participants($oprec)->where('status', 'accepted')
             ->select(['oprec_registrations.id', 'oprec_registrations.user_id', 'oprec_registrations.nim', 'oprec_registrations.form_data', 'oprec_registrations.accepted_division_id', 'oprec_registrations.accepted_position'])->with('user:id,name')
             ->leftJoin('oprec_divisions as accepted_divisions', function ($join) {
                 $join->on('accepted_divisions.id', '=', 'oprec_registrations.accepted_division_id')
                     ->on('accepted_divisions.oprec_id', '=', 'oprec_registrations.oprec_id');
             });
+        if (!$canReadParticipants) $query->whereRaw('1 = 0');
+        $metadata = $this->announcements->metadata($oprec, true);
+        if ($leader) unset($metadata['whatsapp_url']);
         $cases = []; $bindings = [];
         foreach (['bph', 'humas', 'psdm', 'kominfo', 'kwu', 'ristek'] as $division) {
             foreach (OprecAssessmentService::positions($division) as $rank => $position) {
@@ -51,7 +57,8 @@ class OprecAnnouncementController extends Controller
         ]));
         return response()->json([
             'period' => ['id' => $oprec->id, 'periode' => $oprec->periode],
-            'announcement' => $this->announcements->metadata($oprec, true),
+            'announcement' => $metadata,
+            'can_read_participants' => $canReadParticipants,
             'blockers' => $this->announcements->blockers($oprec),
             'participants' => $page, 'server_now' => now()->toIso8601String(),
         ])->header('Cache-Control', 'private, no-store');

@@ -32,9 +32,7 @@ class OprecWorkspaceController extends Controller
 
         if ($requested) abort_unless($registration || $enrolled, 404, 'Pendaftaran OPREC tidak ditemukan.');
 
-        $announced = (bool) (($oprec->status === 'closed' || ($oprec->tanggal_tutup && $oprec->tanggal_tutup->isPast()))
-            && $oprec->pengumuman_published
-            && (!$oprec->pengumuman_tanggal || $oprec->pengumuman_tanggal->isPast()));
+        $announced = app(\App\Services\OprecAnnouncementService::class)->released($oprec);
 
         $acceptedDivision = null;
         if ($registration && $registration->accepted_division_id) {

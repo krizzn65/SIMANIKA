@@ -136,12 +136,13 @@ class OprecAssessmentController extends Controller
         $this->assessment->authorize($request->user(), $oprec);
         $stage = $oprec->writtenTest()->firstOrFail();
         abort_unless($submission->oprec_stage_id === $stage->id && $submission->registration?->oprec_id === $oprec->id, 404);
-        $questionIds = collect($stage->form_fields ?? [])->pluck('id')->filter(fn ($id) => is_string($id))->flip()->all();
+        $questions = OprecWrittenTestAnswers::applicableQuestions($stage->form_fields ?? [], $submission->registration);
+        $questionIds = collect($questions)->pluck('id')->filter(fn ($id) => is_string($id))->flip()->all();
         $answers = array_intersect_key($submission->answers ?? [], $questionIds);
         return response()->json(['data' => ['id' => $submission->id,
             'answers' => OprecWrittenTestAnswers::publicAnswers($answers),
             'files' => OprecWrittenTestAnswers::files($answers, url("/api/admin/oprec/{$oprec->id}/assessment/{$submission->id}/test-files")),
-            'questions' => $stage->form_fields ?? [],
+            'questions' => $questions,
         ]])->header('Cache-Control', 'private, no-store');
     }
 
@@ -247,7 +248,7 @@ class OprecAssessmentController extends Controller
         $this->assessment->authorize($request->user(), $oprec);
         $stage = $oprec->writtenTest()->firstOrFail();
         abort_unless($submission->oprec_stage_id === $stage->id && $submission->registration?->oprec_id === $oprec->id, 404);
-        $question = collect($stage->form_fields ?? [])->firstWhere('id', $field);
+        $question = collect(OprecWrittenTestAnswers::applicableQuestions($stage->form_fields ?? [], $submission->registration))->firstWhere('id', $field);
         abort_unless(($question['type'] ?? null) === 'file', 404);
         $file = ($submission->answers ?? [])[$field] ?? null;
         $path = is_array($file) ? ($file['path'] ?? null) : null;

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Plus, Save } from "lucide-react";
 import { api } from "@/services/api";
+import { toWibInput } from "@/lib/oprecAnnouncement.mjs";
 import { AdminErrorNotice } from "../../../../AdminErrorNotice";
 import { toast } from "sonner";
 import { WrittenTestPreview } from "./WrittenTestPreview";
@@ -61,9 +62,17 @@ export default function EditWrittenTestPage() {
     return next;
   });
 
+  const locked = Boolean(test && (test.submissions_count > 0 || (test.published && Date.now() >= Date.parse(test.tanggal_buka))));
+  const changeSchedule = (field) => (event) => setTest((current) => ({ ...current, [field]: event.target.value ? `${event.target.value}:00+07:00` : "" }));
+
   async function save(event) {
     event.preventDefault();
+    if (locked) { setError("Jadwal dan soal terkunci setelah tes dimulai atau ada jawaban peserta."); return; }
     if (!test || !questions.length) { setError("Tambahkan minimal satu pertanyaan."); return; }
+    const start = Date.parse(test.tanggal_buka), end = Date.parse(test.tanggal_tutup);
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+      setError("Isi jadwal tes yang valid; waktu selesai harus setelah waktu mulai."); return;
+    }
     for (const [index, question] of questions.entries()) {
       if (!question.label.trim()) { setError(`Isi pertanyaan nomor ${index + 1}.`); return; }
       if (["single_choice", "select"].includes(question.type)) {
@@ -103,10 +112,15 @@ export default function EditWrittenTestPage() {
       {loading ? <p className="oprec-test__empty" role="status">Memuat pertanyaan…</p> : test ? (
         <div className="oprec-test__editor-layout"><form className="oprec-test__editor-panel" onSubmit={save}>
           <div className="oprec-test__schedule"><div><strong>Jadwal pelaksanaan</strong><p>{formatWib(test.tanggal_buka)} – {formatWib(test.tanggal_tutup)}</p></div><span className={`oprec-test__badge ${test.published ? "is-ready" : ""}`}>{test.published ? "Soal siap" : "Belum siap"}</span></div>
+          <div className="oprec-test__fields">
+            <label>Mulai tes (WIB)<input type="datetime-local" required disabled={locked || saving} value={toWibInput(test.tanggal_buka)} onChange={changeSchedule("tanggal_buka")} /></label>
+            <label>Selesai tes (WIB)<input type="datetime-local" required disabled={locked || saving} min={toWibInput(test.tanggal_buka)} value={toWibInput(test.tanggal_tutup)} onChange={changeSchedule("tanggal_tutup")} /></label>
+          </div>
+          {locked && <p role="status">Jadwal dan soal terkunci setelah tes dimulai atau ada jawaban peserta.</p>}
           <div className="oprec-test__questions-head"><div><h2>Pertanyaan</h2><p>Teks singkat, paragraf, atau satu pilihan jawaban.</p></div><span>{questions.length} / 40</span></div>
-          {questions.map((question, index) => <WrittenTestQuestionEditor key={question.id} question={question} index={index} count={questions.length} divisions={divisions} update={update} move={move} remove={(target) => setQuestions((current) => current.filter((_, i) => i !== target))} />)}
-          <button className="oprec-test__add" type="button" disabled={questions.length >= 40} onClick={() => setQuestions((current) => [...current, newQuestion()])}><Plus size={17} aria-hidden="true" /> Tambah pertanyaan</button>
-          <footer className="oprec-test__footer"><span>Soal yang tersimpan tersedia saat jadwal tes aktif. Soal terkunci setelah tes dimulai.</span><button type="submit" disabled={saving}><Save size={16} aria-hidden="true" /> {saving ? "Menyimpan…" : "Simpan pertanyaan"}</button></footer>
+          {questions.map((question, index) => <WrittenTestQuestionEditor key={question.id} question={question} disabled={locked || saving} index={index} count={questions.length} divisions={divisions} update={update} move={move} remove={(target) => setQuestions((current) => current.filter((_, i) => i !== target))} />)}
+          <button className="oprec-test__add" type="button" disabled={locked || saving || questions.length >= 40} onClick={() => setQuestions((current) => [...current, newQuestion()])}><Plus size={17} aria-hidden="true" /> Tambah pertanyaan</button>
+          <footer className="oprec-test__footer"><span>Soal yang tersimpan tersedia saat jadwal tes aktif. Soal terkunci setelah tes dimulai.</span><button type="submit" disabled={locked || saving}><Save size={16} aria-hidden="true" /> {saving ? "Menyimpan…" : "Simpan pertanyaan"}</button></footer>
         </form><WrittenTestPreview questions={questions} divisions={divisions} /></div>
       ) : null}
     </div>

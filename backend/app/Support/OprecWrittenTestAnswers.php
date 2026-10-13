@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\OprecRegistration;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -9,12 +10,24 @@ use Illuminate\Validation\ValidationException;
 
 class OprecWrittenTestAnswers
 {
+    public static function applicableQuestions(array $questions, OprecRegistration $registration): array
+    {
+        $selected = array_map('intval', array_filter([
+            $registration->divisi_pilihan_1, $registration->divisi_pilihan_2, $registration->divisi_pilihan_3,
+        ]));
+        return array_values(array_filter($questions, function ($question) use ($selected) {
+            $targets = array_map('intval', $question['targetDivisions'] ?? []);
+            return !$targets || (bool) array_intersect($targets, $selected);
+        }));
+    }
+
     public static function validateAndStore(array $questions, array $raw, int $stageId, array &$stored): array
     {
         if (array_diff(array_keys($raw), array_column($questions, 'id'))) {
             throw ValidationException::withMessages(['answers' => ['Jawaban memuat pertanyaan yang tidak berlaku.']]);
         }
         $answers = [];
+        $uploadBytes = 0;
         foreach ($questions as $question) {
             $id = $question['id'];
             $type = $question['type'];
@@ -25,6 +38,8 @@ class OprecWrittenTestAnswers
             }
             if ($type === 'file') {
                 if (!$value instanceof UploadedFile) throw ValidationException::withMessages(["answers.$id" => ['Jawaban harus berupa berkas.']]);
+                $uploadBytes += $value->getSize();
+                if ($uploadBytes > 11 * 1024 * 1024) throw ValidationException::withMessages(['answers' => ['Ukuran total berkas maksimal 11 MB.']]);
                 Validator::make(['file' => $value], ['file' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:5120']])->validate();
                 $path = $value->store("oprec/test/{$stageId}", 'local');
                 if (!is_string($path)) throw new \RuntimeException('Private file storage failed');

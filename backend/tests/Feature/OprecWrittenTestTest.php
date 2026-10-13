@@ -178,6 +178,12 @@ class OprecWrittenTestTest extends TestCase
             'questions' => $this->questions($oprec),
         ];
         $this->putJson($url, $payload)->assertOk();
+        $reorderedKeys = $payload;
+        $reorderedKeys['questions'] = array_map(fn ($question) => array_reverse($question, true), $payload['questions']);
+        $this->putJson($url, $reorderedKeys)->assertOk();
+        $reorderedQuestions = $payload;
+        $reorderedQuestions['questions'] = array_reverse($payload['questions']);
+        $this->putJson($url, $reorderedQuestions)->assertUnprocessable()->assertJsonValidationErrors('questions');
         $changedSchedule = $payload;
         $changedSchedule['tanggal_tutup'] = now()->addHours(2)->toIso8601String();
         $this->putJson($url, $changedSchedule)->assertUnprocessable()->assertJsonValidationErrors('tanggal_buka');

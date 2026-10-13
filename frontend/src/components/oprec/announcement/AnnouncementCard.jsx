@@ -1,16 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, CalendarDays } from "lucide-react";
+import { ArrowRight, Calendar, Clock } from "lucide-react";
 import { Button, Card } from "./Primitives";
 import { RollingCountdown } from "./RollingCountdown";
 import { ResultLookup } from "./ResultLookup";
-import { formatAnnouncementDate } from "@/lib/oprecAnnouncement.mjs";
+import { OprecPoster } from "../OprecPoster";
 
 export function AnnouncementCard({ periodId, period, announcement, serverNow }) {
   const [data, setData] = useState(announcement);
   const [clock, setClock] = useState(serverNow);
   const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(false);
   const [error, setError] = useState("");
   const trigger = useRef(null);
   const refreshing = useRef(false);
@@ -32,14 +33,32 @@ export function AnnouncementCard({ periodId, period, announcement, serverNow }) 
     return () => document.removeEventListener("visibilitychange", resume);
   }, [refresh]);
   if (!data?.exists) return null;
-  return <><Card className="oa-public-card" id="pengumuman">
+  const releaseDate = data.release_at ? new Date(data.release_at) : null;
+  const hasSchedule = releaseDate && Number.isFinite(releaseDate.getTime());
+  const dateLabel = hasSchedule ? new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta", day: "numeric", month: "long", year: "numeric",
+  }).format(releaseDate) : "Segera diumumkan";
+  const timeLabel = hasSchedule ? new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).format(releaseDate) + " WIB" : "Jam menyusul";
+  return <><Card className={`oa-public-card ${active ? "oa-public-card--active" : ""}`} id="pengumuman"
+    onMouseEnter={() => setActive(true)} onMouseLeave={() => setActive(false)}
+    onFocus={() => setActive(true)} onBlur={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) setActive(false);
+    }}>
+    <div className="oa-public-card__top-bar" aria-hidden="true" />
     <div className="oa-public-content"><span className="oa-eyebrow">Hasil seleksi · {period}</span><h3>{data.title}</h3>
-      <p className="oa-muted"><CalendarDays size={15} aria-hidden="true" style={{ display: "inline", verticalAlign: "-2px", marginRight: 8 }} />{formatAnnouncementDate(data.release_at)}</p>
+      <div className="oa-public-facts">
+        <div className="oa-public-fact"><Calendar size={14} aria-hidden="true" /><span>{dateLabel}</span></div>
+        <div className="oa-public-fact"><Clock size={14} aria-hidden="true" /><span>{timeLabel}</span></div>
+      </div>
       <p className="oa-muted">{data.released ? (data.description || "Terima kasih sudah menjadi bagian dari proses seleksi HIMANIKA. Hasilmu sudah tersedia.") : "Perjalanan berikutnya segera dimulai. Hasil seleksi dapat dilihat sesuai jadwal berikut."}</p>
       {!data.released && data.release_at && clock && <RollingCountdown target={data.release_at} serverNow={clock} onElapsed={refresh} />}
       {error && <p className="oa-error" role="alert">{error} <button type="button" onClick={refresh}>Periksa kembali</button></p>}
-      <div style={{ marginTop: 24 }}><Button ref={trigger} variant="red" disabled={!data.released} onClick={() => setOpen(true)}>{data.released ? "Lihat Pengumuman" : "Pengumuman belum dibuka"}<ArrowRight size={16} /></Button></div>
+      <div style={{ marginTop: 24 }}><Button ref={trigger} variant="red" className="oa-public-cta" disabled={!data.released} onClick={() => setOpen(true)}>{data.released ? "Lihat Pengumuman" : "Pengumuman belum dibuka"}<ArrowRight size={16} /></Button></div>
     </div>
-    <div className="oa-public-art">{data.poster_url ? <img src={data.poster_url} alt={`Poster ${data.title}`} loading="lazy" /> : <span>HIMANIKA<br />PENGUMUMAN<br />{period}</span>}</div>
+    <OprecPoster src={data.poster_url} title={data.title} alt={`Poster ${data.title}`} active={active} className="oa-public-art">
+      <span className="oa-public-art__placeholder">HIMANIKA<br />PENGUMUMAN<br />{period}</span>
+    </OprecPoster>
   </Card><ResultLookup periodId={periodId} open={open} onOpenChange={setOpen} triggerRef={trigger} /></>;
 }

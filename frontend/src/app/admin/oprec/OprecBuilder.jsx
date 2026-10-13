@@ -25,64 +25,16 @@ import {
   MapPin,
   Ticket,
   RotateCcw,
-  X,
   Lock,
 } from "lucide-react";
 import { api } from "@/services/api";
 import { toast } from "sonner";
 import { divisionPreview } from "@/components/oprec/divisionPreview";
-import { getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
+import { DEFAULT_DIVISION_LOGOS, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
 import { OprecPeriodPicker } from "./OprecPeriodPicker";
 import "./oprec-create-dialog.css";
 import "./oprec-builder.css";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
-
-function DivisionJabatanAdder({ onAdd, placeholder }) {
-  const [val, setVal] = useState("");
-
-  const handleAdd = () => {
-    const trimmed = val.trim();
-    if (!trimmed) return;
-    onAdd(trimmed);
-    setVal("");
-  };
-
-  return (
-    <div className="oprec-builder__jabatan-add-row">
-      <input
-        type="text"
-        className="oprec-builder__jabatan-input"
-        value={val}
-        onChange={(e) => setVal(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            handleAdd();
-          }
-        }}
-        placeholder={placeholder || "Ketik nama jabatan baru..."}
-        maxLength={100}
-      />
-      <button
-        type="button"
-        className="oprec-btn oprec-btn--primary oprec-builder__jabatan-add-btn"
-        onClick={handleAdd}
-        disabled={!val.trim()}
-      >
-        <Plus size={13} />
-        <span>Tambah</span>
-      </button>
-    </div>
-  );
-}
-
-const DEFAULT_DIVISION_LOGOS = {
-  bph: "/images/divisi/bph.webp",
-  humas: "/images/divisi/humas.webp",
-  psdm: "/images/divisi/psdm.webp",
-  kominfo: "/images/divisi/kominfo.webp",
-  kwu: "/images/divisi/kwu.webp",
-};
 
 const fixed = [
   { name: "nama", type: "text", label: "Nama lengkap", required: true, maxLength: 150 },
@@ -142,7 +94,7 @@ const initial = () => ({
     nama_lengkap: item.namaLengkap,
     deskripsi: item.deskripsi,
     logo: item.logo || "",
-    jabatan: Array.isArray(item.jabatan) && item.jabatan.length > 0 ? item.jabatan : getDefaultJabatan(item.nama),
+    jabatan: getDefaultJabatan(item.nama),
   })),
   faq: [],
   pengumuman: { published: false, tanggal: null, pesan: "" },
@@ -196,6 +148,7 @@ export default function OprecBuilder({ oprecId }) {
   const router = useRouter();
   const [data, setData] = useState(initial);
   const [busy, setBusy] = useState(false);
+  const saving = useRef(false);
   const [loading, setLoading] = useState(Boolean(oprecId));
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("info");
@@ -225,9 +178,7 @@ export default function OprecBuilder({ oprecId }) {
               String(idx) === String(divVal)
           );
           const positions = division
-            ? (Array.isArray(division.jabatan) && division.jabatan.length > 0
-                ? division.jabatan
-                : getDefaultJabatan(division.nama))
+            ? getDefaultJabatan(division.nama)
             : [];
           if (positions.length === 1) {
             if (next[rank] !== positions[0]) {
@@ -475,10 +426,7 @@ export default function OprecBuilder({ oprecId }) {
             nama_lengkap: division.namaLengkap || "",
             deskripsi: division.deskripsi || "",
             logo: division.logo || "",
-            jabatan:
-              Array.isArray(division.jabatan) && division.jabatan.length > 0
-                ? division.jabatan
-                : getDefaultJabatan(division.nama),
+            jabatan: getDefaultJabatan(division.nama),
           })),
           faq: item.faq || [],
           pengumuman: item.pengumuman || { published: false, tanggal: null, pesan: "" },
@@ -507,51 +455,8 @@ export default function OprecBuilder({ oprecId }) {
       data.divisi_tersedia.map((item, i) => (i === index ? { ...item, ...patch } : item))
     );
 
-  const handleDivisionNameChange = (index, newNama) => {
-    const currentDivision = data.divisi_tersedia[index] || {};
-    const oldNama = (currentDivision.nama || "").trim();
-    const cleanNew = (newNama || "").trim();
-    const currentJabatan = currentDivision.jabatan || [];
-
-    const isDefaultBph =
-      oldNama.toLowerCase() === "bph" &&
-      JSON.stringify(currentJabatan) ===
-        JSON.stringify(["Wakil Ketua Umum", "Sekretaris 2", "Bendahara 2"]);
-    const isDefaultOther =
-      currentJabatan.length === 1 &&
-      currentJabatan[0] === `Staff Divisi ${oldNama}`;
-    const isEmpty = currentJabatan.length === 0;
-
-    let updatedJabatan = currentJabatan;
-    if (isEmpty || isDefaultOther || isDefaultBph) {
-      updatedJabatan = getDefaultJabatan(cleanNew);
-    }
-
-    setDivision(index, { nama: newNama, jabatan: updatedJabatan });
-  };
-
-  const addDivisionJabatan = (divisionIndex, title) => {
-    const trimmed = (title || "").trim();
-    if (!trimmed) return;
-    const currentDivision = data.divisi_tersedia[divisionIndex] || {};
-    const currentJabatan = currentDivision.jabatan || [];
-    if (currentJabatan.includes(trimmed)) return;
-    setDivision(divisionIndex, { jabatan: [...currentJabatan, trimmed] });
-  };
-
-  const removeDivisionJabatan = (divisionIndex, jabatanIndex) => {
-    const currentDivision = data.divisi_tersedia[divisionIndex] || {};
-    const currentJabatan = currentDivision.jabatan || [];
-    setDivision(divisionIndex, {
-      jabatan: currentJabatan.filter((_, idx) => idx !== jabatanIndex),
-    });
-  };
-
-  const resetDivisionJabatan = (divisionIndex) => {
-    const currentDivision = data.divisi_tersedia[divisionIndex] || {};
-    setDivision(divisionIndex, {
-      jabatan: getDefaultJabatan(currentDivision.nama),
-    });
+  const handleDivisionNameChange = (index, nama) => {
+    setDivision(index, { nama, jabatan: getDefaultJabatan(nama) });
   };
 
   const handlePosterFile = async (file) => {
@@ -673,12 +578,12 @@ export default function OprecBuilder({ oprecId }) {
       return "Tanggal tutup tidak boleh sebelum tanggal buka.";
     if (!data.divisi_tersedia.length || data.divisi_tersedia.some((item) => !item.nama.trim()))
       return "Tambahkan divisi dan isi nama setiap divisi.";
-    if (data.divisi_tersedia.some((item) => !Array.isArray(item.jabatan) || item.jabatan.length === 0))
-      return "Setiap divisi wajib memiliki minimal satu jabatan.";
     if (!data.form_fields[3].options?.length) return "Isi minimal satu pilihan angkatan.";
     if (data.form_fields[3].options.some((option) => !/^(19|20)\d{2}$/.test(option.value)))
       return "Pilihan angkatan harus tahun empat digit, misalnya 2024.";
     if (data.form_fields.length > 40) return "Maksimal 40 kolom.";
+    if (data.faq.some((item) => !item.pertanyaan?.trim() || !item.jawaban?.trim()))
+      return "Lengkapi pertanyaan dan jawaban FAQ, atau hapus FAQ yang kosong.";
     const names = new Set();
     for (let i = 0; i < data.form_fields.length; i++) {
       const field = data.form_fields[i];
@@ -705,67 +610,67 @@ export default function OprecBuilder({ oprecId }) {
   };
 
   const save = async (nextStatus = data.status) => {
+    if (saving.current) return;
     const problem = validate();
     if (problem) {
       setError(problem);
       return;
     }
+    saving.current = true;
     setBusy(true);
     setError("");
-    const payload = {
-      ...data,
-      status: nextStatus,
-      periode: data.periode.trim(),
-      tanggal_buka: apiDateStart(data.tanggal_buka),
-      tanggal_tutup: apiDateEnd(data.tanggal_tutup),
-      poster: data.poster.trim() || null,
-      poster_alt: data.poster_alt.trim() || null,
-      link_grup_wa: data.link_grup_wa.trim() || null,
-      divisi_tersedia: data.divisi_tersedia.map((item) => ({
-        ...item,
-        logo: item.logo?.trim() || null,
-        jabatan: Array.isArray(item.jabatan)
-          ? item.jabatan.map(String).map((s) => s.trim()).filter(Boolean)
-          : getDefaultJabatan(item.nama),
-      })),
-      form_fields: data.form_fields.map((field) => ({
-        name: field.name,
-        label: field.label.trim(),
-        type: field.type,
-        required: Boolean(field.required),
-        help: field.help || null,
-        placeholder: field.placeholder || null,
-        target_type: field.target_type === "specific" ? "specific" : "all",
-        target_divisions:
-          field.target_type === "specific" && Array.isArray(field.target_divisions)
-            ? field.target_divisions.map(String).map((s) => s.trim()).filter(Boolean)
-            : [],
-        ...(["select", "radio"].includes(field.type)
-          ? { options: field.options || [] }
-          : {}),
-        ...(field.type === "file"
-          ? {
-              accept: field.accept?.length
-                ? field.accept
-                : [".pdf", ".jpg", ".jpeg", ".png"],
-              maxSizeMB: Number(field.maxSizeMB || 5),
-            }
-          : {}),
-        ...(["text", "email", "tel", "url", "textarea"].includes(field.type)
-          ? {
-              maxLength: Number(
-                field.maxLength || (field.type === "textarea" ? 3000 : 255)
-              ),
-            }
-          : {}),
-      })),
-      pengumuman: {
-        published: Boolean(data.pengumuman?.published),
-        tanggal: data.pengumuman?.tanggal || null,
-        pesan: data.pengumuman?.pesan || "",
-      },
-    };
     try {
+      const payload = {
+        ...data,
+        status: nextStatus,
+        periode: data.periode.trim(),
+        tanggal_buka: apiDateStart(data.tanggal_buka),
+        tanggal_tutup: apiDateEnd(data.tanggal_tutup),
+        poster: data.poster.trim() || null,
+        poster_alt: data.poster_alt.trim() || null,
+        link_grup_wa: data.link_grup_wa.trim() || null,
+        divisi_tersedia: data.divisi_tersedia.map((item) => ({
+          ...item,
+          logo: item.logo?.trim() || null,
+          jabatan: getDefaultJabatan(item.nama),
+        })),
+        form_fields: data.form_fields.map((field) => ({
+          name: field.name,
+          label: field.label.trim(),
+          type: field.type,
+          required: Boolean(field.required),
+          help: field.help || null,
+          placeholder: field.placeholder || null,
+          target_type: field.target_type === "specific" ? "specific" : "all",
+          target_divisions:
+            field.target_type === "specific" && Array.isArray(field.target_divisions)
+              ? field.target_divisions.map(String).map((s) => s.trim()).filter(Boolean)
+              : [],
+          ...(["select", "radio"].includes(field.type)
+            ? { options: field.options || [] }
+            : {}),
+          ...(field.type === "file"
+            ? {
+                accept: field.accept?.length
+                  ? field.accept
+                  : [".pdf", ".jpg", ".jpeg", ".png"],
+                maxSizeMB: Number(field.maxSizeMB || 5),
+              }
+            : {}),
+          ...(["text", "email", "tel", "url", "textarea"].includes(field.type)
+            ? {
+                maxLength: Number(
+                  field.maxLength || (field.type === "textarea" ? 3000 : 255)
+                ),
+              }
+            : {}),
+        })),
+        pengumuman: {
+          published: Boolean(data.pengumuman?.published),
+          tanggal: data.pengumuman?.tanggal || null,
+          pesan: data.pengumuman?.pesan || "",
+        },
+      };
       const response = oprecId
         ? await api.put(`/admin/oprec/${oprecId}`, payload)
         : await api.post("/admin/oprec", payload);
@@ -778,6 +683,7 @@ export default function OprecBuilder({ oprecId }) {
         errors ? Object.values(errors).flat().join(" ") : err.message || "Gagal menyimpan formulir."
       );
     } finally {
+      saving.current = false;
       setBusy(false);
     }
   };
@@ -1232,6 +1138,25 @@ export default function OprecBuilder({ oprecId }) {
 
 
               {/* Advanced Technical Settings */}
+              <section aria-labelledby="oprec-faq-editor-title" className="oprec-builder__advanced">
+                <h3 id="oprec-faq-editor-title">Pertanyaan umum (FAQ)</h3>
+                <p className="text-sm text-slate-600">Informasi ini tampil pada halaman OPREC untuk membantu calon anggota.</p>
+                {data.faq.map((item, index) => (
+                  <fieldset key={index} className="oprec-builder__field oprec-builder__faq-item">
+                    <legend className="text-sm font-semibold">FAQ {index + 1}</legend>
+                    <div className="oprec-builder__grid">
+                      <label className="wide">Pertanyaan
+                        <input maxLength={500} value={item.pertanyaan} onChange={(event) => set("faq", data.faq.map((faq, i) => i === index ? { ...faq, pertanyaan: event.target.value } : faq))} />
+                      </label>
+                      <label className="wide">Jawaban
+                        <textarea rows={3} maxLength={2000} value={item.jawaban} onChange={(event) => set("faq", data.faq.map((faq, i) => i === index ? { ...faq, jawaban: event.target.value } : faq))} />
+                      </label>
+                    </div>
+                    <button type="button" className="oprec-btn oprec-btn--danger oprec-btn--sm" aria-label={`Hapus FAQ ${index + 1}`} onClick={() => set("faq", data.faq.filter((_, i) => i !== index))}>Hapus FAQ</button>
+                  </fieldset>
+                ))}
+                <button type="button" className="oprec-btn oprec-btn--secondary oprec-btn--sm" disabled={data.faq.length >= 40} onClick={() => set("faq", [...data.faq, { pertanyaan: "", jawaban: "" }])}>Tambah FAQ</button>
+              </section>
               <div className="oprec-builder__advanced">
                 <button
                   type="button"
@@ -1281,7 +1206,7 @@ export default function OprecBuilder({ oprecId }) {
                 <div>
                   <h2>Divisi yang Dibuka</h2>
                   <p>
-                    Kelola divisi dan susunan jabatan yang dapat dipilih oleh calon anggota.
+                    Kelola divisi yang dapat dipilih oleh calon anggota.
                   </p>
                 </div>
                 <div className="oprec-builder__section-actions">
@@ -1321,7 +1246,7 @@ export default function OprecBuilder({ oprecId }) {
                       <div className="oprec-builder__division-config-item">
                         <span className="oprec-builder__config-label">Jabatan dalam Divisi</span>
                         <p className="oprec-builder__config-desc">
-                          Setiap divisi memiliki susunan jabatan yang dapat disesuaikan. Default BPH mencakup 3 posisi pimpinan, sedangkan divisi lainnya adalah Staff Divisi.
+                          Pilihan BPH adalah Wakil Ketua Umum, Sekretaris 2, dan Bendahara 2. Divisi lainnya hanya Staff Divisi. Jabatan penerimaan ditentukan saat seleksi.
                         </p>
                       </div>
                     </div>
@@ -1563,57 +1488,23 @@ export default function OprecBuilder({ oprecId }) {
                         />
                       </label>
 
-                      {/* JABATAN DIVISI SECTION */}
                       <div className="oprec-builder__jabatan-section wide">
                         <div className="oprec-builder__jabatan-head">
                           <div>
-                            <span className="oprec-builder__label">
-                              Jabatan / Posisi Divisi <span className="oprec-builder__required">*</span>
-                            </span>
+                            <span className="oprec-builder__label">Jabatan Pendaftaran</span>
                             <small className="oprec-builder__jabatan-desc">
-                              Posisi yang dibuka untuk dipilih calon anggota pada divisi ini.
+                              Pilihan mengikuti aturan divisi. Jabatan penerimaan ditentukan saat seleksi.
                             </small>
                           </div>
-                          <button
-                            type="button"
-                            className="oprec-btn oprec-btn--secondary oprec-btn--xs"
-                            onClick={() => resetDivisionJabatan(index)}
-                            title="Kembalikan susunan jabatan ke standar sistem"
-                          >
-                            <RotateCcw size={12} />
-                            <span>Reset Default</span>
-                          </button>
                         </div>
-
-                        {/* List of Chips */}
                         <div className="oprec-builder__jabatan-chips">
-                          {division.jabatan && division.jabatan.length > 0 ? (
-                            division.jabatan.map((pos, posIdx) => (
-                              <div key={posIdx} className="oprec-builder__jabatan-chip">
-                                <span className="oprec-builder__jabatan-chip-text">{pos}</span>
-                                <button
-                                  type="button"
-                                  className="oprec-builder__jabatan-chip-del"
-                                  onClick={() => removeDivisionJabatan(index, posIdx)}
-                                  title={`Hapus jabatan ${pos}`}
-                                  aria-label={`Hapus ${pos}`}
-                                >
-                                  <X size={12} />
-                                </button>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="oprec-builder__jabatan-empty">
-                              Belum ada jabatan. Tambahkan minimal satu jabatan untuk divisi ini.
-                            </div>
-                          )}
+                          {getDefaultJabatan(division.nama).map((position) => (
+                            <span key={position} className="oprec-builder__jabatan-chip">
+                              <span className="oprec-builder__jabatan-chip-text">{position}</span>
+                            </span>
+                          ))}
+                          {!division.nama.trim() && <span className="oprec-builder__jabatan-empty">Isi nama divisi untuk melihat jabatan pendaftaran.</span>}
                         </div>
-
-                        {/* Inline Add Jabatan Form */}
-                        <DivisionJabatanAdder
-                          onAdd={(newTitle) => addDivisionJabatan(index, newTitle)}
-                          placeholder={`Tambah jabatan baru untuk ${division.nama || "divisi ini"}...`}
-                        />
                       </div>
                     </div>
                   </div>
@@ -1856,6 +1747,7 @@ export default function OprecBuilder({ oprecId }) {
                             onChange={(e) =>
                               setField(actualIndex, {
                                 type: e.target.value,
+                                maxLength: e.target.value === "textarea" ? 3000 : 255,
                                 options: ["select", "radio"].includes(e.target.value)
                                   ? []
                                   : undefined,
@@ -2462,9 +2354,7 @@ export default function OprecBuilder({ oprecId }) {
                                 : null;
                               const isUnlocked = Boolean(division);
                               const positions = division
-                                ? (Array.isArray(division.jabatan) && division.jabatan.length > 0
-                                    ? division.jabatan
-                                    : getDefaultJabatan(division.nama))
+                                ? getDefaultJabatan(division.nama)
                                 : [];
                               const currentChoice = previewSelectedJabatan[rank] || "";
 

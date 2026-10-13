@@ -7,16 +7,47 @@ const lib = await import(`data:text/javascript;base64,${Buffer.from(source).toSt
 const service = (await readFile(new URL("../src/services/oprecSubmission.js", import.meta.url), "utf8")).replace(/^import .*;\n/gm, "").replaceAll("export ", "");
 const period = lib.normalizeOprec({ id: 1, periode: "Test", status: "open", tanggalBuka: "2000-01-01T00:00:00Z", tanggalTutup: "2099-01-01T00:00:00Z", divisiTersedia: [{ id: 1, nama: "Kominfo" }, { id: 2, nama: "Humas" }, { id: 3, nama: "PSDM" }], schemaVersion: "v2", formFields: [{ name: "nim", type: "text", label: "NIM", required: true }, { name: "tanggal_lahir", type: "date", label: "Lahir", required: true }] });
 function handlers(oprec, upstream) {
-  return new Function("getOprec", "normalizeOprecNim", "oprecState", "validBirthDate", "validateOprecForm", "fetch", "process", "NextResponse", `${service}\nreturn {registerOprec, lookupOprecResult};`)(async () => oprec, lib.normalizeOprecNim, lib.oprecState, lib.validBirthDate, lib.validateOprecForm, upstream, { env: { API_BASE_URL: "https://backend.test/api" } }, NextResponse);
+  return new Function("getOprec", "normalizeOprecNim", "oprecState", "validBirthDate", "validateOprecForm", "isFieldApplicable", "fetch", "process", "NextResponse", `${service}\nreturn {registerOprec, lookupOprecResult};`)(async () => oprec, lib.normalizeOprecNim, lib.oprecState, lib.validBirthDate, lib.validateOprecForm, lib.isFieldApplicable, upstream, { env: { API_BASE_URL: "https://backend.test/api" } }, NextResponse);
 }
 function registration(version = "v2") {
   const form = new FormData();
-  for (const [key, value] of Object.entries({ oprec_id: "1", schema_version: version, nim: "e312345", tanggal_lahir: "2004-02-29", ignored: "private-extra" })) form.set(key, value);
+  for (const [key, value] of Object.entries({ oprec_id: "1", schema_version: version, nim: "e312345", tanggal_lahir: "2004-02-29", divisi_pilihan_1: "1", divisi_pilihan_2: "2", divisi_pilihan_3: "3", ignored: "private-extra" })) form.set(key, value);
   return new Request("https://site.test/api/oprec/register", { method: "POST", body: form });
 }
 function lookup() {
   return new Request("https://site.test/api/oprec/result", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ oprec_id: "1", nim: "E312345", tanggal_lahir: "2004-02-29" }) });
 }
+test("registration drops answers for divisions the participant did not choose", async () => {
+  const conditional = { ...period, formFields: [...period.formFields, { name: "hidden_file", type: "file", label: "Berkas Ristek", required: true, targetType: "specific", targetDivisions: ["Ristek"] }] };
+  const form = await registration().formData();
+  ["1", "2", "3"].forEach((id, index) => form.set(`divisi_pilihan_${index + 1}`, id));
+  form.set("hidden_file", "unvalidated-value");
+  const response = await handlers(conditional, async (_url, options) => {
+    assert.equal(options.body.get("hidden_file"), null);
+    return Response.json({ data: { submitted: true } });
+  }).registerOprec(new Request("https://site.test/api/oprec/register", { method: "POST", body: form }));
+  assert.equal(response.status, 201);
+});
+test("registration rejects missing division choices even without a legacy division field", async () => {
+  const form = await registration().formData();
+  [1, 2, 3].forEach(rank => form.delete(`divisi_pilihan_${rank}`));
+  const response = await handlers(period, async () => { throw Error('must not forward'); })
+    .registerOprec(new Request("https://site.test/api/oprec/register", { method: "POST", body: form }));
+  assert.equal(response.status, 422);
+  assert.ok((await response.json()).errors.divisi_pilihan_1);
+});
+test("registration handles session expiry, validation, rate limits and timeout without fake success", async () => {
+  for (const [upstreamStatus, expected] of [[401, 401], [419, 401], [422, 422], [429, 429], [500, 503]]) {
+    const response = await handlers(period, async () => Response.json({ errors: { nim: ['Periksa NIM'] } }, { status: upstreamStatus }))
+      .registerOprec(registration());
+    assert.equal(response.status, expected);
+    assert.notEqual((await response.json()).data?.submitted, true);
+  }
+  let attempts = 0;
+  const response = await handlers(period, async () => { attempts++; throw new DOMException('Timed out', 'TimeoutError'); }).registerOprec(registration());
+  assert.equal(response.status, 503);
+  assert.equal(attempts, 1);
+});
 test("registration forwards only approved schema fields and confirms persisted success", async () => {
   const { registerOprec } = handlers(period, async (url, options) => {
     assert.match(url, /\/user\/oprec\/register$/);
@@ -49,6 +80,8 @@ test("registration forwards exactly three ranked division choices", async () => 
   const request = () => new Request("https://site.test/api/oprec/register", { method: "POST", body: form });
   assert.equal((await submit(request())).status, 422);
   form.set("divisi_pilihan_3", "3");
+  assert.equal((await submit(request())).status, 422);
+  form.set("jabatan_pilihan_1", "Sekretaris 2");
   assert.equal((await submit(request())).status, 201);
 });
 test("closed period and stale schema reject before forwarding", async () => {

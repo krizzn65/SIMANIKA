@@ -60,6 +60,33 @@ class OprecAnnouncementTest extends TestCase
         $this->getJson($base.'/poster')->assertNotFound();
     }
 
+    public function test_utc_and_wib_schedule_inputs_keep_the_same_instant_after_reload(): void
+    {
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-10-02T17:00:00+07:00'));
+        [$oprec] = $this->fixture();
+        $release = \Illuminate\Support\Carbon::parse('2026-10-02T17:05:00+07:00');
+        $admin = User::create(['email' => 'timezone-admin@example.test', 'password' => 'testing-password']);
+        $admin->forceFill(['role' => 'admin'])->save();
+        $url = "/api/admin/oprec/{$oprec->id}/announcement";
+        $public = "/api/public/oprec/{$oprec->id}/announcement";
+        $payload = $this->payload();
+        $payload['release_at'] = $release->copy()->utc()->toIso8601String();
+        $this->actingAs($admin, 'sanctum')->postJson($url, $payload)->assertOk()->assertJsonPath('data.released', false);
+        $this->getJson($url)->assertOk()->assertJsonPath('announcement.released', false);
+        $this->assertTrue($oprec->fresh()->pengumuman_tanggal->equalTo($release));
+        unset($payload['poster']);
+        $payload['release_at'] = $release->toIso8601String();
+        $this->postJson($url, $payload)->assertOk()->assertJsonPath('data.released', false);
+        $this->assertTrue($oprec->fresh()->pengumuman_tanggal->equalTo($release));
+        $this->travelTo($release->copy()->subSecond());
+        $this->postJson($public.'/verify', ['nim' => 'E312345', 'tanggal_lahir' => '2004-01-01'])->assertConflict();
+        $this->getJson($public)->assertOk()->assertJsonPath('data.description', '');
+        $this->travelTo($release);
+        $this->getJson($public)->assertOk()->assertJsonPath('data.released', true);
+        $this->postJson($public.'/verify', ['nim' => 'E312345', 'tanggal_lahir' => '2004-01-01'])->assertOk();
+        $this->postJson($url, $payload)->assertConflict();
+    }
+
     public function test_ticket_is_private_expiring_and_bound_to_period_and_submitted_participant(): void
     {
         [$oprec, $registration] = $this->fixture();
@@ -124,6 +151,10 @@ class OprecAnnouncementTest extends TestCase
             $this->actingAs($actor, 'sanctum')->getJson("/api/admin/oprec/{$oprec->id}/announcement")->assertForbidden();
         }
         $actor->forceFill(['role' => 'leader'])->save();
+        \Illuminate\Support\Facades\DB::table('oprec_assessment_assignments')->insert([
+            'oprec_id' => $oprec->id, 'user_id' => $actor->id, 'assigned_by' => null,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
         $this->actingAs($actor, 'sanctum')->getJson("/api/admin/oprec/{$oprec->id}/announcement")->assertOk()
             ->assertJsonPath('participants.data.0.position', 'Ketua Umum')
             ->assertJsonPath('participants.data.1.position', 'Wakil Ketua Umum')

@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarDays, Eye, LoaderCircle, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { api } from "@/services/api";
+import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
 import { AdminErrorNotice } from "../../AdminErrorNotice";
 import "./test.css";
 
@@ -32,6 +34,8 @@ function useNativeDialog(open, onClose) {
 }
 
 export default function AdminOprecWrittenTestPage() {
+  const { user } = useAuth();
+  const canManage = ["super_admin", "admin"].includes(user?.role);
   const router = useRouter();
   const [periods, setPeriods] = useState([]);
   const [eligible, setEligible] = useState([]);
@@ -83,7 +87,7 @@ export default function AdminOprecWrittenTestPage() {
   const selected = periods.find((period) => period.id === selectedId);
   const test = selected?.written_test;
   const loadAnswers = useCallback(async (signal) => {
-    if (!selectedId || !test) {
+    if (!selectedId || !test || !canManage) {
       setSubmissions([]);
       setQuestions([]);
       setAnswerTotal(0);
@@ -106,7 +110,7 @@ export default function AdminOprecWrittenTestPage() {
     } finally {
       if (!signal?.aborted) setLoadingAnswers(false);
     }
-  }, [selectedId, test?.id, answerPage]);
+  }, [selectedId, test?.id, answerPage, canManage]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -166,9 +170,9 @@ export default function AdminOprecWrittenTestPage() {
           <p>Atur soal dan periksa jawaban peserta OPREC per periode.</p>
         </div>
         <div className="oprec-test__header-actions">
-          <button className="oprec-test__primary" type="button" onClick={() => { setForm({ oprec_id: String(eligible[0]?.id || ""), tanggal_buka: "", tanggal_tutup: "" }); setCreateOpen(true); }} disabled={!eligible.length || loading}>
+          {canManage && <button className="oprec-test__primary" type="button" onClick={() => { setForm({ oprec_id: String(eligible[0]?.id || ""), tanggal_buka: "", tanggal_tutup: "" }); setCreateOpen(true); }} disabled={!eligible.length || loading}>
             <Plus size={17} aria-hidden="true" /> Tambah Tes Tulis
-          </button>
+          </button>}
           <button className="oprec-test__secondary" type="button" onClick={loadPeriods} disabled={loading}><RefreshCw size={16} aria-hidden="true" /> Perbarui</button>
         </div>
       </header>
@@ -196,10 +200,10 @@ export default function AdminOprecWrittenTestPage() {
                 <p><CalendarDays size={16} aria-hidden="true" /> {formatWib(test.tanggal_buka)} – {formatWib(test.tanggal_tutup)}</p>
                 <span className={`oprec-test__badge ${test.published ? "is-ready" : ""}`}>{test.published ? "Soal siap" : "Soal belum disimpan"}</span>
               </div>
-              <button className="oprec-test__primary" type="button" onClick={() => router.push(editHref(selected))}><Pencil size={16} aria-hidden="true" /> Kelola pertanyaan</button>
+              {canManage && <button className="oprec-test__primary" type="button" onClick={() => router.push(editHref(selected))}><Pencil size={16} aria-hidden="true" /> Kelola pertanyaan</button>}
             </div>
           </section>
-          <section className="oprec-test__answers" aria-labelledby="answers-title">
+          {canManage ? <section className="oprec-test__answers" aria-labelledby="answers-title">
             <div className="oprec-test__section-head"><div><h2 id="answers-title">Jawaban Tes Tulis</h2><p>Seluruh kolom pertanyaan mengikuti soal pada tes ini.</p></div><span>{answerTotal} jawaban</span></div>
             {answerError && <AdminErrorNotice message={answerError} />}
             {loadingAnswers ? <div className="oprec-test__answers-loading" role="status" aria-live="polite" aria-busy="true"><div className="oprec-test__answers-loading-label"><LoaderCircle size={18} aria-hidden="true" /> Memuat jawaban…</div><div className="oprec-test__answers-skeleton" aria-hidden="true"><span /><span /><span /><span /><span /><span /></div></div> : (
@@ -214,7 +218,7 @@ export default function AdminOprecWrittenTestPage() {
               </div>
             )}
             {answerPages > 1 && <div className="oprec-test__pager"><button type="button" disabled={answerPage === 1} onClick={() => setAnswerPage((value) => value - 1)}>Sebelumnya</button><span>{answerPage} / {answerPages}</span><button type="button" disabled={answerPage === answerPages} onClick={() => setAnswerPage((value) => value + 1)}>Berikutnya</button></div>}
-          </section>
+          </section> : <p className="oprec-test__hint">Mode hanya baca. Jawaban peserta tersedia melalui <Link href="/admin/oprec/penilaian">Penilaian</Link> untuk periode yang ditugaskan.</p>}
         </>
       ) : <div className="oprec-test__empty">Belum ada Tes Tulis untuk periode ini.</div>}
 

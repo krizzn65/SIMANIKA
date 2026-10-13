@@ -19,6 +19,6 @@ export function canAccessAdminPath(role, pathname) {
   const segment = pathname.split("/")[2] || "";
   if (role === "super_admin") return ["", "users", "events", "oprec", "merchandise", "settings"].includes(segment);
   if (role === "admin") return ["", "events", "oprec", "merchandise", "settings"].includes(segment);
-  if (role === "leader") return segment === "oprec";
+  if (role === "leader") return ["/admin/oprec", "/admin/oprec/test", "/admin/oprec/penilaian", "/admin/oprec/pengumuman"].includes(pathname.replace(/\/$/, ""));
   return segment === "merchandise";
 }

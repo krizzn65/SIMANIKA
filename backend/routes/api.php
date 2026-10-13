@@ -66,12 +66,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [ProfileController::class, 'show']);
     Route::put('/auth/profile', [ProfileController::class, 'update']);
     Route::post('/auth/change-password', [PasswordController::class, 'change'])->middleware('throttle:password');
-    Route::post('/user/oprec/register', [OprecRegistrationController::class, 'store'])->middleware('throttle:auth');
-    Route::post('/user/oprec/enroll', OprecEnrollmentController::class)->middleware('throttle:auth');
+    Route::post('/user/oprec/register', [OprecRegistrationController::class, 'store'])->middleware('throttle:oprec-submission');
+    Route::post('/user/oprec/enroll', OprecEnrollmentController::class)->middleware('throttle:oprec-submission');
     Route::get('/user/oprec/workspace', [OprecWorkspaceController::class, 'show']);
     Route::get('/user/oprec/{oprec}/written-test', [UserOprecWrittenTestController::class, 'show']);
     Route::get('/user/oprec/{oprec}/written-test/files/{field}', [OprecWrittenTestFileController::class, 'user']);
-    Route::post('/user/oprec/{oprec}/written-test', [UserOprecWrittenTestController::class, 'submit'])->middleware('throttle:auth');
+    Route::post('/user/oprec/{oprec}/written-test', [UserOprecWrittenTestController::class, 'submit'])->middleware('throttle:oprec-submission');
     Route::post('/user/events/{event}/register', [EventRegistrationController::class, 'store'])->middleware('throttle:auth');
     Route::post('/user/events/{event}/enroll', EventEnrollmentController::class)->middleware('throttle:auth');
     Route::post('/user/events/{event}/create-team', CreateEventTeamController::class)->middleware('throttle:auth');
@@ -101,7 +101,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/events/{event}', [AdminEventController::class, 'destroy']);
         });
 
-        Route::middleware('admin:oprec')->group(function () {
+        Route::middleware(['admin:oprec', \App\Http\Middleware\OprecAccessMiddleware::class])->group(function () {
             Route::get('/oprec/announcements', [\App\Http\Controllers\Admin\OprecAnnouncementController::class, 'index']);
             Route::get('/oprec/{oprec}/announcement', [\App\Http\Controllers\Admin\OprecAnnouncementController::class, 'show']);
             Route::post('/oprec/{oprec}/announcement', [\App\Http\Controllers\Admin\OprecAnnouncementController::class, 'save']);

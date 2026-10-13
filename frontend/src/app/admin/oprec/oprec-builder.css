@@ -2412,36 +2412,10 @@
   font-size: 12px;
   font-weight: 500;
   color: #1e40af;
-  transition: all 0.15s ease;
-}
-
-.oprec-builder__jabatan-chip:hover {
-  border-color: #93c5fd;
-  background: #e0f2fe;
 }
 
 .oprec-builder__jabatan-chip-text {
   line-height: 1.2;
-}
-
-.oprec-builder__jabatan-chip-del {
-  display: inline-grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: #64748b;
-  cursor: pointer;
-  border-radius: 0 !important;
-  padding: 0;
-  transition: all 0.12s ease;
-}
-
-.oprec-builder__jabatan-chip-del:hover {
-  background: #fee2e2;
-  border-color: #fecdd3;
-  color: #dc2626;
 }
 
 .oprec-builder__jabatan-empty {
@@ -2452,48 +2426,6 @@
   border: 1px dashed #fde68a;
   padding: 8px 12px;
   width: 100%;
-}
-
-.oprec-builder__jabatan-add-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.oprec-builder__jabatan-input {
-  flex: 1;
-  min-width: 0;
-  background: #ffffff;
-  border: 1px solid #cbd5e1 !important;
-  border-radius: 0 !important;
-  padding: 6px 10px !important;
-  font-size: 12px !important;
-  color: #0f172a;
-  height: 32px;
-  transition: border-color 0.15s ease;
-}
-
-.oprec-builder__jabatan-input:focus {
-  outline: none;
-  border-color: #2563eb !important;
-}
-
-.oprec-builder__jabatan-add-btn {
-  height: 32px;
-  padding: 0 12px !important;
-  font-size: 12px !important;
-  gap: 4px !important;
-  border-radius: 0 !important;
-  white-space: nowrap;
-}
-
-.oprec-btn--xs {
-  padding: 3px 8px !important;
-  font-size: 11px !important;
-  gap: 4px !important;
-  min-height: unset !important;
-  height: 26px;
-  border-radius: 0 !important;
 }
 
 .oprec-builder__division-config-footer {
@@ -2965,4 +2897,3 @@
     display: none !important;
   }
 }
-

@@ -5,7 +5,9 @@ import Link from "next/link";
 import OprecCreateDialog from "./OprecCreateDialog";
 import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
 import { api } from "@/services/api";
+import { useAuth } from "@/hooks/useAuth";
 import { getOprecTableFields, getRegistrantFieldValue, getRegistrantFormData } from "@/lib/oprecRegistrants";
+import { getDefaultJabatan, normalizeOprecNim, oprecNimError, validBirthDate } from "@/lib/oprec";
 import { AdminErrorNotice } from "../AdminErrorNotice";
 import { Search, X, RefreshCw, Calendar, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import "./oprec-create-dialog.css";
@@ -39,6 +41,8 @@ function getRegistrantName(r) {
 }
 
 export default function AdminOprecPage() {
+  const { user } = useAuth();
+  const canManage = ["super_admin", "admin"].includes(user?.role);
   const [oprecs, setOprecs] = useState([]);
   const [selectedOprec, setSelectedOprec] = useState(null);
   const [registrants, setRegistrants] = useState([]);
@@ -69,6 +73,9 @@ export default function AdminOprecPage() {
   const [registrantEdit, setRegistrantEdit] = useState(null);
   const [savingRegistrant, setSavingRegistrant] = useState(false);
   const [registrantEditError, setRegistrantEditError] = useState("");
+  const [registrantIdentityErrors, setRegistrantIdentityErrors] = useState({});
+  const registrantNimRef = useRef(null);
+  const registrantBirthDateRef = useRef(null);
 
   const fetchOprecs = async () => {
     setLoading(true);
@@ -87,7 +94,7 @@ export default function AdminOprecPage() {
   };
 
   const fetchRegistrants = async (oprecId, page = registrantPage, term = search, division = divisionFilter) => {
-    if (!oprecId) return;
+    if (!oprecId || !canManage) return;
     const currentRequest = ++requestId.current;
     setLoadingRegistrants(true);
     setRegistrantError("");
@@ -113,11 +120,17 @@ export default function AdminOprecPage() {
   }, []);
 
   useEffect(() => {
-    if (!selectedOprec?.id) return;
+    if (!selectedOprec?.id || !canManage) {
+      requestId.current += 1;
+      setRegistrants([]);
+      setRegistrantTotal(0);
+      setLoadingRegistrants(false);
+      return;
+    }
     setLoadingRegistrants(true);
     const timer = setTimeout(() => fetchRegistrants(selectedOprec.id, registrantPage, search, divisionFilter), 250);
     return () => { clearTimeout(timer); requestId.current += 1; };
-  }, [selectedOprec?.id, registrantPage, search, divisionFilter]);
+  }, [selectedOprec?.id, registrantPage, search, divisionFilter, canManage]);
 
   useEffect(() => {
     if (!deleteTarget) return;
@@ -203,6 +216,7 @@ export default function AdminOprecPage() {
   const openRegistrantEditor = (registrant) => {
     setRegistrantEdit(buildRegistrantEdit(registrant));
     setRegistrantEditError("");
+    setRegistrantIdentityErrors({});
     setVerifyModal({ isOpen: true, registrant });
   };
 
@@ -214,7 +228,15 @@ export default function AdminOprecPage() {
   };
 
   const handleSaveRegistrant = async () => {
-    if (!selectedOprec?.id || !verifyModal.registrant || !registrantEdit || savingRegistrant) return;
+    if (!canManage || !selectedOprec?.id || !verifyModal.registrant || !registrantEdit || savingRegistrant) return;
+    const nimError = oprecNimError(registrantEdit.values.nim);
+    const birthDateError = validBirthDate(registrantEdit.values.tanggal_lahir) ? null : "Isi tanggal lahir yang valid (1900 sampai hari ini).";
+    setRegistrantIdentityErrors({ nim: nimError, tanggal_lahir: birthDateError });
+    if (nimError || birthDateError) {
+      setRegistrantEditError("Periksa NIM dan tanggal lahir sebelum menyimpan.");
+      (nimError ? registrantNimRef : registrantBirthDateRef).current?.focus();
+      return;
+    }
     const choices = [registrantEdit.divisi_pilihan_1, registrantEdit.divisi_pilihan_2, registrantEdit.divisi_pilihan_3];
     if (choices.some((choice) => !choice) || new Set(choices).size !== 3) {
       setRegistrantEditError("Pilih tepat 3 divisi yang berbeda.");
@@ -226,6 +248,7 @@ export default function AdminOprecPage() {
       const payload = {
         schema_version: selectedOprec.schemaVersion,
         ...registrantEdit.values,
+        nim: normalizeOprecNim(registrantEdit.values.nim),
         divisi_pilihan_1: registrantEdit.divisi_pilihan_1,
         divisi_pilihan_2: registrantEdit.divisi_pilihan_2,
         divisi_pilihan_3: registrantEdit.divisi_pilihan_3,
@@ -241,6 +264,7 @@ export default function AdminOprecPage() {
       setRegistrantEdit(buildRegistrantEdit(updated));
     } catch (err) {
       const errors = err.response?.data?.errors;
+      setRegistrantIdentityErrors({ nim: errors?.nim?.[0], tanggal_lahir: errors?.tanggal_lahir?.[0] });
       setRegistrantEditError(Object.values(errors || {})[0]?.[0] || err.response?.data?.message || err.message || "Perubahan belum dapat disimpan.");
     } finally {
       setSavingRegistrant(false);
@@ -282,14 +306,14 @@ export default function AdminOprecPage() {
               </select>
             </label>
           )}
-          <button
+          {canManage && <button
             type="button"
             onClick={() => setCreateOpen(true)}
             className="oprec-btn oprec-btn--primary"
           >
             <CalendarPlusIcon size={16} loopDelay={2300} />
             <span>Tambah pendaftaran</span>
-          </button>
+          </button>}
           <button
             type="button"
             onClick={() => {
@@ -318,10 +342,10 @@ export default function AdminOprecPage() {
               <h2 id="oprec-overview-title">Pendaftaran Calon Anggota</h2>
               <p>Informasi pendaftaran dan tahapan seleksi calon anggota HIMANIKA.</p>
             </div>
-            <div className="oprec-admin-overview__count">
+            {canManage && <div className="oprec-admin-overview__count">
               <strong>{registrantTotal}</strong>
               <span>{search || divisionFilter !== "all" ? "Hasil filter" : "Berkas masuk"}</span>
-            </div>
+            </div>}
           </div>
 
           <div className="oprec-admin-overview__registration">
@@ -348,7 +372,7 @@ export default function AdminOprecPage() {
                 )}
               </div>
             </div>
-            <div className="oprec-admin-overview__actions">
+            {canManage && <div className="oprec-admin-overview__actions">
               <Link href={oprecEditHref(selectedOprec)} className="oprec-admin-overview__edit">
                 <Pencil size={14} aria-hidden="true" />
                 <span>Kelola formulir</span>
@@ -357,7 +381,7 @@ export default function AdminOprecPage() {
                 <Trash2 size={14} aria-hidden="true" />
                 <span>Hapus pendaftaran</span>
               </button>
-            </div>
+            </div>}
           </div>
 
           {selectedOprec.divisiTersedia?.length > 0 && (
@@ -402,7 +426,7 @@ export default function AdminOprecPage() {
       <AdminErrorNotice message={registrantError} onRetry={() => fetchRegistrants(selectedOprec?.id)} />
 
       {/* Filter and Registrants Table (Minimalist Boxy Layout) */}
-      <div className="border border-slate-300 bg-white rounded-none">
+      {canManage ? <div className="border border-slate-300 bg-white rounded-none">
         <div className="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-slate-900">
@@ -564,13 +588,13 @@ export default function AdminOprecPage() {
           <button type="button" className="oprec-btn oprec-btn--secondary" disabled={registrantPage <= 1 || loadingRegistrants} onClick={() => setRegistrantPage((page) => page - 1)}>Sebelumnya</button>
           <button type="button" className="oprec-btn oprec-btn--secondary" disabled={registrantPage >= registrantPages || loadingRegistrants} onClick={() => setRegistrantPage((page) => page + 1)}>Berikutnya</button>
         </div>}
-      </div>
+      </div> : <p className="border border-slate-300 bg-white p-4 text-sm text-slate-600">Mode hanya baca. Data peserta dan berkas tersedia melalui <Link href="/admin/oprec/penilaian" className="text-blue-700 underline">Penilaian</Link> untuk periode yang ditugaskan.</p>}
 
-      <OprecCreateDialog
+      {canManage && <OprecCreateDialog
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onCreated={fetchOprecs}
-      />
+      />}
 
       {deleteRegistrant && (
         <div className="oprec-delete-dialog__overlay" role="presentation" onMouseDown={(event) => {
@@ -640,11 +664,27 @@ export default function AdminOprecPage() {
                     </label>
                     <label className="text-xs font-medium text-slate-700">
                       NIM
-                      <input type="text" value={registrantEdit.values.nim || ""} onChange={(event) => setRegistrantEdit((current) => ({ ...current, values: { ...current.values, nim: event.target.value.toUpperCase() } }))} className="mt-1 block w-full border border-slate-300 bg-white px-3 py-2 font-mono text-sm text-slate-900 outline-none focus:border-blue-600" />
+                      <input ref={registrantNimRef} id="oprec-registrant-nim" type="text" value={registrantEdit.values.nim || ""}
+                        aria-invalid={Boolean(registrantIdentityErrors.nim)} aria-describedby={registrantIdentityErrors.nim ? "oprec-registrant-nim-error" : undefined}
+                        onChange={(event) => {
+                          setRegistrantEdit((current) => ({ ...current, values: { ...current.values, nim: event.target.value.toUpperCase() } }));
+                          setRegistrantIdentityErrors((current) => ({ ...current, nim: null }));
+                        }}
+                        onBlur={(event) => setRegistrantIdentityErrors((current) => ({ ...current, nim: oprecNimError(event.target.value) }))}
+                        className={`mt-1 block w-full border ${registrantIdentityErrors.nim ? "border-rose-500" : "border-slate-300"} bg-white px-3 py-2 font-mono text-sm text-slate-900 outline-none focus:border-blue-600`} />
+                      {registrantIdentityErrors.nim && <span id="oprec-registrant-nim-error" aria-live="polite" className="mt-1 block text-xs text-rose-700">{registrantIdentityErrors.nim}</span>}
                     </label>
                     <label className="text-xs font-medium text-slate-700">
                       Tanggal lahir
-                      <input type="date" value={registrantEdit.values.tanggal_lahir || ""} onChange={(event) => setRegistrantEdit((current) => ({ ...current, values: { ...current.values, tanggal_lahir: event.target.value } }))} className="mt-1 block w-full border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-600" />
+                      <input ref={registrantBirthDateRef} id="oprec-registrant-birth-date" type="date" value={registrantEdit.values.tanggal_lahir || ""}
+                        aria-invalid={Boolean(registrantIdentityErrors.tanggal_lahir)} aria-describedby={registrantIdentityErrors.tanggal_lahir ? "oprec-registrant-birth-date-error" : undefined}
+                        onChange={(event) => {
+                          setRegistrantEdit((current) => ({ ...current, values: { ...current.values, tanggal_lahir: event.target.value } }));
+                          setRegistrantIdentityErrors((current) => ({ ...current, tanggal_lahir: null }));
+                        }}
+                        onBlur={(event) => setRegistrantIdentityErrors((current) => ({ ...current, tanggal_lahir: validBirthDate(event.target.value) ? null : "Isi tanggal lahir yang valid (1900 sampai hari ini)." }))}
+                        className={`mt-1 block w-full border ${registrantIdentityErrors.tanggal_lahir ? "border-rose-500" : "border-slate-300"} bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-600`} />
+                      {registrantIdentityErrors.tanggal_lahir && <span id="oprec-registrant-birth-date-error" aria-live="polite" className="mt-1 block text-xs text-rose-700">{registrantIdentityErrors.tanggal_lahir}</span>}
                     </label>
                     <label className="text-xs font-medium text-slate-700">
                       Angkatan
@@ -656,18 +696,23 @@ export default function AdminOprecPage() {
                       const divisionKey = "divisi_pilihan_" + rank;
                       const jabatanKey = "jabatan_pilihan_" + rank;
                       const division = selectedOprec?.divisiTersedia?.find((item) => String(item.id) === registrantEdit[divisionKey]);
+                      const positions = getDefaultJabatan(division?.nama || "");
                       return (
                         <div key={rank} className="border border-slate-200 bg-white p-3">
                           <label className="block text-xs font-medium text-slate-700">Pilihan {rank}
-                            <select value={registrantEdit[divisionKey]} onChange={(event) => setRegistrantEdit((current) => ({ ...current, [divisionKey]: event.target.value, [jabatanKey]: "" }))} className="mt-1 block w-full border border-slate-300 bg-white px-2 py-2 text-xs outline-none focus:border-blue-600">
+                            <select value={registrantEdit[divisionKey]} onChange={(event) => {
+                              const selected = selectedOprec.divisiTersedia.find((item) => String(item.id) === event.target.value);
+                              const choices = getDefaultJabatan(selected?.nama || "");
+                              setRegistrantEdit((current) => ({ ...current, [divisionKey]: event.target.value, [jabatanKey]: choices.length === 1 ? choices[0] : "" }));
+                            }} className="mt-1 block w-full border border-slate-300 bg-white px-2 py-2 text-xs outline-none focus:border-blue-600">
                               <option value="">Pilih divisi</option>
                               {(selectedOprec?.divisiTersedia || []).map((item) => <option key={item.id} value={item.id}>{item.nama}</option>)}
                             </select>
                           </label>
                           <label className="mt-2 block text-xs font-medium text-slate-700">Jabatan
-                            <select value={registrantEdit[jabatanKey]} onChange={(event) => setRegistrantEdit((current) => ({ ...current, [jabatanKey]: event.target.value }))} disabled={!division} className="mt-1 block w-full border border-slate-300 bg-white px-2 py-2 text-xs outline-none disabled:bg-slate-100 focus:border-blue-600">
-                              <option value="">Pilih jabatan</option>
-                              {(division?.jabatan || []).map((jabatan) => <option key={jabatan} value={jabatan}>{jabatan}</option>)}
+                            <select value={positions.length === 1 ? positions[0] : registrantEdit[jabatanKey]} onChange={(event) => setRegistrantEdit((current) => ({ ...current, [jabatanKey]: event.target.value }))} disabled={!division || positions.length === 1} className="mt-1 block w-full border border-slate-300 bg-white px-2 py-2 text-xs outline-none disabled:bg-slate-100 focus:border-blue-600">
+                              {positions.length !== 1 && <option value="">Pilih jabatan</option>}
+                              {positions.map((jabatan) => <option key={jabatan} value={jabatan}>{jabatan}</option>)}
                             </select>
                           </label>
                         </div>
