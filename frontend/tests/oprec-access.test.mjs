@@ -16,3 +16,10 @@ test("Pengurus sees summaries and assessment but cannot enter OPREC editors", ()
     assert.equal(canAccessAdminPath("super_admin", path), true);
   }
 });
+
+test("only Super Admin can open system logs", () => {
+  assert.equal(canAccessAdminPath("super_admin", "/admin/logs"), true);
+  for (const role of ["admin", "leader", "kwu", "user"]) {
+    assert.equal(canAccessAdminPath(role, "/admin/logs"), false);
+  }
+});

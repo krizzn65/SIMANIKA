@@ -22,6 +22,7 @@ import {
   FilePenLine,
   ClipboardCheck,
   Megaphone,
+  ScrollText,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Toaster } from "sonner";
@@ -55,6 +56,11 @@ const adminLinks = [
     icon: <ShoppingBag className="h-5 w-5 flex-shrink-0" />,
   },
   {
+    label: "Log Sistem",
+    href: "/admin/logs",
+    icon: <ScrollText className="h-5 w-5 flex-shrink-0" />,
+  },
+  {
     label: "Pengaturan",
     href: "/admin/settings",
     icon: <Settings className="h-5 w-5 flex-shrink-0" />,
@@ -80,6 +86,7 @@ function adminBreadcrumb(pathname) {
     events: "Kelola Event",
     oprec: "Kelola OPREC",
     merchandise: "Merchandise",
+    logs: "Log Sistem",
     settings: "Pengaturan",
   };
   const segment = pathname.replace(/^\/admin\/?/, "").split("/")[0];

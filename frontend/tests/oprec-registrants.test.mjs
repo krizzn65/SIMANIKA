@@ -29,5 +29,7 @@ test("renders conditional answers, missing values and private file links safely"
   assert.deepEqual(getRegistrantFieldValue(registrant, { name: "cv", type: "file" }, divisions), { text: "—" });
   registrant.fileUploads = { cv: { downloadUrl: "/api/admin/oprec/1/registrants/2/files/cv" } };
   assert.equal(getRegistrantFieldValue(registrant, { name: "cv", type: "file" }, divisions).downloadUrl, registrant.fileUploads.cv.downloadUrl);
+  registrant.fileUploads.cv.available = false;
+  assert.deepEqual(getRegistrantFieldValue(registrant, { name: "cv", type: "file" }, divisions), { text: "Berkas tidak tersedia", missing: true });
   assert.deepEqual(getRegistrantFormData({ formData: "broken" }), {});
 });

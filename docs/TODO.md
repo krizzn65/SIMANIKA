@@ -990,3 +990,15 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 ### Kerangka Penilaian OPREC — 29 September 2026
 - [x] Submenu Penilaian dan route `/admin/oprec/penilaian` tersedia dengan breadcrumb serta indikator sidebar aktif; akses mengikuti guard area OPREC. Typecheck dan build produksi frontend lulus (route terdaftar).
 - [x] Kriteria, alur penjurian, sumber data, dan hak penilai telah diimplementasikan; rincian dan verifikasi tersisa dicatat pada bagian Penilaian OPREC di awal dokumen.
+
+### Perbaikan OPREC — 13 Oktober 2026
+- [x] Jadwal pendaftaran dan Tes Tulis menyimpan instan dengan offset UTC untuk PostgreSQL; SQLite pengujian mempertahankan waktu WIB. Regresi baca ulang dan konversi tengah malam ditambahkan.
+- [x] Status pendaftar menghapus istilah verifikasi dan mengarahkan ke tes tulis, tes wawancara, lalu pengumuman; setelah jawaban tes dikirim, arahan beralih ke wawancara.
+- [x] Ekspor seluruh calon peserta sesuai periode/filter ke XLSX dan PDF tersedia bagi Super Admin, Admin, dan Pengurus melalui endpoint yang memeriksa role. Pertanyaan baru Tes Tulis otomatis wajib dijawab.
+- [x] Tombol ekspor dibedakan hijau/merah dengan ikon; XLSX memakai lebar kolom, tinggi baris, wrap, zebra, filter, dan header beku. PDF memakai tabel ringkasan lanskap serta tabel rincian jawaban dengan pergantian halaman.
+- [x] Unduh berkas pendaftaran memakai sesi API yang sama dengan tabel, mempertahankan ekstensi file, dan tampil sebagai tombol berikon dengan status memuat di tabel serta panel detail. Permintaan API tanpa sesi mengembalikan 401, bukan error 500.
+- [x] Pendaftaran lokal yang diuji memiliki satu referensi berkas tanpa file fisik di penyimpanan. Daftar kini menandai berkas hilang dan Admin dapat memulihkannya lewat unggah ulang dengan validasi tipe/isi, ukuran, periode, dan role; berkas yang masih tersedia tidak bisa ditimpa lewat jalur pemulihan. Browser sintetis memastikan file PDF terunduh setelah pemulihan.
+- [ ] File asli pendaftar lokal yang hilang masih perlu diunggah ulang melalui detail pendaftar; byte aslinya tidak ada di workspace.
+- [x] Halaman Log Sistem khusus Super Admin resmi tersedia dengan ringkasan 24 jam, filter, paginasi, dan rincian aman. Middleware mencatat perubahan API, unduhan privat, login/gagal login, akses ditolak, dan error 5xx tanpa body request atau isi berkas. Migrasi aditif `audit_entries` sudah diterapkan pada PostgreSQL lokal; 105 tes backend dan uji browser enam viewport lulus.
+- [ ] Tentukan kebijakan retensi/arsip log sebelum menjadwalkan penghapusan otomatis. Aktivitas sebelum migrasi tidak diisi ulang.
+- [ ] Uji integrasi jadwal pada PostgreSQL dan buka hasil XLSX/PDF di aplikasi pembaca sebelum rilis.

@@ -50,7 +50,6 @@ export default function AdminDashboardPage() {
     totalRegistrations: 0,
     totalTeams: 0,
     totalOprecRegistrations: 0,
-    pendingOprecReviews: 0,
   };
 
   return (
@@ -141,9 +140,6 @@ export default function AdminDashboardPage() {
           <div>
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Pendaftar OPREC</span>
             <div className="text-2xl font-bold text-slate-900 mt-1">{loading ? "..." : stats.totalOprecRegistrations}</div>
-            <span className="text-xs text-amber-600 font-medium mt-0.5 block">
-              {stats.pendingOprecReviews} perlu verifikasi
-            </span>
           </div>
           <div className="admin-stat-icon">
             <ClipboardList className="w-5 h-5" />

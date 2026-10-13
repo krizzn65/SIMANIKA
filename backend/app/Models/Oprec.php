@@ -19,6 +19,24 @@ class Oprec extends Model
             set: fn ($value) => $value === null ? null : Carbon::parse($value, config('app.timezone'))->utc()->toIso8601String(),
         );
     }
+    protected function tanggalBuka(): Attribute
+    {
+        return $this->zonedSchedule();
+    }
+    protected function tanggalTutup(): Attribute
+    {
+        return $this->zonedSchedule();
+    }
+    private function zonedSchedule(): Attribute
+    {
+        $postgres = config('database.default') === 'pgsql';
+        return Attribute::make(
+            get: fn ($value) => $value === null ? null : Carbon::parse($value, $postgres ? 'UTC' : config('app.timezone')),
+            set: fn ($value) => $value === null ? null : ($postgres
+                ? Carbon::parse($value, config('app.timezone'))->utc()->toIso8601String()
+                : Carbon::parse($value, config('app.timezone'))->timezone(config('app.timezone'))->format('Y-m-d H:i:s')),
+        );
+    }
     public function divisions(): HasMany { return $this->hasMany(OprecDivision::class)->orderBy('sort_order'); }
     public function registrations(): HasMany { return $this->hasMany(OprecRegistration::class); }
     public function writtenTest(): \Illuminate\Database\Eloquent\Relations\HasOne

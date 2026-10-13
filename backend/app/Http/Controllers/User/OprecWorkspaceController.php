@@ -33,6 +33,8 @@ class OprecWorkspaceController extends Controller
         if ($requested) abort_unless($registration || $enrolled, 404, 'Pendaftaran OPREC tidak ditemukan.');
 
         $announced = app(\App\Services\OprecAnnouncementService::class)->released($oprec);
+        $writtenTestSubmitted = $registration && $oprec->writtenTest()
+            ->whereHas('submissions', fn ($query) => $query->where('user_id', $userId))->exists();
 
         $acceptedDivision = null;
         if ($registration && $registration->accepted_division_id) {
@@ -85,6 +87,7 @@ class OprecWorkspaceController extends Controller
                     ],
                 ],
                 'enrolled' => $enrolled,
+                'writtenTestSubmitted' => (bool) $writtenTestSubmitted,
                 'registration' => $registration ? [
                     'id' => $registration->id,
                     'nim' => $registration->nim,

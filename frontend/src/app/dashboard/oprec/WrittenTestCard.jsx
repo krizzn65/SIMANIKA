@@ -21,7 +21,7 @@ function countdown(milliseconds) {
   return `${days} hari ${hours} jam ${minutes} menit ${seconds % 60} detik`;
 }
 
-export function WrittenTestCard({ oprecId }) {
+export function WrittenTestCard({ oprecId, onSubmitted }) {
   const [test, setTest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -84,6 +84,7 @@ export function WrittenTestCard({ oprecId }) {
       await api.post(`/user/oprec/${oprecId}/written-test`, payload);
       confirmRef.current?.close();
       await load();
+      onSubmitted?.();
     } catch (cause) {
       const validation = Object.values(cause.response?.data?.errors || {}).flat()[0];
       setError(validation || cause.response?.data?.message || cause.message || "Jawaban gagal dikirim.");

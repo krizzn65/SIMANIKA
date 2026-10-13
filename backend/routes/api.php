@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\EventGuidebookController;
 use App\Http\Controllers\OprecWrittenTestFileController;
@@ -79,6 +80,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('admin')->middleware('admin')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->middleware('admin:dashboard');
+        Route::middleware('admin:logs')->group(function () {
+            Route::get('/logs', [AuditLogController::class, 'index']);
+            Route::get('/logs/{entry}', [AuditLogController::class, 'show']);
+        });
 
         Route::middleware('admin:users')->group(function () {
             Route::get('/users', [AdminUserController::class, 'index']);
@@ -132,10 +137,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/oprec/{oprec}', [AdminOprecController::class, 'update']);
             Route::delete('/oprec/{oprec}', [AdminOprecController::class, 'destroy']);
             Route::get('/oprec/{oprec}/registrants', [OprecRegistrantController::class, 'index']);
+            Route::get('/oprec/{oprec}/registrants/export/{format}', \App\Http\Controllers\Admin\OprecRegistrantExportController::class);
             Route::put('/oprec/{oprec}/registrants/{registration}/form', [OprecRegistrantController::class, 'updateForm']);
             Route::put('/oprec/{oprec}/registrants/{registration}', [OprecRegistrantController::class, 'update']);
             Route::delete('/oprec/{oprec}/registrants/{registration}', [OprecRegistrantController::class, 'destroy']);
             Route::get('/oprec/{oprec}/registrants/{registration}/files/{field}', [OprecRegistrantController::class, 'download']);
+            Route::post('/oprec/{oprec}/registrants/{registration}/files/{field}', [OprecRegistrantController::class, 'restoreFile']);
         });
     });
 });

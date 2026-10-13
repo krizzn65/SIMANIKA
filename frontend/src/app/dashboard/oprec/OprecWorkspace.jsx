@@ -151,7 +151,7 @@ function WorkspaceContent({ oprecId }) {
                       </span>
                     ) : isSubmitted ? (
                       <span className={`${styles.badge} ${styles.success}`}>
-                        Terkirim · Menunggu Verifikasi
+                        Terkirim
                       </span>
                     ) : (
                       <span className={`${styles.badge} ${styles.amber}`}>
@@ -169,9 +169,11 @@ function WorkspaceContent({ oprecId }) {
                         "Hasil seleksi sedang diproses."
                       )
                     ) : isSubmitted ? (
-                      "Pendaftaranmu telah berhasil tercatat. Simpan NIM dan tanggal lahir untuk pengumuman."
+                      data?.writtenTestSubmitted
+                        ? "Jawaban tes tulismu terkirim. Tunggu info dari panitia untuk tahap selanjutnya. Simpan NIM dan tanggal lahir untuk melihat hasil."
+                        : "Pendaftaranmu terkirim. Tunggu info dari panitia untuk tahap selanjutnya."
                     ) : (
-                      "Kamu sudah terdaftar di sistem. Silakan lengkapi formulir pendaftaran di samping agar berkasmu dapat diverifikasi."
+                      "Lengkapi formulir pendaftaran di samping, lalu kirim untuk mengikuti tahapan seleksi."
                     )}
                   </p>
                 </section>
@@ -299,7 +301,7 @@ function WorkspaceContent({ oprecId }) {
                   ) : <p className={styles.loading}>Formulir pendaftaran belum dibuka atau sudah ditutup.</p>
                 )}
               </section>
-              {isSubmitted && <WrittenTestCard oprecId={oprecInfo.id} />}
+              {isSubmitted && <WrittenTestCard oprecId={oprecInfo.id} onSubmitted={load} />}
               </div>
             </div>
           </>

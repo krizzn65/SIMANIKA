@@ -33,7 +33,8 @@ export function getRegistrantFieldValue(registrant, field, divisions = []) {
   if (!isFieldApplicable(field, choices, divisions)) return { text: "Tidak berlaku" };
   if (field.type === "file") {
     const file = registrant?.fileUploads?.[field.name];
-    return file?.downloadUrl ? { text: "Unduh berkas", downloadUrl: file.downloadUrl } : { text: "—" };
+    if (file?.available === false) return { text: "Berkas tidak tersedia", missing: true };
+    return file?.downloadUrl ? { text: "Unduh berkas", downloadUrl: file.downloadUrl, fileName: file.fileName } : { text: "—" };
   }
   const value = formData[field.name];
   if (value === null || value === undefined || value === "") return { text: "—" };

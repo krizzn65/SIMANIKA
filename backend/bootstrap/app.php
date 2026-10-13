@@ -1,10 +1,13 @@
 <?php
 
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\AuditTrailMiddleware;
+use App\Http\Middleware\AuditFailureMiddleware;
 use App\Http\Middleware\NoStoreApiResponse;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,8 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prepend(AuditFailureMiddleware::class);
         $middleware->statefulApi();
-        $middleware->api(append: [NoStoreApiResponse::class]);
+        $middleware->api(append: [AuditTrailMiddleware::class, NoStoreApiResponse::class]);
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('api/*') ? null : '/login');
         $middleware->alias(['admin' => AdminMiddleware::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

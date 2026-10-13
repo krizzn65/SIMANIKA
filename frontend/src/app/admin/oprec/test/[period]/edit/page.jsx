@@ -14,7 +14,7 @@ import "../../test.css";
 
 const newQuestion = () => ({
   id: `q_${crypto.randomUUID().replaceAll("-", "").slice(0, 24)}`,
-  label: "", type: "short_text", required: false, help: "", options: [], targetDivisions: [],
+  label: "", type: "short_text", required: true, help: "", options: [], targetDivisions: [],
 });
 const errorText = (error) => Object.values(error.response?.data?.errors || {}).flat()[0] || error.response?.data?.message || error.message || "Tes Tulis gagal disimpan.";
 const formatWib = (value) => value ? new Intl.DateTimeFormat("id-ID", {
