@@ -2,14 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { RotateCcw, Lock, AlertTriangle } from "lucide-react";
-import { DEFAULT_DIVISION_LOGOS, validateOprecForm, normalizeOprecNim, oprecNimProgramWarning, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
+import { DEFAULT_DIVISION_LOGOS, OPREC_FIXED_FIELDS, validateOprecForm, normalizeOprecNim, oprecNimProgramWarning, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
 
 function getDivisionPositions(division) {
   if (!division) return [];
   return getDefaultJabatan(division.nama);
 }
 
-const SYSTEM_IDENTIFIERS = ["nama", "nim", "tanggal_lahir", "angkatan"];
+const SYSTEM_IDENTIFIERS = OPREC_FIXED_FIELDS.map((field) => field.name);
 const isSystemField = (name) => SYSTEM_IDENTIFIERS.includes(name);
 const isDivisionField = (name) => ["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(name);
 const isCustomField = (name) => !isSystemField(name) && !isDivisionField(name);
@@ -520,7 +520,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
       <fieldset disabled={pending || confirmOpen}>
         <legend className="event-form-sr-only">Formulir pendaftaran OPREC</legend>
 
-        {/* 1. Pertanyaan Sistem (01 s/d 04: identitas wajib) */}
+        {/* 1. Pertanyaan wajib sistem */}
         {oprec.formFields
           .filter((field) => isSystemField(field.name))
           .map((field) => (
@@ -536,7 +536,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
             />
           ))}
 
-        {/* 2. Bagian Pilihan Divisi di Form (Pertanyaan No 05) */}
+        {/* 2. Bagian Pilihan Divisi di Form */}
         {oprec.divisiTersedia && oprec.divisiTersedia.length > 0 && (
           <div className="event-dynamic-field event-dynamic-field--wide oprec-division-section" id="oprec-field-divisi_pilihan_1">
             <label htmlFor="oprec-division-choices-list">
@@ -707,7 +707,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
           </div>
         )}
 
-        {/* 3. Pertanyaan Tambahan Admin (No 06 dst, berada di bawah divisi) */}
+        {/* 3. Pertanyaan Tambahan Admin (berada di bawah divisi) */}
         {oprec.formFields
           .filter((field) => isCustomField(field.name) && isFieldApplicable(field, selectedDivisions, oprec.divisiTersedia))
           .map((field) => (

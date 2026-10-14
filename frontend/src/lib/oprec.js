@@ -6,6 +6,17 @@ export const DEFAULT_DIVISION_LOGOS = Object.freeze({
   kwu: "/images/divisi/kwu.webp",
 });
 
+export const OPREC_FIXED_FIELDS = [
+  { name: "nama", type: "text", label: "Nama lengkap", required: true, maxLength: 150 },
+  { name: "nim", type: "text", label: "NIM", required: true, maxLength: 32 },
+  { name: "tanggal_lahir", type: "date", label: "Tanggal lahir", required: true },
+  { name: "angkatan", type: "select", label: "Angkatan", required: true, options: ["2025", "2026"].map((value) => ({ value, label: value })) },
+  { name: "golongan", type: "select", label: "Golongan", required: true, options: ["A", "B", "C", "D", "E"].map((value) => ({ value, label: value })) },
+  { name: "nomor_wa", type: "tel", label: "Nomor WA", required: true, maxLength: 30 },
+  { name: "ktm_sim_online", type: "file", label: "Upload KTM/SIM Online", required: true, accept: [".pdf", ".jpg", ".jpeg", ".png"], maxSizeMB: 5 },
+  { name: "surat_pernyataan", type: "file", label: "Upload Surat Pernyataan", required: true, accept: [".pdf", ".jpg", ".jpeg", ".png"], maxSizeMB: 5 },
+];
+
 export function getDefaultJabatan(nama) {
   const clean = (nama || "").trim();
   if (!clean) return [];
@@ -256,6 +267,7 @@ export function validateOprecForm(fields, form, now = Date.now(), divisions = []
     else if (field.name === "tanggal_lahir" && !validBirthDate(value, now)) errors[field.name] = "Isi tanggal lahir yang valid.";
     else if (field.type === "date" && (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(Date.parse(value)) || new Date(value).toISOString().slice(0, 10) !== value)) errors[field.name] = "Isi tanggal yang valid.";
     else if (field.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) errors[field.name] = "Isi alamat email yang valid.";
+    else if (field.type === "tel" && !/^[0-9+() .-]{5,30}$/.test(value)) errors[field.name] = "Isi nomor telepon yang valid (5–30 karakter).";
     else if (field.type === "url" && !validHttpUrl(value)) errors[field.name] = "Isi link http:// atau https:// yang valid.";
     else if (field.type === "number" && (!Number.isFinite(Number(value)) || (field.min !== null && Number(value) < field.min) || (field.max !== null && Number(value) > field.max))) errors[field.name] = "Angka berada di luar batas yang diperbolehkan.";
     else if (["select", "radio"].includes(field.type) && !field.options.some((option) => option.value === value)) errors[field.name] = "Pilih salah satu pilihan yang tersedia.";

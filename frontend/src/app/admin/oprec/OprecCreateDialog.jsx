@@ -5,16 +5,9 @@ import { useRouter } from "next/navigation";
 import { X, UploadCloud } from "lucide-react";
 import { api } from "@/services/api";
 import { divisionPreview } from "@/components/oprec/divisionPreview";
-import { getDefaultJabatan } from "@/lib/oprec";
+import { OPREC_FIXED_FIELDS, getDefaultJabatan } from "@/lib/oprec";
 import { OprecPeriodPicker } from "./OprecPeriodPicker";
 import "./oprec-create-dialog.css";
-
-const firstFields = [
-  { name: "nama", label: "Nama lengkap", type: "text", required: true, maxLength: 150 },
-  { name: "nim", label: "NIM", type: "text", required: true, maxLength: 32 },
-  { name: "tanggal_lahir", label: "Tanggal lahir", type: "date", required: true },
-  { name: "angkatan", label: "Angkatan", type: "select", required: true, options: [] },
-];
 
 const initial = {
   periode: "",
@@ -98,7 +91,7 @@ export default function OprecCreateDialog({ open, onClose, onCreated }) {
         tanggal_tutup: apiDateEnd(data.tanggal_tutup),
         schema_version: "1",
         form_intro: "",
-        form_fields: firstFields,
+        form_fields: OPREC_FIXED_FIELDS,
         divisi_tersedia: divisionPreview.map((item) => ({
           nama: item.nama,
           nama_lengkap: item.namaLengkap,

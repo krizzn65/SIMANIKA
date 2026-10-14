@@ -43,6 +43,22 @@ class OprecAccessAuditTest extends TestCase
         return compact('period', 'owner', 'leader', 'registration', 'stage', 'submission', 'divisions');
     }
 
+    public function test_participant_workspace_reports_uploaded_field_names_without_private_paths(): void
+    {
+        $f = $this->fixture();
+        $fields = $f['period']->form_fields;
+        $fields[] = ['name' => 'ktm_sim_online', 'label' => 'Upload KTM/SIM Online', 'type' => 'file', 'required' => true];
+        $f['period']->update(['form_fields' => $fields]);
+        $privatePath = "oprec/{$f['period']->id}/private-ktm.pdf";
+        $f['registration']->update(['file_uploads' => ['ktm_sim_online' => $privatePath, 'cv' => "oprec/{$f['period']->id}/cv.pdf"]]);
+
+        $this->actingAs($f['owner'], 'sanctum')
+            ->getJson("/api/user/oprec/workspace?oprec_id={$f['period']->id}")
+            ->assertOk()
+            ->assertJsonPath('data.registration.uploadedFileFields', ['ktm_sim_online'])
+            ->assertDontSee($privatePath);
+    }
+
     public function test_leader_cannot_bypass_assignment_or_manage_through_legacy_routes(): void
     {
         $f = $this->fixture();

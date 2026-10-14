@@ -11,6 +11,6 @@ Halaman `/admin/logs` dan API `GET /api/admin/logs`, `GET /api/admin/logs/{id}` 
 
 ## Halaman
 
-Ringkasan menghitung peristiwa 24 jam terakhir. Tabel dapat difilter menurut jenis, modul, hasil, tanggal WIB, serta pencarian pelaku/tindakan/ID; hasil dipaginasi 20 baris. Panel rincian menampilkan metadata aman. UI mengikuti [DESIGN.md](./DESIGN.md): tata letak editorial, biru untuk aksi, status dengan warna dan teks, fokus keyboard, serta tabel yang bisa digeser pada layar kecil.
+Ringkasan menghitung peristiwa 24 jam terakhir. Tabel dapat difilter menurut jenis dan hasil, serta pencarian pelaku/tindakan/ID. Pilihan filter langsung memperbarui data; pencarian diperbarui setelah jeda singkat saat mengetik. Hasil dipaginasi 20 baris. Panel rincian menampilkan metadata aman. UI mengikuti gaya Kelola User dan [DESIGN.md](./DESIGN.md): biru untuk aksi, status dengan warna dan teks, fokus keyboard, serta tabel yang bisa digeser pada layar kecil.
 
 Tabel `audit_entries` tidak memiliki endpoint edit/hapus. Kebijakan retensi dan arsip belum ditentukan; penjadwalan penghapusan otomatis tidak ditambahkan agar catatan tidak hilang tanpa keputusan pengelola.

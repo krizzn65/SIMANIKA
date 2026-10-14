@@ -15,7 +15,14 @@ export const api = axios.create({
 });
 
 api.interceptors.response.use((response) => response, (error) => {
-  if (error.response?.status === 401) useAuthStore.getState().clear();
+  if (error.response?.status === 401) {
+    const wasAuth = useAuthStore.getState().isAuthenticated;
+    const isRemembered = typeof window !== "undefined" && localStorage.getItem("simanika_remember_me") === "true";
+    if (wasAuth && !isRemembered) {
+      useAuthStore.getState().setSessionExpired(true);
+    }
+    useAuthStore.getState().clear();
+  }
   error.message = apiErrorMessage(error);
   return Promise.reject(error);
 });

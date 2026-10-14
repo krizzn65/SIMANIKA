@@ -81,6 +81,13 @@ async function main() {
       }
       throw Error(`Missing ${expression}; page: ` + await evaluate('document.body?.innerText.slice(-800)') + '; ' + errors.join(', '));
     };
+    const waitForRequest = async predicate => {
+      for (let i = 0; i < 150; i++) {
+        if (requests.some(predicate)) return;
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      throw Error('Expected log API request was not sent');
+    };
     await send('Page.enable'); await send('Runtime.enable');
     await send('Fetch.enable', { patterns: [{ urlPattern: '*api/*' }] });
     await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
@@ -104,9 +111,17 @@ async function main() {
       const overflow = await evaluate(`({scrollWidth: document.documentElement.scrollWidth, innerWidth, elements: Array.from(document.querySelectorAll('body *')).filter(el => el.getBoundingClientRect().right > innerWidth + 1 && getComputedStyle(el).position !== 'fixed').slice(0, 12).map(el => [el.tagName, el.className?.baseVal || el.className, Math.round(el.getBoundingClientRect().right)])})`);
       assert.equal(overflow.scrollWidth > overflow.innerWidth, false, `horizontal overflow at ${width}px: ${JSON.stringify(overflow)}`);
     }
-    await evaluate(`{ const select = document.querySelector('.syslog-filters select'); select.value = 'security'; select.dispatchEvent(new Event('change', { bubbles: true })); document.querySelector('.syslog-filters button[type=submit]').click(); }`);
+    assert.equal(await evaluate('document.querySelectorAll(".syslog-filters select").length'), 2);
+    assert.equal(await evaluate('document.querySelectorAll(".syslog-filters input[type=date], .syslog-filters button").length'), 0);
+    await evaluate(`{ const select = document.querySelector('.syslog-filters select'); select.value = 'security'; select.dispatchEvent(new Event('change', { bubbles: true })); }`);
     await waitFor('document.body.innerText.includes("Belum ada catatan pada filter ini")');
-    assert.ok(requests.some(request => request.includes('kind=security')));
+    await waitForRequest(request => request.includes('kind=security'));
+    await evaluate(`{ const select = document.querySelectorAll('.syslog-filters select')[1]; select.value = 'failed'; select.dispatchEvent(new Event('change', { bubbles: true })); }`);
+    await waitFor('document.querySelectorAll(".syslog-filters select")[1].value === "failed"');
+    await waitForRequest(request => request.includes('kind=security') && request.includes('result=failed'));
+    await evaluate(`{ const input = document.querySelector('.syslog-search input'); const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; setter.call(input, 'Admin Utama'); input.dispatchEvent(new Event('input', { bubbles: true })); }`);
+    await waitFor('document.querySelector(".syslog-search input").value === "Admin Utama"');
+    await waitForRequest(request => request.includes('q=Admin+Utama'));
     role = 'admin';
     await send('Page.navigate', { url: origin + '/admin/logs' });
     await waitFor('location.pathname === "/admin"');

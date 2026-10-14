@@ -1,5 +1,13 @@
 # OPREC — alur dinamis revisi 21 September 2026
 
+## Pertanyaan bawaan dan ringkasan peserta — 15 Oktober 2026
+
+Periode OPREC baru memiliki delapan pertanyaan wajib sebelum Divisi Pilihan: Nama lengkap, NIM, Tanggal lahir, Angkatan, Golongan (A–E), Nomor WA, unggah KTM/SIM Online, dan unggah Surat Pernyataan. Kedua berkas menerima PDF/JPG/JPEG/PNG hingga 5 MB per berkas; batas gabungan pendaftaran tetap 11 MB. Editor memakai daftar bawaan yang sama saat membuat dan memuat periode. Periode yang sudah memiliki pendaftar tetap mengikuti penguncian skema backend.
+
+Pilihan awal Angkatan adalah 2025 dan 2026. Admin dapat mengubah pilihan Angkatan maupun Golongan, satu nilai per baris; nilai yang sudah tersimpan pada periode tetap dipertahankan saat editor dibuka kembali. Draft lama tanpa pilihan memakai daftar awal tersebut.
+
+Bagian Data & administrasi peserta menampilkan Nama lengkap lalu NIM, jawaban lain menurut urutan formulir, dan jabatan pilihan di dalam kurung setelah divisi terkait. Respons workspace hanya mengirim nama field berkas yang diunggah untuk memberi tanda “Berkas diunggah”, tanpa mengirim path privat.
+
 ## Frame dan hover kartu pengumuman — 5 Oktober 2026
 
 Tombol Lihat Pengumuman memakai glow merah 20 px yang menguat menjadi 26 px, naik 1 px, dan panah bergeser 3 px pada hover/fokus keyboard; durasi 200 ms mengikuti tombol pendaftaran. Efek dibatasi ke tombol kartu publik. Tombol sebelum rilis tetap nonaktif tanpa glow/gerakan, dan preferensi pengurangan animasi menonaktifkan transisi/pergeseran. Build produksi/TypeScript serta browser hover/fokus/reset, kondisi nonaktif, pengurangan animasi, dan empat viewport lulus.

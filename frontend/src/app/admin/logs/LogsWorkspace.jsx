@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Activity, AlertTriangle, ArrowRight, CalendarDays, ChevronLeft, ChevronRight, Clock3, FileSearch2, RefreshCw, Search, ShieldAlert, X } from "lucide-react";
+import { Activity, AlertTriangle, ArrowRight, ChevronLeft, ChevronRight, Clock3, FileSearch2, RefreshCw, Search, ShieldAlert, X } from "lucide-react";
 import { api } from "@/services/api";
 import { ROLE_LABELS } from "@/lib/roleAccess";
 import "./logs.css";
 
-const initialFilters = { kind: "all", module: "all", result: "all", from: "", to: "", q: "" };
+const initialFilters = { kind: "all", result: "all", q: "" };
 const modules = { auth: "Akun", oprec: "OPREC", events: "Event", users: "Pengguna", merchandise: "Merchandise", settings: "Pengaturan", public: "Publik", system: "Sistem" };
 const kinds = { activity: "Aktivitas", security: "Keamanan", error: "Error sistem" };
 const dateTime = (value) => value ? new Intl.DateTimeFormat("id-ID", {
@@ -15,10 +15,8 @@ const dateTime = (value) => value ? new Intl.DateTimeFormat("id-ID", {
 
 function StatCard({ label, value, icon: Icon, tone }) {
   return <div className={`syslog-stat syslog-stat--${tone}`}>
-    <span className="syslog-stat__icon"><Icon size={19} aria-hidden="true" /></span>
-    <span className="syslog-stat__label">{label}</span>
-    <strong>{value}</strong>
-    <small>24 jam terakhir</small>
+    <div><span className="syslog-stat__label">{label}</span><strong>{value}</strong><small>24 jam terakhir</small></div>
+    <span className="syslog-stat__icon"><Icon size={20} aria-hidden="true" /></span>
   </div>;
 }
 
@@ -30,8 +28,8 @@ function StatusBadge({ entry }) {
 }
 
 export default function LogsWorkspace() {
-  const [draft, setDraft] = useState(initialFilters);
   const [filters, setFilters] = useState(initialFilters);
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [refresh, setRefresh] = useState(0);
   const [rows, setRows] = useState([]);
@@ -44,6 +42,15 @@ export default function LogsWorkspace() {
   const [detailError, setDetailError] = useState("");
   const closeRef = useRef(null);
   const triggerRef = useRef(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const q = search.trim();
+      setFilters((current) => current.q === q ? current : { ...current, q });
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const load = useCallback(async (signal) => {
     setLoading(true);
@@ -105,28 +112,14 @@ export default function LogsWorkspace() {
     }
   };
 
-  const applyFilters = (event) => {
-    event.preventDefault();
-    if (draft.from && draft.to && draft.to < draft.from) {
-      setError("Tanggal akhir harus sama atau setelah tanggal awal.");
-      return;
-    }
+  const changeFilter = (key, value) => {
+    setFilters((current) => ({ ...current, [key]: value }));
     setPage(1);
-    setFilters({ ...draft, q: draft.q.trim() });
-    setRefresh((value) => value + 1);
-  };
-
-  const resetFilters = () => {
-    setDraft(initialFilters);
-    setFilters(initialFilters);
-    setPage(1);
-    setRefresh((value) => value + 1);
   };
 
   return <main className="syslog-page">
     <header className="syslog-hero">
       <div>
-        <span className="syslog-eyebrow">SIMANIKA / SUPER ADMIN / 01</span>
         <h1>Log Sistem</h1>
         <p>Telusuri perubahan penting, akses yang ditolak, dan gangguan layanan dari satu tempat.</p>
       </div>
@@ -144,19 +137,15 @@ export default function LogsWorkspace() {
 
     <section className="syslog-panel" aria-labelledby="syslog-list-title">
       <div className="syslog-panel__heading">
-        <div><span className="syslog-eyebrow">// JEJAK AKTIVITAS</span><h2 id="syslog-list-title">Riwayat peristiwa</h2><p>Data baru tampil setelah suatu peristiwa terjadi. Catatan lama tidak dibuat ulang.</p></div>
+        <div><h2 id="syslog-list-title">Riwayat peristiwa</h2><p>Data baru tampil setelah suatu peristiwa terjadi. Catatan lama tidak dibuat ulang.</p></div>
         <span className="syslog-count">{meta.total} catatan</span>
       </div>
 
-      <form className="syslog-filters" onSubmit={applyFilters}>
-        <label className="syslog-search"><span>Cari</span><div><Search size={16} aria-hidden="true" /><input value={draft.q} onChange={(event) => setDraft((current) => ({ ...current, q: event.target.value }))} maxLength={100} placeholder="Pelaku, tindakan, ID objek..." /></div></label>
-        <label><span>Jenis</span><select value={draft.kind} onChange={(event) => setDraft((current) => ({ ...current, kind: event.target.value }))}><option value="all">Semua jenis</option><option value="activity">Aktivitas</option><option value="security">Keamanan</option><option value="error">Error sistem</option></select></label>
-        <label><span>Modul</span><select value={draft.module} onChange={(event) => setDraft((current) => ({ ...current, module: event.target.value }))}><option value="all">Semua modul</option>{Object.entries(modules).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
-        <label><span>Hasil</span><select value={draft.result} onChange={(event) => setDraft((current) => ({ ...current, result: event.target.value }))}><option value="all">Semua hasil</option><option value="success">Berhasil</option><option value="failed">Gagal</option></select></label>
-        <label><span>Dari tanggal</span><input type="date" value={draft.from} max={draft.to || undefined} onChange={(event) => setDraft((current) => ({ ...current, from: event.target.value }))} /></label>
-        <label><span>Sampai tanggal</span><input type="date" value={draft.to} min={draft.from || undefined} onChange={(event) => setDraft((current) => ({ ...current, to: event.target.value }))} /></label>
-        <div className="syslog-filter-actions"><button type="submit" className="syslog-apply">Terapkan filter <ArrowRight size={16} aria-hidden="true" /></button><button type="button" className="syslog-reset" onClick={resetFilters}>Reset</button></div>
-      </form>
+      <div className="syslog-filters">
+        <label className="syslog-search"><span>Cari</span><div><Search size={16} aria-hidden="true" /><input value={search} onChange={(event) => setSearch(event.target.value)} maxLength={100} placeholder="Pelaku, tindakan, ID objek..." /></div></label>
+        <label><span>Jenis</span><select value={filters.kind} onChange={(event) => changeFilter("kind", event.target.value)}><option value="all">Semua jenis</option><option value="activity">Aktivitas</option><option value="security">Keamanan</option><option value="error">Error sistem</option></select></label>
+        <label><span>Hasil</span><select value={filters.result} onChange={(event) => changeFilter("result", event.target.value)}><option value="all">Semua hasil</option><option value="success">Berhasil</option><option value="failed">Gagal</option></select></label>
+      </div>
 
       {error && <div className="syslog-error" role="alert"><AlertTriangle size={17} aria-hidden="true" />{error}<button type="button" onClick={() => setRefresh((value) => value + 1)}>Coba lagi</button></div>}
       <div className="syslog-table-wrap" role="region" aria-label="Tabel log sistem" tabIndex={0}>

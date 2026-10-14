@@ -96,6 +96,10 @@ class OprecWorkspaceController extends Controller
                     'divisiPilihan2' => $registration->divisi_pilihan_2,
                     'divisiPilihan3' => $registration->divisi_pilihan_3,
                     'formData' => $registration->form_data,
+                    'uploadedFileFields' => collect($oprec->form_fields ?? [])
+                        ->filter(fn ($field) => ($field['type'] ?? null) === 'file'
+                            && array_key_exists($field['name'] ?? '', $registration->file_uploads ?? []))
+                        ->pluck('name')->values()->all(),
                     'link_grup_wa' => $oprec->link_grup_wa,
                     'linkGrupWa' => $oprec->link_grup_wa,
                     'status' => $announced ? $registration->status : 'pending',

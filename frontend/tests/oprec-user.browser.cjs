@@ -14,6 +14,8 @@ async function main() {
   const scheduleOnly = process.argv.includes('--schedule-only');
   const positionsOnly = process.argv.includes('--positions-only');
   const adminFormsOnly = process.argv.includes('--admin-forms-only');
+  const summaryOnly = process.argv.includes('--summary-only');
+  if (summaryOnly) registered = true;
   let builderSaveAttempts = 0; let editAttempts = 0; let savedEdit;
   let releaseBuilderResponse; let builderResponseGate = Promise.resolve();
   let scheduleLocked = false; let savedSchedule; if (scheduleOnly || positionsOnly || adminFormsOnly) role = 'admin';
@@ -28,9 +30,15 @@ async function main() {
       { name: 'angkatan', label: 'Angkatan', type: 'select', required: true, options: [{ value: '2024', label: '2024' }] },
       { name: 'cv', label: 'CV', type: 'file', required: false, accept: ['.pdf'], maxSizeMB: 2 }],
     pengumuman: { published: false }, faq: [] };
+  if (summaryOnly) period.formFields.splice(4, 0,
+    { name: 'golongan', label: 'Golongan', type: 'select', required: true, options: ['A', 'B', 'C', 'D', 'E'].map(value => ({ value, label: value })) },
+    { name: 'nomor_wa', label: 'Nomor WA', type: 'tel', required: true },
+    { name: 'ktm_sim_online', label: 'Upload KTM/SIM Online', type: 'file', required: true, accept: ['.pdf'], maxSizeMB: 5 },
+    { name: 'surat_pernyataan', label: 'Upload Surat Pernyataan', type: 'file', required: true, accept: ['.pdf'], maxSizeMB: 5 });
   const registration = () => registered ? { id: 100, nim: 'E3124001', tanggalLahir: '2004-01-01',
     divisiPilihan1: 1, divisiPilihan2: 2, divisiPilihan3: 3, status: released ? resultStatus : 'pending',
-    formData: { nama: 'Peserta Uji', angkatan: '2024' }, registeredAt: new Date().toISOString() } : null;
+    formData: { nama: 'Peserta Uji', angkatan: '2024', ...(summaryOnly ? { golongan: 'A', nomor_wa: '08123456789', jabatan_pilihan_1: 'Staff Divisi Humas' } : {}) },
+    uploadedFileFields: summaryOnly ? ['ktm_sim_online', 'surat_pernyataan'] : [], registeredAt: new Date().toISOString() } : null;
   const backend = http.createServer(async (req, res) => {
     try {
       const chunks = []; for await (const chunk of req) chunks.push(chunk);
@@ -119,6 +127,8 @@ async function main() {
           builderSaveAttempts++;
           const input = JSON.parse(request.postData);
           assert.equal(input.periode, period.periode);
+          assert.deepEqual(input.form_fields.slice(4, 8).map(field => field.name), ['golongan', 'nomor_wa', 'ktm_sim_online', 'surat_pernyataan']);
+          assert.deepEqual(input.form_fields[4].options.map(option => option.value), ['X', 'Y']);
           assert.deepEqual(input.divisi_tersedia.map(d => d.jabatan), period.divisiTersedia.map(d => d.jabatan));
           await builderResponseGate;
           if (builderSaveAttempts === 1) { status = 503; payload = { message: 'Penyimpanan builder gagal sementara.' }; }
@@ -159,6 +169,26 @@ async function main() {
     await send('Page.enable'); await send('Runtime.enable'); await send('Network.enable');
     await send('Fetch.enable', { patterns: [{ urlPattern: '*api/*' }] });
     await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+    if (summaryOnly) {
+      await send('Page.navigate', { url: origin + '/dashboard/oprec' });
+      await waitFor(`document.body?.innerText.includes('Data & administrasi') && document.body?.innerText.includes('Divisi Pilihan 1')`);
+      const summary = await evaluate(`{
+        const section = Array.from(document.querySelectorAll('section')).find(el => el.querySelector('h2')?.textContent.trim() === 'Data & administrasi');
+        Array.from(section.querySelectorAll('dl dt')).map(dt => ({ label: dt.textContent.trim(), value: dt.nextElementSibling?.textContent.trim() }));
+      }`);
+      assert.deepEqual(summary.slice(0, 2).map(row => row.label), ['Nama lengkap', 'NIM']);
+      assert.deepEqual(summary.slice(3, 8).map(row => row.label), ['Angkatan', 'Golongan', 'Nomor WA', 'Upload KTM/SIM Online', 'Upload Surat Pernyataan']);
+      assert.equal(summary.find(row => row.label === 'Upload Surat Pernyataan')?.value, 'Berkas diunggah');
+      assert.equal(summary.find(row => row.label === 'Divisi Pilihan 1')?.value, 'Humas (Staff Divisi Humas)');
+      assert.equal(summary.some(row => row.label.startsWith('Jabatan Pilihan')), false);
+      for (const width of [320, 390, 768, 1440]) {
+        await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: false });
+        assert.equal(await evaluate('document.documentElement.scrollWidth > innerWidth'), false, 'participant summary width ' + width);
+      }
+      assert.deepEqual(errors, []);
+      console.log('PASS: participant summary identity order, division position, and 4 viewports.');
+      return;
+    }
     if (adminFormsOnly) {
       const waitForFixture = async condition => {
         for (let i = 0; i < 100; i++) {
@@ -175,6 +205,14 @@ async function main() {
       }`);
       await send('Page.navigate', { url: origin + '/admin/oprec/900/edit' });
       await waitFor(`document.querySelector('.oprec-builder__tabs')`);
+      await evaluate(`Array.from(document.querySelectorAll('.oprec-builder__tabs button')).find(button => button.textContent.includes('Pertanyaan Formulir')).click()`);
+      await waitFor(`Array.from(document.querySelectorAll('.oprec-builder__field--fixed')).some(card => card.querySelector('strong')?.textContent === 'Golongan')`);
+      assert.equal(await evaluate(`Array.from(document.querySelectorAll('.oprec-builder__field--fixed')).find(card => card.querySelector('strong')?.textContent === 'Golongan').querySelector('textarea').value`), 'A\nB\nC\nD\nE');
+      await evaluate(`{
+        const textarea = Array.from(document.querySelectorAll('.oprec-builder__field--fixed')).find(card => card.querySelector('strong')?.textContent === 'Golongan').querySelector('textarea');
+        Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(textarea, ${JSON.stringify('X\nY')});
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      }`);
       builderResponseGate = new Promise(resolve => { releaseBuilderResponse = resolve; });
       await evaluate(`{
         const buttons = Array.from(document.querySelectorAll('button')).filter(el => el.textContent.trim() === 'Simpan Formulir');
