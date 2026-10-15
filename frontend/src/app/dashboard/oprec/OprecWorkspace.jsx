@@ -36,6 +36,7 @@ function WorkspaceContent({ oprecId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [workingOnTest, setWorkingOnTest] = useState(false);
   const abortRef = useRef(null);
 
   const load = useCallback(async () => {
@@ -117,14 +118,14 @@ function WorkspaceContent({ oprecId }) {
   return (
     <main className={styles.workspace}>
       <div className={styles.container}>
-        <nav className={styles.toolbar} aria-label="Navigasi workspace OPREC">
+        {!workingOnTest && <nav className={styles.toolbar} aria-label="Navigasi workspace OPREC">
           <Link className={styles.button} href="/dashboard">
             <ArrowLeft size={16} aria-hidden="true" /> Dashboard
           </Link>
           <button className={styles.button} type="button" onClick={load} disabled={refreshing}>
             <RefreshCw size={15} aria-hidden="true" className={refreshing ? styles.spinning : ""} /> Perbarui
           </button>
-        </nav>
+        </nav>}
 
         {error && <div className={styles.error} role="alert">{error}</div>}
 
@@ -134,17 +135,17 @@ function WorkspaceContent({ oprecId }) {
           <div className={styles.loading}>Belum ada periode OPREC aktif yang dibuka saat ini.</div>
         ) : (
           <>
-            <header className={styles.heading}>
+            {!workingOnTest && <header className={styles.heading}>
               <p className={styles.eyebrow}>HIMANIKA / OPEN RECRUITMENT</p>
               <h1>{oprecInfo?.headline || "Open Recruitment HIMANIKA"}</h1>
               <Link href="/oprec">
                 Informasi OPREC <ArrowUpRight size={14} aria-hidden="true" />
               </Link>
-            </header>
+            </header>}
 
-            <div className={styles.columns}>
+            <div className={`${styles.columns} ${workingOnTest ? styles.testFocusLayout : ""}`}>
               {/* Left Sidebar */}
-              <aside className={styles.sidebar} aria-label="Status & Informasi Pendaftar">
+              {!workingOnTest && <aside className={styles.sidebar} aria-label="Status & Informasi Pendaftar">
                 {/* Account Card */}
                 <section className={styles.panel}>
                   <h2><User size={18} aria-hidden="true" /> Data Akun</h2>
@@ -245,11 +246,11 @@ function WorkspaceContent({ oprecId }) {
                     </a>
                   </section>
                 )}
-              </aside>
+              </aside>}
 
               {/* Main Content Area */}
               <div className={styles.mainColumn}>
-              <section className={styles.panel} aria-labelledby="form-section-title">
+              {!workingOnTest && <section className={styles.panel} aria-labelledby="form-section-title">
                 <header className={styles.panelHeader}>
                   <h2 id="form-section-title">
                     <FileText size={19} aria-hidden="true" /> Data & administrasi
@@ -283,8 +284,8 @@ function WorkspaceContent({ oprecId }) {
                     <OprecForm oprec={normalizedOprec} onSuccess={load} draftScope={user?.id} />
                   ) : <p className={styles.loading}>Formulir pendaftaran belum dibuka atau sudah ditutup.</p>
                 )}
-              </section>
-              {isSubmitted && <WrittenTestCard oprecId={oprecInfo.id} onSubmitted={load} />}
+              </section>}
+              {isSubmitted && <WrittenTestCard oprecId={oprecInfo.id} onSubmitted={load} working={workingOnTest} onWorkingChange={setWorkingOnTest} />}
               </div>
             </div>
           </>

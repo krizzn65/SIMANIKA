@@ -18,6 +18,8 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Public\PublicEventController;
+use App\Http\Controllers\Public\HomeContentController as PublicHomeContentController;
+use App\Http\Controllers\Admin\HomeContentController as AdminHomeContentController;
 use App\Http\Controllers\Public\PublicOprecController;
 use App\Http\Controllers\User\OprecRegistrationController;
 use App\Http\Controllers\User\OprecEnrollmentController;
@@ -43,6 +45,8 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::prefix('public')->group(function () {
+    Route::get('/home', [PublicHomeContentController::class, 'index']);
+    Route::get('/home/images/{kind}/{filename}', [PublicHomeContentController::class, 'image'])->name('public.home-image');
     Route::get('/oprec/{oprec}/announcement', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'show']);
     Route::get('/oprec/{oprec}/announcement/poster', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'poster']);
     Route::post('/oprec/{oprec}/announcement/verify', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'verify'])->middleware('throttle:oprec-announcement');
@@ -79,6 +83,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/events/{event}/join-team', JoinEventTeamController::class)->middleware('throttle:auth');
 
     Route::prefix('admin')->middleware('admin')->group(function () {
+        Route::middleware('admin:content')->prefix('home-content')->group(function () {
+            Route::get('/', [AdminHomeContentController::class, 'index']);
+            Route::put('/text', [AdminHomeContentController::class, 'updateText']);
+            Route::post('/gallery/batch', [AdminHomeContentController::class, 'storeBatchGallery']);
+            Route::post('/gallery', [AdminHomeContentController::class, 'storeGallery']);
+            Route::post('/gallery/{id}', [AdminHomeContentController::class, 'updateGallery'])->whereNumber('id');
+            Route::delete('/gallery/{id}', [AdminHomeContentController::class, 'destroyGallery'])->whereNumber('id');
+            Route::post('/testimonials', [AdminHomeContentController::class, 'storeTestimonial']);
+            Route::post('/testimonials/{id}', [AdminHomeContentController::class, 'updateTestimonial'])->whereNumber('id');
+            Route::delete('/testimonials/{id}', [AdminHomeContentController::class, 'destroyTestimonial'])->whereNumber('id');
+        });
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->middleware('admin:dashboard');
         Route::middleware('admin:logs')->group(function () {
             Route::get('/logs', [AuditLogController::class, 'index']);

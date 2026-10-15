@@ -93,4 +93,44 @@ class AuditLogTest extends TestCase
         $impostor->forceFill(['role' => 'super_admin'])->save();
         $this->actingAs($impostor, 'sanctum')->getJson('/api/admin/logs')->assertForbidden();
     }
+
+    public function test_auth_logs_distinguish_manual_and_google_methods(): void
+    {
+        $super = $this->superAdmin();
+        $user = User::create(['name' => 'Budi', 'email' => 'budi-test@example.test', 'password' => bcrypt('secret-123')]);
+
+        // 1. Manual Login Success
+        $this->postJson('/api/auth/login', ['email' => 'budi-test@example.test', 'password' => 'secret-123', 'remember' => true])
+            ->assertOk();
+        $manualEntry = AuditEntry::where('action', 'auth.login')->where('result', 'success')->firstOrFail();
+        $this->assertSame('manual', $manualEntry->context['auth_method']);
+        $this->assertTrue($manualEntry->context['remember_me']);
+        $this->assertStringContainsString('Manual', $manualEntry->summary);
+
+        // 2. Google OAuth Callback Success creates distinct Google log
+        config()->set('services.google.client_id', 'dummy-client-id');
+        config()->set('services.google.client_secret', 'dummy-client-secret');
+
+        $googleUser = \Mockery::mock(\Laravel\Socialite\Two\User::class);
+        $googleUser->shouldReceive('getId')->andReturn('google-unique-id-999');
+        $googleUser->shouldReceive('getName')->andReturn('Siti Google');
+        $googleUser->shouldReceive('getEmail')->andReturn('siti.google@example.test');
+        $googleUser->shouldReceive('getAvatar')->andReturn('https://lh3.googleusercontent.com/avatar.jpg');
+        $googleUser->shouldReceive('getRaw')->andReturn(['email_verified' => true]);
+
+        $provider = \Mockery::mock('Laravel\Socialite\Two\GoogleProvider');
+        $provider->shouldReceive('user')->andReturn($googleUser);
+        \Laravel\Socialite\Facades\Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
+
+        $this->get('/api/auth/google/callback?code=valid-code')->assertRedirect();
+
+        $googleRegister = AuditEntry::where('action', 'auth.register')->where('result', 'success')->firstOrFail();
+        $this->assertSame('google', $googleRegister->context['auth_method']);
+        $this->assertStringContainsString('Google', $googleRegister->summary);
+
+        // Superadmin opens log and checks detail
+        $res = $this->actingAs($super, 'sanctum')->getJson('/api/admin/logs/'.$googleRegister->id)->assertOk();
+        $this->assertSame('google', $res->json('data.authMethod'));
+        $this->assertSame('Google OAuth 2.0', $res->json('data.context.auth_label'));
+    }
 }

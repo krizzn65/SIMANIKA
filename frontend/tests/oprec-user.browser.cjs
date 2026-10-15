@@ -344,8 +344,11 @@ async function main() {
     assert.equal(registered, false);
     await evaluate(`document.querySelector('.event-dynamic-form').requestSubmit()`);
     await waitFor(`document.querySelector('.oprec-submit-dialog')`); await click('Ya, kirim formulir');
-    await waitFor(`document.body?.innerText.includes('Pendaftaran Berhasil Dikirim') && document.querySelector('#test-reason')`);
+    await waitFor(`document.body?.innerText.includes('Pendaftaran Berhasil Dikirim') && document.body?.innerText.includes('Kerjakan sekarang')`);
     assert.equal(registrationAttempts, 2);
+    assert.equal(await evaluate(`Boolean(document.querySelector('#test-reason'))`), false);
+    await click('Kerjakan sekarang');
+    await waitFor(`document.querySelector('#test-reason') && !document.body?.innerText.includes('Pendaftaran Berhasil Dikirim')`);
     await fill('#test-reason', 'Ingin berkontribusi'); await click('Kirim jawaban'); await click('Ya, kirim jawaban');
     await waitFor(`document.body?.innerText.includes('Jawaban gagal disimpan')`);
     await click('Kirim jawaban'); await click('Ya, kirim jawaban');

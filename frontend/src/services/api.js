@@ -14,8 +14,13 @@ export const api = axios.create({
   timeout: 15000,
 });
 
+api.interceptors.request.use((config) => {
+  config.authEpoch ??= useAuthStore.getState().authEpoch;
+  return config;
+});
+
 api.interceptors.response.use((response) => response, (error) => {
-  if (error.response?.status === 401) {
+  if (error.response?.status === 401 && error.config?.authEpoch === useAuthStore.getState().authEpoch) {
     const wasAuth = useAuthStore.getState().isAuthenticated;
     const isRemembered = typeof window !== "undefined" && localStorage.getItem("simanika_remember_me") === "true";
     if (wasAuth && !isRemembered) {

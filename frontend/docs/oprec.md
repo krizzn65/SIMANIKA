@@ -1,5 +1,9 @@
 # OPREC — alur dinamis revisi 21 September 2026
 
+## Mode fokus Tes Tulis — 16 Oktober 2026
+
+Peserta yang memiliki Tes Tulis aktif melihat jadwal dan tombol **Kerjakan sekarang** sebelum soal ditampilkan. Tombol membuka formulir soal, memindahkan fokus keyboard ke judul tes, dan menyembunyikan ringkasan pendaftaran serta panel akun/status agar area pengerjaan memakai lebar halaman. **Kembali ke ringkasan** memulihkan panel tanpa membuang jawaban yang sedang diisi. Setelah waktu berakhir atau jawaban terkirim, mode fokus ditutup otomatis. Ketentuan waktu, validasi, dan satu kali pengiriman tetap diperiksa backend.
+
 ## Pertanyaan bawaan dan ringkasan peserta — 15 Oktober 2026
 
 Periode OPREC baru memiliki delapan pertanyaan wajib sebelum Divisi Pilihan: Nama lengkap, NIM, Tanggal lahir, Angkatan, Golongan (A–E), Nomor WA, unggah KTM/SIM Online, dan unggah Surat Pernyataan. Kedua berkas menerima PDF/JPG/JPEG/PNG hingga 5 MB per berkas; batas gabungan pendaftaran tetap 11 MB. Editor memakai daftar bawaan yang sama saat membuat dan memuat periode. Periode yang sudah memiliki pendaftar tetap mengikuti penguncian skema backend.

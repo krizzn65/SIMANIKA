@@ -72,6 +72,7 @@ class AuditLogController extends Controller
             'actor' => $entry->actor_id ? ['id' => $entry->actor_id, 'name' => $entry->actor_name, 'role' => $entry->actor_role] : null,
             'target' => $entry->target_id ? ['type' => $entry->target_type, 'id' => $entry->target_id] : null,
             'httpStatus' => $entry->http_status,
+            'authMethod' => $entry->context['auth_method'] ?? (str_contains((string) $entry->summary, 'Google') ? 'google' : (str_contains((string) $entry->summary, 'Manual') ? 'manual' : null)),
         ];
         if ($detail) $data += [
             'ipAddress' => $entry->ip_address,

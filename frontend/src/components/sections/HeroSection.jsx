@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { LogoMarquee } from "@/components/ui/LogoMarquee";
 import { SplitCta } from "@/components/ui/SplitCta";
+import { landingTextDefaults } from "@/lib/landingText";
 
 function ArrowUpRight() {
   return (
@@ -11,7 +12,7 @@ function ArrowUpRight() {
   );
 }
 
-export function HeroSection() {
+export function HeroSection({ tagline, subtitle }) {
   return (
     <section className="hero" id="hero" aria-labelledby="hero-title" data-motion-active="true">
       <div className="hero-stage">
@@ -35,12 +36,11 @@ export function HeroSection() {
               HIMANIKA / 2026
             </p>
             <h1 id="hero-title">
-              <span>Sistem Informasi</span>
+              <span>{tagline || landingTextDefaults.hero_tagline}</span>
               <strong>HIMANIKA</strong>
             </h1>
             <p className="hero-description">
-              Ruang tumbuh, berkarya, dan berkolaborasi bagi mahasiswa Manajemen
-              Informatika dalam satu ekosistem.
+              {subtitle || landingTextDefaults.hero_subtitle}
             </p>
             <div className="hero-actions">
               <SplitCta href="/events">Jelajahi Event</SplitCta>

@@ -23,6 +23,7 @@ import {
   ClipboardCheck,
   Megaphone,
   ScrollText,
+  Images,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Toaster } from "sonner";
@@ -49,6 +50,11 @@ const adminLinks = [
     label: "Kelola OPREC",
     href: "/admin/oprec",
     icon: <UserCheck className="h-5 w-5 flex-shrink-0" />,
+  },
+  {
+    label: "Pengaturan Landing Page",
+    href: "/admin/content",
+    icon: <Images className="h-5 w-5 flex-shrink-0" />,
   },
   {
     label: "Merchandise",
@@ -85,6 +91,7 @@ function adminBreadcrumb(pathname) {
     users: "Kelola User",
     events: "Kelola Event",
     oprec: "Kelola OPREC",
+    content: "Pengaturan Landing Page",
     merchandise: "Merchandise",
     logs: "Log Sistem",
     settings: "Pengaturan",

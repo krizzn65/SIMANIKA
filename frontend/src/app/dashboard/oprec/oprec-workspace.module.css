@@ -891,6 +891,156 @@
 }
 
 .mainColumn { display: grid; gap: 22px; min-width: 0; }
+.testFocusLayout { grid-template-columns: minmax(0, 1fr); }
+
+.testFocusBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid var(--ws-blue);
+  box-shadow: 2px 2px 0 rgba(21, 94, 239, 0.1);
+}
+
+.testBack {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: var(--ws-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.testBack:hover {
+  background: #f8fafc;
+  border-color: var(--ws-blue);
+  color: var(--ws-blue);
+}
+
+.testFocusIndicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #1e40af;
+  letter-spacing: 0.08em;
+}
+
+.testFocusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #155eef;
+  box-shadow: 0 0 8px rgba(21, 94, 239, 0.6);
+  animation: testPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes testPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.testStart {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  margin-top: 10px;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid var(--ws-blue);
+  background: linear-gradient(135deg, #ffffff 0%, #f4f8ff 100%);
+  box-shadow: 4px 4px 0 rgba(21, 94, 239, 0.12);
+}
+
+.testStartContent {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.testStartTag {
+  display: inline-block;
+  color: var(--ws-blue);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.testStart h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ws-ink);
+  letter-spacing: -0.015em;
+}
+
+.testStart p {
+  margin: 0;
+  color: var(--ws-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.testStartBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 11px 22px;
+  border: 1px solid var(--ws-blue);
+  background: var(--ws-blue);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 3px 3px 0 #0f48c2;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  flex-shrink: 0;
+}
+
+.testStartBtn:hover {
+  background: #104bcc;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #0f48c2;
+}
+
+.testStartBtn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 #0f48c2;
+}
+
+@media (max-width: 768px) {
+  .testFocusBanner {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+  }
+  .testStart {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 18px;
+  }
+  .testStartBtn {
+    width: 100%;
+  }
+}
+
 .testSchedule { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
 .testSchedule > div { display: grid; gap: 3px; padding: 12px; border: 1px solid var(--ws-border); background: #f6f8fc; }
 .testSchedule span { color: var(--ws-muted); font-size: 12px; }
@@ -909,7 +1059,7 @@
 .testChoices label { display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 9px 12px; border: 1px solid var(--ws-border); cursor: pointer; }
 .testChoices input { accent-color: var(--ws-blue); }
 .testActions { display: flex; justify-content: flex-end; }
-.testActions button, .testDialog button { min-height: 44px; padding: 10px 16px; border: 1px solid var(--ws-blue); border-radius: 0; background: var(--ws-blue); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.testActions button, .testDialog button { min-height: 44px; padding: 10px 16px; border: 1px solid var(--ws-blue); border-radius: 0; background: var(--ws-blue); color: #fff; font: inherit; font-weight: 600; cursor: pointer; box-shadow: 2px 2px 0 #0f48c2; }
 .testField select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--ws-border); border-radius: 0; background: #fff; color: var(--ws-ink); font: inherit; font-size: 16px; }
 .testField input[type=file] { padding: 9px 12px; }
 .testConsent { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; }
@@ -920,11 +1070,11 @@
 .testDialog h3 { margin: 0 0 12px; font-size: 22px; }
 .testDialog p { color: var(--ws-muted); }
 .testDialog > div { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
-.testDialog button:first-child { border-color: var(--ws-border); background: #fff; color: var(--ws-ink); }
+.testDialog button:first-child { border-color: var(--ws-border); background: #fff; color: var(--ws-ink); box-shadow: none; }
 .testDialog button:disabled { opacity: .5; cursor: not-allowed; }
 .testReview { display: grid; gap: 12px; margin: 0; }
 .testReview > div { padding: 12px; border: 1px solid var(--ws-border); }
 .testReview dt { font-weight: 600; }
 .testReview dd { margin: 5px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .workspace :is(button, input, textarea, select):focus-visible, .testDialog button:focus-visible { outline: 2px solid var(--ws-blue); outline-offset: 2px; }
- (max-width: 600px) { .testSchedule, .testForm { grid-template-columns: 1fr; } .testActions button { width: 100%; } }
+@media (max-width: 600px) { .testSchedule, .testForm { grid-template-columns: 1fr; } .testActions button { width: 100%; } }

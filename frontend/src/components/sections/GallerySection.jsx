@@ -48,11 +48,8 @@ const PLACEHOLDER_GALLERY = [
   },
 ];
 
-export function GallerySection() {
-  // TODO: Replace PLACEHOLDER_GALLERY with data fetched from backend API
-  // Example: const [gallery, setGallery] = useState(PLACEHOLDER_GALLERY);
-  // useEffect(() => { fetch('/api/gallery').then(r => r.json()).then(setGallery) }, []);
-  const galleryImages = PLACEHOLDER_GALLERY;
+export function GallerySection({ images }) {
+  const galleryImages = images ?? PLACEHOLDER_GALLERY;
 
   return (
     <section
@@ -85,7 +82,11 @@ export function GallerySection() {
           </p>
         </header>
 
-        <CardFanCarousel cards={galleryImages} />
+        {galleryImages.length ? (
+          <CardFanCarousel key={galleryImages.map((img) => img.imgUrl).join("|")} cards={galleryImages} />
+        ) : (
+          <p className="gallery-lead">Galeri kegiatan sedang disiapkan.</p>
+        )}
       </div>
     </section>
   );

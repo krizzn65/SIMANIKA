@@ -3,7 +3,7 @@ import styles from "@/app/dashboard/oprec/oprec-workspace.module.css";
 export function WrittenTestFields({ questions, answers, onAnswerChange, idPrefix = "test", preview = false }) {
   return questions.map((question, index) => {
     const id = `${idPrefix}-${question.id}`;
-    const value = answers[question.id] || "";
+    const value = typeof answers[question.id] === "string" ? answers[question.id] : "";
     const label = `${index + 1}. ${question.label || (preview ? "Pertanyaan baru" : "")}`;
     const options = (question.options || []).map((option, optionIndex) => preview && !option.trim() ? `Opsi ${optionIndex + 1}` : option).filter((option) => option.trim());
     const setValue = (next) => onAnswerChange(question.id, next);
@@ -24,7 +24,7 @@ export function WrittenTestFields({ questions, answers, onAnswerChange, idPrefix
       control = <input id={id} type={type} required={question.required} maxLength={type === "text" ? 500 : 200} value={value} onChange={(event) => setValue(event.target.value)} />;
     }
 
-    return <div className={`${styles.testField} ${["paragraph", "single_choice", "checkbox", "file"].includes(question.type) ? styles.testFieldWide : ""}`} key={question.id}>
+    return <div className={`${styles.testField} ${["paragraph", "single_choice", "checkbox", "file"].includes(question.type) ? styles.testFieldWide : ""}`} key={`${question.id}-${question.type}`}>
       <label id={`${id}-label`} htmlFor={["single_choice", "checkbox"].includes(question.type) ? undefined : id}>{label} {question.required && <b aria-hidden="true">*</b>}</label>
       {control}
       {question.help && <small className={styles.testHelp}>{question.help}</small>}

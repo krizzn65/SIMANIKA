@@ -1,3 +1,12 @@
+## Pengaturan landing page dan fokus Tes Tulis — 16 Oktober 2026
+
+- [x] Tes Tulis peserta memulai dari tombol **Kerjakan sekarang**, lalu menyembunyikan ringkasan di atas dan panel samping sampai peserta kembali atau tes selesai. Draft jawaban tetap di state selama panel dibuka/tutup.
+- [x] Super Admin/Admin mempunyai menu **Pengaturan Landing Page** di atas Merchandise. Backend membatasi pengaturan teks, CRUD galeri, dan CRUD testimoni dengan `admin:content`; publik membaca `/api/public/home` dan foto melalui route publik yang dibatasi nama berkas.
+- [x] Galeri dan testimoni memakai tabel `site_contents`, `galleries`, dan `testimonials`. Contoh statis tetap tampil sampai masing-masing jenis konten mulai dikelola; setelah itu daftar kosong tetap kosong bila semua entri dihapus. Migrasi `2026_10_16_000001` menambah dua penanda pengelolaan.
+- [x] Hero, Tentang, serta Visi dan empat Misi dapat diedit dari halaman yang sama. Teks awal mengikuti konten landing yang sudah ada; setelah disimpan, endpoint publik menyajikan teks baru. Tes fitur API: 4 tes/35 assertion lulus; typecheck frontend lulus. Migrasi aditif diterapkan di database lokal dan endpoint publik merespons 200.
+- [ ] Uji browser terautentikasi untuk editor galeri/testimoni dan mode fokus Tes Tulis pada desktop serta mobile. Uji build produksi dengan `NEXT_DIST_DIR` terpisah dari server pengembangan.
+- [ ] Konten divisi, statistik, dan struktur organisasi masih memakai data statis; cakupan editor lanjutan belum diminta.
+
 ## Pemulihan pemeriksaan sesi lokal — 5 Oktober 2026
 
 - [x] Telusuri navbar “Coba lagi”: label muncul ketika pemeriksaan akun gagal, bukan ketika API mengonfirmasi pengunjung tanpa sesi. Dua listener backend ditemukan; listener development IPv4 tidak merespons, sedangkan backend localhost IPv6 merespons 401/200 secara normal.

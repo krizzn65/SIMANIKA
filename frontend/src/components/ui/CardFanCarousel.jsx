@@ -47,15 +47,17 @@ function getHeightMultiplier(width) {
 
 function getSlotConfig(totalCards, slot) {
   if (totalCards >= MAX_VISIBLE) return FAN_POSITIONS[slot];
-  const center = totalCards >> 1;
-  const distance = totalCards > 1 ? (slot - center) / center : 0;
-  const absDistance = Math.abs(distance);
+  if (totalCards <= 1) {
+    return { rot: 0, scale: 1.0, x: 0, y: 0, zIndex: 10 };
+  }
+  const offset = slot - (totalCards - 1) / 2;
+  const absOffset = Math.abs(offset);
   return {
-    rot: distance * 21,
-    scale: 1.0 - 0.2244 * absDistance * absDistance,
-    x: distance * 30,
-    y: absDistance * absDistance * 7.3,
-    zIndex: 10 - Math.abs(slot - center),
+    rot: offset * 7,
+    scale: Math.max(0.75, 1.0 - 0.045 * absOffset * absOffset),
+    x: offset * 11,
+    y: absOffset * absOffset * 1.3,
+    zIndex: Math.round(10 - absOffset),
   };
 }
 
@@ -70,11 +72,18 @@ export function CardFanCarousel({ cards }) {
   const totalCards = cards.length;
   const needsPagination = totalCards > MAX_VISIBLE;
   const [centerIndex, setCenterIndex] = useState(
-    needsPagination ? HALF : totalCards >> 1,
+    needsPagination ? HALF : Math.floor(totalCards / 2),
   );
   const [loadedIndices, setLoadedIndices] = useState(
     () => new Set(Array.from({ length: Math.min(totalCards, MAX_VISIBLE) }, (_, index) => index)),
   );
+
+  useEffect(() => {
+    setLoadedIndices(new Set(Array.from({ length: Math.min(totalCards, MAX_VISIBLE) }, (_, index) => index)));
+    setCenterIndex(needsPagination ? HALF : Math.floor(totalCards / 2));
+    hasEntered.current = false;
+    prevVisible.current = new Set();
+  }, [totalCards, needsPagination]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -365,7 +374,7 @@ export function CardFanCarousel({ cards }) {
               {loadedIndices.has(index) && (
                 <img
                   src={card.imgUrl}
-                  loading="lazy"
+                  loading="eager"
                   decoding="async"
                   alt={card.alt || `Galeri HIMANIKA ${index + 1}`}
                   className="fan-card__img"

@@ -154,7 +154,18 @@ export default function LogsWorkspace() {
             : rows.length === 0 ? <tr><td colSpan={6} className="syslog-state"><FileSearch2 size={28} aria-hidden="true" /><strong>Belum ada catatan pada filter ini.</strong><span>Ubah filter atau periksa kembali nanti.</span></td></tr>
               : rows.map((entry) => <tr key={entry.id}>
                 <td className="syslog-mono"><Clock3 size={14} aria-hidden="true" /> {dateTime(entry.createdAt)}</td>
-                <td><span className={`syslog-kind syslog-kind--${entry.kind}`}>{kinds[entry.kind] || "Aktivitas"}</span><strong>{entry.summary}</strong><small>{modules[entry.module] || entry.module} · {entry.action}</small></td>
+                <td>
+                  <span className={`syslog-kind syslog-kind--${entry.kind}`}>{kinds[entry.kind] || "Aktivitas"}</span>
+                  <div className="syslog-peristiwa-title">
+                    <strong>{entry.summary}</strong>
+                    {entry.module === "auth" && (
+                      <span className={`syslog-auth-tag ${entry.authMethod === "google" || entry.summary?.includes("Google") ? "syslog-auth-tag--google" : "syslog-auth-tag--manual"}`}>
+                        {entry.authMethod === "google" || entry.summary?.includes("Google") ? "Google" : "Manual"}
+                      </span>
+                    )}
+                  </div>
+                  <small>{modules[entry.module] || entry.module} · {entry.action}</small>
+                </td>
                 <td><strong>{entry.actor?.name || "Sistem / pengunjung"}</strong><small>{entry.actor?.role ? ROLE_LABELS[entry.actor.role] || entry.actor.role : "Tanpa akun"}</small></td>
                 <td className="syslog-mono">{entry.target ? `${entry.target.type} #${entry.target.id}` : "—"}</td>
                 <td><StatusBadge entry={entry} /><small>HTTP {entry.httpStatus}</small></td>
@@ -178,10 +189,111 @@ export default function LogsWorkspace() {
             <div><dt>Permintaan</dt><dd>{detail.method} {detail.route} · HTTP {detail.httpStatus}</dd></div>
             <div className="syslog-details__wide"><dt>ID permintaan</dt><dd className="syslog-mono">{detail.requestId || "—"}</dd></div>
           </dl>
+
+          {/* Rincian Metode Autentikasi (Manual vs Google) */}
+          {(detail.module === "auth" || detail.context?.auth_method) && (
+            <div className="syslog-context syslog-context--auth">
+              <h3>Metode & Status Autentikasi</h3>
+              <div className="syslog-auth-card">
+                <div className="syslog-auth-card__top">
+                  <span className={`syslog-auth-pill ${detail.context?.auth_method === "google" || detail.summary?.includes("Google") ? "syslog-auth-pill--google" : "syslog-auth-pill--manual"}`}>
+                    {detail.context?.auth_label || (detail.summary?.includes("Google") ? "Google OAuth 2.0" : "Manual (Email & Kata Sandi)")}
+                  </span>
+                  {detail.context?.remember_me !== undefined && (
+                    <span className="syslog-auth-badge">
+                      Ingat saya: {detail.context.remember_me ? "Aktif" : "Nonaktif"}
+                    </span>
+                  )}
+                </div>
+                {detail.context?.auth_description && (
+                  <p className="syslog-auth-desc">{detail.context.auth_description}</p>
+                )}
+                {detail.context?.email && (
+                  <div className="syslog-auth-row">
+                    <span>Email akun:</span>
+                    <strong>{detail.context.email}</strong>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Rincian Error & Kendala Sistem */}
+          {(detail.result === "failed" || detail.kind === "error" || detail.context?.error_description || detail.context?.error_type) && (
+            <div className="syslog-context syslog-context--error">
+              <h3>Rincian Kendala & Error</h3>
+              <div className="syslog-error-box">
+                <div className="syslog-error-box__lead">
+                  <AlertTriangle size={18} aria-hidden="true" className="syslog-error-box__icon" />
+                  <strong>{detail.context?.error_description || (detail.result === "failed" ? "Permintaan tidak berhasil diproses oleh sistem." : "Terjadi kendala sistem.")}</strong>
+                </div>
+
+                <div className="syslog-error-grid">
+                  {detail.context?.error_type && (
+                    <div>
+                      <span>Tipe Error / Exception</span>
+                      <code className="syslog-code">{detail.context.error_type}</code>
+                    </div>
+                  )}
+                  {detail.httpStatus && (
+                    <div>
+                      <span>Status HTTP</span>
+                      <strong className="syslog-status-code">HTTP {detail.httpStatus}</strong>
+                    </div>
+                  )}
+                  {detail.context?.error_code && (
+                    <div>
+                      <span>Kode Error</span>
+                      <code className="syslog-code">{detail.context.error_code}</code>
+                    </div>
+                  )}
+                  {detail.context?.error_source && (
+                    <div>
+                      <span>Sumber Kode</span>
+                      <code className="syslog-code">{detail.context.error_source}</code>
+                    </div>
+                  )}
+                  {detail.context?.fingerprint && (
+                    <div>
+                      <span>Fingerprint Error</span>
+                      <span className="syslog-mono">{detail.context.fingerprint}</span>
+                    </div>
+                  )}
+                </div>
+
+                {detail.context?.error_detail && (
+                  <div className="syslog-error-detail-text">
+                    <span>Detail Teknis:</span>
+                    <p>{detail.context.error_detail}</p>
+                  </div>
+                )}
+
+                {detail.context?.error_tip && (
+                  <div className="syslog-error-tip">
+                    <strong>Rekomendasi Tindakan:</strong>
+                    <p>{detail.context.error_tip}</p>
+                  </div>
+                )}
+
+                {detail.context?.validation_errors && Object.keys(detail.context.validation_errors).length > 0 && (
+                  <div className="syslog-val-errors">
+                    <h4>Kolom yang Tidak Memenuhi Validasi:</h4>
+                    <ul>
+                      {Object.entries(detail.context.validation_errors).map(([field, msgs]) => (
+                        <li key={field}>
+                          <strong>{field}</strong>: {Array.isArray(msgs) ? msgs.join(", ") : String(msgs)}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {detail.context?.fields?.length > 0 && <div className="syslog-context"><h3>Kolom yang dikirim</h3><div className="syslog-chips">{detail.context.fields.map((field) => <span key={field}>{field}</span>)}</div></div>}
           {(detail.context?.before || detail.context?.after) && <div className="syslog-context"><h3>Perubahan aman</h3><div className="syslog-change">{Object.keys({ ...detail.context.before, ...detail.context.after }).map((key) => <div key={key}><span>{key}</span><strong>{String(detail.context.before?.[key] ?? "—")}</strong><ArrowRight size={15} aria-hidden="true" /><strong>{String(detail.context.after?.[key] ?? "—")}</strong></div>)}</div></div>}
-          {detail.context?.error_type && <div className="syslog-context"><h3>Rujukan error</h3><p>{detail.context.error_type} · {detail.context.fingerprint}</p></div>}
-          {!detail.context?.fields?.length && !detail.context?.before && !detail.context?.error_type && <p className="syslog-detail-note">Tidak ada nilai formulir atau isi berkas yang disimpan dalam log ini.</p>}
+          {!detail.context?.fields?.length && !detail.context?.before && !detail.context?.after && !detail.context?.auth_method && !detail.context?.error_type && !detail.context?.error_description && <p className="syslog-detail-note">Tidak ada nilai formulir atau isi berkas yang disimpan dalam log ini.</p>}
         </div>}
       </section>
     </div>}
