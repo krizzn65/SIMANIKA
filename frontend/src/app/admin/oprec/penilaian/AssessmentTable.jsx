@@ -1,8 +1,10 @@
 "use client";
 
-import { useRef } from "react";
-import { AlertCircle, Check, Eye, Loader2, LockKeyhole, RefreshCw } from "lucide-react";
+import { useRef, useState } from "react";
+import { AlertCircle, Check, Download, Eye, Loader2, LockKeyhole, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { getOprecTableFields, getRegistrantFieldValue } from "@/lib/oprecRegistrants";
+import { downloadAuthenticatedFile, downloadErrorMessage } from "@/lib/downloadFile";
 import { scoreTone, validScore } from "@/lib/oprecAssessment.mjs";
 import { CRITERIA, formattedTotal, scoreText } from "./assessmentFormat";
 
@@ -15,6 +17,14 @@ function SaveFeedback({ state, onRetry }) {
 
 export default function AssessmentTable({ data, loading, error, filtered, selectedId, draft, saveState, onChange, onSave, onCommentChange, onSelect, onDecide, onRetry, onReset, page, onPageChange }) {
   const scroll = useRef(null);
+  const [downloadingFile, setDownloadingFile] = useState("");
+  async function downloadFile(url, name) {
+    if (!url || downloadingFile) return;
+    setDownloadingFile(url);
+    try { await downloadAuthenticatedFile(url, name); }
+    catch (cause) { toast.error(downloadErrorMessage(cause)); }
+    finally { setDownloadingFile(""); }
+  }
   function goToScores() {
     const viewport = scroll.current;
     const heading = viewport?.querySelector("th[data-section=score]");
@@ -53,7 +63,7 @@ export default function AssessmentTable({ data, loading, error, filtered, select
             <td className="assessment-pin assessment-pin--2"><span className="assessment-nim">{row.nim}</span></td>
             {row.choices.map((choice) => <td key={choice.order} className="assessment-choice"><strong>{choice.division || "—"}</strong><span>{choice.applied_position || "Jabatan tidak tercatat"}</span></td>)}
             <td>{row.angkatan || "—"}</td>
-            {fields.map((field) => { const value = fieldValue(row, field); return <td key={field.name} className="assessment-answer-cell">{value.downloadUrl ? <a className="assessment-file-link" href={value.downloadUrl} target="_blank" rel="noopener noreferrer">Unduh berkas</a> : <div>{value.text}</div>}</td>; })}
+            {fields.map((field) => { const value = fieldValue(row, field); return <td key={field.name} className="assessment-answer-cell">{value.downloadUrl ? <button type="button" className="assessment-file-link" disabled={Boolean(downloadingFile)} onClick={() => downloadFile(value.downloadUrl, value.fileName)} aria-label={`Unduh ${field.label || field.name} milik ${row.name}`}>{downloadingFile === value.downloadUrl ? <Loader2 size={15} className="assessment-spin" aria-hidden="true" /> : <Download size={15} aria-hidden="true" />} {downloadingFile === value.downloadUrl ? "Mengunduh…" : "Unduh Berkas"}</button> : <div>{value.text}</div>}</td>; })}
             <td><button type="button" className={`assessment-button assessment-button--small ${selectedId === row.id ? "assessment-button--selected" : ""}`} onClick={(event) => onSelect(row, event.currentTarget)} aria-label={`Lihat jawaban Tes Tulis ${row.name}`} aria-pressed={selectedId === row.id}><Eye size={15} /> Lihat jawaban</button></td>
             {CRITERIA.map(([field, label]) => {
               const key = `${row.registration_id}:${field}`;

@@ -677,20 +677,34 @@
 .oprec-builder__fields {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
 }
 
 .oprec-builder__field {
   border: 1px solid #cad5e5;
+  border-left: 4px solid #2563eb;
   background: #ffffff;
   border-radius: 0;
   padding: 16px;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, border-left-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.oprec-builder__field:hover {
+  border-color: #94a3b8;
+  border-left-color: #1d4ed8;
+}
+
+.oprec-builder__field:focus-within {
+  border-left-color: #1d4ed8;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.08);
 }
 
 .oprec-builder__field--fixed {
   background: #fafcff;
 }
+.oprec-builder__consent-note { margin-top: 16px; border-color: #b9c9df; }
+.oprec-builder__consent-note p { margin: 0 0 8px; color: #526176; font-size: 13px; }
+.oprec-builder__consent-note ul { margin: 0; padding-left: 20px; color: #24364d; font-size: 13px; }
 
 .oprec-builder__field-head {
   display: flex;
@@ -1382,6 +1396,10 @@
 .oprec-user-preview__field-item--wide {
   grid-column: 1 / -1;
 }
+.oprec-user-preview__consents { padding: 12px; border: 1px solid #cbd5e1; background: #f8fafc; }
+.oprec-user-preview__consents > strong { font-size: 13px; }
+.oprec-user-preview__consents label { display: flex; align-items: flex-start; gap: 8px; color: #334155; font-size: 12px; line-height: 1.5; }
+.oprec-user-preview__consents input { appearance: none; -webkit-appearance: none; flex: none; width: 16px; height: 16px; margin: 2px 0 0; border: 2px solid #91baf7; border-radius: 0; background: #fff; box-shadow: 2px 2px 0 rgba(21, 94, 239, .12); }
 
 .oprec-user-preview__field-label {
   font-size: 13px;
@@ -2440,7 +2458,7 @@
 
 /* Card Divisi Pilihan (Sistem & Terintegrasi di Form Bagian Bawah) */
 .oprec-builder__field--division {
-  border-left: 3px solid #2563eb !important;
+  border-left: 4px solid #2563eb !important;
   background: #ffffff;
 }
 
@@ -2895,5 +2913,137 @@
 @media (max-width: 768px) {
   .oprec-builder__floating-nav {
     display: none !important;
+  }
+}
+.oprec-builder__example-editor {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border: 1px dashed #b5c6df;
+  background: #f7faff;
+  border-radius: 6px;
+}
+
+.oprec-builder__example-editor > strong,
+.oprec-builder__example-editor > .oprec-builder__example-file-wrapper,
+.oprec-builder__example-editor > label:last-of-type,
+.oprec-builder__example-editor > button {
+  grid-column: 1 / -1;
+}
+
+.oprec-builder__example-editor > strong {
+  color: #344054;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.oprec-builder__example-editor > label {
+  display: grid;
+  gap: 0.35rem;
+  color: #475467;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.oprec-builder__example-editor input:not([type="file"]) {
+  width: 100%;
+  min-height: 40px;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #c8d4e4;
+  background: #fff;
+  color: #101828;
+  font: inherit;
+  font-size: 0.8rem;
+  border-radius: 4px;
+}
+
+.oprec-builder__example-file-wrapper {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.oprec-builder__example-file-label {
+  color: #475467;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.oprec-builder__file-mock {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  min-height: 40px;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #c8d4e4;
+  background: #fff;
+  border-radius: 6px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.oprec-builder__file-mock:focus-within {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.oprec-builder__file-mock-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.oprec-builder__file-mock-btn:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.oprec-builder__file-mock-btn.is-uploading {
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.oprec-builder__file-mock-name {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
+  font-size: 0.8rem;
+  overflow: hidden;
+}
+
+.oprec-builder__file-mock-name.has-file {
+  color: #1e293b;
+}
+
+.oprec-builder__file-mock-name.is-empty {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.oprec-builder__example-editor small {
+  color: #667085;
+  font-size: 0.7rem;
+  font-weight: 400;
+}
+
+@media (max-width: 640px) {
+  .oprec-builder__example-editor {
+    grid-template-columns: 1fr;
   }
 }

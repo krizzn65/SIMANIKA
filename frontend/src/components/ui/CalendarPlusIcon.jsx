@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { motion, useAnimation, useReducedMotion } from "framer-motion";
 
 /**
@@ -18,42 +18,83 @@ export function CalendarPlusIcon({
 }) {
   const controls = useAnimation();
   const reduced = useReducedMotion();
-  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    isMountedRef.current = true;
+    let isCancelled = false;
+    let timerId = null;
+
+    const safeSet = (variant) => {
+      if (isCancelled) return;
+      try {
+        controls.set(variant);
+      } catch {
+        // Component not ready or unmounted
+      }
+    };
+
+    const safeStart = async (variant) => {
+      if (isCancelled) return;
+      try {
+        await controls.start(variant);
+      } catch {
+        // Component not ready or unmounted
+      }
+    };
+
+    const sleep = (ms) =>
+      new Promise((resolve) => {
+        timerId = setTimeout(resolve, ms);
+      });
 
     if (reduced) {
-      controls.set("normal");
-      return;
+      safeSet("normal");
+      return () => {
+        isCancelled = true;
+      };
     }
 
     if (!loop) {
-      controls.start("animate");
-      return;
+      safeStart("animate");
+      return () => {
+        isCancelled = true;
+        try {
+          controls.stop();
+        } catch {}
+      };
     }
 
     const runLoop = async () => {
-      while (isMountedRef.current) {
-        // Reset to initial invisible state
-        controls.set("initial");
-        // Animate paths sequentially
-        await controls.start("animate");
-        if (!isMountedRef.current) break;
-        // Hold full state for user to view
-        await new Promise((resolve) => setTimeout(resolve, loopDelay));
-        if (!isMountedRef.current) break;
-        // Smooth fade out before next loop cycle
-        await controls.start("exit");
-        if (!isMountedRef.current) break;
-        await new Promise((resolve) => setTimeout(resolve, 200));
+      let isFirst = true;
+
+      while (!isCancelled) {
+        // Initial state is already applied on mount; reset on subsequent loops
+        if (!isFirst) {
+          safeSet("initial");
+        }
+        isFirst = false;
+
+        if (isCancelled) break;
+        await safeStart("animate");
+
+        if (isCancelled) break;
+        await sleep(loopDelay);
+
+        if (isCancelled) break;
+        await safeStart("exit");
+
+        if (isCancelled) break;
+        await sleep(200);
       }
     };
 
     runLoop();
 
     return () => {
-      isMountedRef.current = false;
+      isCancelled = true;
+      if (timerId) clearTimeout(timerId);
+      try {
+        controls.stop();
+      } catch {}
     };
   }, [controls, loop, loopDelay, reduced]);
 

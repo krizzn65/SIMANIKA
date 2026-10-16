@@ -78,6 +78,7 @@ const initial = () => ({
   deskripsi: "",
   poster: "",
   poster_alt: "",
+  guidebook: "",
   tanggal_buka: "",
   tanggal_tutup: "",
   schema_version: "1",
@@ -210,6 +211,8 @@ export default function OprecBuilder({ oprecId }) {
     });
   };
   const [uploadingPoster, setUploadingPoster] = useState(false);
+  const [uploadingGuidebook, setUploadingGuidebook] = useState(false);
+  const [uploadingExample, setUploadingExample] = useState(null);
   const [dragOverPoster, setDragOverPoster] = useState(false);
   const [uploadingLogoIndex, setUploadingLogoIndex] = useState(null);
   const [dragOverLogoIndex, setDragOverLogoIndex] = useState(null);
@@ -392,6 +395,7 @@ export default function OprecBuilder({ oprecId }) {
           deskripsi: item.deskripsi || "",
           poster: item.poster || "",
           poster_alt: item.posterAlt || "",
+          guidebook: item.guidebookPath || "",
           tanggal_buka: localDateOnly(item.tanggalBuka),
           tanggal_tutup: localDateOnly(item.tanggalTutup),
           schema_version: String(item.schemaVersion || "1"),
@@ -405,6 +409,7 @@ export default function OprecBuilder({ oprecId }) {
                 target_type: "all",
                 target_divisions: [],
                 ...saved,
+                example_file_name: saved.exampleFileName || saved.example_file_name || "",
                 ...(["angkatan", "golongan"].includes(template.name) && !saved.options?.length
                   ? { options: template.options }
                   : {}),
@@ -416,6 +421,7 @@ export default function OprecBuilder({ oprecId }) {
                 !["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(field.name)
             ).map((field) => ({
               ...field,
+              example_file_name: field.exampleFileName || field.example_file_name || "",
               target_type: field.targetType || field.target_type || "all",
               target_divisions: Array.isArray(field.targetDivisions || field.target_divisions)
                 ? (field.targetDivisions || field.target_divisions).map(String)
@@ -449,6 +455,126 @@ export default function OprecBuilder({ oprecId }) {
       "form_fields",
       data.form_fields.map((item, i) => (i === index ? { ...item, ...patch } : item))
     );
+
+  const handleExampleFile = async (index, file) => {
+    if (!file) return;
+    if (file.type !== "application/pdf" || file.size > 5 * 1024 * 1024) {
+      setError("Dokumen contoh harus PDF dengan ukuran maksimal 5 MB.");
+      return;
+    }
+    setUploadingExample(index);
+    setError("");
+    try {
+      const body = new FormData();
+      body.append("example", file);
+      const response = await api.post("/admin/oprec/upload-question-example", body, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const path = response.data?.data?.path;
+      const filename = response.data?.data?.filename || file.name;
+      if (!path) throw new Error("Dokumen contoh gagal diunggah.");
+      setField(index, {
+        example_file: path,
+        example_file_name: filename,
+        example_url: "",
+        example_label: data.form_fields[index]?.example_label || "Lihat contoh",
+      });
+    } catch (err) {
+      setError(err.response?.data?.errors?.example?.[0] || err.response?.data?.message || err.message || "Dokumen contoh gagal diunggah.");
+    } finally {
+      setUploadingExample(null);
+    }
+  };
+
+  const renderExampleEditor = (index, field) => {
+    const hasExampleFile = Boolean(field.example_file);
+    const exampleFileName = field.example_file_name || (hasExampleFile ? field.example_file.split("/").pop() : "");
+
+    return (
+      <div className="oprec-builder__example-editor wide">
+        <strong>Contoh / referensi (Opsional)</strong>
+        <label>
+          Teks tombol
+          <input
+            value={field.example_label || ""}
+            onChange={(event) => setField(index, { example_label: event.target.value })}
+            placeholder="Contoh: Lihat contoh portofolio"
+            maxLength={80}
+          />
+        </label>
+        <label>
+          Tautan contoh
+          <input
+            type="url"
+            value={field.example_url || ""}
+            onChange={(event) =>
+              setField(index, {
+                example_url: event.target.value,
+                example_file: "",
+                example_file_name: "",
+              })
+            }
+            placeholder="https://..."
+            maxLength={2048}
+          />
+        </label>
+        <div className="oprec-builder__example-file-wrapper">
+          <span className="oprec-builder__example-file-label">Atau unggah contoh PDF</span>
+          <div className="oprec-builder__file-mock">
+            <input
+              id={`example-file-input-${index}`}
+              type="file"
+              accept="application/pdf,.pdf"
+              className="hidden"
+              disabled={uploadingExample === index}
+              onChange={(event) => {
+                handleExampleFile(index, event.target.files?.[0]);
+                event.target.value = "";
+              }}
+            />
+            <label
+              htmlFor={`example-file-input-${index}`}
+              className={`oprec-builder__file-mock-btn ${uploadingExample === index ? "is-uploading" : ""}`}
+            >
+              <UploadCloud size={14} className="shrink-0" />
+              <span>{uploadingExample === index ? "Mengunggah..." : hasExampleFile ? "Ganti File" : "Pilih File"}</span>
+            </label>
+            <div
+              className={`oprec-builder__file-mock-name ${hasExampleFile ? "has-file" : "is-empty"}`}
+              title={exampleFileName || "Tidak ada file yang dipilih"}
+            >
+              {uploadingExample === index ? (
+                <span className="text-blue-600 animate-pulse text-xs">Sedang mengunggah dokumen...</span>
+              ) : hasExampleFile ? (
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <FileText size={15} className="text-red-500 shrink-0" />
+                  <span className="truncate font-medium text-slate-800">{exampleFileName}</span>
+                </div>
+              ) : (
+                <span className="text-slate-400">Tidak ada file yang dipilih</span>
+              )}
+            </div>
+          </div>
+          <small>
+            {uploadingExample === index
+              ? "Mengunggah PDF ke penyimpanan..."
+              : hasExampleFile
+              ? "PDF contoh sudah tersimpan (Maks. 5 MB)."
+              : "PDF maksimal 5 MB. Tautan dan PDF digunakan bergantian."}
+          </small>
+        </div>
+        {(field.example_url || field.example_file) && (
+          <button
+            type="button"
+            className="oprec-btn oprec-btn--danger oprec-btn--sm"
+            onClick={() => setField(index, { example_url: "", example_file: "", example_file_name: "" })}
+          >
+            Hapus contoh
+          </button>
+        )}
+      </div>
+    );
+  };
 
   const setDivision = (index, patch) =>
     set(
@@ -514,6 +640,30 @@ export default function OprecBuilder({ oprecId }) {
     }
   };
 
+  const handleGuidebookFile = async (file) => {
+    if (!file) return;
+    if (file.type !== "application/pdf" || file.size > 10 * 1024 * 1024) {
+      setError("Guidebook harus berupa PDF dengan ukuran maksimal 10 MB.");
+      return;
+    }
+    setUploadingGuidebook(true);
+    setError("");
+    try {
+      const body = new FormData();
+      body.append("guidebook", file);
+      const response = await api.post("/admin/oprec/upload-guidebook", body, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const path = response.data?.data?.path;
+      if (!path) throw new Error("Guidebook gagal diunggah.");
+      set("guidebook", path);
+    } catch (err) {
+      setError(err.response?.data?.errors?.guidebook?.[0] || err.response?.data?.message || err.message || "Guidebook gagal diunggah.");
+    } finally {
+      setUploadingGuidebook(false);
+    }
+  };
+
   const handleDivisionLogoUpload = async (index, file) => {
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
@@ -564,7 +714,7 @@ export default function OprecBuilder({ oprecId }) {
     set("form_fields", next);
   };
 
-  const validate = () => {
+  const validate = (nextStatus = data.status) => {
     if (
       !data.periode.trim() ||
       data.periode.startsWith("/") ||
@@ -577,12 +727,14 @@ export default function OprecBuilder({ oprecId }) {
       data.tanggal_tutup < data.tanggal_buka
     )
       return "Tanggal tutup tidak boleh sebelum tanggal buka.";
+    if (nextStatus !== "draft" && !data.guidebook) return "Unggah Guidebook sebelum memublikasikan pendaftaran.";
+    if (uploadingGuidebook) return "Tunggu sampai unggahan Guidebook selesai.";
     if (!data.divisi_tersedia.length || data.divisi_tersedia.some((item) => !item.nama.trim()))
       return "Tambahkan divisi dan isi nama setiap divisi.";
     if (!data.form_fields[3].options?.length) return "Isi minimal satu pilihan angkatan.";
     if (data.form_fields[3].options.some((option) => !/^(19|20)\d{2}$/.test(option.value)))
       return "Pilihan angkatan harus tahun empat digit, misalnya 2024.";
-    if (data.form_fields.length > 40) return "Maksimal 40 kolom.";
+    if (data.form_fields.length > 41) return "Maksimal 41 kolom.";
     if (data.faq.some((item) => !item.pertanyaan?.trim() || !item.jawaban?.trim()))
       return "Lengkapi pertanyaan dan jawaban FAQ, atau hapus FAQ yang kosong.";
     const names = new Set();
@@ -615,7 +767,7 @@ export default function OprecBuilder({ oprecId }) {
 
   const save = async (nextStatus = data.status) => {
     if (saving.current) return;
-    const problem = validate();
+    const problem = validate(nextStatus);
     if (problem) {
       setError(problem);
       return;
@@ -632,6 +784,7 @@ export default function OprecBuilder({ oprecId }) {
         tanggal_tutup: apiDateEnd(data.tanggal_tutup),
         poster: data.poster.trim() || null,
         poster_alt: data.poster_alt.trim() || null,
+        guidebook: data.guidebook || null,
         link_grup_wa: data.link_grup_wa.trim() || null,
         divisi_tersedia: data.divisi_tersedia.map((item) => ({
           ...item,
@@ -642,6 +795,10 @@ export default function OprecBuilder({ oprecId }) {
           name: field.name,
           label: field.label.trim(),
           type: field.type,
+          example_label: field.example_label?.trim() || null,
+          example_url: field.example_url?.trim() || null,
+          example_file: field.example_file || null,
+          example_file_name: field.example_file_name || null,
           required: Boolean(field.required),
           help: field.help || null,
           placeholder: field.placeholder || null,
@@ -1138,6 +1295,19 @@ export default function OprecBuilder({ oprecId }) {
                     </label>
                   )}
                 </div>
+
+                <div className="oprec-builder__poster-zone">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="oprec-builder__poster-label">Guidebook OPREC <span className="text-red-600">*</span></span>
+                    {uploadingGuidebook && <span className="text-xs font-mono text-blue-600 flex items-center gap-1.5"><RefreshCw size={12} className="animate-spin" />Mengunggah...</span>}
+                  </div>
+                  <label className="oprec-builder__poster-drop">
+                    <input type="file" accept="application/pdf,.pdf" className="hidden" disabled={uploadingGuidebook} onChange={(event) => { handleGuidebookFile(event.target.files?.[0]); event.target.value = ""; }} />
+                    <UploadCloud size={26} className={data.guidebook ? "text-green-600" : "text-slate-400"} />
+                    <span className="oprec-builder__poster-pick-btn">{data.guidebook ? "Ganti Guidebook PDF" : "Pilih Guidebook PDF"}</span>
+                    <small>{data.guidebook ? "Guidebook tersimpan dan siap ditampilkan untuk peserta." : "Wajib sebelum pendaftaran dipublikasikan · PDF maks. 10 MB"}</small>
+                  </label>
+                </div>
               </div>
 
 
@@ -1548,13 +1718,13 @@ export default function OprecBuilder({ oprecId }) {
                 <div>
                   <h2>Pertanyaan Formulir</h2>
                   <p>
-                    Delapan pertanyaan awal wajib diisi. Divisi terintegrasi otomatis dari tab Kelola Divisi.
+                    Sembilan pertanyaan sistem wajib diisi sebelum pilihan divisi. Persetujuan wajib selalu berada setelah seluruh pertanyaan tambahan.
                   </p>
                 </div>
               </div>
 
               <div className="oprec-builder__fields">
-                {/* 1. Pertanyaan Sistem (01 s/d 08) */}
+                {/* 1. Pertanyaan Sistem (01 s/d 09) */}
                 {data.form_fields.slice(0, fixed.length).map((field, index) => {
                   return (
                     <div
@@ -1594,7 +1764,7 @@ export default function OprecBuilder({ oprecId }) {
                           />
                         </label>
 
-                        {["angkatan", "golongan"].includes(field.name) && (
+                        {["angkatan", "golongan", "status_kepengurusan"].includes(field.name) && (
                           <label className="wide">
                             Pilihan {field.label} (satu pilihan per baris)
                             <textarea
@@ -1611,7 +1781,7 @@ export default function OprecBuilder({ oprecId }) {
                                   options: toOptions(rawVal),
                                 });
                               }}
-                              placeholder={field.name === "angkatan" ? "2025\n2026" : "A\nB\nC\nD\nE"}
+                              placeholder={field.name === "angkatan" ? "2025\n2026" : field.name === "status_kepengurusan" ? "Anggota Baru\nMelanjutkan Periode kedua" : "A\nB\nC\nD\nE"}
                             />
                           </label>
                         )}
@@ -1627,6 +1797,7 @@ export default function OprecBuilder({ oprecId }) {
                             maxLength={500}
                           />
                         </label>
+                        {renderExampleEditor(index, field)}
                       </div>
                     </div>
                   );
@@ -1902,6 +2073,7 @@ export default function OprecBuilder({ oprecId }) {
                             maxLength={500}
                           />
                         </label>
+                        {renderExampleEditor(actualIndex, field)}
 
                         <label className="oprec-builder__check">
                           <input
@@ -1919,13 +2091,19 @@ export default function OprecBuilder({ oprecId }) {
                 })}
               </div>
 
+              <div className="oprec-builder__field oprec-builder__field--fixed oprec-builder__consent-note">
+                <div className="oprec-builder__field-head"><strong>Persetujuan wajib di akhir formulir</strong><span className="oprec-builder__field-tag oprec-builder__field-tag--fixed">WAJIB · SISTEM</span></div>
+                <p>Kedua kotak centang ini selalu tampil setelah semua pertanyaan tambahan dan tidak dapat dihapus.</p>
+                <ul><li>Saya menyatakan bahwa data yang saya isi dalam formulir ini benar dan dapat dipertanggungjawabkan.</li><li>Saya memahami bahwa data yang saya berikan digunakan untuk keperluan administrasi dan seleksi OPREC HIMANIKA sesuai ketentuan yang berlaku.</li></ul>
+              </div>
+
               <button
                 type="button"
                 className="oprec-builder__add"
                 onClick={() =>
                   set("form_fields", [...data.form_fields, newField(Date.now())])
                 }
-                disabled={data.form_fields.length >= 40}
+                disabled={data.form_fields.length >= 41}
               >
                 <Plus size={15} aria-hidden="true" />
                 <span>Tambah Pertanyaan Baru</span>
@@ -2233,7 +2411,7 @@ export default function OprecBuilder({ oprecId }) {
 
                     {/* Question Fields Grid (Textfield Kiri & Kanan) */}
                     <div className="oprec-user-preview__fields-grid">
-                      {/* 1. Delapan field wajib sistem */}
+                      {/* 1. Sembilan field wajib sistem */}
                       {data.form_fields.slice(0, fixed.length).map((f, i) =>
                         renderPreviewField(f, i)
                       )}
@@ -2461,6 +2639,11 @@ export default function OprecBuilder({ oprecId }) {
                           const actualIndex = fixed.length + customIdx;
                           return renderPreviewField(f, actualIndex);
                         })}
+                      <div className="oprec-user-preview__field-item oprec-user-preview__field-item--wide oprec-user-preview__consents">
+                        <strong>Persetujuan Peserta *</strong>
+                        <label><input type="checkbox" disabled /> <span>Saya menyatakan bahwa data yang saya isi dalam formulir ini benar dan dapat dipertanggungjawabkan.</span></label>
+                        <label><input type="checkbox" disabled /> <span>Saya memahami bahwa data yang saya berikan digunakan untuk keperluan administrasi dan seleksi OPREC HIMANIKA sesuai ketentuan yang berlaku.</span></label>
+                      </div>
                     </div>
 
                     {/* Submit Button di Sebelah Kanan (Sesuai Layout User) */}

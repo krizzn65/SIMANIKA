@@ -38,6 +38,12 @@ class OprecSimulationCleanup
             if ($period->pengumuman_poster && str_starts_with($period->pengumuman_poster, 'oprec/announcements/')) {
                 $files['local'][] = ['file' => $period->pengumuman_poster];
             }
+            if ($period->guidebook && str_starts_with($period->guidebook, 'oprec/guidebooks/')) {
+                $files['local'][] = ['file' => $period->guidebook];
+            }
+            foreach (collect($period->form_fields ?? [])->pluck('example_file')->filter() as $path) {
+                if (str_starts_with($path, 'oprec/question-examples/')) $files['local'][] = ['file' => $path];
+            }
             foreach ([$period->poster, ...$period->divisions->pluck('logo')->all()] as $url) {
                 $path = parse_url((string) $url, PHP_URL_PATH);
                 if ($path && preg_match('~/api/public/oprec/posters/([a-zA-Z0-9._-]+)$~', $path, $match)) {
@@ -64,7 +70,7 @@ class OprecSimulationCleanup
                 $path = $entry['directory'] ?? $entry['file'] ?? '';
                 $pattern = isset($entry['directory'])
                     ? '~^oprec/(?:[0-9]+|test/[0-9]+)$~'
-                    : ($disk === 'public' ? '~^oprec/posters/[a-zA-Z0-9._-]+$~' : '~^oprec/(?:announcements/[a-zA-Z0-9._-]+|[0-9]+/.+|test/[0-9]+/.+)$~');
+                    : ($disk === 'public' ? '~^oprec/posters/[a-zA-Z0-9._-]+$~' : '~^oprec/(?:announcements/[a-zA-Z0-9._-]+|guidebooks/[a-zA-Z0-9_-]+\.pdf|question-examples/[a-zA-Z0-9_-]+\.pdf|[0-9]+/.+|test/[0-9]+/.+)$~');
                 if (!preg_match($pattern, $path) || str_contains($path, '..') || str_contains($path, '\\')
                     || ($disk === 'public' && isset($entry['directory']))) {
                     throw new RuntimeException('Path berkas simulasi tidak valid.');

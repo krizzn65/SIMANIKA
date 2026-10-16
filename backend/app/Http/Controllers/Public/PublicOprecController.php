@@ -18,6 +18,37 @@ class PublicOprecController extends Controller
         return response()->file(Storage::disk('public')->path($path), ['Cache-Control' => 'public, max-age=3600']);
     }
 
+    public function guidebook(Oprec $oprec)
+    {
+        abort_unless($oprec->status !== 'draft' && $oprec->guidebook
+            && preg_match('~^oprec/guidebooks/[A-Za-z0-9_-]+\.pdf$~', $oprec->guidebook)
+            && Storage::disk('local')->exists($oprec->guidebook), 404);
+        return response()->file(Storage::disk('local')->path($oprec->guidebook), [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="Guidebook-OPREC.pdf"',
+            'Cache-Control' => 'public, max-age=3600',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    public function questionExample(Oprec $oprec, string $field)
+    {
+        abort_unless($oprec->status !== 'draft', 404);
+        $definition = collect($oprec->form_fields ?? [])->firstWhere('name', $field);
+        $path = $definition['example_file'] ?? null;
+        abort_unless(is_string($path) && preg_match('~^oprec/question-examples/[A-Za-z0-9_-]+\.pdf$~', $path)
+            && Storage::disk('local')->exists($path), 404);
+        $downloadName = !empty($definition['example_file_name'])
+            ? $definition['example_file_name']
+            : 'Contoh-'.preg_replace('/[^A-Za-z0-9_-]/', '-', $field).'.pdf';
+        return response()->file(Storage::disk('local')->path($path), [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$downloadName.'"',
+            'Cache-Control' => 'public, max-age=3600',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
     public function index(Request $request)
     {
         $oprec = Oprec::with('divisions')->where('status', '!=', 'draft')->latest('created_at')->latest('id')->first();

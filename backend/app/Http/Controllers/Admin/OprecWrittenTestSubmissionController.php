@@ -22,7 +22,7 @@ class OprecWrittenTestSubmissionController extends Controller
 
         return response()->json([
             'data' => $submissions->getCollection()->map(fn (OprecTestSubmission $submission) => $this->row($submission, $divisions, $oprec->id))->all(),
-            'questions' => $stage->form_fields ?? [],
+            'questions' => OprecWrittenTestAnswers::allQuestions($stage->form_fields ?? []),
             'current_page' => $submissions->currentPage(),
             'last_page' => $submissions->lastPage(),
             'total' => $submissions->total(),
@@ -36,7 +36,7 @@ class OprecWrittenTestSubmissionController extends Controller
         abort_unless($submission->oprec_stage_id === $stage->id, 404);
         $submission->load('registration.user');
         return response()->json(['data' => $this->row($submission, $oprec->divisions()->pluck('nama', 'id'), $oprec->id),
-            'questions' => $stage->form_fields ?? [],
+            'questions' => OprecWrittenTestAnswers::allQuestions($stage->form_fields ?? []),
         ])->header('Cache-Control', 'private, no-store');
     }
 

@@ -1,10 +1,19 @@
+## Perbaikan unduhan berkas Penilaian OPREC — 16 Oktober 2026
+
+- [x] Akar masalah `{"message":"Unauthenticated."}` saat mengunduh berkas peserta di `/admin/oprec/penilaian`: tautan memakai `<a target="_blank" rel="noopener noreferrer">`, sehingga navigasi langsung tidak dianggap stateful oleh Sanctum (tanpa header XHR/Referer) dan ditolak 401. Tautan pada kolom pendaftaran tabel serta panel Tes Tulis kini mengunduh melalui klien API ber-sesi (`responseType: "blob"`), mengikuti pola halaman pendaftar OPREC.
+- [x] Helper bersama `frontend/src/lib/downloadFile.js`; respons daftar penilaian menyertakan `fileName` dan `available` selaras endpoint pendaftar, sehingga berkas hilang ditandai "Berkas tidak tersedia" dan nama unduhan deskriptif.
+- [x] Verifikasi: 11 tes Penilaian/202 assertion, 10 tes akses OPREC/148 assertion, tes frontend OPREC terkait (23) lulus, `tsc --noEmit`, dan `npm run build` (43 route) lulus.
+- [ ] Uji browser terautentikasi (Super Admin/Admin/Pengurus) mengunduh berkas pendaftaran dan berkas Tes Tulis pada server terpasang; sesi/cookie antar-origin tetap memerlukan pemeriksaan integrasi terpisah.
+
 ## Pengaturan landing page dan fokus Tes Tulis — 16 Oktober 2026
 
 - [x] Tes Tulis peserta memulai dari tombol **Kerjakan sekarang**, lalu menyembunyikan ringkasan di atas dan panel samping sampai peserta kembali atau tes selesai. Draft jawaban tetap di state selama panel dibuka/tutup.
+- [x] Form OPREC menambah Status Kepengurusan wajib sebelum pilihan divisi dan dua persetujuan wajib setelah semua pertanyaan admin. Validasi dijalankan di halaman peserta, route Next, dan backend.
+- [x] Peserta yang memilih **Melanjutkan Periode kedua** otomatis mendapat pertanyaan paragraf wajib **Alasan melanjutkan Kepengurusan 2026** pada Tes Tulis. Pertanyaan tidak dikirim untuk Anggota Baru; admin dapat menyimulasikan status di pratinjau editor Tes Tulis.
 - [x] Super Admin/Admin mempunyai menu **Pengaturan Landing Page** di atas Merchandise. Backend membatasi pengaturan teks, CRUD galeri, dan CRUD testimoni dengan `admin:content`; publik membaca `/api/public/home` dan foto melalui route publik yang dibatasi nama berkas.
 - [x] Galeri dan testimoni memakai tabel `site_contents`, `galleries`, dan `testimonials`. Contoh statis tetap tampil sampai masing-masing jenis konten mulai dikelola; setelah itu daftar kosong tetap kosong bila semua entri dihapus. Migrasi `2026_10_16_000001` menambah dua penanda pengelolaan.
 - [x] Hero, Tentang, serta Visi dan empat Misi dapat diedit dari halaman yang sama. Teks awal mengikuti konten landing yang sudah ada; setelah disimpan, endpoint publik menyajikan teks baru. Tes fitur API: 4 tes/35 assertion lulus; typecheck frontend lulus. Migrasi aditif diterapkan di database lokal dan endpoint publik merespons 200.
-- [ ] Uji browser terautentikasi untuk editor galeri/testimoni dan mode fokus Tes Tulis pada desktop serta mobile. Uji build produksi dengan `NEXT_DIST_DIR` terpisah dari server pengembangan.
+- [ ] Uji browser terautentikasi untuk editor landing page, persetujuan formulir OPREC, status bersyarat Tes Tulis, dan mode fokus pada desktop serta mobile.
 - [ ] Konten divisi, statistik, dan struktur organisasi masih memakai data statis; cakupan editor lanjutan belum diminta.
 
 ## Pemulihan pemeriksaan sesi lokal — 5 Oktober 2026

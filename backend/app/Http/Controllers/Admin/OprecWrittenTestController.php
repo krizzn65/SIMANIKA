@@ -74,7 +74,7 @@ class OprecWrittenTestController extends Controller
             'tanggal_buka' => ['required', 'date'],
             'tanggal_tutup' => ['required', 'date', 'after:tanggal_buka'],
             'questions' => ['required', 'array', 'min:1', 'max:40'],
-            'questions.*.id' => ['required', 'string', 'regex:/^[a-z][a-z0-9_]{0,39}$/', 'distinct'],
+            'questions.*.id' => ['required', 'string', 'regex:/^[a-z][a-z0-9_]{0,39}$/', 'distinct', Rule::notIn(['alasan_melanjutkan_kepengurusan_2026'])],
             'questions.*.label' => ['required', 'string', 'max:300'],
             'questions.*.type' => ['required', Rule::in(['short_text', 'paragraph', 'email', 'tel', 'url', 'number', 'date', 'select', 'single_choice', 'checkbox', 'file'])],
             'questions.*.required' => ['required', 'boolean'],

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowUpRight, RefreshCw, User, CheckCircle2, FileText, Calendar, Clock3 } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, RefreshCw, User, CheckCircle2, FileText, Calendar, Clock3, BookOpen } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { OprecForm } from "@/components/oprec/OprecForm";
@@ -218,6 +218,15 @@ function WorkspaceContent({ oprecId }) {
                     )}
                   </div>
                 </section>
+
+                {oprecInfo?.guidebook && (
+                  <section className={styles.panel}>
+                    <h2><BookOpen size={18} aria-hidden="true" /> Guidebook OPREC</h2>
+                    <a href={oprecInfo.guidebook} target="_blank" rel="noopener noreferrer" className={styles.guidebookButton}>
+                      <BookOpen size={16} aria-hidden="true" /> <span>Buka Guidebook</span>
+                    </a>
+                  </section>
+                )}
 
                 {/* WhatsApp Group Card (only appears after registration is submitted) */}
                 {isSubmitted && waLink && (

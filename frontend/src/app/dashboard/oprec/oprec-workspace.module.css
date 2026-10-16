@@ -244,6 +244,25 @@
   font-weight: 600;
 }
 
+.guidebookButton {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid var(--ws-blue);
+  background: var(--ws-blue);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.guidebookButton:hover { background: var(--ws-blue-dark); }
+
 .loading, .error {
   border: 1px dashed var(--ws-border);
   padding: 48px 24px;
@@ -388,12 +407,52 @@
 .workspace :global(.event-dynamic-choices) label,
 .workspace :global(.event-dynamic-check) {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
+  gap: 10px;
   min-height: 44px;
   font-weight: 400;
   font-size: 14px;
+  line-height: 1.5;
   cursor: pointer;
 }
+.workspace :global(.event-dynamic-check input[type="checkbox"]) {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  border: 2px solid #91baf7;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: 2px 2px 0 rgba(21, 94, 239, .12);
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.workspace :global(.event-dynamic-check input[type="checkbox"]:hover) {
+  border-color: #155eef;
+}
+.workspace :global(.event-dynamic-check input[type="checkbox"]:focus-visible) {
+  outline: 2px solid #155eef;
+  outline-offset: 2px;
+}
+.workspace :global(.event-dynamic-check input[type="checkbox"]:checked) {
+  background: #155eef url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") center / 12px no-repeat;
+  border-color: #155eef;
+}
+.workspace :global(.event-dynamic-check input[type="checkbox"]:disabled) {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.workspace :global(.oprec-consents) {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid #c8d5e8;
+  background: #f7f9fd;
+}
+.workspace :global(.oprec-consents h3), .workspace :global(.oprec-consents p) { margin: 0; }
+.workspace :global(.oprec-consents p) { color: #53647a; font-size: 13px; }
 
 .workspace :global(.event-dynamic-field) small {
   font-size: 12px;

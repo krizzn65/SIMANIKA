@@ -113,7 +113,8 @@ class OprecAccessAuditTest extends TestCase
         $user = User::create(['email' => 'newparticipant@audit.test', 'password' => 'audit-password']);
         $id = $f['period']->id;
         $payload = ['oprec_id' => $id, 'schema_version' => '1', 'nim' => ' e319999 ', 'tanggal_lahir' => '2004-01-01',
-            'nama' => 'Peserta Baru', 'angkatan' => '2024', 'conditional_file' => ['forged' => 'unvalidated-array']];
+            'nama' => 'Peserta Baru', 'angkatan' => '2024', 'status_kepengurusan' => 'Anggota Baru',
+            'persetujuan_data_benar' => 'on', 'persetujuan_penggunaan_data' => 'on', 'conditional_file' => ['forged' => 'unvalidated-array']];
         foreach ([1, 2, 3] as $rank) $payload["divisi_pilihan_$rank"] = (string) $f['divisions'][$rank - 1]->id;
         $payload['jabatan_pilihan_1'] = 'Sekretaris 2';
         $this->actingAs($user, 'sanctum')->getJson('/api/admin/oprec')->assertForbidden();
@@ -190,7 +191,8 @@ class OprecAccessAuditTest extends TestCase
             ['name' => 'cv', 'label' => 'CV', 'type' => 'file', 'required' => true, 'accept' => ['.pdf'], 'maxSizeMB' => 2]]]);
         $user = User::create(['email' => 'upload@audit.test', 'password' => 'audit-password']);
         $payload = ['oprec_id' => $f['period']->id, 'schema_version' => '1', 'nim' => 'E318888',
-            'tanggal_lahir' => '2004-01-01', 'nama' => 'Peserta Upload', 'angkatan' => '2024'];
+            'tanggal_lahir' => '2004-01-01', 'nama' => 'Peserta Upload', 'angkatan' => '2024',
+            'status_kepengurusan' => 'Anggota Baru', 'persetujuan_data_benar' => 'on', 'persetujuan_penggunaan_data' => 'on'];
         foreach ([1, 2, 3] as $rank) $payload["divisi_pilihan_$rank"] = (string) $f['divisions'][$rank - 1]->id;
         $payload['jabatan_pilihan_1'] = 'Sekretaris 2';
         // Laravel's fake file reports MIME from its filename. Use a real test

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { RotateCcw, Lock, AlertTriangle } from "lucide-react";
-import { DEFAULT_DIVISION_LOGOS, OPREC_FIXED_FIELDS, validateOprecForm, normalizeOprecNim, oprecNimProgramWarning, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
+import { DEFAULT_DIVISION_LOGOS, OPREC_FIXED_FIELDS, OPREC_REQUIRED_CONSENTS, validateOprecForm, validateOprecConsents, normalizeOprecNim, oprecNimProgramWarning, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
 
 function getDivisionPositions(division) {
   if (!division) return [];
@@ -214,7 +214,18 @@ function Field({ field, error, inlineError = error, divisions = [], selectedDivi
 
   return (
     <div className={`event-dynamic-field ${isWide ? "event-dynamic-field--wide" : ""}`}>
-      {field.type !== "checkbox" && <label htmlFor={id}>{labelText}</label>}
+      {field.type !== "checkbox" && (
+        <div className="oprec-field-label-row">
+          <label htmlFor={id}>{labelText}</label>
+          {(field.exampleUrl || field.example_url || field.exampleFileUrl || field.example_file_url) && (
+            <div className="oprec-field-example">
+              <a href={field.exampleUrl || field.example_url || field.exampleFileUrl || field.example_file_url} target="_blank" rel="noopener noreferrer">
+                {field.exampleLabel || field.example_label || "Lihat contoh"}
+              </a>
+            </div>
+          )}
+        </div>
+      )}
       {field.help && <small id={`${id}-help`}>{field.help}</small>}
       {control}
       {inlineError && (
@@ -430,7 +441,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
         body.set(`jabatan_pilihan_${rank}`, "");
       }
     });
-    const nextErrors = validateOprecForm(oprec.formFields, body, Date.now(), oprec.divisiTersedia);
+    const nextErrors = { ...validateOprecForm(oprec.formFields, body, Date.now(), oprec.divisiTersedia), ...validateOprecConsents(body) };
     if (Object.keys(nextErrors).length) {
       showErrors(nextErrors, "Periksa kolom yang ditandai sebelum mengirim.");
       return;
@@ -471,7 +482,9 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
   return (
     <>
     <form ref={formRef} className="event-dynamic-form" onSubmit={submit} onInput={saveDraft} onChange={saveDraft} noValidate aria-busy={pending || confirmOpen}>
-      <p>Kolom bertanda * wajib diisi. Isilah sesuai petunjuk penyelenggara.</p>
+      <p style={{ whiteSpace: "pre-line" }}>
+        {oprec?.formIntro || "Kolom bertanda * wajib diisi. Isilah sesuai petunjuk penyelenggara."}
+      </p>
       {message && (
         <div ref={feedback} tabIndex={-1} className="event-form-feedback" role="alert">
           <p>{message}</p>
@@ -513,6 +526,9 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
                     </a>
                   </li>
                 ))}
+              {OPREC_REQUIRED_CONSENTS.filter((consent) => errors[consent.name]).map((consent) => (
+                <li key={consent.name}><a href={`#oprec-field-${consent.name}`}>{consent.label}: {errors[consent.name]}</a></li>
+              ))}
             </ul>
           )}
         </div>
@@ -720,6 +736,14 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
               onToggleDivision={toggleDivision}
             />
           ))}
+
+        <section className="oprec-consents" aria-labelledby="oprec-consents-title">
+          <h3 id="oprec-consents-title">Persetujuan Peserta</h3>
+          <p>Kedua pernyataan berikut wajib disetujui sebelum formulir dikirim.</p>
+          {OPREC_REQUIRED_CONSENTS.map((consent) => (
+            <Field key={consent.name} field={{ ...consent, type: "checkbox", required: true }} error={errors[consent.name]} />
+          ))}
+        </section>
       </fieldset>
       <div className="event-group-submit">
         <button className="event-button" type="submit" disabled={pending || confirmOpen || selectedDivisions.length !== 3}>

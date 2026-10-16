@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Oprec;
 use App\Models\OprecRegistration;
 use App\Models\OprecTestSubmission;
+use App\Support\OprecRegistrationFields;
 use Illuminate\Database\UniqueConstraintViolationException;
 use App\Services\OprecAssessmentService;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -107,8 +108,8 @@ class OprecRegistrantController extends Controller
         }
 
         $oprec->load('divisions');
-        $fields = $oprec->form_fields ?? [];
-        if (!count($fields) || count($fields) > 40) {
+        $fields = OprecRegistrationFields::withDefaults($oprec->form_fields ?? []);
+        if (!count($fields) || count($fields) > 41) {
             return response()->json(['message' => 'Formulir tidak tersedia.'], 409);
         }
 

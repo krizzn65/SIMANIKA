@@ -4,9 +4,11 @@
 
 Peserta yang memiliki Tes Tulis aktif melihat jadwal dan tombol **Kerjakan sekarang** sebelum soal ditampilkan. Tombol membuka formulir soal, memindahkan fokus keyboard ke judul tes, dan menyembunyikan ringkasan pendaftaran serta panel akun/status agar area pengerjaan memakai lebar halaman. **Kembali ke ringkasan** memulihkan panel tanpa membuang jawaban yang sedang diisi. Setelah waktu berakhir atau jawaban terkirim, mode fokus ditutup otomatis. Ketentuan waktu, validasi, dan satu kali pengiriman tetap diperiksa backend.
 
-## Pertanyaan bawaan dan ringkasan peserta — 15 Oktober 2026
+## Pertanyaan bawaan dan ringkasan peserta — 16 Oktober 2026
 
-Periode OPREC baru memiliki delapan pertanyaan wajib sebelum Divisi Pilihan: Nama lengkap, NIM, Tanggal lahir, Angkatan, Golongan (A–E), Nomor WA, unggah KTM/SIM Online, dan unggah Surat Pernyataan. Kedua berkas menerima PDF/JPG/JPEG/PNG hingga 5 MB per berkas; batas gabungan pendaftaran tetap 11 MB. Editor memakai daftar bawaan yang sama saat membuat dan memuat periode. Periode yang sudah memiliki pendaftar tetap mengikuti penguncian skema backend.
+Periode OPREC memakai sembilan pertanyaan wajib sebelum Divisi Pilihan: Nama lengkap, NIM, Tanggal lahir, Angkatan, Golongan (A–E), Nomor WA, unggah KTM/SIM Online, unggah Surat Pernyataan, dan Status Kepengurusan. Pilihan status adalah Anggota Baru atau Melanjutkan Periode kedua. Dua persetujuan wajib selalu tampil setelah semua pertanyaan tambahan admin dan diperiksa frontend serta backend. Kedua berkas menerima PDF/JPG/JPEG/PNG hingga 5 MB per berkas; batas gabungan pendaftaran tetap 11 MB. Periode lama yang belum menyimpan Status Kepengurusan menerima field bawaan ini dari API dan backend. Batas field formulir adalah 41 termasuk sembilan field sistem, agar form lama dapat mempertahankan semua pertanyaan tambahannya.
+
+Peserta berstatus Melanjutkan Periode kedua mendapat pertanyaan Tes Tulis wajib berupa paragraf: **Alasan melanjutkan Kepengurusan 2026**. Pertanyaan dibuat oleh sistem, berlaku hanya bagi peserta tersebut, dan ikut tampil pada rincian penilaian serta tabel jawaban admin. Anggota Baru tidak melihat pertanyaan ini. Pratinjau editor Tes Tulis menyediakan simulasi status kepengurusan.
 
 Pilihan awal Angkatan adalah 2025 dan 2026. Admin dapat mengubah pilihan Angkatan maupun Golongan, satu nilai per baris; nilai yang sudah tersimpan pada periode tetap dipertahankan saat editor dibuka kembali. Draft lama tanpa pilihan memakai daftar awal tersebut.
 
@@ -185,7 +187,7 @@ form karena susunan kolom berubah. Jangan ubah skema periode aktif tanpa alasan.
   jika belum ada/gagal. Disarankan WebP <=200KB. Poster tidak menentukan status.
 - Kuota adalah kapasitas divisi, bukan jumlah kursi tersisa.
 - `formFields`: text, email, tel, url (Link), number, date, textarea, select, radio, checkbox,
-  file. Maksimal 40 field; nama unik `[a-z][a-z0-9_]*`, bukan nama reserved.
+  file. Maksimal 41 field; nama unik `[a-z][a-z0-9_]*`, bukan nama reserved. Dua persetujuan wajib berada di luar daftar field dan selalu ditampilkan paling akhir.
 - NIM (`name: nim`, text required) wajib diawali `E31` (total 3–32 karakter;
   sisanya huruf/angka/titik/tanda hubung). Input dinormalisasi menjadi kapital di
   browser, adapter Next, dan Laravel sebelum validasi serta penyimpanan. Awalan

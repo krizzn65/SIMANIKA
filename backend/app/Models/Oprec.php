@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 
 class Oprec extends Model
 {
-    protected $fillable = ['periode', 'status', 'headline', 'deskripsi', 'poster', 'poster_alt', 'tanggal_buka', 'tanggal_tutup', 'first_published_at', 'schema_version', 'form_intro', 'link_grup_wa', 'form_fields', 'faq', 'pengumuman_published', 'pengumuman_tanggal', 'pengumuman_pesan'];
+    protected $fillable = ['periode', 'status', 'headline', 'deskripsi', 'poster', 'poster_alt', 'guidebook', 'tanggal_buka', 'tanggal_tutup', 'first_published_at', 'schema_version', 'form_intro', 'link_grup_wa', 'form_fields', 'faq', 'pengumuman_published', 'pengumuman_tanggal', 'pengumuman_pesan'];
     protected function casts(): array { return ['tanggal_buka' => 'datetime', 'tanggal_tutup' => 'datetime', 'first_published_at' => 'datetime', 'pengumuman_published' => 'boolean', 'form_fields' => 'array', 'faq' => 'array']; }
     /** Keep the offset when PostgreSQL binds a timestamp with time zone. */
     protected function pengumumanTanggal(): Attribute

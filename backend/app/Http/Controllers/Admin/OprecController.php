@@ -10,6 +10,7 @@ use App\Models\OprecDivision;
 use App\Support\OprecSchema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class OprecController extends Controller
@@ -23,6 +24,26 @@ class OprecController extends Controller
         $request->validate([$field => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120']]);
         $path = $request->file($field)->store('oprec/posters', 'public');
         return response()->json(['url' => route('public.oprec-poster', ['filename' => basename($path)])]);
+    }
+
+    public function uploadGuidebook(Request $request)
+    {
+        $request->validate(['guidebook' => ['required', 'file', 'mimes:pdf', 'max:10240']]);
+        $path = $request->file('guidebook')->store('oprec/guidebooks', 'local');
+        return response()->json(['data' => ['path' => $path]], 201);
+    }
+
+    public function uploadQuestionExample(Request $request)
+    {
+        $request->validate(['example' => ['required', 'file', 'mimes:pdf', 'max:5120']]);
+        $file = $request->file('example');
+        $path = $file->store('oprec/question-examples', 'local');
+        return response()->json([
+            'data' => [
+                'path' => $path,
+                'filename' => $file->getClientOriginalName(),
+            ]
+        ], 201);
     }
 
     public function uploadLogo(Request $request)
@@ -49,6 +70,7 @@ class OprecController extends Controller
     public function update(SaveOprecRequest $request, Oprec $oprec)
     {
         $data = $request->validated();
+        $oldFiles = collect([$oprec->guidebook, ...collect($oprec->form_fields ?? [])->pluck('example_file')])->filter()->unique();
         $updated = DB::transaction(function () use ($oprec, $data) {
             $current = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
             if ($current->pengumuman_published && $data['status'] !== 'closed') throw ValidationException::withMessages(['status' => ['Pendaftaran tetap ditutup setelah pengumuman dijadwalkan.']]);
@@ -76,11 +98,15 @@ class OprecController extends Controller
             if ($divisionsChanged) $this->syncDivisions($current, $data['divisi_tersedia']);
             return $current;
         });
+        $newFiles = collect([$updated->guidebook, ...collect($updated->form_fields ?? [])->pluck('example_file')])->filter()->unique();
+        $oldFiles->diff($newFiles)->each(fn ($path) => Storage::disk('local')->delete($path));
         return new OprecResource($updated->fresh('divisions'));
     }
 
     public function destroy(Oprec $oprec)
     {
+        $guidebook = $oprec->guidebook;
+        $exampleFiles = collect($oprec->form_fields ?? [])->pluck('example_file')->filter();
         $deleted = DB::transaction(function () use ($oprec) {
             $current = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
             if ($current->registrations()->exists()) return false;
@@ -88,6 +114,8 @@ class OprecController extends Controller
             return true;
         });
         if (!$deleted) return response()->json(['message' => 'Pendaftaran tidak dapat dihapus karena sudah memiliki berkas pendaftar.'], 409);
+        if ($guidebook) Storage::disk('local')->delete($guidebook);
+        $exampleFiles->each(fn ($path) => Storage::disk('local')->delete($path));
         return response()->noContent();
     }
 

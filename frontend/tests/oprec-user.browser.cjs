@@ -7,7 +7,7 @@ const path = require('node:path');
 
 async function main() {
   const origin = 'http://localhost:3010';
-  let role = 'user'; let registered = false; let testSubmitted = false; let released = false;
+  let role = 'user'; let registered = false; let testSubmitted = false; let released = false; let registrationStatus = 'Anggota Baru';
   let registrationAttempts = 0; let testAttempts = 0; let resultStatus = 'accepted';
   const requests = []; const errors = [];
   const enrollmentOnly = process.argv.includes('--enrollment-only');
@@ -35,9 +35,10 @@ async function main() {
     { name: 'nomor_wa', label: 'Nomor WA', type: 'tel', required: true },
     { name: 'ktm_sim_online', label: 'Upload KTM/SIM Online', type: 'file', required: true, accept: ['.pdf'], maxSizeMB: 5 },
     { name: 'surat_pernyataan', label: 'Upload Surat Pernyataan', type: 'file', required: true, accept: ['.pdf'], maxSizeMB: 5 });
+  if (summaryOnly) period.formFields.push({ name: 'status_kepengurusan', label: 'Status Kepengurusan', type: 'select', required: true, options: ['Anggota Baru', 'Melanjutkan Periode kedua'].map(value => ({ value, label: value })) });
   const registration = () => registered ? { id: 100, nim: 'E3124001', tanggalLahir: '2004-01-01',
     divisiPilihan1: 1, divisiPilihan2: 2, divisiPilihan3: 3, status: released ? resultStatus : 'pending',
-    formData: { nama: 'Peserta Uji', angkatan: '2024', ...(summaryOnly ? { golongan: 'A', nomor_wa: '08123456789', jabatan_pilihan_1: 'Staff Divisi Humas' } : {}) },
+    formData: { nama: 'Peserta Uji', angkatan: '2024', status_kepengurusan: registrationStatus, ...(summaryOnly ? { golongan: 'A', nomor_wa: '08123456789', jabatan_pilihan_1: 'Staff Divisi Humas' } : {}) },
     uploadedFileFields: summaryOnly ? ['ktm_sim_online', 'surat_pernyataan'] : [], registeredAt: new Date().toISOString() } : null;
   const backend = http.createServer(async (req, res) => {
     try {
@@ -50,6 +51,7 @@ async function main() {
         assert.deepEqual([1, 2, 3].map(rank => form.get('divisi_pilihan_' + rank)), ['1', '2', '3']);
         assert.equal(form.get('jabatan_pilihan_1'), 'Staff Divisi Humas');
         assert.equal(form.get('cv').name, 'cv.pdf');
+        registrationStatus = form.get('status_kepengurusan') || 'Anggota Baru';
         registrationAttempts++;
         if (registrationAttempts === 1) { status = 503; payload = { message: 'Temporary failure' }; }
         else { registered = true; status = 201; payload = { data: { submitted: true } }; }
@@ -116,10 +118,10 @@ async function main() {
       else if (url.pathname.endsWith('/written-test') && request.method === 'GET') payload = { data: {
         id: 901, headline: 'Tes Uji', ready: true, active: true, server_now: new Date().toISOString(),
         tanggal_buka: '2000-01-01T00:00:00Z', tanggal_tutup: '2099-01-01T00:00:00Z',
-        questions: [{ id: 'reason', type: 'short_text', label: 'Alasan bergabung', required: true }],
-        submission: testSubmitted ? { answers: { reason: 'Ingin berkontribusi' }, files: {}, submitted_at: new Date().toISOString() } : null } };
+        questions: registrationStatus === 'Melanjutkan Periode kedua' ? [{ id: 'alasan_melanjutkan_kepengurusan_2026', type: 'paragraph', label: 'Alasan melanjutkan Kepengurusan 2026', required: true }] : [],
+        submission: testSubmitted ? { answers: { alasan_melanjutkan_kepengurusan_2026: 'Ingin berkontribusi' }, files: {}, submitted_at: new Date().toISOString() } : null } };
       else if (url.pathname.endsWith('/written-test') && request.method === 'POST') {
-        testAttempts++; assert.equal(JSON.parse(request.postData).answers.reason, 'Ingin berkontribusi');
+        testAttempts++; assert.equal(JSON.parse(request.postData).answers.alasan_melanjutkan_kepengurusan_2026, 'Ingin berkontribusi');
         if (testAttempts === 1) { status = 503; payload = { message: 'Jawaban gagal disimpan. Coba lagi.' }; }
         else { testSubmitted = true; status = 201; payload = { data: { submitted: true } }; }
       } else if (adminFormsOnly && url.pathname.endsWith('/admin/oprec/900')) {
@@ -338,6 +340,7 @@ async function main() {
     await waitFor(`document.querySelector('.event-form-feedback[role="alert"]')`);
     assert.equal(registrationAttempts, 0);
     for (const id of [1, 2, 3]) await evaluate(`document.querySelector('#oprec-divisi-${id}').click()`);
+    await evaluate(`{ const status=document.querySelector('[name="status_kepengurusan"]');status.value='Melanjutkan Periode kedua';status.dispatchEvent(new Event('change',{bubbles:true})); document.querySelector('[name="persetujuan_data_benar"]').click(); document.querySelector('[name="persetujuan_penggunaan_data"]').click(); }`);
     await evaluate(`document.querySelector('.event-dynamic-form').requestSubmit()`);
     await waitFor(`document.querySelector('.oprec-submit-dialog')`); await click('Ya, kirim formulir');
     await waitFor(`document.querySelector('.event-form-feedback')?.textContent.includes('belum bisa')`);
@@ -346,10 +349,10 @@ async function main() {
     await waitFor(`document.querySelector('.oprec-submit-dialog')`); await click('Ya, kirim formulir');
     await waitFor(`document.body?.innerText.includes('Pendaftaran Berhasil Dikirim') && document.body?.innerText.includes('Kerjakan sekarang')`);
     assert.equal(registrationAttempts, 2);
-    assert.equal(await evaluate(`Boolean(document.querySelector('#test-reason'))`), false);
+    assert.equal(await evaluate(`Boolean(document.querySelector('#test-alasan_melanjutkan_kepengurusan_2026'))`), false);
     await click('Kerjakan sekarang');
-    await waitFor(`document.querySelector('#test-reason') && !document.body?.innerText.includes('Pendaftaran Berhasil Dikirim')`);
-    await fill('#test-reason', 'Ingin berkontribusi'); await click('Kirim jawaban'); await click('Ya, kirim jawaban');
+    await waitFor(`document.querySelector('#test-alasan_melanjutkan_kepengurusan_2026') && !document.body?.innerText.includes('Pendaftaran Berhasil Dikirim')`);
+    await fill('#test-alasan_melanjutkan_kepengurusan_2026', 'Ingin berkontribusi'); await click('Kirim jawaban'); await click('Ya, kirim jawaban');
     await waitFor(`document.body?.innerText.includes('Jawaban gagal disimpan')`);
     await click('Kirim jawaban'); await click('Ya, kirim jawaban');
     await waitFor(`document.body?.innerText.includes('Jawaban Tes Tulis Terkirim')`);

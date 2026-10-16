@@ -122,7 +122,10 @@
 .assessment-answer__question h3 { overflow-wrap: anywhere; }
 .assessment-answer__question p { margin-top: 8px; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--admin-text-muted); font-size: 13px; }
 .assessment-question-number { color: #155eef; background: #eff6ff; padding: 3px 5px; align-self: flex-start; font-size: 10px; }
-.assessment-file-link { display: inline-flex; align-items: center; gap: 5px; color: #155eef; text-decoration: underline; font-size: 12px; padding: 8px 0; }
+.assessment-file-link { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 34px; padding: .4rem .7rem; border: 1px solid #91baf7; border-radius: 0; background: #edf5ff; color: #174eb5; box-shadow: 2px 2px 0 rgba(21, 94, 239, .12); font: inherit; font-size: .75rem; font-weight: 600; white-space: nowrap; cursor: pointer; text-decoration: none; transition: background .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.assessment-file-link:hover:not(:disabled) { background: #dceaff; border-color: #155eef; box-shadow: 2px 2px 0 rgba(21, 94, 239, .22); }
+.assessment-file-link:focus-visible { outline: 2px solid #155eef; outline-offset: 2px; }
+.assessment-file-link:disabled { opacity: .55; cursor: progress; }
 .assessment-state { padding: 32px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; color: var(--admin-text-muted); }
 .assessment-state h3 { color: var(--admin-text-main); }
 .assessment-state p { max-width: 380px; font-size: 12px; }

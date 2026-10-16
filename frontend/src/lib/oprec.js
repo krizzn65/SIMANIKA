@@ -15,7 +15,21 @@ export const OPREC_FIXED_FIELDS = [
   { name: "nomor_wa", type: "tel", label: "Nomor WA", required: true, maxLength: 30 },
   { name: "ktm_sim_online", type: "file", label: "Upload KTM/SIM Online", required: true, accept: [".pdf", ".jpg", ".jpeg", ".png"], maxSizeMB: 5 },
   { name: "surat_pernyataan", type: "file", label: "Upload Surat Pernyataan", required: true, accept: [".pdf", ".jpg", ".jpeg", ".png"], maxSizeMB: 5 },
+  { name: "status_kepengurusan", type: "select", label: "Status Kepengurusan", required: true, options: ["Anggota Baru", "Melanjutkan Periode kedua"].map((value) => ({ value, label: value })) },
 ];
+
+export const OPREC_REQUIRED_CONSENTS = [
+  { name: "persetujuan_data_benar", label: "Saya menyatakan bahwa data yang saya isi dalam formulir ini benar dan dapat dipertanggungjawabkan." },
+  { name: "persetujuan_penggunaan_data", label: "Saya memahami bahwa data yang saya berikan digunakan untuk keperluan administrasi dan seleksi OPREC HIMANIKA sesuai ketentuan yang berlaku." },
+];
+
+export function validateOprecConsents(form) {
+  const errors = {};
+  for (const consent of OPREC_REQUIRED_CONSENTS) {
+    if (form.get(consent.name) !== "on") errors[consent.name] = "Persetujuan ini wajib dicentang.";
+  }
+  return errors;
+}
 
 export function getDefaultJabatan(nama) {
   const clean = (nama || "").trim();
@@ -56,7 +70,7 @@ export function validHttpUrl(value) {
 }
 
 export function normalizeFields(fields = []) {
-  if (!Array.isArray(fields) || fields.length > 40) throw new Error("Invalid OPREC form schema");
+  if (!Array.isArray(fields) || fields.length > 41) throw new Error("Invalid OPREC form schema");
   const seen = new Set();
   const normalized = fields.map((field) => {
     if (!field || !/^[a-z][a-z0-9_]{0,49}$/.test(field.name) || RESERVED_KEYS.has(field.name) || seen.has(field.name) || !FIELD_TYPES.has(field.type) || !text(field.label)) throw new Error("Invalid OPREC field");
@@ -82,6 +96,9 @@ export function normalizeFields(fields = []) {
       targetDivisions: Array.isArray(field.target_divisions ?? field.targetDivisions)
         ? (field.target_divisions ?? field.targetDivisions).map(String).filter(Boolean)
         : [],
+      exampleLabel: text(field.example_label ?? field.exampleLabel),
+      exampleUrl: safePosterUrl(field.example_url ?? field.exampleUrl),
+      exampleFileUrl: safePosterUrl(field.example_file_url ?? field.exampleFileUrl),
     };
   });
   // Identity fields are configured by admin but required for private result lookup.
@@ -115,6 +132,7 @@ export function normalizeOprec(raw) {
   return {
     id: String(raw.id), periode: text(raw.periode), status: raw.status, tanggalBuka, tanggalTutup,
     headline: text(raw.headline), deskripsi: text(raw.deskripsi), poster: safePosterUrl(raw.poster),
+    guidebook: safePosterUrl(raw.guidebook),
     posterAlt: text(raw.posterAlt ?? raw.poster_alt) || `Poster OPREC ${text(raw.periode)}`,
     schemaVersion: String(raw.schemaVersion ?? raw.schema_version ?? "1"),
     formFields: normalizeFields(rawFields),

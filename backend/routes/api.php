@@ -48,6 +48,8 @@ Route::prefix('public')->group(function () {
     Route::get('/home', [PublicHomeContentController::class, 'index']);
     Route::get('/home/images/{kind}/{filename}', [PublicHomeContentController::class, 'image'])->name('public.home-image');
     Route::get('/oprec/{oprec}/announcement', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'show']);
+    Route::get('/oprec/{oprec}/guidebook', [PublicOprecController::class, 'guidebook'])->name('public.oprec-guidebook');
+    Route::get('/oprec/{oprec}/examples/{field}', [PublicOprecController::class, 'questionExample'])->name('public.oprec-example');
     Route::get('/oprec/{oprec}/announcement/poster', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'poster']);
     Route::post('/oprec/{oprec}/announcement/verify', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'verify'])->middleware('throttle:oprec-announcement');
     Route::post('/oprec/{oprec}/announcement/result', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'result'])->middleware('throttle:oprec-result-view');
@@ -148,6 +150,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/oprec/{oprec}/written-test/submissions/{submission}', [OprecWrittenTestSubmissionController::class, 'destroy']);
             Route::post('/oprec', [AdminOprecController::class, 'store']);
             Route::post('/oprec/upload-poster', [AdminOprecController::class, 'uploadPoster']);
+            Route::post('/oprec/upload-guidebook', [AdminOprecController::class, 'uploadGuidebook']);
+            Route::post('/oprec/upload-question-example', [AdminOprecController::class, 'uploadQuestionExample']);
             Route::post('/oprec/upload-logo', [AdminOprecController::class, 'uploadLogo']);
             Route::put('/oprec/{oprec}', [AdminOprecController::class, 'update']);
             Route::delete('/oprec/{oprec}', [AdminOprecController::class, 'destroy']);

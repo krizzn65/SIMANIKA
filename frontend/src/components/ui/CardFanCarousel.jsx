@@ -110,7 +110,11 @@ export function CardFanCarousel({ cards }) {
     (center) => {
       const map = new Map();
       if (!needsPagination) {
-        cards.forEach((_, i) => map.set(i, i));
+        const middleSlot = Math.floor(totalCards / 2);
+        for (let slot = 0; slot < totalCards; slot++) {
+          const cardIndex = (center + slot - middleSlot + totalCards) % totalCards;
+          map.set(cardIndex, slot);
+        }
         return map;
       }
       for (let slot = 0; slot < MAX_VISIBLE; slot++) {
@@ -126,7 +130,7 @@ export function CardFanCarousel({ cards }) {
 
   const cycle = useCallback(
     (direction) => {
-      if (isAnimating.current || !needsPagination) return;
+      if (isAnimating.current || totalCards <= 1) return;
       isAnimating.current = true;
       directionRef.current = direction;
       const nextCenter =
@@ -385,7 +389,7 @@ export function CardFanCarousel({ cards }) {
         ))}
       </div>
 
-      {needsPagination && (
+      {totalCards > 1 && (
         <div className="gallery-fan__nav">
           <button
             className="gallery-fan__arrow"

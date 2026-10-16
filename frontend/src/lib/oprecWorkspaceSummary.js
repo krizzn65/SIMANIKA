@@ -1,9 +1,11 @@
-import { OPREC_FIXED_FIELDS } from "./oprec.js";
+import { OPREC_FIXED_FIELDS, OPREC_REQUIRED_CONSENTS } from "./oprec.js";
 
 const hiddenKeys = new Set([
   "nama", "nama_lengkap", "namaLengkap", "nim", "tanggal_lahir",
   "divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3",
   "jabatan_pilihan_1", "jabatan_pilihan_2", "jabatan_pilihan_3",
+  ...OPREC_REQUIRED_CONSENTS.map((c) => c.name),
+  "persetujuan_data_benar", "persetujuan_penggunaan_data",
 ]);
 
 const showValue = (value) => typeof value === "boolean" ? (value ? "Ya" : "Tidak") : String(value ?? "—");

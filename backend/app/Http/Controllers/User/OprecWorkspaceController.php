@@ -50,6 +50,7 @@ class OprecWorkspaceController extends Controller
                     'headline' => $oprec->headline,
                     'deskripsi' => $oprec->deskripsi,
                     'poster' => $oprec->poster ? url('api/public/oprec/posters/' . basename($oprec->poster)) : null,
+                    'guidebook' => $oprec->guidebook ? route('public.oprec-guidebook', ['oprec' => $oprec->id]) : null,
                     'tanggalBuka' => $oprec->tanggal_buka?->toIso8601String(),
                     'tanggalTutup' => $oprec->tanggal_tutup?->toIso8601String(),
                     'schemaVersion' => $oprec->schema_version,
@@ -62,6 +63,10 @@ class OprecWorkspaceController extends Controller
                             'targetType' => $field['target_type'] ?? 'all',
                             'target_divisions' => $field['target_divisions'] ?? [],
                             'targetDivisions' => $field['target_divisions'] ?? [],
+                            'example_file' => null,
+                            'example_file_url' => !empty($field['example_file']) ? route('public.oprec-example', ['oprec' => $oprec->id, 'field' => $field['name']]) : null,
+                            'exampleFileUrl' => !empty($field['example_file']) ? route('public.oprec-example', ['oprec' => $oprec->id, 'field' => $field['name']]) : null,
+                            'exampleLabel' => $field['example_label'] ?? null,
                         ]))
                         ->values()->all(),
                     'formIntro' => $oprec->form_intro ?? null,
