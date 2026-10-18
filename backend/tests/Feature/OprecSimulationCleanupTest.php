@@ -19,8 +19,8 @@ class OprecSimulationCleanupTest extends TestCase
     public function test_cleanup_removes_published_assessed_data_files_and_sessions_and_can_be_repeated(): void
     {
         Storage::fake('local'); Storage::fake('public');
-        $original = User::create(['email' => 'original@example.test', 'password' => 'original-password']);
-        $user = User::create(['email' => 'participant@oprec-simulation.example.test', 'password' => 'simulation-password']);
+        $original = $this->verifiedUser(['email' => 'original@example.test', 'password' => 'original-password']);
+        $user = $this->verifiedUser(['email' => 'participant@oprec-simulation.example.test', 'password' => 'simulation-password']);
         $period = Oprec::create(['periode' => '2026/2027', 'status' => 'closed', 'pengumuman_published' => true,
             'poster' => 'http://localhost:8000/api/public/oprec/posters/simulation.png']);
         $period->forceFill(['pengumuman_poster' => 'oprec/announcements/simulation.png'])->save();
@@ -71,7 +71,7 @@ class OprecSimulationCleanupTest extends TestCase
 
     public function test_mismatched_account_aborts_before_any_period_is_deleted(): void
     {
-        $original = User::create(['email' => 'original@example.test', 'password' => 'original-password']);
+        $original = $this->verifiedUser(['email' => 'original@example.test', 'password' => 'original-password']);
         $period = Oprec::create(['periode' => '2026/2027']);
         try {
             app(OprecSimulationCleanup::class)->purge([$period->id], [['id' => $original->id, 'email' => 'forged@oprec-simulation.example.test']], []);
@@ -110,8 +110,8 @@ class OprecSimulationCleanupTest extends TestCase
     public function test_console_dry_run_preserves_data_then_cleanup_removes_manifest_and_can_repeat(): void
     {
         Storage::fake('local'); Storage::fake('public');
-        $original = User::create(['email' => 'original@example.test', 'password' => 'original-password']);
-        $user = User::create(['email' => 'console@oprec-simulation.example.test', 'password' => 'simulation-password']);
+        $original = $this->verifiedUser(['email' => 'original@example.test', 'password' => 'original-password']);
+        $user = $this->verifiedUser(['email' => 'console@oprec-simulation.example.test', 'password' => 'simulation-password']);
         $period = Oprec::create(['periode' => '2026/2027']);
         config()->set('admin.email', $original->email);
         $original->forceFill(['role' => User::ROLE_SUPER_ADMIN])->save();
@@ -145,7 +145,7 @@ class OprecSimulationCleanupTest extends TestCase
 
     public function test_reviewer_used_in_another_period_aborts_cleanup_before_deletion(): void
     {
-        $user = User::create(['email' => 'reviewer@oprec-simulation.example.test', 'password' => 'simulation-password']);
+        $user = $this->verifiedUser(['email' => 'reviewer@oprec-simulation.example.test', 'password' => 'simulation-password']);
         $removed = Oprec::create(['periode' => '2026/2027']);
         $other = Oprec::create(['periode' => '2027/2028']);
         DB::table('oprec_assessment_assignments')->insert(['oprec_id' => $other->id, 'user_id' => $user->id]);

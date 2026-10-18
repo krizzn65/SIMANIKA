@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Support\JsonDefault;
 
 return new class extends Migration {
     public function up(): void
@@ -17,7 +18,7 @@ return new class extends Migration {
             $table->timestampTz('tanggal_buka');
             $table->timestampTz('tanggal_tutup')->nullable();
             $table->boolean('published')->default(false);
-            $table->jsonb('form_fields')->default('[]');
+            $table->jsonb('form_fields')->default(JsonDefault::value('[]'));
             $table->timestamps();
             $table->unique(['oprec_id', 'type']);
         });

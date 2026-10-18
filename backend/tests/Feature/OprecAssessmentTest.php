@@ -15,7 +15,7 @@ class OprecAssessmentTest extends TestCase
 
     private function account(string $role, string $email): User
     {
-        $user = User::create(['name' => $role, 'email' => $email, 'password' => 'password-testing-123']);
+        $user = $this->verifiedUser(['name' => $role, 'email' => $email, 'password' => 'password-testing-123']);
         $user->forceFill(['role' => $role])->save();
         return $user;
     }
@@ -341,10 +341,11 @@ class OprecAssessmentTest extends TestCase
         $base = "/api/admin/oprec/{$f['period']->id}/assessment/{$f['submission']->id}";
         $this->actingAs($f['super'], 'sanctum')->putJson("/api/admin/oprec/{$f['period']->id}/assessment/assignments/{$f['leader']->id}")->assertNoContent();
         foreach ([$f['super'], $f['admin'], $f['leader']] as $reviewer) {
-            $this->actingAs($reviewer, 'sanctum')->getJson($base)->assertOk()
-                ->assertJsonCount(3, 'data.questions')->assertJsonPath('data.questions', array_slice($questions, 0, 3))
+            $response = $this->actingAs($reviewer, 'sanctum')->getJson($base)->assertOk()
+                ->assertJsonCount(3, 'data.questions')
                 ->assertJsonPath('data.answers.selected', 'Jawaban Humas')->assertJsonMissingPath('data.answers.foreign')
                 ->assertJsonMissingPath('data.files.foreign');
+            $this->assertEquals(array_slice($questions, 0, 3), $response->json('data.questions'));
             $this->get($base.'/test-files/foreign')->assertNotFound();
         }
     }

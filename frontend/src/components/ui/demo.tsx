@@ -61,6 +61,12 @@ export const SignInPageDemo = () => {
       showFeedback("error", "Alamat email akun Google belum terverifikasi.");
     } else if (error === "google_account_exists") {
       showFeedback("error", "Email ini sudah memiliki akun. Masuk dengan kata sandi untuk mengaksesnya.");
+    } else if (error === "google_link_password_required") {
+      showFeedback("error", "Masuk sekali dengan email dan kata sandi akun yang sama untuk menghubungkan Google. Setelah itu, login Google bisa digunakan.", 0);
+    } else if (error === "google_account_conflict") {
+      showFeedback("error", "Akun ini sudah terhubung ke Google lain atau terdapat konflik data. Hubungi pengelola akun.", 0);
+    } else if (error === "google_email_changed") {
+      showFeedback("error", "Email akun Google berubah. Hubungi pengelola untuk memperbarui akun dengan aman.");
     }
   }, []);
 
@@ -71,10 +77,17 @@ export const SignInPageDemo = () => {
       const response = await login(email, password, rememberMe);
       const user = response?.data;
       setSubmitState("success");
-      showFeedback("success", "Berhasil masuk. Menyiapkan halamanmu…");
+      showFeedback("success", response?.googleLinkedNow
+        ? "Akun Google berhasil dihubungkan. Login berikutnya bisa memakai Google."
+        : "Berhasil masuk. Menyiapkan halamanmu…");
       await new Promise((resolve) => setTimeout(resolve, 520));
       const nextParam = new URLSearchParams(window.location.search).get("next");
       const safeNext = nextParam ? safeNextPath(nextParam) : null;
+      if (!user?.emailVerifiedAt) {
+        router.replace("/verify-email");
+        router.refresh();
+        return;
+      }
       if (STAFF_ROLES.includes(user?.role)) {
         router.replace(safeNext && canAccessAdminPath(user?.role, safeNext) ? safeNext : adminHome(user?.role));
       } else {
@@ -93,7 +106,12 @@ export const SignInPageDemo = () => {
   const handleGoogleSignIn = () => {
     setGoogleState("loading");
     showFeedback("loading", "Menghubungkan ke Google…");
-    window.location.assign(getGoogleAuthUrl());
+    try {
+      window.location.assign(getGoogleAuthUrl());
+    } catch (error) {
+      setGoogleState("idle");
+      showFeedback("error", error instanceof Error ? error.message : "Login Google belum tersedia.");
+    }
   };
 
   return (

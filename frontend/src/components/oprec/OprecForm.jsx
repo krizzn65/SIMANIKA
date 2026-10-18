@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { RotateCcw, Lock, AlertTriangle } from "lucide-react";
 import { DEFAULT_DIVISION_LOGOS, OPREC_FIXED_FIELDS, OPREC_REQUIRED_CONSENTS, validateOprecForm, validateOprecConsents, normalizeOprecNim, oprecNimProgramWarning, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
+import { api } from "@/services/api";
 
 function getDivisionPositions(division) {
   if (!division) return [];
@@ -403,23 +404,14 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
     setErrors({});
     setMessage("");
     try {
-      const response = await fetch("/api/oprec/register", {
-        method: "POST",
-        body,
-        signal: AbortSignal.timeout(25000),
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        showErrors(result.errors || {}, result.message || "Pendaftaran belum berhasil. Coba lagi.");
-        return;
-      }
+      const { data: result } = await api.post("/user/oprec/register", body, { headers: { "Content-Type": "multipart/form-data" }, timeout: 25000 });
       if (result.data?.submitted !== true) throw new Error("Invalid response");
       try { sessionStorage.removeItem(draftKey); } catch {}
       form.reset();
       setSuccess(true);
       onSuccess?.();
-    } catch {
-      showErrors({}, "Koneksi terputus atau layanan belum tersedia. Pastikan status pendaftaran sebelum mencoba kembali.");
+    } catch (cause) {
+      showErrors(cause.response?.data?.errors || {}, cause.response?.data?.message || "Koneksi terputus atau layanan belum tersedia. Pastikan status pendaftaran sebelum mencoba kembali.");
     } finally {
       pendingForm.current = null;
       pendingBody.current = null;

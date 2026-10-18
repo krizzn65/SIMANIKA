@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditEntry;
+use App\Support\SearchSql;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -32,11 +33,11 @@ class AuditLogController extends Controller
         if ($search !== '') {
             $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower($search));
             $like = "%{$escaped}%";
-            $query->where(fn ($match) => $match->whereRaw("LOWER(summary) LIKE ? ESCAPE '\\'", [$like])
-                ->orWhereRaw("LOWER(actor_name) LIKE ? ESCAPE '\\'", [$like])
-                ->orWhereRaw("LOWER(action) LIKE ? ESCAPE '\\'", [$like])
-                ->orWhereRaw("LOWER(target_id) LIKE ? ESCAPE '\\'", [$like])
-                ->orWhereRaw("LOWER(request_id) LIKE ? ESCAPE '\\'", [$like]));
+            $query->where(fn ($match) => $match->whereRaw(SearchSql::lowerLike('summary'), [$like])
+                ->orWhereRaw(SearchSql::lowerLike('actor_name'), [$like])
+                ->orWhereRaw(SearchSql::lowerLike('action'), [$like])
+                ->orWhereRaw(SearchSql::lowerLike('target_id'), [$like])
+                ->orWhereRaw(SearchSql::lowerLike('request_id'), [$like]));
         }
         $rows = $query->orderByDesc('created_at')->orderByDesc('id')->paginate(20);
         $statsQuery = AuditEntry::query()->where('created_at', '>=', $this->dbInstant(now()->subDay()));

@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { forgotPasswordSchema, resetPasswordSchema } from "@/lib/authSchemas";
 import AuthFeedbackToast from "@/components/ui/AuthFeedbackToast";
+import { publicApi } from "@/services/publicApi";
 
 export default function PasswordRecoveryForm({ mode, token = "", email = "" }) {
   const isReset = mode === "reset";
@@ -39,15 +40,7 @@ export default function PasswordRecoveryForm({ mode, token = "", email = "" }) {
     setStatus("loading");
     setFeedback("");
     try {
-      const response = await fetch(isReset ? "/api/auth/reset-password" : "/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        cache: "no-store",
-        signal: AbortSignal.timeout(15000),
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.message || "Layanan sedang bermasalah. Coba lagi nanti.");
+      await publicApi.post(isReset ? "/auth/reset-password" : "/auth/forgot-password", isReset ? { ...body, password_confirmation: values.password } : body);
       setStatus("success");
       setFeedback(isReset
         ? "Kata sandi berhasil diperbarui. Sekarang kamu bisa masuk dengan sandi baru."

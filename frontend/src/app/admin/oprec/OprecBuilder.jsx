@@ -31,6 +31,7 @@ import { api } from "@/services/api";
 import { toast } from "sonner";
 import { divisionPreview } from "@/components/oprec/divisionPreview";
 import { DEFAULT_DIVISION_LOGOS, OPREC_FIXED_FIELDS, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
+import { formatOprecImageSize, optimizeOprecImage } from "@/lib/optimizeOprecImage";
 import { OprecPeriodPicker } from "./OprecPeriodPicker";
 import "./oprec-create-dialog.css";
 import "./oprec-builder.css";
@@ -467,9 +468,7 @@ export default function OprecBuilder({ oprecId }) {
     try {
       const body = new FormData();
       body.append("example", file);
-      const response = await api.post("/admin/oprec/upload-question-example", body, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const response = await api.post("/admin/oprec/upload-question-example", body);
       const path = response.data?.data?.path;
       const filename = response.data?.data?.filename || file.name;
       if (!path) throw new Error("Dokumen contoh gagal diunggah.");
@@ -603,20 +602,20 @@ export default function OprecBuilder({ oprecId }) {
     setError("");
 
     try {
+      const uploadFile = await optimizeOprecImage(file);
       const body = new FormData();
-      body.append("poster", file);
-      const res = await api.post("/admin/oprec/upload-poster", body, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      body.append("poster", uploadFile);
+      const res = await api.post("/admin/oprec/upload-poster", body);
       const url = res.data?.url;
       if (!url) throw new Error("Gagal mengunggah poster.");
       set("poster", url);
+      if (uploadFile !== file) toast.success(`Poster dioptimalkan: ${formatOprecImageSize(file.size)} menjadi ${formatOprecImageSize(uploadFile.size)}.`);
     } catch (err) {
-      const msg =
-        err.response?.data?.errors?.poster?.[0] ||
-        err.response?.data?.message ||
-        err.message ||
-        "Gagal mengunggah poster.";
+      const msg = err.response?.status === 413
+        ? "Server menolak ukuran poster. Periksa batas upload di hosting atau gunakan gambar lebih kecil."
+        : err.response?.data?.errors?.poster?.[0] ||
+          err.message ||
+          "Gagal mengunggah poster.";
       setError(msg);
     } finally {
       setUploadingPoster(false);
@@ -651,9 +650,7 @@ export default function OprecBuilder({ oprecId }) {
     try {
       const body = new FormData();
       body.append("guidebook", file);
-      const response = await api.post("/admin/oprec/upload-guidebook", body, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const response = await api.post("/admin/oprec/upload-guidebook", body);
       const path = response.data?.data?.path;
       if (!path) throw new Error("Guidebook gagal diunggah.");
       set("guidebook", path);
@@ -679,14 +676,14 @@ export default function OprecBuilder({ oprecId }) {
     setError("");
 
     try {
+      const uploadFile = await optimizeOprecImage(file);
       const body = new FormData();
-      body.append("logo", file);
-      const res = await api.post("/admin/oprec/upload-logo", body, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      body.append("logo", uploadFile);
+      const res = await api.post("/admin/oprec/upload-logo", body);
       const url = res.data?.url;
       if (!url) throw new Error("Gagal mengunggah logo divisi.");
       setDivision(index, { logo: url });
+      if (uploadFile !== file) toast.success(`Logo dioptimalkan: ${formatOprecImageSize(file.size)} menjadi ${formatOprecImageSize(uploadFile.size)}.`);
     } catch (err) {
       const msg =
         err.response?.data?.errors?.logo?.[0] ||
@@ -837,7 +834,7 @@ export default function OprecBuilder({ oprecId }) {
         : await api.post("/admin/oprec", payload);
       toast.success(nextStatus === "open" ? "Pendaftaran berhasil dipublikasikan." : "Formulir pendaftaran berhasil disimpan.", { position: "top-center" });
       setData((current) => ({ ...current, status: nextStatus }));
-      if (!oprecId) router.replace(`/admin/oprec/${periodSlug(data.periode)}/edit`);
+      if (!oprecId) router.replace(`/admin/oprec/edit?id=${periodSlug(data.periode)}`);
     } catch (err) {
       const errors = err.response?.data?.errors;
       setError(
@@ -1289,7 +1286,7 @@ export default function OprecBuilder({ oprecId }) {
                           <span className="oprec-builder__poster-pick-btn">
                             Pilih Berkas Poster
                           </span>
-                          <small>atau seret gambar ke sini · JPG, PNG, WebP maks. 5 MB</small>
+                          <small>atau seret gambar ke sini · JPG, PNG, WebP maks. 5 MB. Gambar besar dioptimalkan otomatis.</small>
                         </>
                       )}
                     </label>

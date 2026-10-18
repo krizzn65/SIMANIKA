@@ -308,7 +308,11 @@ ditutup. Satu periode memiliki paling banyak satu tahap tes tulis dan satu tahap
 pengumuman.
 
 Kontrak baru Laravel: `POST /api/admin/oprec/upload-poster` menerima gambar maksimal
-5 MB; `POST /api/admin/oprec/{oprec}/stages` dan
+5 MB. Karena WebShield hosting pernah menolak multipart sekitar 2,4 MB sebelum Laravel,
+browser mengubah poster OPREC, logo divisi, dan poster pengumuman yang dipilih di atas
+900 KB menjadi WebP di bawah 900 KB sebelum upload. Berkas hasil kompresi yang disimpan;
+aturan WebShield hosting tetap perlu diperbaiki agar berkas besar asli dapat diterima.
+`POST /api/admin/oprec/{oprec}/stages` dan
 `PUT /api/admin/oprec/{oprec}/stages/{stage}` menyimpan metadata tahap;
 `PUT /api/admin/oprec/{oprec}/stages/{stage}/form` menyimpan soal tes dan status
 publikasinya; `GET|POST /api/user/oprec/stages/{stage}/test` hanya untuk peserta

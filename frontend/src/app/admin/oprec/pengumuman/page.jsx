@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { api } from "@/services/api";
 import { Button, Card, Input, Modal, Select, Table, Textarea } from "@/components/oprec/announcement/Primitives";
 import { formatAnnouncementDate, fromWibInput, toWibInput } from "@/lib/oprecAnnouncement.mjs";
+import { optimizeOprecImage } from "@/lib/optimizeOprecImage";
 
 const message = (error) => Object.values(error.response?.data?.errors || {}).flat()[0] || error.response?.data?.message || error.message || "Data belum dapat dimuat.";
 
@@ -30,7 +31,7 @@ function AnnouncementEditor({ data, onClose, onSaved, triggerRef }) {
       const body = new FormData();
       body.set("title", form.title.trim()); body.set("description", form.description.trim());
       body.set("release_at", fromWibInput(form.release_at)); body.set("whatsapp_url", form.whatsapp_url.trim());
-      if (file) body.set("poster", file);
+      if (file) body.set("poster", await optimizeOprecImage(file));
       await api.post(`/admin/oprec/${data.period.id}/announcement`, body);
       toast.success(current.exists ? "Pengumuman berhasil diperbarui." : "Pengumuman berhasil dijadwalkan.", { position: "top-center" });
       onSaved();
@@ -47,7 +48,7 @@ function AnnouncementEditor({ data, onClose, onSaved, triggerRef }) {
           const selected = event.target.files?.[0];
           if (selected && (!['image/jpeg', 'image/png', 'image/webp'].includes(selected.type) || selected.size > 5 * 1024 * 1024)) { setError("Gunakan JPG, PNG, atau WebP maksimal 5 MB."); event.target.value = ""; setFile(null); return; }
           setError(""); setFile(selected || null);
-        }} /><small>JPG, PNG, atau WebP · maksimal 5 MB. Poster hanya tampil pada kartu pengumuman.</small></label>
+        }} /><small>JPG, PNG, atau WebP · maksimal 5 MB. Gambar besar dioptimalkan otomatis. Poster hanya tampil pada kartu pengumuman.</small></label>
         {preview && <img className="oa-file-preview" src={preview} alt="Pratinjau poster pengumuman" />}
         <label className="oa-field">Tanggal dan jam rilis (WIB)<Input type="datetime-local" value={form.release_at} onChange={change("release_at")} required disabled={busy} /><small>Gunakan waktu Indonesia Barat (UTC+7).</small></label>
         <label className="oa-field">Deskripsi <Textarea value={form.description} onChange={change("description")} maxLength={2000} required disabled={busy} /></label>

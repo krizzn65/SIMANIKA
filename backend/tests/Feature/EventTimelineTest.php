@@ -99,7 +99,7 @@ class EventTimelineTest extends TestCase
     public function test_admin_cannot_override_dates_derived_from_typed_timeline(): void
     {
         config()->set('admin.email', 'timeline-admin@example.test');
-        $admin = User::create(['name' => 'Timeline Admin', 'email' => 'timeline-admin@example.test', 'password' => 'password-testing-123']);
+        $admin = $this->verifiedUser(['name' => 'Timeline Admin', 'email' => 'timeline-admin@example.test', 'password' => 'password-testing-123']);
         $admin->forceFill(['role' => 'admin'])->save();
         $this->actingAs($admin, 'sanctum')->postJson('/api/admin/events', [
             'slug' => 'timeline-authoritative', 'judul' => 'Timeline authoritative', 'kategori' => 'hi-fest',

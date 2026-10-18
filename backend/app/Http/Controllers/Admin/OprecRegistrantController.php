@@ -7,6 +7,7 @@ use App\Models\Oprec;
 use App\Models\OprecRegistration;
 use App\Models\OprecTestSubmission;
 use App\Support\OprecRegistrationFields;
+use App\Support\SearchSql;
 use Illuminate\Database\UniqueConstraintViolationException;
 use App\Services\OprecAssessmentService;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -32,13 +33,13 @@ class OprecRegistrantController extends Controller
             $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower($search));
             $pattern = "%{$escaped}%";
             $query->where(function ($query) use ($pattern) {
-                $query->whereRaw("LOWER(nim) LIKE ? ESCAPE '\\'", [$pattern])
-                    ->orWhereRaw("LOWER(form_data->>'nama') LIKE ? ESCAPE '\\'", [$pattern])
-                    ->orWhereRaw("LOWER(form_data->>'nama_lengkap') LIKE ? ESCAPE '\\'", [$pattern])
-                    ->orWhereRaw("LOWER(form_data->>'namaLengkap') LIKE ? ESCAPE '\\'", [$pattern])
+                $query->whereRaw(SearchSql::lowerLike('nim'), [$pattern])
+                    ->orWhereRaw(SearchSql::lowerLike('form_data->nama'), [$pattern])
+                    ->orWhereRaw(SearchSql::lowerLike('form_data->nama_lengkap'), [$pattern])
+                    ->orWhereRaw(SearchSql::lowerLike('form_data->namaLengkap'), [$pattern])
                     ->orWhereHas('user', function ($user) use ($pattern) {
-                        $user->whereRaw("LOWER(name) LIKE ? ESCAPE '\\'", [$pattern])
-                            ->orWhereRaw("LOWER(email) LIKE ? ESCAPE '\\'", [$pattern]);
+                        $user->whereRaw(SearchSql::lowerLike('name'), [$pattern])
+                            ->orWhereRaw(SearchSql::lowerLike('email'), [$pattern]);
                     });
             });
         }

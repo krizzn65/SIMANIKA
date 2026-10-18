@@ -204,6 +204,36 @@
   font-weight: 400;
 }
 
+.oprec-dialog__poster-remove {
+  justify-self: start;
+  margin-top: -10px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: #155eef;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.oprec-dialog__upload-info {
+  margin: -8px 0 0;
+  color: #0f4bcb;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.oprec-dialog__poster-remove:focus-visible {
+  outline: 2px solid #155eef;
+  outline-offset: 3px;
+}
+
+.oprec-dialog__poster-remove:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .oprec-dialog__form .oprec-dialog__publish {
   display: flex;
   flex-direction: row;

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Oprec;
 use App\Support\OprecRegistrantDocument;
+use App\Support\SearchSql;
 use Illuminate\Http\Request;
 
 class OprecRegistrantExportController extends Controller
@@ -23,12 +24,12 @@ class OprecRegistrantExportController extends Controller
             $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower($search));
             $pattern = "%{$escaped}%";
             $query->where(function ($query) use ($pattern) {
-                $query->whereRaw("LOWER(nim) LIKE ? ESCAPE '\\'", [$pattern])
-                    ->orWhereRaw("LOWER(form_data->>'nama') LIKE ? ESCAPE '\\'", [$pattern])
-                    ->orWhereRaw("LOWER(form_data->>'nama_lengkap') LIKE ? ESCAPE '\\'", [$pattern])
-                    ->orWhereRaw("LOWER(form_data->>'namaLengkap') LIKE ? ESCAPE '\\'", [$pattern])
-                    ->orWhereHas('user', fn ($user) => $user->whereRaw("LOWER(name) LIKE ? ESCAPE '\\'", [$pattern])
-                        ->orWhereRaw("LOWER(email) LIKE ? ESCAPE '\\'", [$pattern]));
+                $query->whereRaw(SearchSql::lowerLike('nim'), [$pattern])
+                    ->orWhereRaw(SearchSql::lowerLike('form_data->nama'), [$pattern])
+                    ->orWhereRaw(SearchSql::lowerLike('form_data->nama_lengkap'), [$pattern])
+                    ->orWhereRaw(SearchSql::lowerLike('form_data->namaLengkap'), [$pattern])
+                    ->orWhereHas('user', fn ($user) => $user->whereRaw(SearchSql::lowerLike('name'), [$pattern])
+                        ->orWhereRaw(SearchSql::lowerLike('email'), [$pattern]));
             });
         }
         if (isset($filters['division'])) {

@@ -1,4 +1,5 @@
-import { OprecWorkspace } from "./OprecWorkspace";
+import { Suspense } from "react";
+import DashboardOprecContent from "./DashboardOprecContent";
 
 export const metadata = {
   title: "Pendaftaran OPREC | SIMANIKA",
@@ -6,7 +7,6 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function DashboardOprecPage({ searchParams }) {
-  const { oprec_id: oprecId } = (await searchParams) ?? {};
-  return <OprecWorkspace oprecId={typeof oprecId === "string" ? oprecId : null} />;
+export default function DashboardOprecPage() {
+  return <Suspense fallback={<p>Memuat pendaftaran OPREC...</p>}><DashboardOprecContent /></Suspense>;
 }

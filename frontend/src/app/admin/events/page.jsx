@@ -473,7 +473,7 @@ export default function AdminEventsPage() {
         const created = await api.post("/admin/events", payload);
         const eventId = created.data?.data?.id;
         if (!eventId) throw new Error("Event tersimpan, tetapi ID event tidak diterima. Muat ulang daftar event.");
-        router.push("/admin/events/" + eventId);
+        router.push("/admin/events/edit?id=" + encodeURIComponent(eventId));
         return;
       }
       setTimeout(() => {
@@ -680,9 +680,9 @@ export default function AdminEventsPage() {
                     </td>
                     <td className="text-right">
                       <div className="inline-flex items-center gap-1.5 justify-end">
-                        <Link href={"/admin/events/" + ev.id} className="admin-btn admin-btn--secondary admin-btn--sm">Atur formulir</Link>
+                        <Link href={"/admin/events/edit?id=" + encodeURIComponent(ev.id)} className="admin-btn admin-btn--secondary admin-btn--sm">Atur formulir</Link>
                         <Link
-                          href={`/events/${ev.slug}`}
+                          href={`/events/detail?slug=${encodeURIComponent(ev.slug)}`}
                           target="_blank"
                           className="admin-icon-btn hover:text-blue-600"
                           title="Lihat Halaman Publik"
@@ -782,7 +782,7 @@ export default function AdminEventsPage() {
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-mono text-slate-600 focus:outline-none focus:border-blue-500"
                   />
                   <p className="text-[11px] text-slate-500 mt-1">
-                    Alamat URL publik: <span className="font-mono text-blue-600 font-semibold">/events/{formData.slug || "nama-event"}</span>
+                    Alamat URL publik: <span className="font-mono text-blue-600 font-semibold">/events/detail?slug={formData.slug || "nama-event"}</span>
                   </p>
                 </div>
 

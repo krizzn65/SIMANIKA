@@ -24,8 +24,9 @@ class UserController extends Controller
         if ($search !== '') {
             $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search);
             $query->where(function ($q) use ($escaped) {
-                $q->where('name', 'ilike', "%{$escaped}%")
-                  ->orWhere('email', 'ilike', "%{$escaped}%");
+                $pattern = '%'.mb_strtolower($escaped).'%';
+                $q->whereRaw('LOWER(name) LIKE ?', [$pattern])
+                  ->orWhereRaw('LOWER(email) LIKE ?', [$pattern]);
             });
         }
 

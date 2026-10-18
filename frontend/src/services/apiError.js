@@ -1,6 +1,13 @@
 const safeMessage = (value) => typeof value === "string" && value.length <= 300
   && !/(SQLSTATE|\bSQL:|\bselect\b|\bupdate\b|\bConnection:|stack trace|exception)/i.test(value);
 
+export const hostingProtectionMessage = "Perlindungan hosting sedang membatasi akses. Coba lagi atau hubungi pengelola.";
+
+export function isHostingProtectionResponse(body) {
+  if (typeof body?.message === "string" && /^Access denied by Imunify360 bot-protection\b/i.test(body.message.trim())) return true;
+  return typeof body === "string" && /imunify360-webshield|Please wait while your request is being verified/i.test(body);
+}
+
 export function apiErrorMessage(error) {
   const status = error.response?.status;
   const body = error.response?.data;
@@ -16,6 +23,7 @@ export function apiErrorMessage(error) {
     ? body.message : "Data belum valid. Periksa kolom formulir dan coba lagi.";
   if (status === 409 && safeMessage(body?.message)) return body.message;
   if (status === 413) return "Berkas terlalu besar. Periksa batas ukuran unggahan.";
+  if (status === 507) return safeMessage(body?.message) ? body.message : "Penyimpanan server penuh atau belum dapat ditulis.";
   if (status === 429) return "Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi.";
   if (!error.response) return "Tidak dapat terhubung ke server. Periksa koneksi lalu coba lagi.";
   return "Layanan sedang bermasalah. Data belum tersimpan; coba lagi nanti atau hubungi pengelola.";

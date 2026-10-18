@@ -4,15 +4,17 @@
 
 Backend: `APP_URL=http://localhost:8000`, `FRONTEND_URL=http://localhost:3000`, `SANCTUM_STATEFUL_DOMAINS=localhost:3000,localhost:8000`, `CORS_ALLOWED_ORIGINS=http://localhost:3000`. Frontend: `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api` dan `API_BASE_URL=http://localhost:8000/api`.
 
-Gunakan host `localhost` secara konsisten. Browser mengirim cookie sesi langsung ke Laravel melalui Axios `withCredentials`; `authClient.js` lebih dulu meminta `/sanctum/csrf-cookie`, lalu Axios mengirim `X-XSRF-TOKEN` untuk mutasi. Zustand menyimpan identitas pengguna di memori, tanpa token di localStorage. Form auth memakai React Hook Form + Zod; Laravel tetap memvalidasi input melalui FormRequest. Adapter server Next.js untuk OPREC meneruskan cookie sesi dan CSRF; adapter reset sandi tidak memerlukan sesi.
+Gunakan host `localhost` secara konsisten. Browser mengirim cookie sesi langsung ke Laravel melalui Axios `withCredentials`; `authClient.js` lebih dulu meminta `/sanctum/csrf-cookie`, lalu Axios mengirim `X-XSRF-TOKEN` untuk mutasi. Zustand menyimpan identitas pengguna di memori, tanpa token di localStorage. Form auth memakai React Hook Form + Zod; Laravel tetap memvalidasi input melalui FormRequest. Frontend static export menghubungi API Laravel secara langsung.
 
 ## Kontrak yang tersedia
 
 | Frontend | Backend | Catatan |
 | --- | --- | --- |
 | `/login`, `/register`, Navbar, `/dashboard` | `/api/auth/register`, `/login`, `/logout`, `/me` | Email/password; sesi Sanctum. |
-| Tombol Google di `/login` & `/register`, `/auth/callback` | `/api/auth/google/redirect`, `/api/auth/google/callback` | Google OAuth 2.0 via `laravel/socialite`, tautkan `google_id` dan login sesi Sanctum. |
+| Tombol Google di `/login` & `/register`, `/auth/callback` | `/api/auth/google/redirect`, `/api/auth/google/callback` | Google OAuth 2.0 via `laravel/socialite`. Akun manual dengan email Gmail/Workspace yang sama ditautkan ke baris pengguna lama setelah Google memastikan email; untuk alamat Google dari provider lain, callback meminta login kata sandi akun manual yang sama dalam 10 menit sebelum `google_id` ditautkan. ID pengguna, password, role, dan data pendaftaran tetap. |
 | `/forgot-password`, `/reset-password` | `/api/auth/forgot-password`, `/reset-password` | Email reset memakai broker Laravel; backend mengirim tautan ke halaman Next.js. SMTP harus diisi. |
+| `/verify-email` | `GET /api/auth/email/verify/{id}/{hash}`, `POST /api/auth/email/resend` | Akun baru menerima tautan bertanda tangan; fitur user/admin memerlukan email terverifikasi. Google baru ditandai terverifikasi setelah Google menyatakan email valid. |
+
 | `/events`, `/events/[slug]` | `/api/public/events`, `/api/public/events/{slug}` | Hanya event non-draft, maksimal 9 per halaman; kontrak menyertakan `paymentType` dan nominal integer `htm`. |
 | Dialog pendaftaran competition tim | `/api/user/events/{event}/create-team`, `/join-team` | Transaksi autentikasi; buat tim menghasilkan kode, join membuat permintaan pending, keduanya mencatat enrolment dashboard. Ketua menerima/menolak di workspace; hanya anggota accepted dihitung. |
 | `/dashboard/events/{id}` | `/api/user/events/{event}/workspace`, `/teams/{team}/members/{userId}`, `/files/{field}` | Detail pendaftaran privat, formulir tim milik ketua, approval/remove ketua-only, berkas hanya untuk anggota aktif. |
@@ -21,9 +23,11 @@ Gunakan host `localhost` secara konsisten. Browser mengirim cookie sesi langsung
 
 Aturan kode tim terbaru (menggantikan nomor urut per-event pada PRD lama): `team_code_sequences.prefix` menyimpan counter global per prefix secara permanen; `team_code_reservations.code` mencegah kode baru diulang. Prefix hanya eksklusif selama dipakai event yang masih ada: pembuatan/pembaruan admin mengunci baris sequence lalu mengecek event aktif dalam satu transaksi. Setelah event tanpa peserta dihapus, prefix dan nama/slug boleh digunakan lagi; counter/kode lama tetap dicadangkan. Migrasi membackfill kode/prefix lama tanpa mengganti kode yang sudah dibagikan. Pengaturan tim tidak dapat diubah sesudah ada peserta. Generator mengunci event lalu baris sequence, mencadangkan kode, dan membuat tim dalam satu transaksi. Kode tetap dicari dalam event yang dipilih saat join. Data historis dengan dua `HACK01` perlu remediasi eksplisit bila ingin sepenuhnya unik secara global; keduanya tidak diubah otomatis.
 | `/oprec`, `/oprec/detail` | `/api/public/oprec` | Payload jadwal, divisi, schema form, poster, FAQ, dan publikasi pengumuman. |
-| Form OPREC | `/api/user/oprec/register` | Next adapter `/api/oprec/register`, cookie Sanctum, validasi backend, berkas privat. |
-| Cek hasil OPREC | `/api/public/oprec/{id}/result` | Next adapter `/api/oprec/result`; NIM/tanggal lahir dikirim lewat POST, tidak di URL. |
+| Form OPREC | `/api/user/oprec/register` | Browser mengirim multipart langsung dengan sesi Sanctum; backend memvalidasi dan menyimpan berkas privat. |
+| Cek hasil OPREC | `/api/public/oprec/{id}/announcement/verify`, `/result` | NIM/tanggal lahir dikirim lewat POST, tidak di URL. |
 | Pengelolaan admin | `/api/admin/users`, `/api/admin/events`, `/api/admin/oprec`, dashboard | Semua route memakai `auth:sanctum` dan otorisasi area: `super_admin` semua, `admin` kecuali users, `leader` hanya OPREC, `kwu` hanya merchandise. |
+
+Frontend produksi adalah static export dan memanggil API Laravel secara langsung. `NEXT_PUBLIC_API_BASE_URL` ditanam saat build, sehingga perubahan URL mengharuskan build ulang. Pada hosting saat ini situs dan API satu domain: `https://himanika.wsmif.myhost.id` dan `/api`. Akun lokal lama dengan `email_verified_at` kosong masuk ke `/verify-email` lalu meminta tautan; jangan mengisi kolom itu massal tanpa bukti kepemilikan email.
 
 ## Batas tahap ini
 

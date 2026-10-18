@@ -17,7 +17,9 @@ class OprecAccessAuditTest extends TestCase
     private function fixture(): array
     {
         Storage::fake('local');
+        Storage::disk('local')->put('oprec/guidebooks/test-guidebook.pdf', '%PDF-1.4 test guidebook');
         $period = Oprec::create(['periode' => '2026/2027', 'status' => 'open', 'schema_version' => '1',
+            'guidebook' => 'oprec/guidebooks/test-guidebook.pdf',
             'tanggal_buka' => now()->subHour(), 'tanggal_tutup' => now()->addHour(),
             'first_published_at' => now()->subHour(), 'link_grup_wa' => 'https://chat.whatsapp.com/PrivateRegistration',
             'form_fields' => [
@@ -28,7 +30,7 @@ class OprecAccessAuditTest extends TestCase
                 ['name' => 'conditional_file', 'type' => 'file', 'required' => true, 'target_type' => 'specific', 'target_divisions' => ['Ristek']],
             ]]);
         $divisions = collect(['BPH', 'Humas', 'PSDM', 'Ristek'])->map(fn ($name) => $period->divisions()->create(['nama' => $name]));
-        $owner = User::create(['email' => 'participant@audit.test', 'password' => 'audit-password']);
+        $owner = $this->verifiedUser(['email' => 'participant@audit.test', 'password' => 'audit-password']);
         $registration = $period->registrations()->create(['user_id' => $owner->id, 'nim' => 'E312345',
             'tanggal_lahir' => '2004-01-01', 'form_data' => ['nama' => 'Peserta Audit', 'angkatan' => '2024'],
             'divisi_pilihan_1' => $divisions[0]->id, 'divisi_pilihan_2' => $divisions[1]->id, 'divisi_pilihan_3' => $divisions[2]->id,
@@ -38,7 +40,7 @@ class OprecAccessAuditTest extends TestCase
             'form_fields' => [['id' => 'reason', 'label' => 'Alasan', 'type' => 'short_text', 'required' => true]]]);
         $submission = $stage->submissions()->create(['user_id' => $owner->id, 'oprec_registration_id' => $registration->id,
             'answers' => ['reason' => 'Jawaban privat']]);
-        $leader = User::create(['email' => 'leader@audit.test', 'password' => 'audit-password']);
+        $leader = $this->verifiedUser(['email' => 'leader@audit.test', 'password' => 'audit-password']);
         $leader->forceFill(['role' => 'leader'])->save();
         return compact('period', 'owner', 'leader', 'registration', 'stage', 'submission', 'divisions');
     }
@@ -110,7 +112,7 @@ class OprecAccessAuditTest extends TestCase
     public function test_user_journey_rejects_forgery_duplicates_and_other_participants(): void
     {
         $f = $this->fixture();
-        $user = User::create(['email' => 'newparticipant@audit.test', 'password' => 'audit-password']);
+        $user = $this->verifiedUser(['email' => 'newparticipant@audit.test', 'password' => 'audit-password']);
         $id = $f['period']->id;
         $payload = ['oprec_id' => $id, 'schema_version' => '1', 'nim' => ' e319999 ', 'tanggal_lahir' => '2004-01-01',
             'nama' => 'Peserta Baru', 'angkatan' => '2024', 'status_kepengurusan' => 'Anggota Baru',
@@ -142,7 +144,7 @@ class OprecAccessAuditTest extends TestCase
         $f['period']->update(['status' => 'closed', 'pengumuman_published' => false]);
         $f['stage']->update(['tanggal_tutup' => now()->subMinute()]);
         config()->set('admin.email', 'super@audit.test');
-        $super = User::create(['email' => 'super@audit.test', 'password' => 'audit-password']);
+        $super = $this->verifiedUser(['email' => 'super@audit.test', 'password' => 'audit-password']);
         $super->forceFill(['role' => 'super_admin'])->save();
         $this->actingAs($super, 'sanctum');
         $this->putJson("/api/admin/oprec/$id/assessment/registrations/{$registration->id}/decision", [
@@ -164,12 +166,12 @@ class OprecAccessAuditTest extends TestCase
     public function test_admin_correction_returns_conflict_and_deletion_cleans_test_files(): void
     {
         $f = $this->fixture();
-        $admin = User::create(['email' => 'admin@audit.test', 'password' => 'audit-password']);
+        $admin = $this->verifiedUser(['email' => 'admin@audit.test', 'password' => 'audit-password']);
         $admin->forceFill(['role' => 'admin'])->save();
-        $other = User::create(['email' => 'other@audit.test', 'password' => 'audit-password']);
+        $other = $this->verifiedUser(['email' => 'other@audit.test', 'password' => 'audit-password']);
         $f['period']->registrations()->create(['user_id' => $other->id, 'nim' => 'E319999', 'tanggal_lahir' => '2004-01-01', 'form_data' => []]);
         $url = "/api/admin/oprec/{$f['period']->id}/registrants/{$f['registration']->id}";
-        $payload = ['schema_version' => '1', 'nim' => 'E319999', 'tanggal_lahir' => '2004-01-01', 'nama' => 'Peserta Audit', 'angkatan' => '2024'];
+        $payload = ['schema_version' => '1', 'nim' => 'E319999', 'tanggal_lahir' => '2004-01-01', 'nama' => 'Peserta Audit', 'angkatan' => '2024', 'status_kepengurusan' => 'Anggota Baru'];
         foreach ([1, 2, 3] as $rank) $payload["divisi_pilihan_$rank"] = (string) $f['divisions'][$rank - 1]->id;
         $payload['jabatan_pilihan_1'] = 'Sekretaris 2';
         $this->actingAs($admin, 'sanctum')->putJson($url.'/form', $payload)->assertConflict();
@@ -189,7 +191,7 @@ class OprecAccessAuditTest extends TestCase
         $f = $this->fixture();
         $f['period']->update(['form_fields' => [...$f['period']->form_fields,
             ['name' => 'cv', 'label' => 'CV', 'type' => 'file', 'required' => true, 'accept' => ['.pdf'], 'maxSizeMB' => 2]]]);
-        $user = User::create(['email' => 'upload@audit.test', 'password' => 'audit-password']);
+        $user = $this->verifiedUser(['email' => 'upload@audit.test', 'password' => 'audit-password']);
         $payload = ['oprec_id' => $f['period']->id, 'schema_version' => '1', 'nim' => 'E318888',
             'tanggal_lahir' => '2004-01-01', 'nama' => 'Peserta Upload', 'angkatan' => '2024',
             'status_kepengurusan' => 'Anggota Baru', 'persetujuan_data_benar' => 'on', 'persetujuan_penggunaan_data' => 'on'];
@@ -221,7 +223,7 @@ class OprecAccessAuditTest extends TestCase
             $this->postJson('/api/user/oprec/enroll', ['oprec_id' => $f['period']->id])->assertOk();
         }
         $this->postJson('/api/user/oprec/enroll', ['oprec_id' => $f['period']->id, 'email' => 'different@audit.test'])->assertStatus(429);
-        $other = User::create(['email' => 'same-proxy@audit.test', 'password' => 'audit-password']);
+        $other = $this->verifiedUser(['email' => 'same-proxy@audit.test', 'password' => 'audit-password']);
         $this->actingAs($other, 'sanctum')->postJson('/api/user/oprec/enroll', ['oprec_id' => $f['period']->id])->assertCreated();
     }
 
@@ -243,10 +245,10 @@ class OprecAccessAuditTest extends TestCase
         $f = $this->fixture();
         $fields = array_map(fn ($field) => [...$field, 'label' => $field['name']], $f['period']->form_fields);
         $f['period']->update(['status' => 'closed', 'pengumuman_published' => true, 'form_fields' => $fields]);
-        $admin = User::create(['email' => 'schema-admin@audit.test', 'password' => 'audit-password']);
+        $admin = $this->verifiedUser(['email' => 'schema-admin@audit.test', 'password' => 'audit-password']);
         $admin->forceFill(['role' => 'admin'])->save();
         $fields[0]['label'] = 'Nama kolom diubah';
-        $payload = ['periode' => $f['period']->periode, 'status' => 'closed', 'schema_version' => '2', 'form_fields' => $fields,
+        $payload = ['periode' => $f['period']->periode, 'status' => 'closed', 'schema_version' => '2', 'form_fields' => $fields, 'guidebook' => $f['period']->guidebook,
             'divisi_tersedia' => $f['divisions']->map(fn ($division) => $division->only(['nama', 'jabatan']))->all(),
             'pengumuman' => ['published' => true]];
         $this->actingAs($admin, 'sanctum')->putJson("/api/admin/oprec/{$f['period']->id}", $payload)
@@ -258,9 +260,9 @@ class OprecAccessAuditTest extends TestCase
         $f = $this->fixture();
         $fields = array_map(fn ($field) => [...$field, 'label' => $field['name']], $f['period']->form_fields);
         $f['period']->update(['form_fields' => $fields]);
-        $admin = User::create(['email' => 'schema-admin@audit.test', 'password' => 'audit-password']);
+        $admin = $this->verifiedUser(['email' => 'schema-admin@audit.test', 'password' => 'audit-password']);
         $admin->forceFill(['role' => User::ROLE_ADMIN])->save();
-        $payload = ['periode' => $f['period']->periode, 'status' => 'closed', 'schema_version' => '1',
+        $payload = ['periode' => $f['period']->periode, 'status' => 'closed', 'schema_version' => '1', 'guidebook' => $f['period']->guidebook,
             'form_fields' => array_map(fn ($field) => array_reverse($field, true), $fields),
             'divisi_tersedia' => $f['divisions']->map(fn ($division) => $division->only(['nama', 'jabatan']))->all(),
             'faq' => [], 'pengumuman' => ['published' => false]];

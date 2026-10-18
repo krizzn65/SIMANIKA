@@ -12,7 +12,7 @@ class RoleAccessTest extends TestCase
 
     private function account(string $role, string $email): User
     {
-        $user = User::create(['name' => $role, 'email' => $email, 'password' => 'password-testing-123']);
+        $user = $this->verifiedUser(['name' => $role, 'email' => $email, 'password' => 'password-testing-123']);
         $user->forceFill(['role' => $role])->save();
         return $user;
     }
@@ -60,12 +60,12 @@ class RoleAccessTest extends TestCase
     {
         config()->set('admin.email', 'official@example.test');
         $super = $this->account('super_admin', 'official@example.test');
-        $this->account('user', 'newer@example.test');
+        $other = $this->account('user', 'newer@example.test');
         $this->actingAs($super, 'sanctum')->getJson('/api/admin/users?sort_by=created_at&sort_dir=desc')
             ->assertOk()->assertJsonPath('data.0.id', $super->id);
 
         $this->putJson('/api/auth/profile', ['email' => 'changed@example.test'])->assertUnprocessable();
-        $this->putJson("/api/admin/users/2", ['name' => 'Other', 'email' => 'official@example.test', 'role' => 'admin'])->assertUnprocessable();
+        $this->putJson("/api/admin/users/{$other->id}", ['name' => 'Other', 'email' => 'official@example.test', 'role' => 'admin'])->assertUnprocessable();
     }
 
     public function test_mismatched_super_admin_role_has_no_privileges(): void

@@ -15,7 +15,7 @@ class AuditLogTest extends TestCase
     private function superAdmin(): User
     {
         config()->set('admin.email', 'root-log@example.test');
-        $user = User::create(['name' => 'Admin Utama', 'email' => 'root-log@example.test', 'password' => 'secret-password']);
+        $user = $this->verifiedUser(['name' => 'Admin Utama', 'email' => 'root-log@example.test', 'password' => 'secret-password']);
         $user->forceFill(['role' => 'super_admin'])->save();
         return $user;
     }
@@ -23,9 +23,9 @@ class AuditLogTest extends TestCase
     public function test_only_official_super_admin_can_read_filtered_log_and_safe_detail(): void
     {
         $super = $this->superAdmin();
-        $admin = User::create(['name' => 'Admin', 'email' => 'admin-log@example.test', 'password' => 'secret-password']);
+        $admin = $this->verifiedUser(['name' => 'Admin', 'email' => 'admin-log@example.test', 'password' => 'secret-password']);
         $admin->forceFill(['role' => 'admin'])->save();
-        $target = User::create(['name' => 'Peserta', 'email' => 'target-log@example.test', 'password' => 'secret-password']);
+        $target = $this->verifiedUser(['name' => 'Peserta', 'email' => 'target-log@example.test', 'password' => 'secret-password']);
         $this->getJson('/api/admin/logs')->assertUnauthorized();
         $this->actingAs($admin, 'sanctum')->getJson('/api/admin/logs')->assertForbidden();
 
@@ -65,7 +65,7 @@ class AuditLogTest extends TestCase
         $this->assertStringNotContainsString('unknown@example.test', json_encode($login->toArray()));
         $this->assertStringNotContainsString('private-secret', json_encode($login->toArray()));
 
-        $user = User::create(['email' => 'ordinary-log@example.test', 'password' => 'secret-password']);
+        $user = $this->verifiedUser(['email' => 'ordinary-log@example.test', 'password' => 'secret-password']);
         $this->actingAs($user, 'sanctum')->getJson('/api/admin/logs')->assertForbidden();
         $this->assertDatabaseHas('audit_entries', ['kind' => 'security', 'actor_id' => $user->id, 'http_status' => 403]);
         $this->actingAs($super, 'sanctum')->getJson('/api/admin/logs?kind=security')->assertOk()
@@ -89,7 +89,7 @@ class AuditLogTest extends TestCase
     public function test_unofficial_super_admin_role_cannot_open_logs(): void
     {
         config()->set('admin.email', 'official@example.test');
-        $impostor = User::create(['email' => 'impostor-log@example.test', 'password' => 'secret-password']);
+        $impostor = $this->verifiedUser(['email' => 'impostor-log@example.test', 'password' => 'secret-password']);
         $impostor->forceFill(['role' => 'super_admin'])->save();
         $this->actingAs($impostor, 'sanctum')->getJson('/api/admin/logs')->assertForbidden();
     }
@@ -97,7 +97,7 @@ class AuditLogTest extends TestCase
     public function test_auth_logs_distinguish_manual_and_google_methods(): void
     {
         $super = $this->superAdmin();
-        $user = User::create(['name' => 'Budi', 'email' => 'budi-test@example.test', 'password' => bcrypt('secret-123')]);
+        $user = $this->verifiedUser(['name' => 'Budi', 'email' => 'budi-test@example.test', 'password' => bcrypt('secret-123')]);
 
         // 1. Manual Login Success
         $this->postJson('/api/auth/login', ['email' => 'budi-test@example.test', 'password' => 'secret-123', 'remember' => true])

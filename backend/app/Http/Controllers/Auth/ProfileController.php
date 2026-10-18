@@ -13,7 +13,13 @@ class ProfileController extends Controller
 
     public function update(UpdateProfileRequest $request): UserResource
     {
-        $request->user()->update($request->validated());
+        $user = $request->user();
+        $previousEmail = $user->email;
+        $user->update($request->validated());
+        if (mb_strtolower(trim($previousEmail)) !== mb_strtolower(trim($user->email))) {
+            $user->forceFill(['email_verified_at' => null])->save();
+            $user->sendEmailVerificationNotification();
+        }
         return new UserResource($request->user()->refresh());
     }
 }

@@ -20,16 +20,16 @@ class OprecRegistrantTableTest extends TestCase
         Storage::fake('local');
         $oprec = Oprec::create(['periode' => 'Restore', 'status' => 'closed', 'schema_version' => '1',
             'form_fields' => [['name' => 'portfolio', 'type' => 'file', 'label' => 'Portofolio', 'accept' => ['.pdf'], 'maxSizeMB' => 2]]]);
-        $candidate = User::create(['email' => 'restore-candidate@example.test', 'password' => 'password-testing-123']);
+        $candidate = $this->verifiedUser(['email' => 'restore-candidate@example.test', 'password' => 'password-testing-123']);
         $registration = OprecRegistration::create(['oprec_id' => $oprec->id, 'user_id' => $candidate->id,
             'nim' => 'E31999', 'tanggal_lahir' => '2004-01-01', 'form_data' => ['nama' => 'Peserta'],
             'file_uploads' => ['portfolio' => "oprec/{$oprec->id}/lost.pdf"]]);
         $url = "/api/admin/oprec/{$oprec->id}/registrants/{$registration->id}/files/portfolio";
-        $leader = User::create(['email' => 'restore-leader@example.test', 'password' => 'password-testing-123']);
+        $leader = $this->verifiedUser(['email' => 'restore-leader@example.test', 'password' => 'password-testing-123']);
         $leader->forceFill(['role' => 'leader'])->save();
         $this->actingAs($leader, 'sanctum')->post($url, ['file' => UploadedFile::fake()->create('portfolio.pdf', 1, 'application/pdf')])
             ->assertForbidden();
-        $admin = User::create(['email' => 'restore-admin@example.test', 'password' => 'password-testing-123']);
+        $admin = $this->verifiedUser(['email' => 'restore-admin@example.test', 'password' => 'password-testing-123']);
         $admin->forceFill(['role' => 'admin'])->save();
         $this->actingAs($admin, 'sanctum')->getJson("/api/admin/oprec/{$oprec->id}/registrants")
             ->assertOk()->assertJsonPath('data.0.fileUploads.portfolio.available', false)
@@ -51,7 +51,7 @@ class OprecRegistrantTableTest extends TestCase
         Storage::fake('local');
         $oprec = Oprec::create(['periode' => 'Download', 'status' => 'closed', 'schema_version' => '1',
             'form_fields' => [['name' => 'portfolio', 'type' => 'file', 'label' => 'Portofolio']]]);
-        $candidate = User::create(['email' => 'download-candidate@example.test', 'password' => 'password-testing-123']);
+        $candidate = $this->verifiedUser(['email' => 'download-candidate@example.test', 'password' => 'password-testing-123']);
         $path = "oprec/{$oprec->id}/portfolio.pdf";
         Storage::disk('local')->put($path, '%PDF-1.4 private portfolio');
         $registration = OprecRegistration::create(['oprec_id' => $oprec->id, 'user_id' => $candidate->id,
@@ -60,7 +60,7 @@ class OprecRegistrantTableTest extends TestCase
         $url = "/api/admin/oprec/{$oprec->id}/registrants/{$registration->id}/files/portfolio";
         $this->get($url)->assertUnauthorized();
         $this->actingAs($candidate, 'sanctum')->getJson($url)->assertForbidden();
-        $admin = User::create(['email' => 'download-admin@example.test', 'password' => 'password-testing-123']);
+        $admin = $this->verifiedUser(['email' => 'download-admin@example.test', 'password' => 'password-testing-123']);
         $admin->forceFill(['role' => 'admin'])->save();
         $this->actingAs($admin, 'sanctum')->getJson("/api/admin/oprec/{$oprec->id}/registrants")
             ->assertOk()->assertJsonPath('data.0.fileUploads.portfolio.fileName', "oprec-{$registration->id}-portfolio.pdf");
@@ -75,14 +75,14 @@ class OprecRegistrantTableTest extends TestCase
         $oprec = Oprec::create(['periode' => 'Export', 'status' => 'closed', 'schema_version' => '1',
             'form_fields' => [['name' => 'motivasi', 'type' => 'text', 'label' => 'Motivasi']]]);
         for ($i = 1; $i <= 21; $i++) {
-            $user = User::create(['email' => "export{$i}@example.test", 'name' => "Peserta {$i}", 'password' => 'password-testing-123']);
+            $user = $this->verifiedUser(['email' => "export{$i}@example.test", 'name' => "Peserta {$i}", 'password' => 'password-testing-123']);
             OprecRegistration::create(['oprec_id' => $oprec->id, 'user_id' => $user->id,
                 'nim' => "E31{$i}", 'tanggal_lahir' => '2004-01-01', 'divisi_pilihan_1' => $i === 21 ? 8 : 7,
                 'form_data' => ['nama' => "Peserta {$i}", 'motivasi' => "Jawaban {$i}"]]);
         }
         $base = "/api/admin/oprec/{$oprec->id}/registrants/export/";
         $this->getJson($base.'xlsx')->assertUnauthorized();
-        $admin = User::create(['email' => 'export-admin@example.test', 'password' => 'password-testing-123']);
+        $admin = $this->verifiedUser(['email' => 'export-admin@example.test', 'password' => 'password-testing-123']);
         $admin->forceFill(['role' => 'admin'])->save();
         $xlsx = $this->actingAs($admin, 'sanctum')->getJson($base.'xlsx')->assertOk()
             ->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')->getContent();
@@ -107,7 +107,7 @@ class OprecRegistrantTableTest extends TestCase
         $this->assertGreaterThan(2, substr_count($allPdf, '/Type /Page /Parent'));
         $this->assertStringContainsString('Jawaban 21', $allPdf);
 
-        $leader = User::create(['email' => 'export-leader@example.test', 'password' => 'password-testing-123']);
+        $leader = $this->verifiedUser(['email' => 'export-leader@example.test', 'password' => 'password-testing-123']);
         $leader->forceFill(['role' => 'leader'])->save();
         $pdf = $this->actingAs($leader, 'sanctum')->getJson($base.'pdf?division=8')->assertOk()
             ->assertHeader('Content-Type', 'application/pdf')->getContent();
@@ -124,7 +124,7 @@ class OprecRegistrantTableTest extends TestCase
     {
         Storage::fake('local');
         config()->set('admin.email', 'table-admin@example.test');
-        $admin = User::create(['email' => 'table-admin@example.test', 'password' => 'password-testing-123']);
+        $admin = $this->verifiedUser(['email' => 'table-admin@example.test', 'password' => 'password-testing-123']);
         $admin->forceFill(['role' => 'admin'])->save();
         $oprec = Oprec::create(['periode' => 'Table', 'status' => 'closed', 'schema_version' => '1', 'form_fields' => [
             ['name' => 'portfolio', 'type' => 'text', 'label' => 'Portofolio', 'target_type' => 'specific', 'target_divisions' => ['Kominfo']],
@@ -132,8 +132,8 @@ class OprecRegistrantTableTest extends TestCase
         ]]);
         Storage::disk('local')->put("oprec/{$oprec->id}/private.pdf", '%PDF-1.4 test');
         for ($i = 1; $i <= 21; $i++) {
-            $user = User::create(['email' => "candidate{$i}@example.test", 'name' => "Peserta {$i}", 'password' => 'password-testing-123']);
-            OprecRegistration::create([
+            $user = $this->verifiedUser(['email' => "candidate{$i}@example.test", 'name' => "Peserta {$i}", 'password' => 'password-testing-123']);
+            $registration = OprecRegistration::create([
                 'oprec_id' => $oprec->id, 'user_id' => $user->id, 'nim' => "E{$i}",
                 'tanggal_lahir' => '2004-01-01', 'divisi_pilihan_1' => $i === 21 ? 8 : 7,
                 'form_data' => ['nama' => $i === 21 ? 'Nama Khusus Form' : "Peserta {$i}", 'angkatan' => '2023', 'portfolio' => "Jawaban {$i}"],
@@ -149,7 +149,7 @@ class OprecRegistrantTableTest extends TestCase
             ->assertJsonPath('data.0.formData.portfolio', 'Jawaban 21')
             ->assertJsonPath('data.0.formData.angkatan', '2023')
             ->assertJsonPath('data.0.tanggalLahir', '2004-01-01')
-            ->assertJsonPath('data.0.fileUploads.cv.downloadUrl', url("{$url}/21/files/cv"));
+            ->assertJsonPath('data.0.fileUploads.cv.downloadUrl', url("{$url}/{$registration->id}/files/cv"));
         $this->getJson("{$url}?search=E21")->assertOk()->assertJsonPath('total', 1);
         $this->getJson("{$url}?search=Nama Khusus Form")->assertOk()->assertJsonPath('total', 1);
         $this->getJson("{$url}?division=invalid")->assertUnprocessable();
@@ -159,9 +159,9 @@ class OprecRegistrantTableTest extends TestCase
     {
         Storage::fake('local');
         config()->set('admin.email', 'delete-registrant-admin@example.test');
-        $admin = User::create(['email' => 'delete-registrant-admin@example.test', 'password' => 'password-testing-123']);
+        $admin = $this->verifiedUser(['email' => 'delete-registrant-admin@example.test', 'password' => 'password-testing-123']);
         $admin->forceFill(['role' => 'admin'])->save();
-        $candidate = User::create(['email' => 'delete-registrant-candidate@example.test', 'password' => 'password-testing-123']);
+        $candidate = $this->verifiedUser(['email' => 'delete-registrant-candidate@example.test', 'password' => 'password-testing-123']);
         $oprec = Oprec::create(['periode' => 'Delete A', 'status' => 'closed', 'schema_version' => '1', 'form_fields' => []]);
         $otherOprec = Oprec::create(['periode' => 'Delete B', 'status' => 'closed', 'schema_version' => '1', 'form_fields' => []]);
         $path = "oprec/{$oprec->id}/candidate.pdf";
@@ -181,9 +181,9 @@ class OprecRegistrantTableTest extends TestCase
     public function test_admin_can_edit_valid_form_values_but_cannot_bypass_oprec_choices_or_nim_rules(): void
     {
         config()->set('admin.email', 'edit-registrant-admin@example.test');
-        $admin = User::create(['email' => 'edit-registrant-admin@example.test', 'password' => 'password-testing-123']);
+        $admin = $this->verifiedUser(['email' => 'edit-registrant-admin@example.test', 'password' => 'password-testing-123']);
         $admin->forceFill(['role' => 'admin'])->save();
-        $candidate = User::create(['email' => 'edit-registrant-candidate@example.test', 'password' => 'password-testing-123']);
+        $candidate = $this->verifiedUser(['email' => 'edit-registrant-candidate@example.test', 'password' => 'password-testing-123']);
         $oprec = Oprec::create(['periode' => 'Edit', 'status' => 'closed', 'schema_version' => '1', 'form_fields' => [
             ['name' => 'nama', 'type' => 'text', 'label' => 'Nama', 'required' => true],
             ['name' => 'nim', 'type' => 'text', 'label' => 'NIM', 'required' => true],
@@ -203,7 +203,7 @@ class OprecRegistrantTableTest extends TestCase
         $payload = [
             'schema_version' => '1',
             'nama' => 'Nama Baru', 'nim' => 'e3121111', 'tanggal_lahir' => '2004-02-02', 'angkatan' => '2024',
-            'portfolio' => 'https://example.test/portfolio',
+            'portfolio' => 'https://example.test/portfolio', 'status_kepengurusan' => 'Anggota Baru',
             'divisi_pilihan_1' => (string) $divisions[2]->id, 'divisi_pilihan_2' => (string) $divisions[1]->id, 'divisi_pilihan_3' => (string) $divisions[0]->id,
             'jabatan_pilihan_1' => 'Staff Divisi Kominfo', 'jabatan_pilihan_2' => 'Staff Divisi Humas', 'jabatan_pilihan_3' => 'Wakil Ketua Umum',
         ];

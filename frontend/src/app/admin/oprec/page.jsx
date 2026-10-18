@@ -25,7 +25,7 @@ function formatOprecDate(dateStr) {
     return String(dateStr);
   }
 }
-const oprecEditHref = (oprec) => `/admin/oprec/${encodeURIComponent(String(oprec.periode || oprec.id).replace(/\//g, "-"))}/edit`;
+const oprecEditHref = (oprec) => `/admin/oprec/edit?id=${encodeURIComponent(String(oprec.periode || oprec.id).replace(/\//g, "-"))}`;
 
 function getRegistrantName(r) {
   if (!r) return "Peserta";
@@ -179,7 +179,7 @@ export default function AdminOprecPage() {
       const body = new FormData();
       body.set("file", file);
       const response = await api.post(`/admin/oprec/${selectedOprec.id}/registrants/${registrationId}/files/${encodeURIComponent(field)}`, body, {
-        headers: { "Content-Type": "multipart/form-data" }, timeout: 60000,
+        timeout: 60000,
       });
       const restored = response.data?.data;
       if (!restored?.downloadUrl) throw new Error("Respons pemulihan berkas tidak valid.");

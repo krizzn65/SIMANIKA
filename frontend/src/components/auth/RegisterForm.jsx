@@ -55,12 +55,12 @@ export default function RegisterForm() {
     setSubmitState("loading");
     showFeedback("loading", "Membuat akun dan menyiapkan profilmu…");
     try {
-      await register(email, password, nama);
+      const response = await register(email, password, nama);
       setSubmitState("success");
-      showFeedback("success", "Akun berhasil dibuat. Menyiapkan halamanmu…");
+      showFeedback("success", "Akun berhasil dibuat. Verifikasi email untuk mengaktifkannya.");
       await new Promise((resolve) => setTimeout(resolve, 520));
       const next = new URLSearchParams(window.location.search).get("next");
-      router.replace(safeNextPath(next));
+      router.replace(response?.data?.emailVerifiedAt ? safeNextPath(next) : "/verify-email");
       router.refresh();
     } catch (error) {
       setSubmitState("error");
@@ -74,13 +74,18 @@ export default function RegisterForm() {
   const handleGoogle = () => {
     setGoogleState("loading");
     showFeedback("loading", "Menghubungkan ke Google…");
-    window.location.assign(getGoogleAuthUrl());
+    try {
+      window.location.assign(getGoogleAuthUrl());
+    } catch (error) {
+      setGoogleState("idle");
+      showFeedback("error", error instanceof Error ? error.message : "Login Google belum tersedia.");
+    }
   };
 
   const submitLabel = submitState === "loading"
     ? "Membuat akun…"
     : submitState === "success"
-      ? "Akun siap"
+      ? "Periksa email"
       : submitState === "error"
         ? "Coba lagi"
         : "Buat akun";

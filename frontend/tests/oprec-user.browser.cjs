@@ -205,7 +205,7 @@ async function main() {
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
       }`);
-      await send('Page.navigate', { url: origin + '/admin/oprec/900/edit' });
+      await send('Page.navigate', { url: origin + '/admin/oprec/edit?id=900' });
       await waitFor(`document.querySelector('.oprec-builder__tabs')`);
       await evaluate(`Array.from(document.querySelectorAll('.oprec-builder__tabs button')).find(button => button.textContent.includes('Pertanyaan Formulir')).click()`);
       await waitFor(`Array.from(document.querySelectorAll('.oprec-builder__field--fixed')).some(card => card.querySelector('strong')?.textContent === 'Golongan')`);
@@ -260,7 +260,7 @@ async function main() {
       return;
     }
     if (positionsOnly) {
-      await send('Page.navigate', { url: origin + '/admin/oprec/900/edit' });
+      await send('Page.navigate', { url: origin + '/admin/oprec/edit?id=900' });
       await waitFor(`document.querySelector('.oprec-builder__tabs')`);
       await evaluate(`Array.from(document.querySelectorAll('button')).find(el=>el.textContent.includes('2. Kelola Divisi'))?.click()`);
       await waitFor(`document.querySelectorAll('.oprec-builder__jabatan-section').length === 6`);
@@ -294,7 +294,7 @@ async function main() {
       assert.deepEqual(errors,[]); console.log('PASS: fixed registration catalogs in Admin editor, preview, and participant form; shared default logos and fallback; no custom-position controls; 4 viewports.'); return;
     }
     if (scheduleOnly) {
-      await send('Page.navigate', { url: origin + '/admin/oprec/test/900/edit' });
+      await send('Page.navigate', { url: origin + '/admin/oprec/test/edit?period=900' });
       await waitFor(`document.querySelectorAll('.oprec-test__editor-panel input[type=datetime-local]').length === 2`);
       assert.equal(await evaluate(`document.querySelector('.oprec-test__editor-panel input[type=datetime-local]').value`), '2099-10-02T07:00');
       for(const width of [320,390,768,1440]){await send('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:false});assert.equal(await evaluate('document.documentElement.scrollWidth > innerWidth'),false,'schedule editor width '+width);}

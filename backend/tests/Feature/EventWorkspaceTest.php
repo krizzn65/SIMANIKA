@@ -17,7 +17,7 @@ class EventWorkspaceTest extends TestCase
 
     private function user(string $name): User
     {
-        return User::create(['name' => $name, 'email' => $name.'@example.test', 'password' => 'password-testing-123']);
+        return $this->verifiedUser(['name' => $name, 'email' => $name.'@example.test', 'password' => 'password-testing-123']);
     }
 
     private function event(string $slug = 'workspace'): Event

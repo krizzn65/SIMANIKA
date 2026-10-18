@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Support\JsonDefault;
 
 return new class extends Migration {
     public function up(): void
@@ -12,7 +13,7 @@ return new class extends Migration {
                 $table->dropColumn('kuota');
             }
             if (!Schema::hasColumn('oprec_divisions', 'jabatan')) {
-                $table->jsonb('jabatan')->default('[]');
+                $table->jsonb('jabatan')->default(JsonDefault::value('[]'));
             }
         });
 

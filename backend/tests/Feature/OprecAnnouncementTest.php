@@ -20,7 +20,7 @@ class OprecAnnouncementTest extends TestCase
         $this->travelTo(now()->startOfMinute());
         $oprec = Oprec::create(['periode' => '2026/2027', 'status' => 'closed', 'first_published_at' => now()->subDays(3), 'form_fields' => []]);
         $division = $oprec->divisions()->create(['nama' => 'Humas', 'sort_order' => 1]);
-        $user = User::create(['email' => 'participant@example.test', 'password' => 'testing-password']);
+        $user = $this->verifiedUser(['email' => 'participant@example.test', 'password' => 'testing-password']);
         $registration = $oprec->registrations()->create(['user_id' => $user->id, 'nim' => 'E312345', 'tanggal_lahir' => '2004-01-01', 'form_data' => ['nama' => 'Peserta'], 'status' => 'accepted', 'accepted_division_id' => $division->id, 'accepted_position' => 'Staff Divisi Humas']);
         $stage = $oprec->writtenTest()->create(['type' => 'test_tulis', 'headline' => 'Tes Tulis', 'published' => true, 'tanggal_buka' => now()->subDays(2), 'tanggal_tutup' => now()->subDay(), 'form_fields' => []]);
         $stage->submissions()->create(['oprec_registration_id' => $registration->id, 'user_id' => $user->id, 'answers' => []]);
@@ -36,7 +36,7 @@ class OprecAnnouncementTest extends TestCase
     {
         [$oprec, $registration] = $this->fixture();
         $url = "/api/admin/oprec/{$oprec->id}/announcement";
-        $actor = User::create(['email' => 'reviewer@example.test', 'password' => 'testing-password']);
+        $actor = $this->verifiedUser(['email' => 'reviewer@example.test', 'password' => 'testing-password']);
         $actor->forceFill(['role' => 'leader'])->save();
         $this->actingAs($actor, 'sanctum')->postJson($url, $this->payload())->assertForbidden();
         $actor->forceFill(['role' => 'admin'])->save();
@@ -65,7 +65,7 @@ class OprecAnnouncementTest extends TestCase
         $this->travelTo(\Illuminate\Support\Carbon::parse('2026-10-02T17:00:00+07:00'));
         [$oprec] = $this->fixture();
         $release = \Illuminate\Support\Carbon::parse('2026-10-02T17:05:00+07:00');
-        $admin = User::create(['email' => 'timezone-admin@example.test', 'password' => 'testing-password']);
+        $admin = $this->verifiedUser(['email' => 'timezone-admin@example.test', 'password' => 'testing-password']);
         $admin->forceFill(['role' => 'admin'])->save();
         $url = "/api/admin/oprec/{$oprec->id}/announcement";
         $public = "/api/public/oprec/{$oprec->id}/announcement";
@@ -141,11 +141,11 @@ class OprecAnnouncementTest extends TestCase
         [$oprec] = $this->fixture();
         $bph = $oprec->divisions()->create(['nama' => 'BPH', 'sort_order' => 9]);
         foreach (['Wakil Ketua Umum', 'Ketua Umum'] as $index => $position) {
-            $user = User::create(['email' => "bph{$index}@example.test", 'password' => 'testing-password']);
+            $user = $this->verifiedUser(['email' => "bph{$index}@example.test", 'password' => 'testing-password']);
             $registration = $oprec->registrations()->create(['user_id' => $user->id, 'nim' => 'E31999'.$index, 'tanggal_lahir' => '2004-01-01', 'form_data' => ['nama' => 'BPH '.$index], 'status' => 'accepted', 'accepted_division_id' => $bph->id, 'accepted_position' => $position]);
             $oprec->writtenTest->submissions()->create(['oprec_registration_id' => $registration->id, 'user_id' => $user->id, 'answers' => ['private_answer' => 'private']]);
         }
-        $actor = User::create(['email' => 'reader@example.test', 'password' => 'testing-password']);
+        $actor = $this->verifiedUser(['email' => 'reader@example.test', 'password' => 'testing-password']);
         foreach (['kwu', 'user'] as $role) {
             $actor->forceFill(['role' => $role])->save();
             $this->actingAs($actor, 'sanctum')->getJson("/api/admin/oprec/{$oprec->id}/announcement")->assertForbidden();

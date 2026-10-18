@@ -8,7 +8,7 @@ export function EventCard({ event, now }) {
     <Link
       className="event-card"
       prefetch={false}
-      href={"/events/" + event.slug}
+      href={"/events/detail?slug=" + encodeURIComponent(event.slug)}
       aria-label={"Masuk ke " + event.judul}
     >
       <article>

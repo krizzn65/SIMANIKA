@@ -23,6 +23,7 @@ class OprecController extends Controller
         $field = $request->hasFile('logo') ? 'logo' : 'poster';
         $request->validate([$field => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120']]);
         $path = $request->file($field)->store('oprec/posters', 'public');
+        if (!$path) return response()->json(['message' => 'Berkas tidak dapat disimpan. Periksa izin storage hosting.'], 507);
         return response()->json(['url' => route('public.oprec-poster', ['filename' => basename($path)])]);
     }
 

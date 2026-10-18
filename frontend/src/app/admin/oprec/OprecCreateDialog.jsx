@@ -6,6 +6,7 @@ import { X, UploadCloud } from "lucide-react";
 import { api } from "@/services/api";
 import { divisionPreview } from "@/components/oprec/divisionPreview";
 import { OPREC_FIXED_FIELDS, getDefaultJabatan } from "@/lib/oprec";
+import { formatOprecImageSize, optimizeOprecImage } from "@/lib/optimizeOprecImage";
 import { OprecPeriodPicker } from "./OprecPeriodPicker";
 import "./oprec-create-dialog.css";
 
@@ -30,6 +31,7 @@ export default function OprecCreateDialog({ open, onClose, onCreated }) {
   const [posterPreview, setPosterPreview] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [uploadInfo, setUploadInfo] = useState("");
 
   useEffect(() => {
     if (!open) return;
@@ -37,6 +39,7 @@ export default function OprecCreateDialog({ open, onClose, onCreated }) {
     setPosterFile(null);
     setPosterPreview("");
     setError("");
+    setUploadInfo("");
   }, [open]);
 
   useEffect(() => () => { if (posterPreview) URL.revokeObjectURL(posterPreview); }, [posterPreview]);
@@ -69,14 +72,17 @@ export default function OprecCreateDialog({ open, onClose, onCreated }) {
 
     setBusy(true);
     setError("");
+    setUploadInfo("");
     try {
       let poster = data.poster.trim() || null;
       if (posterFile) {
+        const uploadFile = await optimizeOprecImage(posterFile);
+        if (uploadFile !== posterFile) {
+          setUploadInfo(`Poster dioptimalkan dari ${formatOprecImageSize(posterFile.size)} menjadi ${formatOprecImageSize(uploadFile.size)} sebelum diunggah.`);
+        }
         const body = new FormData();
-        body.set("poster", posterFile);
-        const response = await api.post("/admin/oprec/upload-poster", body, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        body.set("poster", uploadFile);
+        const response = await api.post("/admin/oprec/upload-poster", body);
         poster = response.data?.url;
         if (!poster) throw new Error("Poster gagal diunggah.");
       }
@@ -105,10 +111,12 @@ export default function OprecCreateDialog({ open, onClose, onCreated }) {
 
       onCreated?.();
       onClose();
-      router.push(`/admin/oprec/${encodeURIComponent(data.periode.trim().replace(/\//g, "-"))}/edit`);
+      router.push(`/admin/oprec/edit?id=${encodeURIComponent(data.periode.trim().replace(/\//g, "-"))}`);
     } catch (err) {
       const errors = err.response?.data?.errors;
-      setError(errors ? Object.values(errors).flat().join(" ") : err.message || "Pendaftaran belum berhasil dibuat.");
+      setError(err.response?.status === 413
+        ? "Server menolak ukuran poster. Periksa batas upload di hosting atau gunakan gambar lebih kecil."
+        : errors ? Object.values(errors).flat().join(" ") : err.message || "Pendaftaran belum berhasil dibuat.");
     } finally {
       setBusy(false);
     }
@@ -203,7 +211,7 @@ export default function OprecCreateDialog({ open, onClose, onCreated }) {
               )}
               <span>
                 <strong>{posterFile ? posterFile.name : data.poster ? "Ganti poster" : "Pilih poster"}</strong>
-                <small>JPG, PNG, atau WebP · maksimal 5 MB</small>
+                <small>JPG, PNG, atau WebP · maksimal 5 MB. Gambar besar dioptimalkan otomatis.</small>
               </span>
             </span>
             <input
@@ -219,9 +227,28 @@ export default function OprecCreateDialog({ open, onClose, onCreated }) {
                 setPosterFile(file);
                 setPosterPreview(URL.createObjectURL(file));
                 setError("");
+                setUploadInfo("");
               }}
             />
           </label>
+
+          {uploadInfo && <p className="oprec-dialog__upload-info" role="status">{uploadInfo}</p>}
+
+          {posterFile && (
+            <button
+              className="oprec-dialog__poster-remove"
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                setPosterFile(null);
+                setPosterPreview("");
+                setError("");
+                setUploadInfo("");
+              }}
+            >
+              Hapus poster dan lanjutkan tanpa poster
+            </button>
+          )}
 
           <footer>
             <button type="button" onClick={onClose} disabled={busy}>

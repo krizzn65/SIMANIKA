@@ -25,6 +25,10 @@ function CallbackContent() {
       currentUser()
         .then((response) => {
           const user = response?.data;
+          if (!user?.emailVerifiedAt) {
+            router.replace("/verify-email");
+            return;
+          }
           const nextParam = searchParams.get("next");
           const safeNext = nextParam ? safeNextPath(nextParam) : null;
           if (STAFF_ROLES.includes(user?.role)) {

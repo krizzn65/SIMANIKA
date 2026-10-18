@@ -14,7 +14,7 @@ const formatWib = (value) => value ? new Intl.DateTimeFormat("id-ID", {
   timeZone: "Asia/Jakarta", day: "numeric", month: "short", year: "numeric",
   hour: "2-digit", minute: "2-digit",
 }).format(new Date(value)) + " WIB" : "—";
-const editHref = (period) => `/admin/oprec/test/${encodeURIComponent(period.periode.replaceAll("/", "-"))}/edit`;
+const editHref = (period) => `/admin/oprec/test/edit?period=${encodeURIComponent(period.periode.replaceAll("/", "-"))}`;
 const errorText = (error, fallback) => Object.values(error.response?.data?.errors || {}).flat()[0] || error.response?.data?.message || error.message || fallback;
 
 function useNativeDialog(open, onClose) {

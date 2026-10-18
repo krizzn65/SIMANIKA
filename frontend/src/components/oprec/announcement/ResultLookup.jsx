@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, LoaderCircle } from "lucide-react";
 import { Button, Input, Modal } from "./Primitives";
 import { normalizeOprecNim, validBirthDate } from "@/lib/oprec";
+import { publicApi } from "@/services/publicApi";
 
 export function ResultLookup({ periodId, open, onOpenChange, triggerRef }) {
   const router = useRouter();
@@ -19,13 +20,15 @@ export function ResultLookup({ periodId, open, onOpenChange, triggerRef }) {
     if (!/^E31[A-Z0-9.\-]{0,29}$/.test(nim) || !validBirthDate(birth)) { setError("Periksa kembali NIM dan tanggal lahir sesuai pendaftaran."); return; }
     submitting.current = true; setBusy(true); setError("");
     try {
-      const response = await fetch("/api/oprec/result", { method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ oprec_id: String(periodId), nim, tanggal_lahir: birth }), signal: AbortSignal.timeout(20000), cache: "no-store" });
-      const body = await response.json();
-      if (!response.ok) { setError(body.message || "Hasil belum dapat diperiksa. Silakan coba lagi."); return; }
-      router.push(`/oprec/pengumuman/${encodeURIComponent(String(periodId))}`);
+      const id = encodeURIComponent(String(periodId));
+      const verified = await publicApi.post(`/public/oprec/${id}/announcement/verify`, { nim, tanggal_lahir: birth });
+      const ticket = verified.data?.ticket;
+      if (typeof ticket !== "string") throw new Error("Tiket verifikasi tidak valid.");
+      const response = await publicApi.post(`/public/oprec/${id}/announcement/result`, { ticket });
+      sessionStorage.setItem(`oprec_result_${periodId}`, JSON.stringify({ result: response.data?.data, expires: Date.now() + 30 * 60 * 1000 }));
+      router.push(`/oprec/pengumuman?id=${id}`);
       onOpenChange(false); setNim(""); setBirth("");
-    } catch { setError("Koneksi terputus. Data belum terkirim; silakan coba kembali."); }
+    } catch (cause) { setError(cause.response?.data?.message || "Hasil belum dapat diperiksa. Silakan coba kembali."); }
     finally { submitting.current = false; setBusy(false); }
   }
   return <Modal open={open} onOpenChange={(next) => { setError(""); onOpenChange(next); }} busy={busy} triggerRef={triggerRef}

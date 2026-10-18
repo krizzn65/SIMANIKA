@@ -14,7 +14,7 @@ class HomeContentTest extends TestCase
 
     private function account(string $role, string $email): User
     {
-        $user = User::create(['name' => $role, 'email' => $email, 'password' => 'password-testing-123']);
+        $user = $this->verifiedUser(['name' => $role, 'email' => $email, 'password' => 'password-testing-123']);
         $user->forceFill(['role' => $role])->save();
         return $user;
     }

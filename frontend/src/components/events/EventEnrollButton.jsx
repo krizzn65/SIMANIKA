@@ -25,7 +25,7 @@ export function EventEnrollButton({ event }) {
   }, [team.step]);
 
   function goToLogin() {
-    router.push(`/login?next=${encodeURIComponent(`/events/${event.slug}`)}`);
+    router.push(`/login?next=${encodeURIComponent(`/events/detail?slug=${encodeURIComponent(event.slug)}`)}`);
   }
 
   async function enrollIndividual() {

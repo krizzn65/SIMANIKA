@@ -21,9 +21,9 @@ class OprecRegistrationPositionsTest extends TestCase
     private function fixture(): array
     {
         Storage::fake('local');
-        $admin = User::create(['email' => 'positions-admin@example.test', 'password' => 'password-testing-123']);
+        $admin = $this->verifiedUser(['email' => 'positions-admin@example.test', 'password' => 'password-testing-123']);
         $admin->forceFill(['role' => 'admin'])->save();
-        $user = User::create(['email' => 'positions-user@example.test', 'password' => 'password-testing-123']);
+        $user = $this->verifiedUser(['email' => 'positions-user@example.test', 'password' => 'password-testing-123']);
         $period = Oprec::create(['periode' => '2026/2027', 'status' => 'open', 'schema_version' => '1',
             'tanggal_buka' => now()->subHour(), 'tanggal_tutup' => now()->addHour(), 'form_fields' => [
                 ['name' => 'nama', 'type' => 'text', 'label' => 'Nama', 'required' => true],
@@ -65,7 +65,7 @@ class OprecRegistrationPositionsTest extends TestCase
         }
         $this->assertDatabaseCount('oprec_registrations', 0);
         foreach (OprecDivision::defaultJabatan('BPH') as $index => $position) {
-            $user = User::create(['email' => "valid-position-{$index}@example.test", 'password' => 'password-testing-123']);
+            $user = $this->verifiedUser(['email' => "valid-position-{$index}@example.test", 'password' => 'password-testing-123']);
             $this->actingAs($user, 'sanctum')->postJson('/api/user/oprec/register', [...$f['payload'],
                 'nim' => 'E312410'.$index, 'jabatan_pilihan_1' => $position])->assertCreated();
             $form = $f['period']->registrations()->where('user_id', $user->id)->firstOrFail()->form_data;
@@ -110,7 +110,7 @@ class OprecRegistrationPositionsTest extends TestCase
         $otherDivision = $unrelated->divisions()->create(['nama' => 'Humas', 'jabatan' => ['Ketua Divisi Humas']]);
         $ids = [];
         foreach (['Ketua Umum', 'Sekretaris 1', 'Bendahara 1'] as $index => $position) {
-            $ids[] = $f['period']->registrations()->create(['user_id' => $index === 0 ? $f['user']->id : User::create(['email' => "legacy-{$index}@example.test", 'password' => 'password-testing-123'])->id,
+            $ids[] = $f['period']->registrations()->create(['user_id' => $index === 0 ? $f['user']->id : $this->verifiedUser(['email' => "legacy-{$index}@example.test", 'password' => 'password-testing-123'])->id,
                 'nim' => 'E312420'.$index, 'tanggal_lahir' => '2004-01-01',
                 'form_data' => ['nama' => 'Historis', 'motivasi' => 'Jawaban tetap.', 'jabatan_pilihan_1' => $position,
                     'jabatan_pilihan_2' => 'Ketua Divisi Humas', 'jabatan_pilihan_3' => 'Staff Bidang Akademik'],

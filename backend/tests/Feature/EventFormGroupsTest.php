@@ -15,7 +15,7 @@ class EventFormGroupsTest extends TestCase
 
     private function user(string $name): User
     {
-        return User::create(['name' => $name, 'email' => "$name@example.test", 'password' => 'password-testing-123']);
+        return $this->verifiedUser(['name' => $name, 'email' => "$name@example.test", 'password' => 'password-testing-123']);
     }
 
     private function event(): Event
@@ -32,7 +32,7 @@ class EventFormGroupsTest extends TestCase
     public function test_admin_can_save_group_rules_but_cannot_change_them_after_a_team_registers(): void
     {
         config()->set('admin.email', 'official@example.test');
-        $admin = User::create(['name' => 'Official', 'email' => 'official@example.test', 'password' => 'password-testing-123']);
+        $admin = $this->verifiedUser(['name' => 'Official', 'email' => 'official@example.test', 'password' => 'password-testing-123']);
         $admin->forceFill(['role' => 'admin'])->save();
         $event = $this->event();
         $event->update(['status' => 'draft']);

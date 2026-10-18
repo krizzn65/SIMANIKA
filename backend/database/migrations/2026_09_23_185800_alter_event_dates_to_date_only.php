@@ -2,6 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 use App\Models\Event;
 
 return new class extends Migration
@@ -18,6 +20,13 @@ return new class extends Migration
             DB::statement('ALTER TABLE events ALTER COLUMN tanggal_selesai TYPE date USING tanggal_selesai::date');
             DB::statement('ALTER TABLE events ALTER COLUMN buka_pendaftaran TYPE date USING buka_pendaftaran::date');
             DB::statement('ALTER TABLE events ALTER COLUMN deadline_pendaftaran TYPE date USING deadline_pendaftaran::date');
+        } elseif (DB::getDriverName() === 'mysql') {
+            Schema::table('events', function (Blueprint $table) {
+                $table->date('tanggal_mulai')->change();
+                $table->date('tanggal_selesai')->change();
+                $table->date('buka_pendaftaran')->nullable()->change();
+                $table->date('deadline_pendaftaran')->nullable()->change();
+            });
         }
 
         // Clean up existing timeline JSON data to date-only (YYYY-MM-DD)
@@ -47,6 +56,13 @@ return new class extends Migration
             DB::statement('ALTER TABLE events ALTER COLUMN tanggal_selesai TYPE timestamp(0) with time zone USING tanggal_selesai::timestamp with time zone');
             DB::statement('ALTER TABLE events ALTER COLUMN buka_pendaftaran TYPE timestamp(0) with time zone USING buka_pendaftaran::timestamp with time zone');
             DB::statement('ALTER TABLE events ALTER COLUMN deadline_pendaftaran TYPE timestamp(0) with time zone USING deadline_pendaftaran::timestamp with time zone');
+        } elseif (DB::getDriverName() === 'mysql') {
+            Schema::table('events', function (Blueprint $table) {
+                $table->timestampTz('tanggal_mulai')->change();
+                $table->timestampTz('tanggal_selesai')->change();
+                $table->timestampTz('buka_pendaftaran')->nullable()->change();
+                $table->timestampTz('deadline_pendaftaran')->nullable()->change();
+            });
         }
     }
 };

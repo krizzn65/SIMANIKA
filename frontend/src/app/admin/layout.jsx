@@ -73,7 +73,7 @@ const adminLinks = [
   },
 ];
 
-const isOprecRegistrationRoute = (pathname) => pathname === "/admin/oprec" || /^\/admin\/oprec\/[^/]+\/edit$/.test(pathname);
+const isOprecRegistrationRoute = (pathname) => pathname === "/admin/oprec" || pathname === "/admin/oprec/edit";
 const isOprecWrittenTestRoute = (pathname) => pathname === "/admin/oprec/test" || pathname.startsWith("/admin/oprec/test/");
 const isOprecAssessmentRoute = (pathname) => pathname === "/admin/oprec/penilaian" || pathname.startsWith("/admin/oprec/penilaian/");
 

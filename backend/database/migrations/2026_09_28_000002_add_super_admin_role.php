@@ -33,19 +33,28 @@ return new class extends Migration {
                     ->update(['role' => 'super_admin']);
             }
 
-            DB::statement("CREATE UNIQUE INDEX users_one_super_admin ON users (role) WHERE role = 'super_admin'");
-            if (DB::getDriverName() === 'pgsql') {
-                DB::statement("ALTER TABLE users ADD CONSTRAINT users_role_allowed CHECK (role IN ('super_admin', 'admin', 'leader', 'kwu', 'user'))");
-            }
         });
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("CREATE UNIQUE INDEX users_one_super_admin ON users ((CASE WHEN role = 'super_admin' THEN 1 ELSE NULL END))");
+        } else {
+            DB::statement("CREATE UNIQUE INDEX users_one_super_admin ON users (role) WHERE role = 'super_admin'");
+        }
+        if (in_array(DB::getDriverName(), ['pgsql', 'mysql'], true)) {
+            DB::statement("ALTER TABLE users ADD CONSTRAINT users_role_allowed CHECK (role IN ('super_admin', 'admin', 'leader', 'kwu', 'user'))");
+        }
     }
 
     public function down(): void
     {
         if (DB::getDriverName() === 'pgsql') {
             DB::statement('ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_allowed');
+            DB::statement('DROP INDEX IF EXISTS users_one_super_admin');
+        } elseif (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE users DROP CHECK users_role_allowed');
+            DB::statement('DROP INDEX users_one_super_admin ON users');
+        } else {
+            DB::statement('DROP INDEX IF EXISTS users_one_super_admin');
         }
-        DB::statement('DROP INDEX IF EXISTS users_one_super_admin');
         DB::table('users')->where('role', 'super_admin')->update(['role' => 'admin']);
     }
 };

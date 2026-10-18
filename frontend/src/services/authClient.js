@@ -56,6 +56,12 @@ export async function currentUser() {
   return data;
 }
 
+export async function resendVerification() {
+  await initCsrf();
+  const { data } = await api.post("/auth/email/resend");
+  return data;
+}
+
 export async function logout() {
   try {
     await initCsrf();
@@ -82,6 +88,7 @@ export async function logout() {
 }
 
 export function getGoogleAuthUrl() {
-  const base = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api").replace(/\/+$/, "");
+  const base = (process.env.NEXT_PUBLIC_API_BASE_URL || (process.env.NODE_ENV === "development" ? "http://localhost:8000/api" : "")).replace(/\/+$/, "");
+  if (!base) throw new Error("Alamat API publik belum dikonfigurasi pada build website.");
   return `${base}/auth/google/redirect`;
 }

@@ -10,6 +10,7 @@ use App\Support\OprecRegistrationFields;
 use App\Models\User;
 use App\Services\OprecAssessmentService;
 use App\Support\OprecWrittenTestAnswers;
+use App\Support\SearchSql;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -57,11 +58,11 @@ class OprecAssessmentController extends Controller
             $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower(trim($filters['search'])));
             $pattern = '%'.$escaped.'%';
             $query->whereHas('registration', fn ($q) => $q->where(function ($search) use ($pattern) {
-                $search->whereRaw("LOWER(nim) LIKE ? ESCAPE '\\'", [$pattern])
-                    ->orWhereRaw("LOWER(form_data->>'nama') LIKE ? ESCAPE '\\'", [$pattern])
-                    ->orWhereRaw("LOWER(form_data->>'nama_lengkap') LIKE ? ESCAPE '\\'", [$pattern])
-                    ->orWhereRaw("LOWER(form_data->>'namaLengkap') LIKE ? ESCAPE '\\'", [$pattern])
-                    ->orWhereHas('user', fn ($user) => $user->whereRaw("LOWER(name) LIKE ? ESCAPE '\\'", [$pattern]));
+                $search->whereRaw(SearchSql::lowerLike('nim'), [$pattern])
+                    ->orWhereRaw(SearchSql::lowerLike('form_data->nama'), [$pattern])
+                    ->orWhereRaw(SearchSql::lowerLike('form_data->nama_lengkap'), [$pattern])
+                    ->orWhereRaw(SearchSql::lowerLike('form_data->namaLengkap'), [$pattern])
+                    ->orWhereHas('user', fn ($user) => $user->whereRaw(SearchSql::lowerLike('name'), [$pattern]));
             }));
         }
         if (($filters['decision'] ?? 'all') !== 'all') {

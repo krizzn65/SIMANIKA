@@ -19,6 +19,7 @@ class UserResource extends JsonResource
             'name' => $nama,
             'fotoProfil' => $this->foto_profil,
             'role' => $this->effectiveRole(),
+            'emailVerifiedAt' => $this->email_verified_at?->toIso8601String(),
         ];
     }
 }

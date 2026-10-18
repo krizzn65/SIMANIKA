@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AuditTrail;
 use GuzzleHttp\Client as GuzzleClient;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -43,7 +45,8 @@ class GoogleAuthController extends Controller
      */
     public function redirect(Request $request): RedirectResponse|JsonResponse
     {
-        $frontendUrl = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:3000')), '/');
+        $frontendUrl = rtrim(config('app.frontend_url'), '/');
+        $request->session()->forget('pending_google_link');
 
         if (!config('services.google.client_id') || !config('services.google.client_secret')) {
             app(AuditTrail::class)->recordCustom(
@@ -122,7 +125,7 @@ class GoogleAuthController extends Controller
      */
     public function callback(Request $request): RedirectResponse
     {
-        $frontendUrl = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:3000')), '/');
+        $frontendUrl = rtrim(config('app.frontend_url'), '/');
 
         // Pengguna membatalkan login
         if ($request->has('error')) {
@@ -214,7 +217,7 @@ class GoogleAuthController extends Controller
             return redirect($frontendUrl . '/login?error=google_failed');
         }
 
-        $email = $googleUser->getEmail();
+        $email = trim((string) $googleUser->getEmail());
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             app(AuditTrail::class)->recordCustom(
                 request: $request,
@@ -257,7 +260,7 @@ class GoogleAuthController extends Controller
         }
 
         $googleId = (string) $googleUser->getId();
-        if ($googleId === '') {
+        if ($googleId === '' || strlen($googleId) > 255) {
             app(AuditTrail::class)->recordCustom(
                 request: $request,
                 module: 'auth',
@@ -277,57 +280,92 @@ class GoogleAuthController extends Controller
             return redirect($frontendUrl . '/login?error=google_failed');
         }
         $googleName = $googleUser->getName() ?: explode('@', $email)[0];
+        $normalizedEmail = mb_strtolower($email);
+        $googleOwnsEmail = str_ends_with($normalizedEmail, '@gmail.com')
+            || (is_string($rawUser['hd'] ?? null)
+                && mb_strtolower($rawUser['hd']) === substr($normalizedEmail, strrpos($normalizedEmail, '@') + 1));
 
         // 1. Cari berdasarkan google_id
         $user = User::where('google_id', $googleId)->first();
         $isNewUser = false;
+        $linkedExistingUser = false;
 
-        // Jangan tautkan akun lokal hanya berdasarkan email dari provider.
+        if ($user && strcasecmp($user->email, $email) !== 0) {
+            app(AuditTrail::class)->recordCustom(
+                request: $request,
+                module: 'auth',
+                action: 'auth.login',
+                kind: 'security',
+                result: 'failed',
+                summary: 'Masuk (Google) · Email akun berubah',
+                httpStatus: 302,
+                context: ['auth_method' => 'google', 'error_code' => 'google_email_changed']
+            );
+            return redirect($frontendUrl . '/login?error=google_email_changed');
+        }
+
+        // Gmail dan Workspace dapat ditautkan langsung. Provider email lain
+        // memerlukan login kata sandi ke akun lokal yang sama terlebih dahulu.
         if (!$user) {
-            if (User::where('email', $email)->exists()) {
-                app(AuditTrail::class)->recordCustom(
-                    request: $request,
-                    module: 'auth',
-                    action: 'auth.login',
-                    kind: 'security',
-                    result: 'failed',
-                    summary: 'Masuk (Google) · Akun (konflik akun)',
-                    httpStatus: 302,
-                    context: [
-                        'auth_method' => 'google',
-                        'auth_label' => 'Google OAuth 2.0',
-                        'error_code' => 'google_account_exists',
-                        'error_description' => 'Alamat email ini sudah terdaftar sebelumnya dengan kata sandi manual. Login otomatis dicegah demi keamanan akun.',
-                        'error_tip' => 'Pengguna dapat masuk menggunakan email & kata sandi manual.',
-                    ]
-                );
-
-                return redirect($frontendUrl . '/login?error=google_account_exists');
+            $matches = User::whereRaw('LOWER(email) = ?', [$normalizedEmail])->limit(2)->get();
+            if ($matches->count() > 1 || ($matches->first()?->google_id !== null)) {
+                return redirect($frontendUrl . '/login?error=google_account_conflict');
             }
 
-            // Buat akun pengguna baru dari Google.
-            $user = User::create([
-                'google_id' => $googleId,
-                'name' => $googleName,
-                'email' => $email,
-                'email_verified_at' => now(),
-                'foto_profil' => $googleUser->getAvatar(),
-                'password' => bcrypt(Str::random(32)),
-                'role' => 'user',
-            ]);
-            $isNewUser = true;
+            if ($matches->isNotEmpty()) {
+                $existing = $matches->first();
+                if (!$googleOwnsEmail) {
+                    $request->session()->put('pending_google_link', [
+                        'google_id' => $googleId,
+                        'email' => $normalizedEmail,
+                        'expires_at' => now()->addMinutes(10)->timestamp,
+                    ]);
+                    return redirect($frontendUrl . '/login?error=google_link_password_required');
+                }
+
+                try {
+                    $user = DB::transaction(function () use ($existing, $googleId, $normalizedEmail) {
+                        $account = User::whereKey($existing->getKey())->lockForUpdate()->firstOrFail();
+                        if (mb_strtolower($account->email) !== $normalizedEmail || ($account->google_id !== null && $account->google_id !== $googleId)) {
+                            return null;
+                        }
+                        if (User::where('google_id', $googleId)->where('id', '!=', $account->id)->exists()) return null;
+                        $account->google_id = $googleId;
+                        if (!$account->hasVerifiedEmail()) $account->email_verified_at = now();
+                        $account->save();
+                        return $account;
+                    });
+                } catch (QueryException $e) {
+                    report($e);
+                    return redirect($frontendUrl . '/login?error=google_account_conflict');
+                }
+                if (!$user) return redirect($frontendUrl . '/login?error=google_account_conflict');
+                $linkedExistingUser = true;
+            }
+
+            if (!$user) {
+                $user = User::create([
+                    'google_id' => $googleId,
+                    'name' => $googleName,
+                    'email' => $email,
+                    'foto_profil' => $googleUser->getAvatar(),
+                    'password' => bcrypt(Str::random(32)),
+                    'role' => 'user',
+                ]);
+                if ($googleOwnsEmail) {
+                    $user->markEmailAsVerified();
+                } else {
+                    try {
+                        $user->sendEmailVerificationNotification();
+                    } catch (\Throwable $e) {
+                        Log::warning('Email verifikasi akun Google baru belum dapat dikirim', ['error_type' => class_basename($e)]);
+                    }
+                }
+                $isNewUser = true;
+            }
         } else {
-            $dirty = false;
-            if ($googleName && $user->name !== $googleName) {
-                $user->name = $googleName;
-                $dirty = true;
-            }
-            if ($googleUser->getAvatar() && $user->foto_profil !== $googleUser->getAvatar()) {
-                $user->foto_profil = $googleUser->getAvatar();
-                $dirty = true;
-            }
-            if ($dirty) {
-                $user->save();
+            if ($googleOwnsEmail && !$user->hasVerifiedEmail()) {
+                $user->markEmailAsVerified();
             }
         }
 
@@ -368,6 +406,7 @@ class GoogleAuthController extends Controller
                     'auth_label' => 'Google OAuth 2.0',
                     'auth_description' => 'Pengguna berhasil masuk menggunakan Akun Google.',
                     'email' => $user->email,
+                    'account_linked' => $linkedExistingUser,
                 ]
             );
         }

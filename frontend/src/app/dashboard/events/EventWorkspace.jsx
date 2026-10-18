@@ -1,0 +1,123 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, ArrowUpRight, Check, ChevronDown, ChevronUp, Clock3, FileText, RefreshCw, UsersRound } from "lucide-react";
+import { Navbar } from "@/components/layout/Navbar";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { EventRegistrationForm } from "@/components/events/EventRegistrationForm";
+import { EventGroupForm } from "@/components/events/EventGroupForm";
+import { useAuth } from "@/hooks/useAuth";
+import { api } from "@/services/api";
+import { STAFF_ROLES, adminHome } from "@/lib/roleAccess";
+import { eventCategoryLabel } from "@/lib/events";
+import { TeamAccessPanel } from "./[id]/TeamAccessPanel";
+import styles from "./[id]/workspace.module.css";
+
+const reviewLabels = { pending: "Menunggu verifikasi", accepted: "Diterima", rejected: "Belum diterima" };
+
+function GroupPanel({ group, eventId, onSuccess }) {
+  const [open, setOpen] = useState(true);
+  return <section className={styles.panel} aria-labelledby={`group-title-${group.id}`}>
+    <header className={styles.panelHeader}>
+      <div><h2 id={`group-title-${group.id}`}>{group.title}</h2><p className={styles.groupScope}>{group.scope === "personal" ? "Pribadi · jawabanmu hanya dapat dilihat olehmu" : group.editRole === "leader" ? "Tim · semua anggota melihat, ketua mengisi" : "Tim · semua anggota melihat dan dapat mengisi"}</p></div>
+      <div className={styles.groupActions}><span className={`${styles.badge} ${group.submitted ? styles.success : styles.neutral}`}>{group.submitted ? "Terkirim" : "Belum diisi"}</span><button type="button" className={styles.groupToggle} aria-expanded={open} aria-controls={`group-content-${group.id}`} aria-label={`${open ? "Lipat" : "Buka"} grup ${group.title}`} onClick={() => setOpen((value) => !value)}>{open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</button></div>
+    </header>
+    {open && <div id={`group-content-${group.id}`}>{group.canEdit ? <EventGroupForm key={`${group.id}-${group.submitted}`} eventId={eventId} group={group} onSuccess={onSuccess} /> : group.submitted ? <dl className={styles.answers}>{group.fields.map((field) => <div key={field.name}><dt>{field.label}</dt><dd>{field.type === "file" ? (field.downloadUrl ? <a href={field.downloadUrl} target="_blank" rel="noopener noreferrer">Lihat berkas <ArrowUpRight size={14} aria-hidden="true" /></a> : "—") : field.type === "checkbox" ? (field.value ? "Ya" : "Tidak") : String(field.value ?? "—")}</dd></div>)}</dl> : <p className={styles.groupScope}>Menunggu ketua tim mengirim jawaban grup ini.</p>}</div>}
+  </section>;
+}
+
+function WorkspaceContent({ eventId }) {
+  const { user } = useAuth();
+  const router = useRouter();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const requestRef = useRef(null);
+
+  const load = useCallback(async () => {
+    requestRef.current?.abort();
+    const controller = new AbortController();
+    requestRef.current = controller;
+    setRefreshing(true);
+    try {
+      const response = await api.get(`/user/events/${eventId}/workspace`, { signal: controller.signal });
+      if (!response.data?.data?.event) throw new Error("Data pendaftaran belum dapat dimuat.");
+      setData(response.data.data);
+      setError("");
+    } catch (err) {
+      if (!controller.signal.aborted) {
+        if ([403, 404].includes(err.response?.status)) setData(null);
+        setError(err.response?.status === 404 ? "Pendaftaran tidak ditemukan atau kamu tidak lagi tergabung dalam tim ini." : err.message);
+      }
+    } finally {
+      if (!controller.signal.aborted) { setLoading(false); setRefreshing(false); }
+    }
+  }, [eventId]);
+
+  useEffect(() => {
+    if (STAFF_ROLES.includes(user?.role)) { router.replace(adminHome(user?.role)); return; }
+    if (!user) return;
+    load();
+    return () => requestRef.current?.abort();
+  }, [load, user?.id, user?.role, router]);
+
+  if (STAFF_ROLES.includes(user?.role)) return null;
+
+  return <main className={styles.workspace}>
+    <div className={styles.container}>
+      <nav className={styles.toolbar} aria-label="Navigasi pendaftaran">
+        <Link className={styles.button} href="/dashboard"><ArrowLeft size={16} aria-hidden="true" /> Dashboard</Link>
+        <button className={styles.button} type="button" onClick={load} disabled={refreshing}><RefreshCw size={15} aria-hidden="true" className={refreshing ? styles.spinning : ""} /> Perbarui</button>
+      </nav>
+      {error && <div className={styles.error} role="alert">{error}</div>}
+      {loading ? <div className={styles.loading} role="status">Memuat detail pendaftaran…</div> : data && <>
+        <header className={styles.heading}>
+          <p className={styles.eyebrow}>{eventCategoryLabel(data.event.kategori)}</p>
+          <h1>{data.event.judul}</h1>
+          <Link href={`/events/detail?slug=${encodeURIComponent(data.event.slug)}`}>Informasi event <ArrowUpRight size={14} aria-hidden="true" /></Link>
+        </header>
+        <div className={styles.columns}>
+          <aside className={styles.sidebar} aria-label="Informasi pendaftaran">
+            {data.team ? <TeamAccessPanel team={data.team} eventId={data.event.id} paymentStatus={data.paymentStatus} htm={data.htm} onRefresh={load} /> :
+              <section className={styles.panel}>
+                <h2><UsersRound size={18} aria-hidden="true" /> Pendaftaranmu</h2>
+                <p>{user?.namaLengkap || user?.name || "Peserta"}</p>
+                <div className={styles.payment}><span>Administrasi</span><PaymentStatus status={data.paymentStatus} /></div>
+              </section>}
+          </aside>
+          {data.event.formGroups?.length ? <div className={styles.groupStack}>
+            {data.team?.membershipStatus === "pending" ? <div className={styles.panel}><div className={styles.notice}><Clock3 size={20} aria-hidden="true" /><div><h3>Menunggu persetujuan ketua</h3><p>Formulir tersedia setelah ketua menyetujui permintaan bergabung.</p></div></div></div> : data.event.formGroups.map((group) => <GroupPanel key={group.id} group={group} eventId={data.event.id} onSuccess={load} />)}
+          </div> : <section className={styles.panel} aria-labelledby="registration-title">
+            <header className={styles.panelHeader}>
+              <h2 id="registration-title"><FileText size={19} aria-hidden="true" /> Data & administrasi</h2>
+              <span className={`${styles.badge} ${data.form.reviewStatus === "accepted" ? styles.success : styles.neutral}`}>
+                {data.form.submitted ? (reviewLabels[data.form.reviewStatus] || "Terkirim") : "Belum dikirim"}
+              </span>
+            </header>
+            {data.team?.membershipStatus === "pending" ? <div className={styles.notice}><Clock3 size={20} aria-hidden="true" /><div><h3>Menunggu persetujuan ketua</h3><p>Permintaan bergabung sudah terkirim. Informasi anggota dan formulir tersedia setelah ketua menyetujuinya.</p></div></div> :
+              data.form.submitted ? <>
+                <p className={styles.description}><Check size={16} aria-hidden="true" /> Formulir sudah tersimpan{data.team ? " untuk tim ini" : ""}.</p>
+                {data.form.note && <p className={styles.notice}>Catatan penyelenggara: {data.form.note}</p>}
+                <dl className={styles.answers}>{data.form.answers.map((answer) => <div key={answer.name}>
+                  <dt>{answer.label}</dt>
+                  <dd>{answer.type === "file" ? (answer.downloadUrl ? <a href={answer.downloadUrl} target="_blank" rel="noopener noreferrer">Lihat berkas <ArrowUpRight size={14} aria-hidden="true" /></a> : "—") : answer.type === "checkbox" ? (answer.value ? "Ya" : "Tidak") : String(answer.value ?? "—")}</dd>
+                </div>)}</dl>
+              </> : data.form.canSubmit ? <EventRegistrationForm event={data.event} onSuccess={load} compact /> :
+                <div className={styles.notice}><FileText size={20} aria-hidden="true" /><div><h3>Formulir pendaftaran</h3><p>{data.form.lockReason || (data.team ? "Ketua tim mengisi dan mengirim satu formulir untuk seluruh tim. Jawaban akan tampil di sini setelah dikirim." : data.event.tipePendaftaran === "tim" ? "Buat atau gabung tim melalui halaman event untuk melanjutkan." : "Penyelenggara belum menyiapkan formulir.")}</p>{!data.team && data.event.tipePendaftaran === "tim" && <Link href={`/events/detail?slug=${encodeURIComponent(data.event.slug)}`}>Buka event <ArrowUpRight size={14} aria-hidden="true" /></Link>}</div></div>}
+          </section>}
+        </div>
+      </>}
+    </div>
+  </main>;
+}
+
+export function PaymentStatus({ status }) {
+  return <strong className={status === "paid" ? styles.paid : status === "unpaid" ? styles.unpaid : styles.free}>{status === "paid" ? "Paid" : status === "unpaid" ? "Unpaid" : "Free"}</strong>;
+}
+
+export default function EventWorkspace({ eventId }) {
+  return <div className="site-root"><Navbar /><ProtectedRoute><WorkspaceContent eventId={eventId} /></ProtectedRoute></div>;
+}

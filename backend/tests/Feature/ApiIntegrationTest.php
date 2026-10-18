@@ -11,6 +11,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Tests\TestCase;
 
 class ApiIntegrationTest extends TestCase
@@ -71,10 +72,25 @@ class ApiIntegrationTest extends TestCase
         $this->postJson('/api/auth/forgot-password', ['email' => 'tidak-ada@example.test'])->assertOk();
     }
 
+    public function test_password_reset_email_links_to_public_frontend(): void
+    {
+        Notification::fake();
+        config()->set('app.frontend_url', 'https://himanika.wsmif.myhost.id');
+        $user = $this->verifiedUser(['email' => 'pemilik@example.test', 'password' => 'old-password-123']);
+
+        $this->postJson('/api/auth/forgot-password', ['email' => $user->email])->assertOk();
+        Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification) use ($user) {
+            $url = $notification->toMail($user)->actionUrl;
+            $this->assertStringStartsWith('https://himanika.wsmif.myhost.id/reset-password?', $url);
+            $this->assertStringContainsString('email=pemilik%40example.test', $url);
+            return true;
+        });
+    }
+
     public function test_password_reset_revokes_existing_database_sessions(): void
     {
         config(['session.driver' => 'database']);
-        $user = User::create(['email' => 'reset@example.test', 'password' => 'old-password-123']);
+        $user = $this->verifiedUser(['email' => 'reset@example.test', 'password' => 'old-password-123']);
         DB::table('sessions')->insert([
             'id' => 'old-session',
             'user_id' => $user->id,
@@ -112,14 +128,14 @@ class ApiIntegrationTest extends TestCase
 
     public function test_admin_endpoint_rejects_normal_user(): void
     {
-        $user = User::create(['email' => 'user@example.test', 'password' => 'password-yang-kuat']);
+        $user = $this->verifiedUser(['email' => 'user@example.test', 'password' => 'password-yang-kuat']);
         $this->actingAs($user, 'sanctum')->getJson('/api/admin/events')->assertForbidden();
     }
 
     public function test_dashboard_only_returns_owners_registrations_and_hides_unpublished_oprec_result(): void
     {
-        $owner = User::create(['email' => 'owner@example.test', 'password' => 'password-yang-kuat']);
-        $other = User::create(['email' => 'other@example.test', 'password' => 'password-yang-kuat']);
+        $owner = $this->verifiedUser(['email' => 'owner@example.test', 'password' => 'password-yang-kuat']);
+        $other = $this->verifiedUser(['email' => 'other@example.test', 'password' => 'password-yang-kuat']);
         $event = Event::create([
             'slug' => 'lomba-uji', 'judul' => 'Lomba Uji', 'kategori' => 'competition',
             'tanggal_mulai' => now()->addDays(4), 'tanggal_selesai' => now()->addDays(5),
@@ -147,8 +163,8 @@ class ApiIntegrationTest extends TestCase
 
     public function test_team_registration_creates_code_then_allows_another_user_to_join(): void
     {
-        $leader = User::create(['email' => 'leader@example.test', 'password' => 'password-yang-kuat']);
-        $member = User::create(['email' => 'member@example.test', 'password' => 'password-yang-kuat']);
+        $leader = $this->verifiedUser(['email' => 'leader@example.test', 'password' => 'password-yang-kuat']);
+        $member = $this->verifiedUser(['email' => 'member@example.test', 'password' => 'password-yang-kuat']);
         $event = Event::create([
             'slug' => 'team-competition',
             'judul' => 'Team Competition',
@@ -198,14 +214,14 @@ class ApiIntegrationTest extends TestCase
 
     public function test_authenticated_user_can_logout_cleanly(): void
     {
-        $user = User::create(['email' => 'logout-test@example.test', 'password' => 'password-yang-kuat']);
+        $user = $this->verifiedUser(['email' => 'logout-test@example.test', 'password' => 'password-yang-kuat']);
         $response = $this->actingAs($user, 'sanctum')->postJson('/api/auth/logout');
         $response->assertOk()->assertJson(['message' => 'Berhasil keluar.']);
     }
 
     public function test_personal_access_token_logout_revokes_only_current_token(): void
     {
-        $user = User::create(['email' => 'token-logout@example.test', 'password' => 'password-yang-kuat']);
+        $user = $this->verifiedUser(['email' => 'token-logout@example.test', 'password' => 'password-yang-kuat']);
         $first = $user->createToken('first');
         $second = $user->createToken('second');
 
@@ -219,7 +235,7 @@ class ApiIntegrationTest extends TestCase
     {
         $this->getJson('/api/auth/me')->assertUnauthorized();
 
-        User::create(['email' => 'login@example.test', 'password' => 'password-yang-kuat']);
+        $this->verifiedUser(['email' => 'login@example.test', 'password' => 'password-yang-kuat']);
         $this->withHeaders(['Origin' => 'http://localhost:3000', 'Referer' => 'http://localhost:3000/login'])
             ->postJson('/api/auth/login', ['email' => 'login@example.test', 'password' => 'password-yang-kuat'])
             ->assertOk()->assertJsonPath('data.email', 'login@example.test');

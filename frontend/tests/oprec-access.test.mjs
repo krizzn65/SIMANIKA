@@ -10,7 +10,7 @@ test("Pengurus sees summaries and assessment but cannot enter OPREC editors", ()
     assert.equal(canAccessAdminPath("leader", path + "/"), true);
     assert.equal(canAccessAdminPath("user", path), false);
   }
-  for (const path of ["/admin/oprec/create", "/admin/oprec/1/edit", "/admin/oprec/test/2026-2027/edit"]) {
+  for (const path of ["/admin/oprec/create", "/admin/oprec/edit", "/admin/oprec/test/edit"]) {
     assert.equal(canAccessAdminPath("leader", path), false);
     assert.equal(canAccessAdminPath("admin", path), true);
     assert.equal(canAccessAdminPath("super_admin", path), true);

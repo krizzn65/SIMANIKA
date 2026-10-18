@@ -17,6 +17,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Public\PublicEventController;
 use App\Http\Controllers\Public\HomeContentController as PublicHomeContentController;
 use App\Http\Controllers\Admin\HomeContentController as AdminHomeContentController;
@@ -62,17 +63,18 @@ Route::prefix('public')->group(function () {
     Route::post('/oprec/{oprec}/result', [PublicOprecController::class, 'result'])->middleware('throttle:oprec-result');
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/user/dashboard', DashboardController::class);
     Route::get('/user/events/{event}/workspace', [EventWorkspaceController::class, 'show']);
     Route::post('/user/events/{event}/groups/{group}/submit', [EventGroupSubmissionController::class, 'store'])->middleware('throttle:auth');
     Route::get('/user/events/{event}/groups/{group}/files/{field}', [EventGroupSubmissionController::class, 'download'])->name('user.event-group-file');
     Route::get('/user/events/{event}/files/{field}', [EventWorkspaceController::class, 'download'])->name('user.event-file');
     Route::post('/user/events/{event}/teams/{team}/members/{member}', TeamMemberController::class)->whereNumber(['team', 'member'])->middleware('throttle:auth');
-    Route::post('/auth/logout', [LoginController::class, 'destroy']);
-    Route::get('/auth/me', [ProfileController::class, 'show']);
-    Route::put('/auth/profile', [ProfileController::class, 'update']);
-    Route::post('/auth/change-password', [PasswordController::class, 'change'])->middleware('throttle:password');
+    Route::post('/auth/logout', [LoginController::class, 'destroy'])->withoutMiddleware('verified');
+    Route::get('/auth/me', [ProfileController::class, 'show'])->withoutMiddleware('verified');
+    Route::put('/auth/profile', [ProfileController::class, 'update'])->withoutMiddleware('verified');
+    Route::post('/auth/change-password', [PasswordController::class, 'change'])->middleware('throttle:password')->withoutMiddleware('verified');
+    Route::post('/auth/email/resend', [EmailVerificationController::class, 'resend'])->middleware('throttle:6,1')->withoutMiddleware('verified');
     Route::post('/user/oprec/register', [OprecRegistrationController::class, 'store'])->middleware('throttle:oprec-submission');
     Route::post('/user/oprec/enroll', OprecEnrollmentController::class)->middleware('throttle:oprec-submission');
     Route::get('/user/oprec/workspace', [OprecWorkspaceController::class, 'show']);

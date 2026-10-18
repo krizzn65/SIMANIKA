@@ -14,7 +14,7 @@ class OprecPublicWorkspaceTest extends TestCase
 
     public function test_public_hides_group_link_and_lowercase_nim_can_find_published_result(): void
     {
-        $user = User::create(['email' => 'oprec-result@example.test', 'password' => 'password-testing-123']);
+        $user = $this->verifiedUser(['email' => 'oprec-result@example.test', 'password' => 'password-testing-123']);
         $oprec = Oprec::create([
             'periode' => '2025/2026', 'status' => 'closed', 'schema_version' => '1',
             'form_fields' => [], 'link_grup_wa' => 'https://chat.whatsapp.com/private',
@@ -36,8 +36,8 @@ class OprecPublicWorkspaceTest extends TestCase
 
     public function test_workspace_uses_public_period_and_historical_access_is_owner_only(): void
     {
-        $owner = User::create(['email' => 'oprec-owner@example.test', 'password' => 'password-testing-123']);
-        $stranger = User::create(['email' => 'oprec-stranger@example.test', 'password' => 'password-testing-123']);
+        $owner = $this->verifiedUser(['email' => 'oprec-owner@example.test', 'password' => 'password-testing-123']);
+        $stranger = $this->verifiedUser(['email' => 'oprec-stranger@example.test', 'password' => 'password-testing-123']);
         $old = Oprec::create(['periode' => '2024/2025', 'status' => 'closed', 'schema_version' => '1', 'form_fields' => []]);
         $current = Oprec::create(['periode' => '2025/2026', 'status' => 'open', 'schema_version' => '1', 'form_fields' => []]);
         Oprec::create(['periode' => '2026/2027', 'status' => 'draft', 'schema_version' => '1', 'form_fields' => []]);
@@ -78,7 +78,7 @@ class OprecPublicWorkspaceTest extends TestCase
 
     public function test_enrollment_requires_current_open_period_and_three_divisions(): void
     {
-        $user = User::create(['email' => 'oprec-enroll@example.test', 'password' => 'password-testing-123']);
+        $user = $this->verifiedUser(['email' => 'oprec-enroll@example.test', 'password' => 'password-testing-123']);
         $old = Oprec::create([
             'periode' => '2024/2025', 'status' => 'open', 'schema_version' => '1', 'form_fields' => [],
             'tanggal_buka' => now()->subDay(), 'tanggal_tutup' => now()->addDay(),

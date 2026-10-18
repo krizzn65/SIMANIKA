@@ -4,7 +4,7 @@ import test from "node:test";
 import { NextResponse } from "next/server.js";
 const source = await readFile(new URL("../src/lib/oprec.js", import.meta.url), "utf8");
 const lib = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
-const service = (await readFile(new URL("../src/services/oprecSubmission.js", import.meta.url), "utf8")).replace(/^import .*;\n/gm, "").replaceAll("export ", "");
+const service = (await readFile(new URL("../src/services/oprecSubmission.js", import.meta.url), "utf8")).replace(/^import .*;\r?\n/gm, "").replaceAll("export ", "");
 const period = lib.normalizeOprec({ id: 1, periode: "Test", status: "open", tanggalBuka: "2000-01-01T00:00:00Z", tanggalTutup: "2099-01-01T00:00:00Z", divisiTersedia: [{ id: 1, nama: "Kominfo" }, { id: 2, nama: "Humas" }, { id: 3, nama: "PSDM" }], schemaVersion: "v2", formFields: [{ name: "nim", type: "text", label: "NIM", required: true }, { name: "tanggal_lahir", type: "date", label: "Lahir", required: true }] });
 function handlers(oprec, upstream) {
   return new Function("getOprec", "OPREC_REQUIRED_CONSENTS", "normalizeOprecNim", "oprecState", "validBirthDate", "validateOprecForm", "validateOprecConsents", "isFieldApplicable", "fetch", "process", "NextResponse", `${service}\nreturn {registerOprec, lookupOprecResult};`)(async () => oprec, lib.OPREC_REQUIRED_CONSENTS, lib.normalizeOprecNim, lib.oprecState, lib.validBirthDate, lib.validateOprecForm, lib.validateOprecConsents, lib.isFieldApplicable, upstream, { env: { API_BASE_URL: "https://backend.test/api" } }, NextResponse);

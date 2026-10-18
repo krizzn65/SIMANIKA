@@ -14,10 +14,7 @@ class Oprec extends Model
     /** Keep the offset when PostgreSQL binds a timestamp with time zone. */
     protected function pengumumanTanggal(): Attribute
     {
-        return Attribute::make(
-            get: fn ($value) => $value === null ? null : Carbon::parse($value, 'UTC'),
-            set: fn ($value) => $value === null ? null : Carbon::parse($value, config('app.timezone'))->utc()->toIso8601String(),
-        );
+        return $this->zonedSchedule();
     }
     protected function tanggalBuka(): Attribute
     {

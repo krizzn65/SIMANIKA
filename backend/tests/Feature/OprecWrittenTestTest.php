@@ -46,6 +46,7 @@ class OprecWrittenTestTest extends TestCase
         config()->set('admin.email', 'test-admin@example.test');
         $admin = User::firstOrCreate(['email' => 'test-admin@example.test'], ['password' => 'password-testing-123']);
         $admin->forceFill(['role' => 'admin'])->save();
+        $admin->markEmailAsVerified();
         return $admin;
     }
 
@@ -84,7 +85,7 @@ class OprecWrittenTestTest extends TestCase
 
     private function applicant(Oprec $oprec): User
     {
-        $user = User::create(['email' => 'applicant@example.test', 'password' => 'password-testing-123']);
+        $user = $this->verifiedUser(['email' => 'applicant@example.test', 'password' => 'password-testing-123']);
         $ids = $oprec->divisions->pluck('id')->all();
         OprecRegistration::create([
             'oprec_id' => $oprec->id, 'user_id' => $user->id, 'nim' => 'E312345',
@@ -100,7 +101,7 @@ class OprecWrittenTestTest extends TestCase
         $url = "/api/admin/oprec/{$draft->id}/written-test";
         $schedule = ['tanggal_buka' => now()->addDay()->toIso8601String(), 'tanggal_tutup' => now()->addDays(2)->toIso8601String()];
         $this->postJson($url, $schedule)->assertUnauthorized();
-        $user = User::create(['email' => 'user@example.test', 'password' => 'password-testing-123']);
+        $user = $this->verifiedUser(['email' => 'user@example.test', 'password' => 'password-testing-123']);
         $this->actingAs($user, 'sanctum')->postJson($url, $schedule)->assertForbidden();
         $this->actingAs($this->admin(), 'sanctum')->postJson($url, $schedule)->assertUnprocessable();
         $this->assertDatabaseCount('oprec_stages', 0);
@@ -149,7 +150,7 @@ class OprecWrittenTestTest extends TestCase
             'questions' => $questions,
         ])->assertOk();
 
-        $user = User::create(['email' => 'outsider@example.test', 'password' => 'password-testing-123']);
+        $user = $this->verifiedUser(['email' => 'outsider@example.test', 'password' => 'password-testing-123']);
         $participantUrl = "/api/user/oprec/{$oprec->id}/written-test";
         $this->actingAs($user, 'sanctum')->getJson($participantUrl)->assertNotFound();
         $this->postJson($participantUrl, ['answers' => ['q_motivasi' => 'Jawaban']])->assertNotFound();
@@ -167,7 +168,7 @@ class OprecWrittenTestTest extends TestCase
 
         $this->actingAs($this->admin(), 'sanctum')->getJson($url.'/submissions')
             ->assertOk()->assertJsonPath('data.0.name', 'Peserta Tes')
-            ->assertJsonPath('data.0.answers.q_motivasi', 'Lengkap')->assertJsonCount(2, 'questions');
+            ->assertJsonPath('data.0.answers.q_motivasi', 'Lengkap')->assertJsonCount(3, 'questions');
         $submissionId = $stage->submissions()->first()->id;
         $this->getJson($url.'/submissions/'.$submissionId)->assertOk()->assertJsonPath('data.nim', 'E312345');
         $this->deleteJson($url.'/submissions/'.$submissionId)->assertNoContent();

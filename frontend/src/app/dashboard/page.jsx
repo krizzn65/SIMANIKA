@@ -67,7 +67,7 @@ function RegistrationCard({ item, onComplete }) {
       </div>
       <div className="dashboard-entry__bottom">
         <span className={item.kind === "oprec" ? undefined : "dashboard-entry__payment dashboard-entry__payment--" + paymentTone}>{item.kind === "oprec" ? (date ? "Pengumuman · " + date : "Pendaftaran tercatat") : paymentLabel}</span>
-        <Link href={item.href}>Lihat detail <span aria-hidden="true">↗</span></Link>
+        <Link href={item.href?.startsWith("/dashboard/events/") ? `/dashboard/events/detail?id=${encodeURIComponent(item.href.split("/")[3])}` : item.href}>Lihat detail <span aria-hidden="true">↗</span></Link>
       </div>
     </article>
   );

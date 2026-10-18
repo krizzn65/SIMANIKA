@@ -1,4 +1,5 @@
-import PasswordRecoveryForm from "@/components/auth/PasswordRecoveryForm";
+import { Suspense } from "react";
+import ResetPasswordContent from "./ResetPasswordContent";
 import "../register/register.css";
 import "./recovery.css";
 
@@ -7,9 +8,6 @@ export const metadata = {
   description: "Atur kata sandi baru untuk akun SIMANIKA.",
 };
 
-export default async function ResetPasswordPage({ searchParams }) {
-  const params = await searchParams;
-  const token = typeof params?.token === "string" ? params.token : "";
-  const email = typeof params?.email === "string" ? params.email : "";
-  return <PasswordRecoveryForm mode="reset" token={token} email={email} />;
+export default function ResetPasswordPage() {
+  return <Suspense fallback={<p>Memuat halaman reset sandi...</p>}><ResetPasswordContent /></Suspense>;
 }

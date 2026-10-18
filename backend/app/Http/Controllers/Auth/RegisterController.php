@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Auth\Events\Registered;
 
 class RegisterController extends Controller
 {
@@ -19,6 +20,7 @@ class RegisterController extends Controller
         }
 
         $user = User::create($payload);
+        event(new Registered($user));
         Auth::guard('web')->login($user);
         if ($request->hasSession()) {
             $request->session()->regenerate();

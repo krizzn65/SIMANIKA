@@ -6,6 +6,7 @@ import { Button, Card } from "./Primitives";
 import { RollingCountdown } from "./RollingCountdown";
 import { ResultLookup } from "./ResultLookup";
 import { OprecPoster } from "../OprecPoster";
+import { publicApi } from "@/services/publicApi";
 
 export function AnnouncementCard({ periodId, period, announcement, serverNow }) {
   const [data, setData] = useState(announcement);
@@ -20,9 +21,7 @@ export function AnnouncementCard({ periodId, period, announcement, serverNow }) 
     if (refreshing.current) return;
     refreshing.current = true;
     try {
-      const response = await fetch(`/api/oprec/announcement/${periodId}`, { cache: "no-store", signal: AbortSignal.timeout(15000) });
-      if (!response.ok) throw new Error();
-      const body = await response.json();
+      const { data: body } = await publicApi.get(`/public/oprec/${encodeURIComponent(periodId)}/announcement`);
       setData(body.data); setClock(body.server_now); setError("");
     } catch { setError("Status belum dapat diperbarui. Coba periksa kembali."); }
     finally { refreshing.current = false; }

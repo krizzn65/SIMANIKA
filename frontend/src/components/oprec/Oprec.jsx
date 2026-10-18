@@ -25,7 +25,7 @@ function DivisionLogo({ division }) {
   </span>;
 }
 
-export function Oprec({ oprec }) {
+export function Oprec({ oprec, onRefresh }) {
   const faq = oprec?.faq.length ? oprec.faq : defaultFaq;
   const hasOpenDivisions = Boolean(oprec?.divisiTersedia.length);
   const divisions = hasOpenDivisions ? oprec.divisiTersedia : divisionPreview;
@@ -49,7 +49,7 @@ export function Oprec({ oprec }) {
     </section>
     <section className="oprec-registration-section" id="pendaftaran" aria-labelledby="registration-heading"><div className="oprec-container">
       <div className="oprec-section-heading"><div><h2 id="registration-heading">Pendaftaran & pengumuman.</h2></div></div>
-      <OprecPreview key={oprec?.poster || "no-poster"} oprec={oprec ? { ...oprec, pengumuman: { published: false, tanggal: null, pesan: "" } } : null} initialNow={Date.now()} />
+      <OprecPreview key={oprec?.poster || "no-poster"} oprec={oprec ? { ...oprec, pengumuman: { published: false, tanggal: null, pesan: "" } } : null} initialNow={Date.now()} onRefresh={onRefresh} />
       {oprec?.announcement && <AnnouncementCard key={oprec.id} periodId={oprec.id} period={oprec.periode} announcement={oprec.announcement} serverNow={oprec.serverNow || new Date().toISOString()} />}
     </div></section>
     <section className="oprec-faq-section oprec-container" id="faq-oprec" aria-labelledby="faq-heading"><div><h2 id="faq-heading">Masih penasaran?</h2><p>Hal-hal yang perlu kamu tahu<br />sebelum mengambil langkah pertama.</p></div><OprecFaq faq={faq} /></section>

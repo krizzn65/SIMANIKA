@@ -13,7 +13,7 @@ class OprecThreeDivisionChoicesTest extends TestCase
 
     public function test_registration_requires_three_distinct_divisions_and_persists_their_order(): void
     {
-        $user = User::create(['email' => 'three-divisions@example.test', 'password' => 'password-testing-123']);
+        $user = $this->verifiedUser(['email' => 'three-divisions@example.test', 'password' => 'password-testing-123']);
         $oprec = Oprec::create([
             'periode' => '2026/2027', 'status' => 'open', 'schema_version' => '1',
             'tanggal_buka' => now()->subDay(), 'tanggal_tutup' => now()->addDay(),

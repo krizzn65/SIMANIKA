@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { oprecState } from "@/lib/oprec";
 import { OprecPoster } from "./OprecPoster";
 import { OprecEmptyState } from "./OprecEmptyState";
@@ -63,14 +62,13 @@ function ArrowRightIcon({ size = 14 }) {
   );
 }
 
-export function OprecPreview({ oprec, initialNow }) {
+export function OprecPreview({ oprec, initialNow, onRefresh }) {
   const [now, setNow] = useState(initialNow);
   const [active, setActive] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
-    const update = () => { if (!document.hidden) { setNow(Date.now()); router.refresh(); } };
+    const update = () => { if (!document.hidden) { setNow(Date.now()); onRefresh?.(); } };
     const dates = [oprec?.tanggalBuka, oprec?.tanggalTutup, oprec?.pengumuman?.tanggal]
       .filter(Boolean).map(Date.parse).filter((value) => value > Date.now());
     const nextDate = dates.length ? Math.min(...dates) : null;
@@ -78,7 +76,7 @@ export function OprecPreview({ oprec, initialNow }) {
     const interval = setInterval(update, 60000);
     document.addEventListener("visibilitychange", update);
     return () => { clearTimeout(boundary); clearInterval(interval); document.removeEventListener("visibilitychange", update); };
-  }, [oprec, router]);
+  }, [oprec, onRefresh]);
 
   const state = oprecState(oprec, now);
   if (state.key === "empty") {

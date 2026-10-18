@@ -1,6 +1,8 @@
 # Backend SIMANIKA
 
-Backend memakai Laravel 11, Sanctum cookie, PostgreSQL 15+, dan PHP 8.2+. `composer.lock` dikunci untuk platform PHP 8.2 agar instalasi produksi sesuai arsitektur. Lihat `PRD.md`, `architecture.md`, `frontend/docs/events.md`, `frontend/docs/oprec.md`, dan `frontend/docs/password-recovery.md` di root proyek untuk kontrak lengkap.
+Backend memakai Laravel 12, Sanctum cookie, PostgreSQL 15+ atau MySQL 8.0.30, dan PHP 8.2+. `composer.lock` dikunci untuk platform PHP 8.2 agar instalasi produksi sesuai arsitektur. Lihat `PRD.md`, `architecture.md`, `frontend/docs/events.md`, `frontend/docs/oprec.md`, dan `frontend/docs/password-recovery.md` di root proyek untuk kontrak lengkap.
+
+Untuk hosting kampus dengan MySQL 8.0.30, phpMyAdmin, dan FTP tanpa terminal, gunakan [panduan impor MySQL](deploy/README.md). Kode backend kini mendukung `DB_CONNECTION=mysql`; konfigurasi PostgreSQL lokal tetap tersedia.
 
 ## Menjalankan lokal
 

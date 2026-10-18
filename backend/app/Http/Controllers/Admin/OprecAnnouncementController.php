@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Oprec;
 use App\Services\OprecAnnouncementService;
 use App\Services\OprecAssessmentService;
+use App\Support\SearchSql;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -47,7 +48,7 @@ class OprecAnnouncementController extends Controller
         }
         $page = $query->orderByRaw("CASE LOWER(TRIM(accepted_divisions.nama)) WHEN 'bph' THEN 0 WHEN 'humas' THEN 1 WHEN 'psdm' THEN 2 WHEN 'kominfo' THEN 3 WHEN 'kwu' THEN 4 WHEN 'ristek' THEN 5 ELSE 6 END")
             ->orderByRaw('CASE '.implode(' ', $cases).' ELSE 99 END', $bindings)
-            ->orderByRaw("LOWER(COALESCE(oprec_registrations.form_data->>'nama', oprec_registrations.form_data->>'nama_lengkap', ''))")
+            ->orderByRaw('LOWER(COALESCE('.SearchSql::text('oprec_registrations.form_data->nama').', '.SearchSql::text('oprec_registrations.form_data->nama_lengkap').", ''))")
             ->orderBy('oprec_registrations.id')->paginate(20);
         $divisions = $oprec->divisions()->pluck('nama', 'id');
         $page->setCollection($page->getCollection()->map(fn ($r) => [

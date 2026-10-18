@@ -97,7 +97,7 @@ async function main() {
     await send('Runtime.enable'); await send('Page.enable');
     await send('Fetch.enable', { patterns: [{ urlPattern: '*api/*' }] });
     await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1100, deviceScaleFactor: 1, mobile: false });
-    await send('Page.navigate', { url: 'http://localhost:3100/dashboard/events/900' });
+    await send('Page.navigate', { url: 'http://localhost:3100/dashboard/events/detail?id=900' });
     await waitFor(`document.body?.innerText.includes('Byte Builders')`);
     await screenshot('desktop');
     assert.equal(await evaluate(`document.documentElement.scrollWidth > innerWidth`), false);
