@@ -78,10 +78,10 @@ class User extends Authenticatable
     public function canAccessArea(string $area): bool
     {
         $role = $this->effectiveRole();
-        if ($role === self::ROLE_SUPER_ADMIN) return in_array($area, ['console', 'dashboard', 'users', 'events', 'oprec', 'merchandise', 'settings'], true);
+        if ($role === self::ROLE_SUPER_ADMIN) return in_array($area, ['console', 'dashboard', 'users', 'events', 'oprec', 'merchandise', 'settings', 'content', 'logs'], true);
         return match ($area) {
             'console' => in_array($role, [self::ROLE_ADMIN, self::ROLE_LEADER, self::ROLE_KWU], true),
-            'dashboard', 'events', 'merchandise', 'settings' => $role === self::ROLE_ADMIN || ($area === 'merchandise' && $role === self::ROLE_KWU),
+            'dashboard', 'events', 'merchandise', 'settings', 'content' => $role === self::ROLE_ADMIN || ($area === 'merchandise' && $role === self::ROLE_KWU),
             'oprec' => in_array($role, [self::ROLE_ADMIN, self::ROLE_LEADER], true),
             default => false,
         };

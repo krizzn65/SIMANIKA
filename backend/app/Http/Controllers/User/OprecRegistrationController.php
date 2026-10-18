@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use App\Support\OprecRegistrationFields;
 
 class OprecRegistrationController extends Controller
 {
@@ -25,8 +26,8 @@ class OprecRegistrationController extends Controller
         if ($oprec->id !== $currentPublicId) return response()->json(['message' => 'Periode pendaftaran telah berubah. Muat ulang halaman.'], 409);
         if ($oprec->status !== 'open' || !$oprec->tanggal_buka || !$oprec->tanggal_tutup || now()->lt($oprec->tanggal_buka) || now()->gte($oprec->tanggal_tutup) || $oprec->divisions->count() < 3) return response()->json(['message' => 'Pendaftaran belum dibuka atau sudah ditutup.'], 409);
         if ($oprec->schema_version !== $head['schema_version']) return response()->json(['message' => 'Formulir sudah diperbarui. Muat ulang halaman.'], 409);
-        $fields = $oprec->form_fields ?? [];
-        if (!count($fields) || count($fields) > 40) return response()->json(['message' => 'Formulir belum tersedia.'], 409);
+        $fields = OprecRegistrationFields::withDefaults($oprec->form_fields ?? []);
+        if (!count($fields) || count($fields) > 41) return response()->json(['message' => 'Formulir belum tersedia.'], 409);
 
         $chosenDivisionIds = array_filter([
             (int) $request->input('divisi_pilihan_1'),
@@ -85,6 +86,8 @@ class OprecRegistrationController extends Controller
                 if (in_array($type, ['select', 'radio'], true)) $rules[$name][] = Rule::in(array_column($field['options'] ?? [], 'value'));
             }
         }
+        $rules['persetujuan_data_benar'] = ['required', Rule::in(['on'])];
+        $rules['persetujuan_penggunaan_data'] = ['required', Rule::in(['on'])];
         if (!isset($rules['nim'], $rules['tanggal_lahir'])) return response()->json(['message' => 'Skema identitas tidak tersedia.'], 503);
         $divisionIds = $oprec->divisions->pluck('id')->map(fn ($id) => (string) $id)->all();
         foreach (['divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3'] as $key) {

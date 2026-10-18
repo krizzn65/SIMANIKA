@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Oprec;
 use App\Models\OprecRegistration;
 use App\Models\OprecTestSubmission;
+use App\Support\OprecRegistrationFields;
 use App\Models\User;
 use App\Services\OprecAssessmentService;
 use App\Support\OprecWrittenTestAnswers;
@@ -81,14 +82,15 @@ class OprecAssessmentController extends Controller
         $ids = $page->getCollection()->pluck('oprec_registration_id')->all();
         $reviews = DB::table('oprec_assessment_reviews')->whereIn('oprec_registration_id', $ids)->get()->groupBy('oprec_registration_id');
         $divisions = $oprec->divisions()->get(['id', 'nama'])->keyBy('id');
-        $visibleFormFields = collect($oprec->form_fields ?? [])
+        $registrationFields = OprecRegistrationFields::withDefaults($oprec->form_fields ?? []);
+        $visibleFormFields = collect($registrationFields)
             ->filter(fn ($field) => is_array($field) && ($field['type'] ?? null) !== 'file')
             ->pluck('name')->filter(fn ($name) => is_string($name) && !in_array($name, [
                 'nama', 'nama_lengkap', 'namaLengkap', 'nim', 'tanggal_lahir', 'angkatan',
                 'divisi_pilihan_1', 'divisi_pilihan_2', 'divisi_pilihan_3',
                 'jabatan_pilihan_1', 'jabatan_pilihan_2', 'jabatan_pilihan_3',
             ], true))->flip()->all();
-        $visibleFileFields = collect($oprec->form_fields ?? [])
+        $visibleFileFields = collect($registrationFields)
             ->filter(fn ($field) => is_array($field) && ($field['type'] ?? null) === 'file')
             ->pluck('name')->filter(fn ($name) => is_string($name))->flip()->all();
         $user = $request->user();
@@ -105,7 +107,13 @@ class OprecAssessmentController extends Controller
             ])->all();
             $uploads = [];
             foreach ($registration->file_uploads ?? [] as $field => $path) {
-                if (isset($visibleFileFields[$field]) && is_string($path) && $path !== '') $uploads[$field] = ['downloadUrl' => url("/api/admin/oprec/{$oprec->id}/assessment/{$submission->id}/registration-files/".rawurlencode($field))];
+                if (!isset($visibleFileFields[$field]) || !is_string($path) || $path === '') continue;
+                $available = Storage::disk('local')->exists($path);
+                $uploads[$field] = [
+                    'available' => $available,
+                    'downloadUrl' => $available ? url("/api/admin/oprec/{$oprec->id}/assessment/{$submission->id}/registration-files/".rawurlencode($field)) : null,
+                    'fileName' => "oprec-{$registration->id}-{$field}.".(pathinfo($path, PATHINFO_EXTENSION) ?: 'bin'),
+                ];
             }
             return [
                 'id' => $submission->id, 'registration_id' => $registration->id,

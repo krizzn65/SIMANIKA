@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\EventGuidebookController;
 use App\Http\Controllers\OprecWrittenTestFileController;
@@ -17,6 +18,8 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Public\PublicEventController;
+use App\Http\Controllers\Public\HomeContentController as PublicHomeContentController;
+use App\Http\Controllers\Admin\HomeContentController as AdminHomeContentController;
 use App\Http\Controllers\Public\PublicOprecController;
 use App\Http\Controllers\User\OprecRegistrationController;
 use App\Http\Controllers\User\OprecEnrollmentController;
@@ -42,7 +45,11 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::prefix('public')->group(function () {
+    Route::get('/home', [PublicHomeContentController::class, 'index']);
+    Route::get('/home/images/{kind}/{filename}', [PublicHomeContentController::class, 'image'])->name('public.home-image');
     Route::get('/oprec/{oprec}/announcement', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'show']);
+    Route::get('/oprec/{oprec}/guidebook', [PublicOprecController::class, 'guidebook'])->name('public.oprec-guidebook');
+    Route::get('/oprec/{oprec}/examples/{field}', [PublicOprecController::class, 'questionExample'])->name('public.oprec-example');
     Route::get('/oprec/{oprec}/announcement/poster', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'poster']);
     Route::post('/oprec/{oprec}/announcement/verify', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'verify'])->middleware('throttle:oprec-announcement');
     Route::post('/oprec/{oprec}/announcement/result', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'result'])->middleware('throttle:oprec-result-view');
@@ -78,7 +85,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/events/{event}/join-team', JoinEventTeamController::class)->middleware('throttle:auth');
 
     Route::prefix('admin')->middleware('admin')->group(function () {
+        Route::middleware('admin:content')->prefix('home-content')->group(function () {
+            Route::get('/', [AdminHomeContentController::class, 'index']);
+            Route::put('/text', [AdminHomeContentController::class, 'updateText']);
+            Route::post('/gallery/batch', [AdminHomeContentController::class, 'storeBatchGallery']);
+            Route::post('/gallery', [AdminHomeContentController::class, 'storeGallery']);
+            Route::post('/gallery/{id}', [AdminHomeContentController::class, 'updateGallery'])->whereNumber('id');
+            Route::delete('/gallery/{id}', [AdminHomeContentController::class, 'destroyGallery'])->whereNumber('id');
+            Route::post('/testimonials', [AdminHomeContentController::class, 'storeTestimonial']);
+            Route::post('/testimonials/{id}', [AdminHomeContentController::class, 'updateTestimonial'])->whereNumber('id');
+            Route::delete('/testimonials/{id}', [AdminHomeContentController::class, 'destroyTestimonial'])->whereNumber('id');
+        });
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->middleware('admin:dashboard');
+        Route::middleware('admin:logs')->group(function () {
+            Route::get('/logs', [AuditLogController::class, 'index']);
+            Route::get('/logs/{entry}', [AuditLogController::class, 'show']);
+        });
 
         Route::middleware('admin:users')->group(function () {
             Route::get('/users', [AdminUserController::class, 'index']);
@@ -128,14 +150,18 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/oprec/{oprec}/written-test/submissions/{submission}', [OprecWrittenTestSubmissionController::class, 'destroy']);
             Route::post('/oprec', [AdminOprecController::class, 'store']);
             Route::post('/oprec/upload-poster', [AdminOprecController::class, 'uploadPoster']);
+            Route::post('/oprec/upload-guidebook', [AdminOprecController::class, 'uploadGuidebook']);
+            Route::post('/oprec/upload-question-example', [AdminOprecController::class, 'uploadQuestionExample']);
             Route::post('/oprec/upload-logo', [AdminOprecController::class, 'uploadLogo']);
             Route::put('/oprec/{oprec}', [AdminOprecController::class, 'update']);
             Route::delete('/oprec/{oprec}', [AdminOprecController::class, 'destroy']);
             Route::get('/oprec/{oprec}/registrants', [OprecRegistrantController::class, 'index']);
+            Route::get('/oprec/{oprec}/registrants/export/{format}', \App\Http\Controllers\Admin\OprecRegistrantExportController::class);
             Route::put('/oprec/{oprec}/registrants/{registration}/form', [OprecRegistrantController::class, 'updateForm']);
             Route::put('/oprec/{oprec}/registrants/{registration}', [OprecRegistrantController::class, 'update']);
             Route::delete('/oprec/{oprec}/registrants/{registration}', [OprecRegistrantController::class, 'destroy']);
             Route::get('/oprec/{oprec}/registrants/{registration}/files/{field}', [OprecRegistrantController::class, 'download']);
+            Route::post('/oprec/{oprec}/registrants/{registration}/files/{field}', [OprecRegistrantController::class, 'restoreFile']);
         });
     });
 });

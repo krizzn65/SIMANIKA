@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Oprec;
 use App\Models\OprecRegistration;
 use App\Models\OprecTestSubmission;
+use App\Support\OprecRegistrationFields;
 use Illuminate\Database\UniqueConstraintViolationException;
 use App\Services\OprecAssessmentService;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -56,9 +57,12 @@ class OprecRegistrantController extends Controller
             if (is_array($item->file_uploads)) {
                 foreach ($item->file_uploads as $key => $path) {
                     if (is_string($path) && $path !== '') {
+                        $available = Storage::disk('local')->exists($path);
                         $fileUploads[$key] = [
                             'field' => $key,
-                            'downloadUrl' => url("/api/admin/oprec/{$oprec->id}/registrants/{$item->id}/files/".rawurlencode($key)),
+                            'available' => $available,
+                            'downloadUrl' => $available ? url("/api/admin/oprec/{$oprec->id}/registrants/{$item->id}/files/".rawurlencode($key)) : null,
+                            'fileName' => "oprec-{$item->id}-{$key}.".(pathinfo($path, PATHINFO_EXTENSION) ?: 'bin'),
                         ];
                     }
                 }
@@ -104,8 +108,8 @@ class OprecRegistrantController extends Controller
         }
 
         $oprec->load('divisions');
-        $fields = $oprec->form_fields ?? [];
-        if (!count($fields) || count($fields) > 40) {
+        $fields = OprecRegistrationFields::withDefaults($oprec->form_fields ?? []);
+        if (!count($fields) || count($fields) > 41) {
             return response()->json(['message' => 'Formulir tidak tersedia.'], 409);
         }
 
@@ -281,6 +285,51 @@ class OprecRegistrantController extends Controller
         abort_unless($registration->oprec_id === $oprec->id && preg_match('/^[a-z][a-z0-9_]{0,49}$/', $field), 404);
         $path = $registration->file_uploads[$field] ?? null;
         abort_unless(is_string($path) && str_starts_with($path, "oprec/{$oprec->id}/") && Storage::disk('local')->exists($path), 404);
-        return Storage::disk('local')->download($path, "oprec-{$registration->id}-{$field}", ['Cache-Control' => 'private, no-store']);
+        $extension = pathinfo($path, PATHINFO_EXTENSION) ?: 'bin';
+        return Storage::disk('local')->download($path, "oprec-{$registration->id}-{$field}.{$extension}", ['Cache-Control' => 'private, no-store']);
+    }
+
+    public function restoreFile(Request $request, Oprec $oprec, OprecRegistration $registration, string $field)
+    {
+        abort_unless(in_array($request->user()->effectiveRole(), ['super_admin', 'admin'], true), 403);
+        abort_unless($registration->oprec_id === $oprec->id && preg_match('/^[a-z][a-z0-9_]{0,49}$/', $field), 404);
+        $definition = collect($oprec->form_fields ?? [])->firstWhere('name', $field);
+        abort_unless(($definition['type'] ?? null) === 'file', 404);
+        $existing = $registration->file_uploads[$field] ?? null;
+        abort_unless(is_string($existing) && str_starts_with($existing, "oprec/{$oprec->id}/") && !Storage::disk('local')->exists($existing), 409,
+            'Berkas masih tersedia. Muat ulang daftar pendaftar.');
+        $extensions = array_map(fn ($value) => ltrim(strtolower($value), '.'), $definition['accept'] ?? ['.pdf', '.jpg', '.jpeg', '.png']);
+        $maxKilobytes = min(10240, max(1, (int) ($definition['maxSizeMB'] ?? 10)) * 1024);
+        $request->validate(['file' => ['required', 'file', 'max:'.$maxKilobytes, 'mimes:'.implode(',', $extensions)]]);
+        $extension = strtolower($request->file('file')->getClientOriginalExtension());
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($request->file('file')->getRealPath());
+        $expectedMime = ['pdf' => 'application/pdf', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png'];
+        if (!in_array($extension, $extensions, true) || ($expectedMime[$extension] ?? null) !== $mime) {
+            throw ValidationException::withMessages(['file' => ['Jenis atau isi berkas tidak diizinkan.']]);
+        }
+
+        $stored = null;
+        try {
+            DB::transaction(function () use ($request, $oprec, $registration, $field, &$stored) {
+                $current = OprecRegistration::whereKey($registration->id)->lockForUpdate()->firstOrFail();
+                abort_unless($current->oprec_id === $oprec->id, 404);
+                $path = $current->file_uploads[$field] ?? null;
+                abort_unless(is_string($path) && str_starts_with($path, "oprec/{$oprec->id}/") && !Storage::disk('local')->exists($path), 409);
+                $stored = $request->file('file')->store("oprec/{$oprec->id}", 'local');
+                if (!is_string($stored)) throw new \RuntimeException('Private file storage failed');
+                $uploads = $current->file_uploads ?? [];
+                $uploads[$field] = $stored;
+                $current->update(['file_uploads' => $uploads]);
+            });
+        } catch (\Throwable $error) {
+            if ($stored) Storage::disk('local')->delete($stored);
+            throw $error;
+        }
+        return response()->json(['data' => [
+            'field' => $field,
+            'available' => true,
+            'downloadUrl' => url("/api/admin/oprec/{$oprec->id}/registrants/{$registration->id}/files/".rawurlencode($field)),
+            'fileName' => "oprec-{$registration->id}-{$field}.".(pathinfo($stored, PATHINFO_EXTENSION) ?: 'bin'),
+        ]]);
     }
 }

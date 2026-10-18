@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 
 class Oprec extends Model
 {
-    protected $fillable = ['periode', 'status', 'headline', 'deskripsi', 'poster', 'poster_alt', 'tanggal_buka', 'tanggal_tutup', 'first_published_at', 'schema_version', 'form_intro', 'link_grup_wa', 'form_fields', 'faq', 'pengumuman_published', 'pengumuman_tanggal', 'pengumuman_pesan'];
+    protected $fillable = ['periode', 'status', 'headline', 'deskripsi', 'poster', 'poster_alt', 'guidebook', 'tanggal_buka', 'tanggal_tutup', 'first_published_at', 'schema_version', 'form_intro', 'link_grup_wa', 'form_fields', 'faq', 'pengumuman_published', 'pengumuman_tanggal', 'pengumuman_pesan'];
     protected function casts(): array { return ['tanggal_buka' => 'datetime', 'tanggal_tutup' => 'datetime', 'first_published_at' => 'datetime', 'pengumuman_published' => 'boolean', 'form_fields' => 'array', 'faq' => 'array']; }
     /** Keep the offset when PostgreSQL binds a timestamp with time zone. */
     protected function pengumumanTanggal(): Attribute
@@ -17,6 +17,24 @@ class Oprec extends Model
         return Attribute::make(
             get: fn ($value) => $value === null ? null : Carbon::parse($value, 'UTC'),
             set: fn ($value) => $value === null ? null : Carbon::parse($value, config('app.timezone'))->utc()->toIso8601String(),
+        );
+    }
+    protected function tanggalBuka(): Attribute
+    {
+        return $this->zonedSchedule();
+    }
+    protected function tanggalTutup(): Attribute
+    {
+        return $this->zonedSchedule();
+    }
+    private function zonedSchedule(): Attribute
+    {
+        $postgres = config('database.default') === 'pgsql';
+        return Attribute::make(
+            get: fn ($value) => $value === null ? null : Carbon::parse($value, $postgres ? 'UTC' : config('app.timezone')),
+            set: fn ($value) => $value === null ? null : ($postgres
+                ? Carbon::parse($value, config('app.timezone'))->utc()->toIso8601String()
+                : Carbon::parse($value, config('app.timezone'))->timezone(config('app.timezone'))->format('Y-m-d H:i:s')),
         );
     }
     public function divisions(): HasMany { return $this->hasMany(OprecDivision::class)->orderBy('sort_order'); }

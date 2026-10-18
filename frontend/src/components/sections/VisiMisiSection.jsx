@@ -109,7 +109,8 @@ function VisionVideo() {
   );
 }
 
-export function VisiMisiSection() {
+export function VisiMisiSection({ visi, misi }) {
+  const displayedMissions = missions.map((mission, index) => ({ ...mission, description: misi?.[index] || mission.description }));
   return (
     <section className="vision-section" id="visi-misi" aria-labelledby="vision-title">
       <div className="vision-shell">
@@ -128,10 +129,12 @@ export function VisiMisiSection() {
         </p>
 
         <h2 className="vision-title" id="vision-title">
-          Menjadi <ScrollRevealAccent text="wadah inovasi" /> dan{" "}
-          <ScrollRevealAccent text="pengembangan SDM" /> yang unggul secara
-          progresif dan berbasis entrepreneur dengan pemanfaatan teknologi
-          informasi.
+          {visi ? visi : <>
+            Menjadi <ScrollRevealAccent text="wadah inovasi" /> dan{" "}
+            <ScrollRevealAccent text="pengembangan SDM" /> yang unggul secara
+            progresif dan berbasis entrepreneur dengan pemanfaatan teknologi
+            informasi.
+          </>}
         </h2>
 
         <div className="vision-content">
@@ -139,7 +142,7 @@ export function VisiMisiSection() {
             <VisionVideo />
           </div>
 
-          <MissionAccordion items={missions} />
+          <MissionAccordion items={displayedMissions} />
         </div>
 
         <p className="vision-footer-copy">

@@ -2,14 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { RotateCcw, Lock, AlertTriangle } from "lucide-react";
-import { DEFAULT_DIVISION_LOGOS, validateOprecForm, normalizeOprecNim, oprecNimProgramWarning, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
+import { DEFAULT_DIVISION_LOGOS, OPREC_FIXED_FIELDS, OPREC_REQUIRED_CONSENTS, validateOprecForm, validateOprecConsents, normalizeOprecNim, oprecNimProgramWarning, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
 
 function getDivisionPositions(division) {
   if (!division) return [];
   return getDefaultJabatan(division.nama);
 }
 
-const SYSTEM_IDENTIFIERS = ["nama", "nim", "tanggal_lahir", "angkatan"];
+const SYSTEM_IDENTIFIERS = OPREC_FIXED_FIELDS.map((field) => field.name);
 const isSystemField = (name) => SYSTEM_IDENTIFIERS.includes(name);
 const isDivisionField = (name) => ["divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(name);
 const isCustomField = (name) => !isSystemField(name) && !isDivisionField(name);
@@ -214,7 +214,18 @@ function Field({ field, error, inlineError = error, divisions = [], selectedDivi
 
   return (
     <div className={`event-dynamic-field ${isWide ? "event-dynamic-field--wide" : ""}`}>
-      {field.type !== "checkbox" && <label htmlFor={id}>{labelText}</label>}
+      {field.type !== "checkbox" && (
+        <div className="oprec-field-label-row">
+          <label htmlFor={id}>{labelText}</label>
+          {(field.exampleUrl || field.example_url || field.exampleFileUrl || field.example_file_url) && (
+            <div className="oprec-field-example">
+              <a href={field.exampleUrl || field.example_url || field.exampleFileUrl || field.example_file_url} target="_blank" rel="noopener noreferrer">
+                {field.exampleLabel || field.example_label || "Lihat contoh"}
+              </a>
+            </div>
+          )}
+        </div>
+      )}
       {field.help && <small id={`${id}-help`}>{field.help}</small>}
       {control}
       {inlineError && (
@@ -430,7 +441,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
         body.set(`jabatan_pilihan_${rank}`, "");
       }
     });
-    const nextErrors = validateOprecForm(oprec.formFields, body, Date.now(), oprec.divisiTersedia);
+    const nextErrors = { ...validateOprecForm(oprec.formFields, body, Date.now(), oprec.divisiTersedia), ...validateOprecConsents(body) };
     if (Object.keys(nextErrors).length) {
       showErrors(nextErrors, "Periksa kolom yang ditandai sebelum mengirim.");
       return;
@@ -471,7 +482,9 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
   return (
     <>
     <form ref={formRef} className="event-dynamic-form" onSubmit={submit} onInput={saveDraft} onChange={saveDraft} noValidate aria-busy={pending || confirmOpen}>
-      <p>Kolom bertanda * wajib diisi. Isilah sesuai petunjuk penyelenggara.</p>
+      <p style={{ whiteSpace: "pre-line" }}>
+        {oprec?.formIntro || "Kolom bertanda * wajib diisi. Isilah sesuai petunjuk penyelenggara."}
+      </p>
       {message && (
         <div ref={feedback} tabIndex={-1} className="event-form-feedback" role="alert">
           <p>{message}</p>
@@ -513,6 +526,9 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
                     </a>
                   </li>
                 ))}
+              {OPREC_REQUIRED_CONSENTS.filter((consent) => errors[consent.name]).map((consent) => (
+                <li key={consent.name}><a href={`#oprec-field-${consent.name}`}>{consent.label}: {errors[consent.name]}</a></li>
+              ))}
             </ul>
           )}
         </div>
@@ -520,7 +536,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
       <fieldset disabled={pending || confirmOpen}>
         <legend className="event-form-sr-only">Formulir pendaftaran OPREC</legend>
 
-        {/* 1. Pertanyaan Sistem (01 s/d 04: identitas wajib) */}
+        {/* 1. Pertanyaan wajib sistem */}
         {oprec.formFields
           .filter((field) => isSystemField(field.name))
           .map((field) => (
@@ -536,7 +552,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
             />
           ))}
 
-        {/* 2. Bagian Pilihan Divisi di Form (Pertanyaan No 05) */}
+        {/* 2. Bagian Pilihan Divisi di Form */}
         {oprec.divisiTersedia && oprec.divisiTersedia.length > 0 && (
           <div className="event-dynamic-field event-dynamic-field--wide oprec-division-section" id="oprec-field-divisi_pilihan_1">
             <label htmlFor="oprec-division-choices-list">
@@ -707,7 +723,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
           </div>
         )}
 
-        {/* 3. Pertanyaan Tambahan Admin (No 06 dst, berada di bawah divisi) */}
+        {/* 3. Pertanyaan Tambahan Admin (berada di bawah divisi) */}
         {oprec.formFields
           .filter((field) => isCustomField(field.name) && isFieldApplicable(field, selectedDivisions, oprec.divisiTersedia))
           .map((field) => (
@@ -720,6 +736,14 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
               onToggleDivision={toggleDivision}
             />
           ))}
+
+        <section className="oprec-consents" aria-labelledby="oprec-consents-title">
+          <h3 id="oprec-consents-title">Persetujuan Peserta</h3>
+          <p>Kedua pernyataan berikut wajib disetujui sebelum formulir dikirim.</p>
+          {OPREC_REQUIRED_CONSENTS.map((consent) => (
+            <Field key={consent.name} field={{ ...consent, type: "checkbox", required: true }} error={errors[consent.name]} />
+          ))}
+        </section>
       </fieldset>
       <div className="event-group-submit">
         <button className="event-button" type="submit" disabled={pending || confirmOpen || selectedDivisions.length !== 3}>

@@ -1,3 +1,21 @@
+## Perbaikan unduhan berkas Penilaian OPREC — 16 Oktober 2026
+
+- [x] Akar masalah `{"message":"Unauthenticated."}` saat mengunduh berkas peserta di `/admin/oprec/penilaian`: tautan memakai `<a target="_blank" rel="noopener noreferrer">`, sehingga navigasi langsung tidak dianggap stateful oleh Sanctum (tanpa header XHR/Referer) dan ditolak 401. Tautan pada kolom pendaftaran tabel serta panel Tes Tulis kini mengunduh melalui klien API ber-sesi (`responseType: "blob"`), mengikuti pola halaman pendaftar OPREC.
+- [x] Helper bersama `frontend/src/lib/downloadFile.js`; respons daftar penilaian menyertakan `fileName` dan `available` selaras endpoint pendaftar, sehingga berkas hilang ditandai "Berkas tidak tersedia" dan nama unduhan deskriptif.
+- [x] Verifikasi: 11 tes Penilaian/202 assertion, 10 tes akses OPREC/148 assertion, tes frontend OPREC terkait (23) lulus, `tsc --noEmit`, dan `npm run build` (43 route) lulus.
+- [ ] Uji browser terautentikasi (Super Admin/Admin/Pengurus) mengunduh berkas pendaftaran dan berkas Tes Tulis pada server terpasang; sesi/cookie antar-origin tetap memerlukan pemeriksaan integrasi terpisah.
+
+## Pengaturan landing page dan fokus Tes Tulis — 16 Oktober 2026
+
+- [x] Tes Tulis peserta memulai dari tombol **Kerjakan sekarang**, lalu menyembunyikan ringkasan di atas dan panel samping sampai peserta kembali atau tes selesai. Draft jawaban tetap di state selama panel dibuka/tutup.
+- [x] Form OPREC menambah Status Kepengurusan wajib sebelum pilihan divisi dan dua persetujuan wajib setelah semua pertanyaan admin. Validasi dijalankan di halaman peserta, route Next, dan backend.
+- [x] Peserta yang memilih **Melanjutkan Periode kedua** otomatis mendapat pertanyaan paragraf wajib **Alasan melanjutkan Kepengurusan 2026** pada Tes Tulis. Pertanyaan tidak dikirim untuk Anggota Baru; admin dapat menyimulasikan status di pratinjau editor Tes Tulis.
+- [x] Super Admin/Admin mempunyai menu **Pengaturan Landing Page** di atas Merchandise. Backend membatasi pengaturan teks, CRUD galeri, dan CRUD testimoni dengan `admin:content`; publik membaca `/api/public/home` dan foto melalui route publik yang dibatasi nama berkas.
+- [x] Galeri dan testimoni memakai tabel `site_contents`, `galleries`, dan `testimonials`. Contoh statis tetap tampil sampai masing-masing jenis konten mulai dikelola; setelah itu daftar kosong tetap kosong bila semua entri dihapus. Migrasi `2026_10_16_000001` menambah dua penanda pengelolaan.
+- [x] Hero, Tentang, serta Visi dan empat Misi dapat diedit dari halaman yang sama. Teks awal mengikuti konten landing yang sudah ada; setelah disimpan, endpoint publik menyajikan teks baru. Tes fitur API: 4 tes/35 assertion lulus; typecheck frontend lulus. Migrasi aditif diterapkan di database lokal dan endpoint publik merespons 200.
+- [ ] Uji browser terautentikasi untuk editor landing page, persetujuan formulir OPREC, status bersyarat Tes Tulis, dan mode fokus pada desktop serta mobile.
+- [ ] Konten divisi, statistik, dan struktur organisasi masih memakai data statis; cakupan editor lanjutan belum diminta.
+
 ## Pemulihan pemeriksaan sesi lokal — 5 Oktober 2026
 
 - [x] Telusuri navbar “Coba lagi”: label muncul ketika pemeriksaan akun gagal, bukan ketika API mengonfirmasi pengunjung tanpa sesi. Dua listener backend ditemukan; listener development IPv4 tidak merespons, sedangkan backend localhost IPv6 merespons 401/200 secara normal.
@@ -990,3 +1008,18 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 ### Kerangka Penilaian OPREC — 29 September 2026
 - [x] Submenu Penilaian dan route `/admin/oprec/penilaian` tersedia dengan breadcrumb serta indikator sidebar aktif; akses mengikuti guard area OPREC. Typecheck dan build produksi frontend lulus (route terdaftar).
 - [x] Kriteria, alur penjurian, sumber data, dan hak penilai telah diimplementasikan; rincian dan verifikasi tersisa dicatat pada bagian Penilaian OPREC di awal dokumen.
+
+### Perbaikan OPREC — 13 Oktober 2026
+- [x] Pertanyaan bawaan pendaftaran menambah Golongan A–E, Nomor WA, KTM/SIM Online, dan Surat Pernyataan setelah Angkatan. Ringkasan Data & administrasi peserta menempatkan Nama lengkap lalu NIM, serta jabatan dalam kurung pada divisi pilihan. Unit test frontend dan tes API privat lulus; build dan uji browser editor OPREC lulus.
+- [x] Pilihan Golongan dapat diedit per baris seperti Angkatan. Angkatan bawaan berisi 2025 dan 2026; draft lama tanpa opsi memakai bawaan, sedangkan opsi tersimpan tetap dipertahankan. Validasi pilihan ganda dan batas 100 opsi diperiksa sebelum menyimpan.
+- [x] Jadwal pendaftaran dan Tes Tulis menyimpan instan dengan offset UTC untuk PostgreSQL; SQLite pengujian mempertahankan waktu WIB. Regresi baca ulang dan konversi tengah malam ditambahkan.
+- [x] Status pendaftar menghapus istilah verifikasi dan mengarahkan ke tes tulis, tes wawancara, lalu pengumuman; setelah jawaban tes dikirim, arahan beralih ke wawancara.
+- [x] Ekspor seluruh calon peserta sesuai periode/filter ke XLSX dan PDF tersedia bagi Super Admin, Admin, dan Pengurus melalui endpoint yang memeriksa role. Pertanyaan baru Tes Tulis otomatis wajib dijawab.
+- [x] Tombol ekspor dibedakan hijau/merah dengan ikon; XLSX memakai lebar kolom, tinggi baris, wrap, zebra, filter, dan header beku. PDF memakai tabel ringkasan lanskap serta tabel rincian jawaban dengan pergantian halaman.
+- [x] Unduh berkas pendaftaran memakai sesi API yang sama dengan tabel, mempertahankan ekstensi file, dan tampil sebagai tombol berikon dengan status memuat di tabel serta panel detail. Permintaan API tanpa sesi mengembalikan 401, bukan error 500.
+- [x] Pendaftaran lokal yang diuji memiliki satu referensi berkas tanpa file fisik di penyimpanan. Daftar kini menandai berkas hilang dan Admin dapat memulihkannya lewat unggah ulang dengan validasi tipe/isi, ukuran, periode, dan role; berkas yang masih tersedia tidak bisa ditimpa lewat jalur pemulihan. Browser sintetis memastikan file PDF terunduh setelah pemulihan.
+- [ ] File asli pendaftar lokal yang hilang masih perlu diunggah ulang melalui detail pendaftar; byte aslinya tidak ada di workspace.
+- [x] Halaman Log Sistem khusus Super Admin resmi tersedia dengan ringkasan 24 jam, filter, paginasi, dan rincian aman. Middleware mencatat perubahan API, unduhan privat, login/gagal login, akses ditolak, dan error 5xx tanpa body request atau isi berkas. Migrasi aditif `audit_entries` sudah diterapkan pada PostgreSQL lokal; 105 tes backend dan uji browser enam viewport lulus.
+- [x] Tampilan Log Sistem diselaraskan dengan Kelola User. Filter Modul dan rentang tanggal dihapus dari UI; pilihan Jenis/Hasil langsung memuat data dan pencarian memakai jeda 300 ms tanpa tombol terapkan/reset. Build produksi serta uji browser Super Admin/Admin pada enam lebar layar lulus.
+- [ ] Tentukan kebijakan retensi/arsip log sebelum menjadwalkan penghapusan otomatis. Aktivitas sebelum migrasi tidak diisi ulang.
+- [ ] Uji integrasi jadwal pada PostgreSQL dan buka hasil XLSX/PDF di aplikasi pembaca sebelum rilis.

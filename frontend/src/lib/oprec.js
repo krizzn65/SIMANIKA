@@ -6,6 +6,31 @@ export const DEFAULT_DIVISION_LOGOS = Object.freeze({
   kwu: "/images/divisi/kwu.webp",
 });
 
+export const OPREC_FIXED_FIELDS = [
+  { name: "nama", type: "text", label: "Nama lengkap", required: true, maxLength: 150 },
+  { name: "nim", type: "text", label: "NIM", required: true, maxLength: 32 },
+  { name: "tanggal_lahir", type: "date", label: "Tanggal lahir", required: true },
+  { name: "angkatan", type: "select", label: "Angkatan", required: true, options: ["2025", "2026"].map((value) => ({ value, label: value })) },
+  { name: "golongan", type: "select", label: "Golongan", required: true, options: ["A", "B", "C", "D", "E"].map((value) => ({ value, label: value })) },
+  { name: "nomor_wa", type: "tel", label: "Nomor WA", required: true, maxLength: 30 },
+  { name: "ktm_sim_online", type: "file", label: "Upload KTM/SIM Online", required: true, accept: [".pdf", ".jpg", ".jpeg", ".png"], maxSizeMB: 5 },
+  { name: "surat_pernyataan", type: "file", label: "Upload Surat Pernyataan", required: true, accept: [".pdf", ".jpg", ".jpeg", ".png"], maxSizeMB: 5 },
+  { name: "status_kepengurusan", type: "select", label: "Status Kepengurusan", required: true, options: ["Anggota Baru", "Melanjutkan Periode kedua"].map((value) => ({ value, label: value })) },
+];
+
+export const OPREC_REQUIRED_CONSENTS = [
+  { name: "persetujuan_data_benar", label: "Saya menyatakan bahwa data yang saya isi dalam formulir ini benar dan dapat dipertanggungjawabkan." },
+  { name: "persetujuan_penggunaan_data", label: "Saya memahami bahwa data yang saya berikan digunakan untuk keperluan administrasi dan seleksi OPREC HIMANIKA sesuai ketentuan yang berlaku." },
+];
+
+export function validateOprecConsents(form) {
+  const errors = {};
+  for (const consent of OPREC_REQUIRED_CONSENTS) {
+    if (form.get(consent.name) !== "on") errors[consent.name] = "Persetujuan ini wajib dicentang.";
+  }
+  return errors;
+}
+
 export function getDefaultJabatan(nama) {
   const clean = (nama || "").trim();
   if (!clean) return [];
@@ -45,7 +70,7 @@ export function validHttpUrl(value) {
 }
 
 export function normalizeFields(fields = []) {
-  if (!Array.isArray(fields) || fields.length > 40) throw new Error("Invalid OPREC form schema");
+  if (!Array.isArray(fields) || fields.length > 41) throw new Error("Invalid OPREC form schema");
   const seen = new Set();
   const normalized = fields.map((field) => {
     if (!field || !/^[a-z][a-z0-9_]{0,49}$/.test(field.name) || RESERVED_KEYS.has(field.name) || seen.has(field.name) || !FIELD_TYPES.has(field.type) || !text(field.label)) throw new Error("Invalid OPREC field");
@@ -71,6 +96,9 @@ export function normalizeFields(fields = []) {
       targetDivisions: Array.isArray(field.target_divisions ?? field.targetDivisions)
         ? (field.target_divisions ?? field.targetDivisions).map(String).filter(Boolean)
         : [],
+      exampleLabel: text(field.example_label ?? field.exampleLabel),
+      exampleUrl: safePosterUrl(field.example_url ?? field.exampleUrl),
+      exampleFileUrl: safePosterUrl(field.example_file_url ?? field.exampleFileUrl),
     };
   });
   // Identity fields are configured by admin but required for private result lookup.
@@ -104,6 +132,7 @@ export function normalizeOprec(raw) {
   return {
     id: String(raw.id), periode: text(raw.periode), status: raw.status, tanggalBuka, tanggalTutup,
     headline: text(raw.headline), deskripsi: text(raw.deskripsi), poster: safePosterUrl(raw.poster),
+    guidebook: safePosterUrl(raw.guidebook),
     posterAlt: text(raw.posterAlt ?? raw.poster_alt) || `Poster OPREC ${text(raw.periode)}`,
     schemaVersion: String(raw.schemaVersion ?? raw.schema_version ?? "1"),
     formFields: normalizeFields(rawFields),
@@ -256,6 +285,7 @@ export function validateOprecForm(fields, form, now = Date.now(), divisions = []
     else if (field.name === "tanggal_lahir" && !validBirthDate(value, now)) errors[field.name] = "Isi tanggal lahir yang valid.";
     else if (field.type === "date" && (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(Date.parse(value)) || new Date(value).toISOString().slice(0, 10) !== value)) errors[field.name] = "Isi tanggal yang valid.";
     else if (field.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) errors[field.name] = "Isi alamat email yang valid.";
+    else if (field.type === "tel" && !/^[0-9+() .-]{5,30}$/.test(value)) errors[field.name] = "Isi nomor telepon yang valid (5–30 karakter).";
     else if (field.type === "url" && !validHttpUrl(value)) errors[field.name] = "Isi link http:// atau https:// yang valid.";
     else if (field.type === "number" && (!Number.isFinite(Number(value)) || (field.min !== null && Number(value) < field.min) || (field.max !== null && Number(value) > field.max))) errors[field.name] = "Angka berada di luar batas yang diperbolehkan.";
     else if (["select", "radio"].includes(field.type) && !field.options.some((option) => option.value === value)) errors[field.name] = "Pilih salah satu pilihan yang tersedia.";

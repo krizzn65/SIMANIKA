@@ -1,0 +1,550 @@
+.syslog-page {
+  --log-ink: #0f172a;
+  --log-muted: #52627a;
+  --log-border: #e2e8f0;
+  width: 100%;
+  min-width: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  gap: 24px;
+  color: var(--log-ink);
+}
+
+.syslog-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0;
+}
+
+.syslog-eyebrow {
+  display: inline-block;
+  color: #155eef;
+  font-family: ui-monospace, "IBM Plex Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.syslog-hero h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -.025em;
+}
+
+.syslog-hero p {
+  max-width: 620px;
+  margin: 2px 0 0;
+  color: var(--log-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.syslog-refresh,
+.syslog-pagination button,
+.syslog-detail-button,
+.syslog-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  border: 1px solid var(--log-border) !important;
+  border-radius: 10px !important;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color .16s ease, border-color .16s ease, transform .16s ease;
+}
+
+.syslog-refresh {
+  flex: none;
+  padding: 0 17px;
+  color: #0f4bcb;
+  background: #fff !important;
+}
+
+.syslog-refresh:hover:not(:disabled) {
+  background: #f8fafc !important;
+}
+
+.syslog-refresh:disabled,
+.syslog-pagination button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.syslog-spin { animation: syslog-spin .8s linear infinite; }
+@keyframes syslog-spin { to { transform: rotate(360deg); } }
+
+.syslog-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.syslog-stat {
+  min-width: 0;
+  min-height: 106px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--log-border);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+}
+
+.syslog-stat--neutral { --stat-accent: #4a5568; }
+.syslog-stat--amber { --stat-accent: #b35c00; }
+.syslog-stat--red { --stat-accent: #c42b3a; }
+.syslog-stat__icon {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--stat-accent, #155eef);
+  background: #eff4ff;
+}
+.syslog-stat--neutral .syslog-stat__icon { background: #f1f5f9; }
+.syslog-stat--amber .syslog-stat__icon { background: #fffbeb; }
+.syslog-stat--red .syslog-stat__icon { background: #fff1f2; }
+.syslog-stat__label {
+  display: block;
+  color: var(--log-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.syslog-stat strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.syslog-stat small { display: block; margin-top: 4px; color: var(--log-muted); font-size: 12px; }
+
+.syslog-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--log-border);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+}
+.syslog-panel__heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 24px;
+}
+.syslog-panel__heading h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  letter-spacing: -.03em;
+}
+.syslog-panel__heading p { margin: 0; color: var(--log-muted); font-size: 14px; }
+.syslog-count {
+  flex: none;
+  color: #0f4bcb;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.syslog-filters {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(150px, 190px));
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e8eef7;
+  border-bottom: 1px solid #e8eef7;
+  background: #f8fafc;
+}
+.syslog-filters label { display: grid; gap: 7px; min-width: 0; }
+.syslog-filters label > span {
+  color: #3d4b62;
+  font-size: 12px;
+  font-weight: 700;
+}
+.syslog-filters input,
+.syslog-filters select {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  padding: 0 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--log-ink);
+  font: inherit;
+  font-size: 13px;
+}
+.syslog-search div { position: relative; }
+.syslog-search div svg { position: absolute; left: 11px; top: 14px; color: #66758b; }
+.syslog-search input { padding-left: 34px; }
+.syslog-filters input:focus-visible,
+.syslog-filters select:focus-visible,
+.syslog-page button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+
+.syslog-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 26px;
+  border-bottom: 1px solid #f4bdc4;
+  background: #fff3f4;
+  color: #9f1c2a;
+  font-size: 14px;
+}
+.syslog-error button { margin-left: auto; color: inherit; text-decoration: underline; font-weight: 700; }
+.syslog-table-wrap { max-width: 100%; overflow-x: auto; }
+.syslog-table { width: 100%; min-width: 840px; border-collapse: collapse; text-align: left; }
+.syslog-table th {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--log-border);
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.syslog-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; font-size: 13px; }
+.syslog-table tbody tr:hover { background: #f8fafc; }
+.syslog-table tbody tr:last-child td { border-bottom: 0; }
+.syslog-table td strong { display: block; color: var(--log-ink); font-size: 13px; font-weight: 600; }
+.syslog-table td small { display: block; margin-top: 4px; color: var(--log-muted); font-size: 11px; }
+.syslog-mono { font-family: ui-monospace, "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; }
+.syslog-table .syslog-mono { white-space: nowrap; color: #43536b; font-size: 12px; }
+.syslog-table .syslog-mono svg { vertical-align: -2px; color: #155eef; }
+.syslog-kind {
+  display: inline-block;
+  margin-bottom: 5px;
+  color: #0f4bcb;
+  font-family: ui-monospace, "IBM Plex Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.syslog-kind--security { color: #925300; }
+.syslog-kind--error { color: #a92735; }
+.syslog-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 8px;
+  border: 1px solid #9fd7bb;
+  border-radius: 999px;
+  background: #e8f7ee;
+  color: #156a48;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.syslog-badge--failed,
+.syslog-badge--error { border-color: #f1b8bf; background: #fff0f2; color: #a92735; }
+.syslog-badge__dot { width: 6px; height: 6px; flex: none; background: currentColor; }
+.syslog-detail-button,
+.syslog-pagination button,
+.syslog-close { width: 44px; padding: 0; color: #0f4bcb; background: #eff4ff !important; }
+.syslog-detail-button:hover,
+.syslog-pagination button:not(:disabled):hover,
+.syslog-close:hover { background: #dbeafe !important; border-color: #8bb7f5 !important; }
+.syslog-table .syslog-state { height: 200px; text-align: center; color: var(--log-muted); font-size: 14px; }
+.syslog-state svg,
+.syslog-state strong,
+.syslog-state span { display: block; margin: 5px auto; }
+.syslog-loading { width: 20px; height: 20px; border: 2px solid #cad5e5; border-top-color: #155eef; border-radius: 50%; animation: syslog-spin .8s linear infinite; }
+.syslog-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 26px; border-top: 1px solid #e8eef7; color: var(--log-muted); font-size: 13px; }
+.syslog-pagination div { display: flex; gap: 8px; }
+
+.syslog-modal-backdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(7, 17, 31, .55);
+}
+.syslog-modal {
+  width: min(100%, 620px);
+  height: 100%;
+  overflow-y: auto;
+  border-left: 3px solid #155eef;
+  background: #fff;
+  box-shadow: -20px 0 60px rgba(7,17,31,.2);
+}
+.syslog-modal > header { display: flex; align-items: start; justify-content: space-between; gap: 16px; padding: 28px; border-bottom: 1px solid var(--log-border); }
+.syslog-modal h2 { margin: 8px 0 0; font-size: 25px; line-height: 1.2; letter-spacing: -.03em; }
+.syslog-modal__body { padding: 27px 28px 40px; }
+.syslog-modal__lead { display: flex; align-items: center; gap: 12px; margin-bottom: 23px; }
+.syslog-modal__lead .syslog-kind { margin: 0; }
+.syslog-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; border: 1px solid var(--log-border); }
+.syslog-details > div { min-width: 0; padding: 13px 15px; border-right: 1px solid #e9eef6; border-bottom: 1px solid #e9eef6; }
+.syslog-details > div:nth-child(2n) { border-right: 0; }
+.syslog-details__wide { grid-column: 1 / -1; }
+.syslog-details dt { margin-bottom: 5px; color: var(--log-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.syslog-details dd { margin: 0; color: var(--log-ink); font-size: 13px; overflow-wrap: anywhere; }
+.syslog-context { margin-top: 25px; }
+.syslog-context h3 { margin: 0 0 10px; font-size: 16px; }
+.syslog-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.syslog-chips span { padding: 5px 8px; border: 1px solid #bfd6ff; background: #eff6ff; color: #0f4bcb; font-family: ui-monospace, monospace; font-size: 11px; }
+.syslog-change { border: 1px solid var(--log-border); }
+.syslog-change > div { display: grid; grid-template-columns: 95px minmax(0, 1fr) 16px minmax(0, 1fr); align-items: center; gap: 8px; padding: 12px; border-bottom: 1px solid #e9eef6; font-size: 12px; overflow-wrap: anywhere; }
+.syslog-change > div:last-child { border-bottom: 0; }
+.syslog-change span { color: var(--log-muted); }
+.syslog-change strong { font-weight: 600; }
+.syslog-change svg { color: #155eef; }
+.syslog-context p,
+.syslog-detail-note,
+.syslog-detail-state { color: var(--log-muted); font-size: 13px; line-height: 1.55; }
+.syslog-detail-state { padding: 25px 28px; }
+
+/* Judul peristiwa di tabel dengan tag metode auth */
+.syslog-peristiwa-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.syslog-auth-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.syslog-auth-tag--google {
+  background: #e8f0fe;
+  border: 1px solid #bfdbfe;
+  color: #1a73e8;
+}
+.syslog-auth-tag--manual {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}
+
+/* Kartu Autentikasi di Modal */
+.syslog-auth-card {
+  border: 1px solid var(--log-border);
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+.syslog-auth-card__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.syslog-auth-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.syslog-auth-pill--google {
+  background: #e8f0fe;
+  color: #1a73e8;
+  border: 1px solid #93c5fd;
+}
+.syslog-auth-pill--manual {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+.syslog-auth-badge {
+  font-size: 12px;
+  color: var(--log-muted);
+  font-weight: 500;
+}
+.syslog-auth-desc {
+  margin: 0 !important;
+  color: #1e293b !important;
+  font-size: 13px !important;
+  line-height: 1.5;
+}
+.syslog-auth-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--log-muted);
+}
+.syslog-auth-row strong {
+  color: var(--log-ink);
+  font-family: ui-monospace, monospace;
+}
+
+/* Box Rincian Kendala & Error */
+.syslog-error-box {
+  border: 1px solid #fecaca;
+  background: #fff5f5;
+  border-radius: 12px;
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+}
+.syslog-error-box__lead {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #991b1b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.syslog-error-box__icon {
+  flex: none;
+  margin-top: 2px;
+  color: #dc2626;
+}
+.syslog-error-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #fee2e2;
+}
+.syslog-error-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.syslog-error-grid span {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #7f1d1d;
+  letter-spacing: .04em;
+}
+.syslog-code {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  color: #b91c1c;
+  word-break: break-all;
+}
+.syslog-status-code {
+  font-size: 13px;
+  color: #b91c1c;
+  font-weight: 700;
+}
+.syslog-error-detail-text {
+  font-size: 12px;
+  color: #7f1d1d;
+  line-height: 1.5;
+  background: #fff;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #fee2e2;
+}
+.syslog-error-detail-text span {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+.syslog-error-detail-text p {
+  margin: 0 !important;
+  color: #991b1b !important;
+  font-family: ui-monospace, monospace;
+  font-size: 12px !important;
+  word-break: break-all;
+}
+.syslog-error-tip {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  color: #854d0e;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.syslog-error-tip strong {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  color: #713f12;
+}
+.syslog-error-tip p {
+  margin: 0 !important;
+  color: #854d0e !important;
+}
+.syslog-val-errors {
+  font-size: 12px;
+  color: #991b1b;
+  background: #fff;
+  border: 1px solid #fee2e2;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.syslog-val-errors h4 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #7f1d1d;
+}
+.syslog-val-errors ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.syslog-val-errors li {
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+@media (max-width: 1200px) {
+  .syslog-filters { grid-template-columns: minmax(0, 1fr) repeat(2, minmax(130px, 170px)); }
+}
+@media (max-width: 760px) {
+  .syslog-page { gap: 16px; }
+  .syslog-hero { align-items: start; flex-direction: column; }
+  .syslog-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .syslog-stat { min-height: 118px; padding: 15px; }
+  .syslog-panel__heading { align-items: start; padding: 20px; }
+  .syslog-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 17px 20px; }
+  .syslog-search { grid-column: 1 / -1; }
+  .syslog-modal { width: 100%; }
+}
+@media (max-width: 480px) {
+  .syslog-panel__heading { flex-direction: column; gap: 10px; }
+  .syslog-filters { grid-template-columns: 1fr; }
+  .syslog-modal > header { padding: 20px; }
+  .syslog-modal__body { padding: 20px; }
+  .syslog-details { grid-template-columns: 1fr; }
+  .syslog-details > div { border-right: 0; }
+  .syslog-change > div { grid-template-columns: 70px minmax(0, 1fr) 16px minmax(0, 1fr); gap: 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .syslog-spin,
+  .syslog-loading { animation: none; }
+  .syslog-page button { transition: none; }
+}

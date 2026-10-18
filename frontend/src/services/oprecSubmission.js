@@ -1,7 +1,7 @@
 import "server-only";
 import { NextResponse } from "next/server";
 import { getOprec } from "./oprecService";
-import { normalizeOprecNim, oprecState, validBirthDate, validateOprecForm, isFieldApplicable } from "@/lib/oprec";
+import { OPREC_REQUIRED_CONSENTS, normalizeOprecNim, oprecState, validBirthDate, validateOprecForm, validateOprecConsents, isFieldApplicable } from "@/lib/oprec";
 
 const headers = { "Cache-Control": "private, no-store, max-age=0", "X-Content-Type-Options": "nosniff" };
 const reply = (body, status = 200) => Response.json(body, { status, headers });
@@ -34,7 +34,7 @@ async function readBody(request, limit) {
 }
 
 async function forwardRegistration(body, request) {
-  const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+  const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
   if (!base) throw new RequestError("Layanan belum tersedia. Coba lagi nanti.", 503);
   const authHeaders = {};
   {
@@ -96,7 +96,7 @@ export async function registerOprec(request) {
     if (form.get("oprec_id") !== oprec.id || form.get("schema_version") !== oprec.schemaVersion) return reply({ message: "Formulir sudah diperbarui. Muat ulang halaman sebelum mengirim." }, 409);
     if (!oprec.formFields.length) return reply({ message: "Formulir belum tersedia." }, 409);
     if (typeof form.get("nim") === "string") form.set("nim", normalizeOprecNim(form.get("nim")));
-    const errors = validateOprecForm(oprec.formFields, form, Date.now(), oprec.divisiTersedia);
+    const errors = { ...validateOprecForm(oprec.formFields, form, Date.now(), oprec.divisiTersedia), ...validateOprecConsents(form) };
     if (Object.keys(errors).length) return reply({ message: "Periksa kembali formulir pendaftaranmu.", errors }, 422);
     const body = new FormData();
     body.set("schema_version", oprec.schemaVersion);
@@ -106,6 +106,7 @@ export async function registerOprec(request) {
       const value = form.get(field.name);
       if (value !== null && !(field.type === "file" && !value.size)) body.set(field.name, typeof value === "string" ? value.trim() : value);
     }
+    for (const consent of OPREC_REQUIRED_CONSENTS) body.set(consent.name, form.get(consent.name));
     for (const rank of [1, 2, 3]) {
       const value = form.get(`divisi_pilihan_${rank}`);
       if (value !== null) body.set(`divisi_pilihan_${rank}`, value);
@@ -132,7 +133,7 @@ export async function lookupOprecResult(request) {
     const nim = normalizeOprecNim(body?.nim);
     const id = String(body?.oprec_id || "");
     if (!/^\d+$/.test(id) || !/^E31[A-Z0-9.\-]{0,29}$/.test(nim) || !validBirthDate(body?.tanggal_lahir)) return reply({ message: "Periksa NIM dan tanggal lahirmu." }, 422);
-    const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+    const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
     if (!base) return reply({ message: "Layanan belum tersedia." }, 503);
     const response = await fetch(base.replace(/\/+$/, "") + "/public/oprec/" + id + "/announcement/verify", {
       method: "POST", headers: { Accept: "application/json", "Content-Type": "application/json" },

@@ -1,4 +1,5 @@
 import { ScrollReset } from "@/components/layout/ScrollReset";
+import { SessionTimeoutModal } from "@/components/auth/SessionTimeoutModal";
 import "./globals.css";
 
 export const metadata = {
@@ -35,6 +36,7 @@ export default function RootLayout({ children }) {
       <body>
         <ScrollReset />
         {children}
+        <SessionTimeoutModal />
       </body>
     </html>
   );

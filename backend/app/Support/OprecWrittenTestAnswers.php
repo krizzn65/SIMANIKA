@@ -10,15 +10,38 @@ use Illuminate\Validation\ValidationException;
 
 class OprecWrittenTestAnswers
 {
+    public static function allQuestions(array $questions): array
+    {
+        if (!collect($questions)->contains(fn ($question) => ($question['id'] ?? null) === 'alasan_melanjutkan_kepengurusan_2026')) {
+            $questions[] = [
+                'id' => 'alasan_melanjutkan_kepengurusan_2026',
+                'label' => 'Alasan melanjutkan Kepengurusan 2026',
+                'type' => 'paragraph',
+                'required' => true,
+                'help' => 'Khusus peserta dengan status Melanjutkan Periode kedua.',
+                'options' => [],
+                'targetDivisions' => [],
+            ];
+        }
+        return $questions;
+    }
+
     public static function applicableQuestions(array $questions, OprecRegistration $registration): array
     {
         $selected = array_map('intval', array_filter([
             $registration->divisi_pilihan_1, $registration->divisi_pilihan_2, $registration->divisi_pilihan_3,
         ]));
-        return array_values(array_filter($questions, function ($question) use ($selected) {
+        $questions = array_values(array_filter($questions, function ($question) use ($selected) {
             $targets = array_map('intval', $question['targetDivisions'] ?? []);
             return !$targets || (bool) array_intersect($targets, $selected);
         }));
+        $statusField = collect(OprecRegistrationFields::withDefaults($registration->oprec->form_fields ?? []))
+            ->firstWhere('name', 'status_kepengurusan');
+        $continuingValue = $statusField['options'][1]['value'] ?? 'Melanjutkan Periode kedua';
+        if (($registration->form_data['status_kepengurusan'] ?? null) === $continuingValue) {
+            $questions = self::allQuestions($questions);
+        }
+        return $questions;
     }
 
     public static function validateAndStore(array $questions, array $raw, int $stageId, array &$stored): array

@@ -112,8 +112,9 @@ Aturan tambahan:
 
 ### 6.1 Identitas wajib
 
-- Formulir dimulai dengan **Nama lengkap, NIM, Tanggal lahir, Angkatan, dan Pilihan divisi**. Pilihan divisi menjadi satu kelompok yang menyimpan prioritas 1–3.
-- Nama, NIM, tanggal lahir, dan angkatan memiliki tipe dasar dan sifat wajib yang tetap. Pilihan angkatan berasal dari admin dan berupa tahun empat digit.
+- Urutan sistem formulir adalah **Nama lengkap, NIM, Tanggal lahir, Angkatan, Golongan, Nomor WA, unggah KTM/SIM Online, unggah Surat Pernyataan, Status Kepengurusan, lalu Pilihan divisi**. Divisi menyimpan prioritas 1–3.
+- Field identitas, status kepengurusan, dan persetujuan memiliki sifat wajib. Status berisi **Anggota Baru** atau **Melanjutkan Periode kedua**. Setelah semua pertanyaan tambahan admin, peserta wajib mencentang pernyataan bahwa data benar dan dapat dipertanggungjawabkan serta pernyataan penggunaan data untuk administrasi dan seleksi OPREC.
+- Pilihan awal Angkatan adalah 2025 dan 2026; Golongan adalah A–E. Admin dapat mengubah opsi melalui editor formulir.
 - NIM wajib diawali **`E31`**, panjang total 3–32 karakter; karakter berikutnya hanya huruf, angka, titik, atau tanda hubung.
 - NIM dipangkas dan dinormalisasi ke huruf kapital di browser, proxy Next, dan Laravel. NIM disimpan sebagai string agar angka nol tidak hilang.
 - Peringatan inline awalan NIM muncul saat awalan sudah menyimpang dari `E31`. Input kosong atau awalan yang masih mungkin dilengkapi (`E`, `E3`, `E31`) tidak langsung diberi peringatan awalan; kiriman tetap wajib lolos validasi lengkap.
@@ -131,7 +132,7 @@ Aturan tambahan:
 
 ### 6.3 Pertanyaan dinamis
 
-- Formulir pendaftaran maksimal **40 field**, dengan paling banyak 35 pertanyaan tambahan di luar lima kelompok awal.
+- Formulir pendaftaran maksimal **41 field**, termasuk sembilan field sistem sebelum divisi; maksimal 32 pertanyaan tambahan admin. Batas ini mempertahankan field lama saat Status Kepengurusan ditambahkan. Persetujuan sistem berada di akhir, di luar daftar field yang dapat diubah admin.
 - Tipe yang didukung: teks, email, telepon, Link/URL, angka, tanggal, paragraf, select, radio, checkbox, dan berkas.
 - Nama field harus unik, mengikuti `[a-z][a-z0-9_]*`, maksimal 50 karakter, dan tidak memakai nama terlarang seperti `oprec_id`, `schema_version`, `__proto__`, `constructor`, atau `prototype`.
 - Sifat wajib, petunjuk, placeholder, panjang teks, batas angka, opsi, format berkas, dan ukuran berkas mengikuti skema admin; server tetap menjadi pemeriksa otoritatif.
@@ -216,6 +217,7 @@ Nama jabatan di tabel mengikuti nilai katalog aplikasi, termasuk ejaan `Staff` d
 - Tes Tulis hanya tersedia bagi pemilik **pendaftaran yang sudah dikirim**. Enrollment saja tidak cukup.
 - Kartu Tes Tulis muncul di bawah Data & administrasi. Sebelum mulai, soal dirahasiakan dan countdown ditampilkan.
 - Dalam jendela aktif, peserta hanya mendapat soal yang berlaku untuk salah satu dari tiga pilihan divisinya.
+- Peserta berstatus **Melanjutkan Periode kedua** mendapat soal sistem wajib tipe paragraf **Alasan melanjutkan Kepengurusan 2026**. Anggota Baru tidak mendapat soal ini; backend menentukan keberlakuannya dari status pada data pendaftaran dan menampilkannya pada detail serta tabel jawaban admin.
 - Satu peserta hanya boleh mengirim satu jawaban Tes Tulis untuk periode itu. Jawaban tersimpan menjadi hanya-baca dan dapat dibaca kembali setelah refresh.
 - Server memeriksa kepemilikan, kesiapan tes, waktu, pertanyaan yang berlaku, tipe, kewajiban, panjang jawaban, dan berkas. Constraint unik mencegah kiriman ganda serentak.
 - Batas jawaban tes: teks singkat maksimal **500 karakter**, paragraf **5.000 karakter**, dan tipe teks lain **200 karakter**. Berkas Tes Tulis maksimal **5 MB per berkas**.

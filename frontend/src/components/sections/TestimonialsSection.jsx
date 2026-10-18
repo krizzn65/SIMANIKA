@@ -1,7 +1,7 @@
 import { TestimonialMarqueeColumns } from "@/components/ui/testimonial-v2";
 import { PixelCorner } from "@/components/ui/PixelCorner";
 
-export function TestimonialsSection() {
+export function TestimonialsSection({ testimonials }) {
   return (
     <section
       className="testimonials-section"
@@ -26,7 +26,7 @@ export function TestimonialsSection() {
         </header>
 
         {/* 21st.dev Testimonial V2 Scrolling Columns */}
-        <TestimonialMarqueeColumns />
+        {testimonials?.length === 0 ? <p>Testimoni sedang disiapkan.</p> : <TestimonialMarqueeColumns testimonials={testimonials} />}
       </div>
     </section>
   );

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, Calendar, MapPin, Tag, ArrowRight, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { X, Calendar, MapPin, Tag, ArrowRight, CheckCircle2, AlertCircle, Loader2, BookOpen } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
 import { oprecState } from "@/lib/oprec";
@@ -231,6 +231,13 @@ export function OprecDetailModal({ isOpen, onClose, oprec }) {
 
             {/* Modal Actions */}
             <div className="oprec-modal-footer">
+              {oprec?.guidebook && (
+                <div className="oprec-modal-guidebook-actions">
+                  <a href={oprec.guidebook} target="_blank" rel="noopener noreferrer" className="oprec-modal-guidebook-btn">
+                    <BookOpen size={17} aria-hidden="true" /><span>Guidebook</span>
+                  </a>
+                </div>
+              )}
               {isOpenPhase ? (
                 <button
                   type="button"

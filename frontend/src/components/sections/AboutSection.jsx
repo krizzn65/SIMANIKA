@@ -1,5 +1,6 @@
 import { ScrollRevealText } from "@/components/ui/ScrollRevealText";
 import { PixelCorner } from "@/components/ui/PixelCorner";
+import { landingTextDefaults } from "@/lib/landingText";
 
 const pillars = [
   {
@@ -19,7 +20,8 @@ const pillars = [
   },
 ];
 
-export function AboutSection() {
+export function AboutSection({ about }) {
+  const paragraphs = (about || landingTextDefaults.about).split(/\n\s*\n/).filter(Boolean);
   return (
     <section className="about-section" id="tentang" aria-labelledby="about-title">
       <div className="about-shell">
@@ -48,15 +50,7 @@ export function AboutSection() {
 
         <div className="about-details">
           <div className="about-copy">
-            <p>
-              HIMANIKA adalah ruang bagi mahasiswa Manajemen Informatika untuk
-              bertemu, belajar, dan membangun pengalaman yang relevan di dalam
-              maupun di luar kampus.
-            </p>
-            <p>
-              Melalui SIMANIKA, informasi organisasi, kolaborasi, dan pengembangan
-              anggota hadir dalam satu ekosistem yang lebih terbuka dan terhubung.
-            </p>
+            {paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
           </div>
 
           <div className="about-pillars" role="list" aria-label="Fokus HIMANIKA">

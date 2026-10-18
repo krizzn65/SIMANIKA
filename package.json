@@ -4,9 +4,9 @@
   "private": true,
   "description": "SIMANIKA Fullstack Monorepo Root",
   "scripts": {
-    "dev": "concurrently -k -n \"FRONTEND,BACKEND\" -c \"cyan.bold,magenta.bold\" \"npm run dev --prefix frontend\" \"cd backend && php -S 127.0.0.1:8000 -t public public/index.php\"",
+    "dev": "concurrently -k -n \"FRONTEND,BACKEND\" -c \"cyan.bold,magenta.bold\" \"npm run dev --prefix frontend\" \"cd backend && php -S 127.0.0.1:8000 -t public public/router.php\"",
     "dev:fe": "npm run dev --prefix frontend",
-    "dev:be": "cd backend && php -S 127.0.0.1:8000 -t public public/index.php"
+    "dev:be": "cd backend && php -S 127.0.0.1:8000 -t public public/router.php"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

@@ -25,7 +25,7 @@ class OprecThreeDivisionChoicesTest extends TestCase
         ]);
         $ids = collect(['BPH', 'Humas', 'PSDM'])->map(fn ($name, $index) => $oprec->divisions()->create(['nama' => $name, 'sort_order' => $index])->id)->all();
         $url = '/api/user/oprec/register';
-        $base = ['oprec_id' => $oprec->id, 'schema_version' => '1', 'nim' => 'e312345', 'tanggal_lahir' => '2004-01-01', 'portofolio' => 'https://github.com/example/portfolio', 'jabatan_pilihan_1' => 'Sekretaris 2'];
+        $base = ['oprec_id' => $oprec->id, 'schema_version' => '1', 'nim' => 'e312345', 'tanggal_lahir' => '2004-01-01', 'portofolio' => 'https://github.com/example/portfolio', 'status_kepengurusan' => 'Anggota Baru', 'persetujuan_data_benar' => 'on', 'persetujuan_penggunaan_data' => 'on', 'jabatan_pilihan_1' => 'Sekretaris 2'];
 
         $this->actingAs($user, 'sanctum')->postJson($url, $base + ['divisi_pilihan_1' => (string) $ids[0]])->assertUnprocessable();
         $this->postJson($url, $base + ['divisi_pilihan_1' => (string) $ids[0], 'divisi_pilihan_2' => (string) $ids[1], 'divisi_pilihan_3' => (string) $ids[1]])->assertUnprocessable();

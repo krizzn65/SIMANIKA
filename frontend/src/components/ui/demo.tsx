@@ -47,7 +47,9 @@ export const SignInPageDemo = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const error = params.get("error");
-    if (error === "google_cancelled") {
+    if (params.get("reason") === "session_expired" || error === "session_expired") {
+      showFeedback("error", "Sesi Anda telah berakhir karena tidak ada aktivitas selama 2 jam. Silakan masuk kembali.");
+    } else if (error === "google_cancelled") {
       showFeedback("error", "Login dengan akun Google dibatalkan.");
     } else if (error === "google_not_configured") {
       showFeedback("error", "Google OAuth belum dikonfigurasi di server (.env).");

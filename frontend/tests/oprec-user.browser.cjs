@@ -7,13 +7,15 @@ const path = require('node:path');
 
 async function main() {
   const origin = 'http://localhost:3010';
-  let role = 'user'; let registered = false; let testSubmitted = false; let released = false;
+  let role = 'user'; let registered = false; let testSubmitted = false; let released = false; let registrationStatus = 'Anggota Baru';
   let registrationAttempts = 0; let testAttempts = 0; let resultStatus = 'accepted';
   const requests = []; const errors = [];
   const enrollmentOnly = process.argv.includes('--enrollment-only');
   const scheduleOnly = process.argv.includes('--schedule-only');
   const positionsOnly = process.argv.includes('--positions-only');
   const adminFormsOnly = process.argv.includes('--admin-forms-only');
+  const summaryOnly = process.argv.includes('--summary-only');
+  if (summaryOnly) registered = true;
   let builderSaveAttempts = 0; let editAttempts = 0; let savedEdit;
   let releaseBuilderResponse; let builderResponseGate = Promise.resolve();
   let scheduleLocked = false; let savedSchedule; if (scheduleOnly || positionsOnly || adminFormsOnly) role = 'admin';
@@ -28,9 +30,16 @@ async function main() {
       { name: 'angkatan', label: 'Angkatan', type: 'select', required: true, options: [{ value: '2024', label: '2024' }] },
       { name: 'cv', label: 'CV', type: 'file', required: false, accept: ['.pdf'], maxSizeMB: 2 }],
     pengumuman: { published: false }, faq: [] };
+  if (summaryOnly) period.formFields.splice(4, 0,
+    { name: 'golongan', label: 'Golongan', type: 'select', required: true, options: ['A', 'B', 'C', 'D', 'E'].map(value => ({ value, label: value })) },
+    { name: 'nomor_wa', label: 'Nomor WA', type: 'tel', required: true },
+    { name: 'ktm_sim_online', label: 'Upload KTM/SIM Online', type: 'file', required: true, accept: ['.pdf'], maxSizeMB: 5 },
+    { name: 'surat_pernyataan', label: 'Upload Surat Pernyataan', type: 'file', required: true, accept: ['.pdf'], maxSizeMB: 5 });
+  if (summaryOnly) period.formFields.push({ name: 'status_kepengurusan', label: 'Status Kepengurusan', type: 'select', required: true, options: ['Anggota Baru', 'Melanjutkan Periode kedua'].map(value => ({ value, label: value })) });
   const registration = () => registered ? { id: 100, nim: 'E3124001', tanggalLahir: '2004-01-01',
     divisiPilihan1: 1, divisiPilihan2: 2, divisiPilihan3: 3, status: released ? resultStatus : 'pending',
-    formData: { nama: 'Peserta Uji', angkatan: '2024' }, registeredAt: new Date().toISOString() } : null;
+    formData: { nama: 'Peserta Uji', angkatan: '2024', status_kepengurusan: registrationStatus, ...(summaryOnly ? { golongan: 'A', nomor_wa: '08123456789', jabatan_pilihan_1: 'Staff Divisi Humas' } : {}) },
+    uploadedFileFields: summaryOnly ? ['ktm_sim_online', 'surat_pernyataan'] : [], registeredAt: new Date().toISOString() } : null;
   const backend = http.createServer(async (req, res) => {
     try {
       const chunks = []; for await (const chunk of req) chunks.push(chunk);
@@ -42,6 +51,7 @@ async function main() {
         assert.deepEqual([1, 2, 3].map(rank => form.get('divisi_pilihan_' + rank)), ['1', '2', '3']);
         assert.equal(form.get('jabatan_pilihan_1'), 'Staff Divisi Humas');
         assert.equal(form.get('cv').name, 'cv.pdf');
+        registrationStatus = form.get('status_kepengurusan') || 'Anggota Baru';
         registrationAttempts++;
         if (registrationAttempts === 1) { status = 503; payload = { message: 'Temporary failure' }; }
         else { registered = true; status = 201; payload = { data: { submitted: true } }; }
@@ -108,10 +118,10 @@ async function main() {
       else if (url.pathname.endsWith('/written-test') && request.method === 'GET') payload = { data: {
         id: 901, headline: 'Tes Uji', ready: true, active: true, server_now: new Date().toISOString(),
         tanggal_buka: '2000-01-01T00:00:00Z', tanggal_tutup: '2099-01-01T00:00:00Z',
-        questions: [{ id: 'reason', type: 'short_text', label: 'Alasan bergabung', required: true }],
-        submission: testSubmitted ? { answers: { reason: 'Ingin berkontribusi' }, files: {}, submitted_at: new Date().toISOString() } : null } };
+        questions: registrationStatus === 'Melanjutkan Periode kedua' ? [{ id: 'alasan_melanjutkan_kepengurusan_2026', type: 'paragraph', label: 'Alasan melanjutkan Kepengurusan 2026', required: true }] : [],
+        submission: testSubmitted ? { answers: { alasan_melanjutkan_kepengurusan_2026: 'Ingin berkontribusi' }, files: {}, submitted_at: new Date().toISOString() } : null } };
       else if (url.pathname.endsWith('/written-test') && request.method === 'POST') {
-        testAttempts++; assert.equal(JSON.parse(request.postData).answers.reason, 'Ingin berkontribusi');
+        testAttempts++; assert.equal(JSON.parse(request.postData).answers.alasan_melanjutkan_kepengurusan_2026, 'Ingin berkontribusi');
         if (testAttempts === 1) { status = 503; payload = { message: 'Jawaban gagal disimpan. Coba lagi.' }; }
         else { testSubmitted = true; status = 201; payload = { data: { submitted: true } }; }
       } else if (adminFormsOnly && url.pathname.endsWith('/admin/oprec/900')) {
@@ -119,6 +129,8 @@ async function main() {
           builderSaveAttempts++;
           const input = JSON.parse(request.postData);
           assert.equal(input.periode, period.periode);
+          assert.deepEqual(input.form_fields.slice(4, 8).map(field => field.name), ['golongan', 'nomor_wa', 'ktm_sim_online', 'surat_pernyataan']);
+          assert.deepEqual(input.form_fields[4].options.map(option => option.value), ['X', 'Y']);
           assert.deepEqual(input.divisi_tersedia.map(d => d.jabatan), period.divisiTersedia.map(d => d.jabatan));
           await builderResponseGate;
           if (builderSaveAttempts === 1) { status = 503; payload = { message: 'Penyimpanan builder gagal sementara.' }; }
@@ -159,6 +171,26 @@ async function main() {
     await send('Page.enable'); await send('Runtime.enable'); await send('Network.enable');
     await send('Fetch.enable', { patterns: [{ urlPattern: '*api/*' }] });
     await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+    if (summaryOnly) {
+      await send('Page.navigate', { url: origin + '/dashboard/oprec' });
+      await waitFor(`document.body?.innerText.includes('Data & administrasi') && document.body?.innerText.includes('Divisi Pilihan 1')`);
+      const summary = await evaluate(`{
+        const section = Array.from(document.querySelectorAll('section')).find(el => el.querySelector('h2')?.textContent.trim() === 'Data & administrasi');
+        Array.from(section.querySelectorAll('dl dt')).map(dt => ({ label: dt.textContent.trim(), value: dt.nextElementSibling?.textContent.trim() }));
+      }`);
+      assert.deepEqual(summary.slice(0, 2).map(row => row.label), ['Nama lengkap', 'NIM']);
+      assert.deepEqual(summary.slice(3, 8).map(row => row.label), ['Angkatan', 'Golongan', 'Nomor WA', 'Upload KTM/SIM Online', 'Upload Surat Pernyataan']);
+      assert.equal(summary.find(row => row.label === 'Upload Surat Pernyataan')?.value, 'Berkas diunggah');
+      assert.equal(summary.find(row => row.label === 'Divisi Pilihan 1')?.value, 'Humas (Staff Divisi Humas)');
+      assert.equal(summary.some(row => row.label.startsWith('Jabatan Pilihan')), false);
+      for (const width of [320, 390, 768, 1440]) {
+        await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: false });
+        assert.equal(await evaluate('document.documentElement.scrollWidth > innerWidth'), false, 'participant summary width ' + width);
+      }
+      assert.deepEqual(errors, []);
+      console.log('PASS: participant summary identity order, division position, and 4 viewports.');
+      return;
+    }
     if (adminFormsOnly) {
       const waitForFixture = async condition => {
         for (let i = 0; i < 100; i++) {
@@ -175,6 +207,14 @@ async function main() {
       }`);
       await send('Page.navigate', { url: origin + '/admin/oprec/900/edit' });
       await waitFor(`document.querySelector('.oprec-builder__tabs')`);
+      await evaluate(`Array.from(document.querySelectorAll('.oprec-builder__tabs button')).find(button => button.textContent.includes('Pertanyaan Formulir')).click()`);
+      await waitFor(`Array.from(document.querySelectorAll('.oprec-builder__field--fixed')).some(card => card.querySelector('strong')?.textContent === 'Golongan')`);
+      assert.equal(await evaluate(`Array.from(document.querySelectorAll('.oprec-builder__field--fixed')).find(card => card.querySelector('strong')?.textContent === 'Golongan').querySelector('textarea').value`), 'A\nB\nC\nD\nE');
+      await evaluate(`{
+        const textarea = Array.from(document.querySelectorAll('.oprec-builder__field--fixed')).find(card => card.querySelector('strong')?.textContent === 'Golongan').querySelector('textarea');
+        Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(textarea, ${JSON.stringify('X\nY')});
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      }`);
       builderResponseGate = new Promise(resolve => { releaseBuilderResponse = resolve; });
       await evaluate(`{
         const buttons = Array.from(document.querySelectorAll('button')).filter(el => el.textContent.trim() === 'Simpan Formulir');
@@ -300,15 +340,19 @@ async function main() {
     await waitFor(`document.querySelector('.event-form-feedback[role="alert"]')`);
     assert.equal(registrationAttempts, 0);
     for (const id of [1, 2, 3]) await evaluate(`document.querySelector('#oprec-divisi-${id}').click()`);
+    await evaluate(`{ const status=document.querySelector('[name="status_kepengurusan"]');status.value='Melanjutkan Periode kedua';status.dispatchEvent(new Event('change',{bubbles:true})); document.querySelector('[name="persetujuan_data_benar"]').click(); document.querySelector('[name="persetujuan_penggunaan_data"]').click(); }`);
     await evaluate(`document.querySelector('.event-dynamic-form').requestSubmit()`);
     await waitFor(`document.querySelector('.oprec-submit-dialog')`); await click('Ya, kirim formulir');
     await waitFor(`document.querySelector('.event-form-feedback')?.textContent.includes('belum bisa')`);
     assert.equal(registered, false);
     await evaluate(`document.querySelector('.event-dynamic-form').requestSubmit()`);
     await waitFor(`document.querySelector('.oprec-submit-dialog')`); await click('Ya, kirim formulir');
-    await waitFor(`document.body?.innerText.includes('Pendaftaran Berhasil Dikirim') && document.querySelector('#test-reason')`);
+    await waitFor(`document.body?.innerText.includes('Pendaftaran Berhasil Dikirim') && document.body?.innerText.includes('Kerjakan sekarang')`);
     assert.equal(registrationAttempts, 2);
-    await fill('#test-reason', 'Ingin berkontribusi'); await click('Kirim jawaban'); await click('Ya, kirim jawaban');
+    assert.equal(await evaluate(`Boolean(document.querySelector('#test-alasan_melanjutkan_kepengurusan_2026'))`), false);
+    await click('Kerjakan sekarang');
+    await waitFor(`document.querySelector('#test-alasan_melanjutkan_kepengurusan_2026') && !document.body?.innerText.includes('Pendaftaran Berhasil Dikirim')`);
+    await fill('#test-alasan_melanjutkan_kepengurusan_2026', 'Ingin berkontribusi'); await click('Kirim jawaban'); await click('Ya, kirim jawaban');
     await waitFor(`document.body?.innerText.includes('Jawaban gagal disimpan')`);
     await click('Kirim jawaban'); await click('Ya, kirim jawaban');
     await waitFor(`document.body?.innerText.includes('Jawaban Tes Tulis Terkirim')`);

@@ -33,6 +33,8 @@ class OprecWorkspaceController extends Controller
         if ($requested) abort_unless($registration || $enrolled, 404, 'Pendaftaran OPREC tidak ditemukan.');
 
         $announced = app(\App\Services\OprecAnnouncementService::class)->released($oprec);
+        $writtenTestSubmitted = $registration && $oprec->writtenTest()
+            ->whereHas('submissions', fn ($query) => $query->where('user_id', $userId))->exists();
 
         $acceptedDivision = null;
         if ($registration && $registration->accepted_division_id) {
@@ -48,6 +50,7 @@ class OprecWorkspaceController extends Controller
                     'headline' => $oprec->headline,
                     'deskripsi' => $oprec->deskripsi,
                     'poster' => $oprec->poster ? url('api/public/oprec/posters/' . basename($oprec->poster)) : null,
+                    'guidebook' => $oprec->guidebook ? route('public.oprec-guidebook', ['oprec' => $oprec->id]) : null,
                     'tanggalBuka' => $oprec->tanggal_buka?->toIso8601String(),
                     'tanggalTutup' => $oprec->tanggal_tutup?->toIso8601String(),
                     'schemaVersion' => $oprec->schema_version,
@@ -60,6 +63,10 @@ class OprecWorkspaceController extends Controller
                             'targetType' => $field['target_type'] ?? 'all',
                             'target_divisions' => $field['target_divisions'] ?? [],
                             'targetDivisions' => $field['target_divisions'] ?? [],
+                            'example_file' => null,
+                            'example_file_url' => !empty($field['example_file']) ? route('public.oprec-example', ['oprec' => $oprec->id, 'field' => $field['name']]) : null,
+                            'exampleFileUrl' => !empty($field['example_file']) ? route('public.oprec-example', ['oprec' => $oprec->id, 'field' => $field['name']]) : null,
+                            'exampleLabel' => $field['example_label'] ?? null,
                         ]))
                         ->values()->all(),
                     'formIntro' => $oprec->form_intro ?? null,
@@ -85,6 +92,7 @@ class OprecWorkspaceController extends Controller
                     ],
                 ],
                 'enrolled' => $enrolled,
+                'writtenTestSubmitted' => (bool) $writtenTestSubmitted,
                 'registration' => $registration ? [
                     'id' => $registration->id,
                     'nim' => $registration->nim,
@@ -93,6 +101,10 @@ class OprecWorkspaceController extends Controller
                     'divisiPilihan2' => $registration->divisi_pilihan_2,
                     'divisiPilihan3' => $registration->divisi_pilihan_3,
                     'formData' => $registration->form_data,
+                    'uploadedFileFields' => collect($oprec->form_fields ?? [])
+                        ->filter(fn ($field) => ($field['type'] ?? null) === 'file'
+                            && array_key_exists($field['name'] ?? '', $registration->file_uploads ?? []))
+                        ->pluck('name')->values()->all(),
                     'link_grup_wa' => $oprec->link_grup_wa,
                     'linkGrupWa' => $oprec->link_grup_wa,
                     'status' => $announced ? $registration->status : 'pending',

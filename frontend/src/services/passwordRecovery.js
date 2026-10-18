@@ -44,7 +44,7 @@ export async function passwordRecovery(request, action) {
     payload = { token, email, password, password_confirmation: password };
   }
 
-  const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+  const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
   if (!base) return reply("Layanan pemulihan sandi belum tersedia. Coba lagi nanti.", 503);
 
   try {

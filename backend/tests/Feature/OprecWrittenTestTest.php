@@ -12,6 +12,35 @@ class OprecWrittenTestTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_registration_and_written_test_keep_the_selected_wib_schedule_after_reload(): void
+    {
+        $oprec = Oprec::create(['periode' => 'WIB', 'status' => 'closed', 'schema_version' => '1',
+            'form_fields' => [], 'tanggal_buka' => '2026-10-13T00:00:00+07:00',
+            'tanggal_tutup' => '2026-10-13T23:59:59+07:00']);
+        $stage = $oprec->writtenTest()->create(['type' => 'test_tulis', 'headline' => 'Tes WIB',
+            'tanggal_buka' => '2026-10-14T08:30:00+07:00',
+            'tanggal_tutup' => '2026-10-14T10:15:00+07:00', 'form_fields' => [], 'published' => false]);
+        $this->assertSame('2026-10-13 00:00', $oprec->fresh()->tanggal_buka->timezone('Asia/Jakarta')->format('Y-m-d H:i'));
+        $this->assertSame('2026-10-13 23:59', $oprec->fresh()->tanggal_tutup->timezone('Asia/Jakarta')->format('Y-m-d H:i'));
+        $this->assertSame('2026-10-14 08:30', $stage->fresh()->tanggal_buka->timezone('Asia/Jakarta')->format('Y-m-d H:i'));
+        $this->assertSame('2026-10-14 10:15', $stage->fresh()->tanggal_tutup->timezone('Asia/Jakarta')->format('Y-m-d H:i'));
+
+        $originalDriver = config('database.default');
+        try {
+            config()->set('database.default', 'pgsql');
+            $registrationSchedule = new Oprec();
+            $registrationSchedule->tanggal_buka = '2026-10-13T00:00:00+07:00';
+            $this->assertSame('2026-10-12T17:00:00+00:00', $registrationSchedule->getAttributes()['tanggal_buka']);
+            $registrationSchedule->setRawAttributes(['tanggal_buka' => '2026-10-12 17:00:00+00']);
+            $this->assertSame('2026-10-13 00:00', $registrationSchedule->tanggal_buka->timezone('Asia/Jakarta')->format('Y-m-d H:i'));
+            $testSchedule = new \App\Models\OprecStage();
+            $testSchedule->tanggal_buka = '2026-10-14T08:30:00+07:00';
+            $this->assertSame('2026-10-14T01:30:00+00:00', $testSchedule->getAttributes()['tanggal_buka']);
+        } finally {
+            config()->set('database.default', $originalDriver);
+        }
+    }
+
     private function admin(): User
     {
         config()->set('admin.email', 'test-admin@example.test');

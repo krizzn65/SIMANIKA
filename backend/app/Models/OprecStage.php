@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Carbon;
 
 class OprecStage extends Model
 {
@@ -21,6 +23,24 @@ class OprecStage extends Model
             'published' => 'boolean',
             'form_fields' => 'array',
         ];
+    }
+    protected function tanggalBuka(): Attribute
+    {
+        return $this->zonedSchedule();
+    }
+    protected function tanggalTutup(): Attribute
+    {
+        return $this->zonedSchedule();
+    }
+    private function zonedSchedule(): Attribute
+    {
+        $postgres = config('database.default') === 'pgsql';
+        return Attribute::make(
+            get: fn ($value) => $value === null ? null : Carbon::parse($value, $postgres ? 'UTC' : config('app.timezone')),
+            set: fn ($value) => $value === null ? null : ($postgres
+                ? Carbon::parse($value, config('app.timezone'))->utc()->toIso8601String()
+                : Carbon::parse($value, config('app.timezone'))->timezone(config('app.timezone'))->format('Y-m-d H:i:s')),
+        );
     }
 
     public function oprec(): BelongsTo { return $this->belongsTo(Oprec::class); }

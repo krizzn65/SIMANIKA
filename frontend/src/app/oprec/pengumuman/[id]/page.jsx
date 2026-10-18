@@ -13,7 +13,7 @@ export default async function AnnouncementResultPage({ params }) {
   let failed = false;
   if (ticket) {
     try {
-      const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+      const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
       const response = await fetch(`${base?.replace(/\/+$/, "")}/public/oprec/${id}/announcement/result`, {
         method: "POST", body: JSON.stringify({ ticket }), headers: { "Content-Type": "application/json", Accept: "application/json" },
         cache: "no-store", signal: AbortSignal.timeout(15000), redirect: "error",

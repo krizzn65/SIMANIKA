@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowUpRight, RefreshCw, User, CheckCircle2, FileText, Calendar, Clock3 } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, RefreshCw, User, CheckCircle2, FileText, Calendar, Clock3, BookOpen } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { OprecForm } from "@/components/oprec/OprecForm";
@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
 import { STAFF_ROLES, adminHome } from "@/lib/roleAccess";
 import { normalizeOprec, oprecState } from "@/lib/oprec";
+import { getOprecSummaryRows } from "@/lib/oprecWorkspaceSummary";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import styles from "./oprec-workspace.module.css";
 import "../../oprec/oprec.css";
@@ -35,6 +36,7 @@ function WorkspaceContent({ oprecId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [workingOnTest, setWorkingOnTest] = useState(false);
   const abortRef = useRef(null);
 
   const load = useCallback(async () => {
@@ -92,24 +94,38 @@ function WorkspaceContent({ oprecId }) {
   const oprecInfo = data?.oprec;
   const waLink = oprecInfo?.link_grup_wa || oprecInfo?.linkGrupWa || registration?.link_grup_wa || registration?.linkGrupWa || normalizedOprec?.link_grup_wa || normalizedOprec?.linkGrupWa || "";
 
+  const userFullName =
+    registration?.formData?.nama_lengkap ||
+    registration?.formData?.nama ||
+    registration?.formData?.namaLengkap ||
+    user?.namaLengkap ||
+    user?.nama ||
+    user?.name ||
+    "—";
+
   const divisionMap = new Map();
-  if (data?.oprec?.divisions) {
-    for (const div of data.oprec.divisions) {
-      divisionMap.set(Number(div.id), div.namaLengkap || div.nama);
-    }
+  for (const div of data?.oprec?.divisions || data?.oprec?.divisiTersedia || []) {
+    divisionMap.set(Number(div.id), div.namaLengkap || div.nama);
   }
+  const summaryRows = getOprecSummaryRows(
+    registration,
+    normalizedOprec?.formFields,
+    divisionMap,
+    userFullName,
+    formatDate(registration?.tanggalLahir)
+  );
 
   return (
     <main className={styles.workspace}>
       <div className={styles.container}>
-        <nav className={styles.toolbar} aria-label="Navigasi workspace OPREC">
+        {!workingOnTest && <nav className={styles.toolbar} aria-label="Navigasi workspace OPREC">
           <Link className={styles.button} href="/dashboard">
             <ArrowLeft size={16} aria-hidden="true" /> Dashboard
           </Link>
           <button className={styles.button} type="button" onClick={load} disabled={refreshing}>
             <RefreshCw size={15} aria-hidden="true" className={refreshing ? styles.spinning : ""} /> Perbarui
           </button>
-        </nav>
+        </nav>}
 
         {error && <div className={styles.error} role="alert">{error}</div>}
 
@@ -119,21 +135,25 @@ function WorkspaceContent({ oprecId }) {
           <div className={styles.loading}>Belum ada periode OPREC aktif yang dibuka saat ini.</div>
         ) : (
           <>
-            <header className={styles.heading}>
+            {!workingOnTest && <header className={styles.heading}>
               <p className={styles.eyebrow}>HIMANIKA / OPEN RECRUITMENT</p>
               <h1>{oprecInfo?.headline || "Open Recruitment HIMANIKA"}</h1>
               <Link href="/oprec">
                 Informasi OPREC <ArrowUpRight size={14} aria-hidden="true" />
               </Link>
-            </header>
+            </header>}
 
-            <div className={styles.columns}>
+            <div className={`${styles.columns} ${workingOnTest ? styles.testFocusLayout : ""}`}>
               {/* Left Sidebar */}
-              <aside className={styles.sidebar} aria-label="Status & Informasi Pendaftar">
+              {!workingOnTest && <aside className={styles.sidebar} aria-label="Status & Informasi Pendaftar">
                 {/* Account Card */}
                 <section className={styles.panel}>
                   <h2><User size={18} aria-hidden="true" /> Data Akun</h2>
                   <div className={styles.metaList}>
+                    <div className={styles.metaItem}>
+                      <span>Nama Lengkap</span>
+                      <span>{userFullName}</span>
+                    </div>
                     <div className={styles.metaItem}>
                       <span>Email</span>
                       <span>{user?.email || "—"}</span>
@@ -151,7 +171,7 @@ function WorkspaceContent({ oprecId }) {
                       </span>
                     ) : isSubmitted ? (
                       <span className={`${styles.badge} ${styles.success}`}>
-                        Terkirim · Menunggu Verifikasi
+                        Terkirim
                       </span>
                     ) : (
                       <span className={`${styles.badge} ${styles.amber}`}>
@@ -169,9 +189,11 @@ function WorkspaceContent({ oprecId }) {
                         "Hasil seleksi sedang diproses."
                       )
                     ) : isSubmitted ? (
-                      "Pendaftaranmu telah berhasil tercatat. Simpan NIM dan tanggal lahir untuk pengumuman."
+                      data?.writtenTestSubmitted
+                        ? "Jawaban tes tulismu terkirim. Tunggu info dari panitia untuk tahap selanjutnya. Simpan NIM dan tanggal lahir untuk melihat hasil."
+                        : "Pendaftaranmu terkirim. Tunggu info dari panitia untuk tahap selanjutnya."
                     ) : (
-                      "Kamu sudah terdaftar di sistem. Silakan lengkapi formulir pendaftaran di samping agar berkasmu dapat diverifikasi."
+                      "Lengkapi formulir pendaftaran di samping, lalu kirim untuk mengikuti tahapan seleksi."
                     )}
                   </p>
                 </section>
@@ -196,6 +218,15 @@ function WorkspaceContent({ oprecId }) {
                     )}
                   </div>
                 </section>
+
+                {oprecInfo?.guidebook && (
+                  <section className={styles.panel}>
+                    <h2><BookOpen size={18} aria-hidden="true" /> Guidebook OPREC</h2>
+                    <a href={oprecInfo.guidebook} target="_blank" rel="noopener noreferrer" className={styles.guidebookButton}>
+                      <BookOpen size={16} aria-hidden="true" /> <span>Buka Guidebook</span>
+                    </a>
+                  </section>
+                )}
 
                 {/* WhatsApp Group Card (only appears after registration is submitted) */}
                 {isSubmitted && waLink && (
@@ -224,11 +255,11 @@ function WorkspaceContent({ oprecId }) {
                     </a>
                   </section>
                 )}
-              </aside>
+              </aside>}
 
               {/* Main Content Area */}
               <div className={styles.mainColumn}>
-              <section className={styles.panel} aria-labelledby="form-section-title">
+              {!workingOnTest && <section className={styles.panel} aria-labelledby="form-section-title">
                 <header className={styles.panelHeader}>
                   <h2 id="form-section-title">
                     <FileText size={19} aria-hidden="true" /> Data & administrasi
@@ -252,45 +283,9 @@ function WorkspaceContent({ oprecId }) {
                     </div>
 
                     <dl className={styles.answers}>
-                      <div>
-                        <dt>NIM</dt>
-                        <dd>{registration.nim}</dd>
-                      </div>
-                      <div>
-                        <dt>Tanggal Lahir</dt>
-                        <dd>{formatDate(registration.tanggalLahir)}</dd>
-                      </div>
-                      <div>
-                        <dt>Divisi Pilihan 1</dt>
-                        <dd>{divisionMap.get(Number(registration.divisiPilihan1)) || `Divisi #${registration.divisiPilihan1 || "—"}`}</dd>
-                      </div>
-                      {registration.divisiPilihan2 && (
-                        <div>
-                          <dt>Divisi Pilihan 2</dt>
-                          <dd>{divisionMap.get(Number(registration.divisiPilihan2)) || `Divisi #${registration.divisiPilihan2}`}</dd>
-                        </div>
-                      )}
-                      {registration.divisiPilihan3 && (
-                        <div>
-                          <dt>Divisi Pilihan 3</dt>
-                          <dd>{divisionMap.get(Number(registration.divisiPilihan3)) || `Divisi #${registration.divisiPilihan3}`}</dd>
-                        </div>
-                      )}
-                      {registration.formData && Object.entries(registration.formData).map(([key, val]) => {
-                        if (["nim", "tanggal_lahir", "divisi_pilihan_1", "divisi_pilihan_2", "divisi_pilihan_3"].includes(key)) return null;
-                        const fieldMeta = normalizedOprec?.formFields?.find((f) => f.name === key);
-                        const label = fieldMeta?.label || (
-                          key === "jabatan_pilihan_1" ? "Jabatan Pilihan 1" :
-                          key === "jabatan_pilihan_2" ? "Jabatan Pilihan 2" :
-                          key === "jabatan_pilihan_3" ? "Jabatan Pilihan 3" : key
-                        );
-                        return (
-                          <div key={key}>
-                            <dt>{label}</dt>
-                            <dd>{typeof val === "boolean" ? (val ? "Ya" : "Tidak") : String(val || "—")}</dd>
-                          </div>
-                        );
-                      })}
+                      {summaryRows.map(({ key, label, value }) => (
+                        <div key={key}><dt>{label}</dt><dd>{value}</dd></div>
+                      ))}
                     </dl>
                   </div>
                 ) : (
@@ -298,8 +293,8 @@ function WorkspaceContent({ oprecId }) {
                     <OprecForm oprec={normalizedOprec} onSuccess={load} draftScope={user?.id} />
                   ) : <p className={styles.loading}>Formulir pendaftaran belum dibuka atau sudah ditutup.</p>
                 )}
-              </section>
-              {isSubmitted && <WrittenTestCard oprecId={oprecInfo.id} />}
+              </section>}
+              {isSubmitted && <WrittenTestCard oprecId={oprecInfo.id} onSubmitted={load} working={workingOnTest} onWorkingChange={setWorkingOnTest} />}
               </div>
             </div>
           </>

@@ -21,7 +21,6 @@ class DashboardController extends Controller
         $totalRegistrations = EventRegistration::count();
         $totalTeams = Team::count();
         $totalOprecRegistrations = OprecRegistration::count();
-        $pendingOprecRegistrations = OprecRegistration::where('status', 'pending')->count();
 
         $activeOprec = Oprec::withCount('registrations')->latest()->first();
 
@@ -63,7 +62,6 @@ class DashboardController extends Controller
                 'totalRegistrations' => $totalRegistrations,
                 'totalTeams' => $totalTeams,
                 'totalOprecRegistrations' => $totalOprecRegistrations,
-                'pendingOprecReviews' => $pendingOprecRegistrations,
             ],
             'activeOprec' => $activeOprec ? [
                 'id' => $activeOprec->id,

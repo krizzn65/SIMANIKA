@@ -9,7 +9,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { getOprecTableFields, getRegistrantFieldValue, getRegistrantFormData } from "@/lib/oprecRegistrants";
 import { getDefaultJabatan, normalizeOprecNim, oprecNimError, validBirthDate } from "@/lib/oprec";
 import { AdminErrorNotice } from "../AdminErrorNotice";
-import { Search, X, RefreshCw, Calendar, Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { Search, X, RefreshCw, Calendar, Pencil, Trash2, AlertTriangle, FileSpreadsheet, FileText, LoaderCircle, Download, UploadCloud } from "lucide-react";
+import { toast } from "sonner";
 import "./oprec-create-dialog.css";
 
 function formatOprecDate(dateStr) {
@@ -43,6 +44,10 @@ function getRegistrantName(r) {
 export default function AdminOprecPage() {
   const { user } = useAuth();
   const canManage = ["super_admin", "admin"].includes(user?.role);
+  const canExport = ["super_admin", "admin", "leader"].includes(user?.role);
+  const [exportBusy, setExportBusy] = useState("");
+  const [downloadingFile, setDownloadingFile] = useState("");
+  const [restoringFile, setRestoringFile] = useState("");
   const [oprecs, setOprecs] = useState([]);
   const [selectedOprec, setSelectedOprec] = useState(null);
   const [registrants, setRegistrants] = useState([]);
@@ -112,6 +117,82 @@ export default function AdminOprecPage() {
       setRegistrantError(err.message || "Gagal memuat pendaftar OPREC.");
     } finally {
       if (currentRequest === requestId.current) setLoadingRegistrants(false);
+    }
+  };
+
+  const downloadExport = async (format) => {
+    if (!selectedOprec?.id || exportBusy) return;
+    setExportBusy(format);
+    setRegistrantError("");
+    try {
+      const response = await api.get(`/admin/oprec/${selectedOprec.id}/registrants/export/${format}`, {
+        params: { search: search.trim() || undefined, division: divisionFilter === "all" ? undefined : divisionFilter },
+        responseType: "blob",
+        timeout: 60000,
+      });
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `calon-peserta-oprec-${selectedOprec.id}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      setRegistrantError(error.message || "Ekspor pendaftar gagal.");
+    } finally {
+      setExportBusy("");
+    }
+  };
+
+  const downloadRegistrantFile = async (downloadUrl, fileName) => {
+    if (!downloadUrl || downloadingFile) return;
+    setDownloadingFile(downloadUrl);
+    try {
+      const path = new URL(downloadUrl, window.location.origin).pathname;
+      if (!path.startsWith("/api/admin/oprec/")) throw new Error("Tautan berkas tidak valid.");
+      const response = await api.get(path.slice(4), { responseType: "blob", timeout: 60000 });
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName || "berkas-oprec";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      const status = error.response?.status;
+      toast.error(status === 401 ? "Sesi berakhir. Masuk kembali untuk mengunduh berkas."
+        : status === 403 ? "Akun ini tidak memiliki izin mengunduh berkas."
+        : status === 404 ? "Berkas tidak ditemukan. Perbarui daftar pendaftar lalu coba lagi."
+        : "Berkas gagal diunduh. Coba lagi atau hubungi pengelola.");
+    } finally {
+      setDownloadingFile("");
+    }
+  };
+
+  const restoreRegistrantFile = async (registrationId, field, file) => {
+    if (!canManage || !selectedOprec?.id || !file || restoringFile) return;
+    const key = `${registrationId}:${field}`;
+    setRestoringFile(key);
+    try {
+      const body = new FormData();
+      body.set("file", file);
+      const response = await api.post(`/admin/oprec/${selectedOprec.id}/registrants/${registrationId}/files/${encodeURIComponent(field)}`, body, {
+        headers: { "Content-Type": "multipart/form-data" }, timeout: 60000,
+      });
+      const restored = response.data?.data;
+      if (!restored?.downloadUrl) throw new Error("Respons pemulihan berkas tidak valid.");
+      const update = (registrant) => registrant?.id === registrationId
+        ? { ...registrant, fileUploads: { ...registrant.fileUploads, [field]: restored } }
+        : registrant;
+      setRegistrants((current) => current.map(update));
+      setVerifyModal((current) => ({ ...current, registrant: update(current.registrant) }));
+      toast.success("Berkas berhasil dipulihkan dan dapat diunduh.");
+    } catch (error) {
+      toast.error(error.message || "Berkas gagal dipulihkan.");
+    } finally {
+      setRestoringFile("");
     }
   };
 
@@ -283,7 +364,7 @@ export default function AdminOprecPage() {
             Kelola Pendaftaran OPREC
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Manajemen seleksi calon anggota pengurus dan verifikasi berkas per divisi.
+            Manajemen seleksi calon anggota pengurus dan berkas per divisi.
           </p>
         </div>
 
@@ -426,7 +507,7 @@ export default function AdminOprecPage() {
       <AdminErrorNotice message={registrantError} onRetry={() => fetchRegistrants(selectedOprec?.id)} />
 
       {/* Filter and Registrants Table (Minimalist Boxy Layout) */}
-      {canManage ? <div className="border border-slate-300 bg-white rounded-none">
+      {canExport ? <div className="border border-slate-300 bg-white rounded-none">
         <div className="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-slate-900">
@@ -462,10 +543,12 @@ export default function AdminOprecPage() {
                 </option>
               ))}
             </select>
+            <button type="button" className="oprec-btn oprec-btn--excel" disabled={!selectedOprec || Boolean(exportBusy)} onClick={() => downloadExport("xlsx")}>{exportBusy === "xlsx" ? <LoaderCircle size={15} className="animate-spin" aria-hidden="true" /> : <FileSpreadsheet size={15} aria-hidden="true" />}{exportBusy === "xlsx" ? "Menyiapkan…" : "Export Excel"}</button>
+            <button type="button" className="oprec-btn oprec-btn--pdf" disabled={!selectedOprec || Boolean(exportBusy)} onClick={() => downloadExport("pdf")}>{exportBusy === "pdf" ? <LoaderCircle size={15} className="animate-spin" aria-hidden="true" /> : <FileText size={15} aria-hidden="true" />}{exportBusy === "pdf" ? "Menyiapkan…" : "Export PDF"}</button>
           </div>
         </div>
 
-        <div className="overflow-x-auto" role="region" aria-label="Tabel pendaftar OPREC; geser ke samping untuk melihat seluruh jawaban" tabIndex={0}>
+        {canManage ? <><div className="overflow-x-auto" role="region" aria-label="Tabel pendaftar OPREC; geser ke samping untuk melihat seluruh jawaban" tabIndex={0}>
           <table className="w-full min-w-max text-left text-sm border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
@@ -561,7 +644,12 @@ export default function AdminOprecPage() {
                       {tableFields.map((field) => {
                         const value = getRegistrantFieldValue(r, field, selectedOprec?.divisiTersedia);
                         return <td key={field.name} className="py-3 px-4 text-xs text-slate-700 min-w-44 max-w-64 break-words" title={value.downloadUrl ? undefined : value.text}>
-                          {value.downloadUrl ? <a href={value.downloadUrl} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline underline-offset-2">{value.text}</a> : <span className="line-clamp-3 whitespace-pre-wrap">{value.text}</span>}
+                          {value.missing ? <button type="button" className="oprec-file-missing" onClick={() => openRegistrantEditor(r)} aria-label={`Buka detail untuk memulihkan ${field.label || field.name} milik ${getRegistrantName(r)}`}>
+                            <AlertTriangle size={14} aria-hidden="true" /><span>Berkas hilang · Pulihkan</span>
+                          </button> : value.downloadUrl ? <button type="button" className="oprec-file-download" disabled={Boolean(downloadingFile)} onClick={() => downloadRegistrantFile(value.downloadUrl, value.fileName)} aria-label={`Unduh ${field.label || field.name} milik ${getRegistrantName(r)}`}>
+                            {downloadingFile === value.downloadUrl ? <LoaderCircle size={14} className="animate-spin" aria-hidden="true" /> : <Download size={14} aria-hidden="true" />}
+                            <span>{downloadingFile === value.downloadUrl ? "Mengunduh…" : "Unduh Berkas"}</span>
+                          </button> : <span className="line-clamp-3 whitespace-pre-wrap">{value.text}</span>}
                         </td>;
                       })}
                       <td className="py-3 px-4 text-right">
@@ -587,7 +675,7 @@ export default function AdminOprecPage() {
           <span>Halaman {registrantPage} dari {registrantPages}</span>
           <button type="button" className="oprec-btn oprec-btn--secondary" disabled={registrantPage <= 1 || loadingRegistrants} onClick={() => setRegistrantPage((page) => page - 1)}>Sebelumnya</button>
           <button type="button" className="oprec-btn oprec-btn--secondary" disabled={registrantPage >= registrantPages || loadingRegistrants} onClick={() => setRegistrantPage((page) => page + 1)}>Berikutnya</button>
-        </div>}
+        </div>}</> : <p className="p-4 text-sm text-slate-600">Unduh daftar calon peserta sesuai periode dan filter yang dipilih.</p>}
       </div> : <p className="border border-slate-300 bg-white p-4 text-sm text-slate-600">Mode hanya baca. Data peserta dan berkas tersedia melalui <Link href="/admin/oprec/penilaian" className="text-blue-700 underline">Penilaian</Link> untuk periode yang ditugaskan.</p>}
 
       {canManage && <OprecCreateDialog
@@ -883,18 +971,25 @@ export default function AdminOprecPage() {
                       const fieldMeta = selectedOprec?.formFields?.find((f) => f.name === key);
                       const label = fieldMeta?.label || key;
                       const downloadUrl = fileInfo?.downloadUrl;
-                      if (!downloadUrl) return null;
                       return (
                         <div key={key} className="p-3 border border-slate-200 bg-white flex items-center justify-between gap-3">
                           <span className="text-xs font-medium text-slate-800">{label}</span>
-                          <a
-                            href={downloadUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="oprec-btn oprec-btn--secondary !min-h-[32px] !py-1 !text-xs"
-                          >
-                            Unduh Berkas
-                          </a>
+                          {fileInfo.available === false ? <div className="oprec-file-recovery">
+                            <span>Berkas asli tidak ditemukan di server.</span>
+                            <label className="oprec-file-restore">
+                              {restoringFile === `${verifyModal.registrant.id}:${key}` ? <LoaderCircle size={14} className="animate-spin" aria-hidden="true" /> : <UploadCloud size={14} aria-hidden="true" />}
+                              {restoringFile === `${verifyModal.registrant.id}:${key}` ? "Mengunggah…" : "Unggah ulang berkas"}
+                              <input type="file" accept={(fieldMeta?.accept || [".pdf", ".jpg", ".jpeg", ".png"]).join(",")}
+                                disabled={Boolean(restoringFile)} onChange={(event) => {
+                                  const file = event.target.files?.[0];
+                                  event.target.value = "";
+                                  if (file) restoreRegistrantFile(verifyModal.registrant.id, key, file);
+                                }} />
+                            </label>
+                          </div> : downloadUrl ? <button type="button" className="oprec-file-download" disabled={Boolean(downloadingFile)} onClick={() => downloadRegistrantFile(downloadUrl, fileInfo.fileName)} aria-label={`Unduh ${label} milik ${getRegistrantName(verifyModal.registrant)}`}>
+                            {downloadingFile === downloadUrl ? <LoaderCircle size={14} className="animate-spin" aria-hidden="true" /> : <Download size={14} aria-hidden="true" />}
+                            <span>{downloadingFile === downloadUrl ? "Mengunduh…" : "Unduh Berkas"}</span>
+                          </button> : <span className="text-xs text-slate-500">Berkas belum tersedia</span>}
                         </div>
                       );
                     })}

@@ -151,7 +151,7 @@ export const TestimonialMarqueeColumns = (props: {
   testimonials?: Testimonial[];
   className?: string;
 }) => {
-  const items = props.testimonials && props.testimonials.length >= 6 
+  const items = props.testimonials
     ? props.testimonials 
     : defaultTestimonials;
 

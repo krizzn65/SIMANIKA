@@ -94,6 +94,10 @@
 .oprec-test__live-preview-head p { font-size: 13px; }
 .oprec-test__preview-count { flex: none; padding: 5px 8px; background: #eff6ff; color: #155eef; font: 600 11px/1.4 "IBM Plex Mono", ui-monospace, monospace; }
 .oprec-test__preview-divisions { min-width: 0; padding: 18px 24px; border-bottom: 1px solid #e2e8f0; }
+.oprec-test__preview-status { display: grid; gap: 7px; padding: 16px 24px; border-bottom: 1px solid #e2e8f0; }
+.oprec-test__preview-status label { font-size: 13px; font-weight: 700; }
+.oprec-test__preview-status select { min-height: 40px; padding: 8px 10px; border: 1px solid #cad5e5; background: #fff; color: #15213a; font: inherit; }
+.oprec-test__preview-status small { color: #64748b; font-size: 12px; }
 .oprec-test__preview-divisions > strong { display: block; font-size: 15px; }
 .oprec-test__preview-divisions > p { margin: 4px 0 12px; font-size: 12px; }
 .oprec-test__preview-mode { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -117,7 +121,26 @@
 .oprec-test__schedule { padding-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
 .oprec-test__schedule strong { font-size: 16px; }
 .oprec-test__questions-head { margin: 26px 0 16px; }
-.oprec-test__question { position: relative; min-width: 0; margin: 0 0 14px; padding: 20px; border: 1px solid #cad5e5; }
+.oprec-test__question {
+  position: relative;
+  min-width: 0;
+  margin: 0 0 20px;
+  padding: 22px;
+  border: 1px solid #cad5e5;
+  border-left: 4px solid #155eef;
+  background: #ffffff;
+  transition: border-color 0.15s ease, border-left-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.oprec-test__question:hover {
+  border-color: #94a3b8;
+  border-left-color: #1048b8;
+}
+
+.oprec-test__question:focus-within {
+  border-left-color: #1048b8;
+  box-shadow: 0 1px 4px rgba(21, 94, 239, 0.08);
+}
 .oprec-test__question legend { padding: 0 7px; color: #155eef; font: 600 12px/1.4 "IBM Plex Mono", ui-monospace, monospace; }
 .oprec-test__question-actions { display: flex; justify-content: flex-end; gap: 5px; margin: -7px 0 14px; }
 .oprec-test__question-actions button { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid #cad5e5; background: #fff; color: #334155; }
@@ -128,11 +151,8 @@
 .oprec-test__targets label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }
 .oprec-test__add { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 9px 13px; border: 1px dashed #155eef; background: #eff6ff; color: #155eef; font-weight: 600; }
 .oprec-test__footer { margin-top: 26px; padding-top: 22px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; }
-.oprec-test__footer button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 10px 16px; border: 1px solid #155eef; background: #155eef; color: #fff; font-weight: 600; }
 .oprec-test__sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-.oprec-test__question { padding: 22px; }
 .oprec-test__question-top { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0; }
-.oprec-test__question-title { display: flex; align-items: center; min-width: 0; gap: 10px; }
 .oprec-test__question-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .oprec-test__question-number { flex: none; padding: 3px 6px; border: 1px solid #bfdbfe; background: #eff6ff; color: #155eef; font: 600 12px/1.2 "IBM Plex Mono", ui-monospace, monospace; }
 .oprec-test__question-actions { align-items: center; margin: 0; }

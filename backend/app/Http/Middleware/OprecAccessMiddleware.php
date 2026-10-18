@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Http\Controllers\Admin\OprecAnnouncementController;
 use App\Http\Controllers\Admin\OprecAssessmentController;
 use App\Http\Controllers\Admin\OprecController;
+use App\Http\Controllers\Admin\OprecRegistrantExportController;
 use App\Http\Controllers\Admin\OprecWrittenTestController;
 use App\Models\User;
 use Closure;
@@ -24,9 +25,11 @@ class OprecAccessMiddleware
                 OprecWrittenTestController::class.'@index',
                 OprecAnnouncementController::class.'@index', OprecAnnouncementController::class.'@show',
                 OprecAnnouncementController::class.'@poster',
+                OprecRegistrantExportController::class.'@__invoke',
+                OprecRegistrantExportController::class,
             ], true);
-            // Legacy participant/file endpoints belong to management. Reviewers use
-            // the assessment endpoints, which filter private data and check assignment.
+            // Leaders can export the registration list, but editing and direct file
+            // downloads still require management access. Assessment checks assignment.
             abort_unless($assessment || $summary, 403);
         }
         return $next($request);

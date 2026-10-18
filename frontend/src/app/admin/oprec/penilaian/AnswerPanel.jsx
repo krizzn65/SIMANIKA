@@ -1,10 +1,20 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { ArrowLeft, ClipboardCheck, Download, RefreshCw, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ClipboardCheck, Download, Loader2, RefreshCw, X } from "lucide-react";
+import { toast } from "sonner";
+import { downloadAuthenticatedFile, downloadErrorMessage } from "@/lib/downloadFile";
 
 export default function AnswerPanel({ selected, detail, loading, error, onRetry, onClose, compact, triggerRef }) {
   const dialog = useRef(null);
+  const [downloadingFile, setDownloadingFile] = useState("");
+  async function downloadFile(url) {
+    if (!url || downloadingFile) return;
+    setDownloadingFile(url);
+    try { await downloadAuthenticatedFile(url); }
+    catch (cause) { toast.error(downloadErrorMessage(cause)); }
+    finally { setDownloadingFile(""); }
+  }
   useEffect(() => {
     if (!compact || !selected) return;
     const element = dialog.current;
@@ -24,7 +34,7 @@ export default function AnswerPanel({ selected, detail, loading, error, onRetry,
           : detail ? <><p className="assessment-answer__count">{detail.questions.length} pertanyaan · Jawaban hanya dapat dibaca</p>{detail.questions.map((question, index) => <article key={question.id} className="assessment-answer__question">
             <span className="assessment-question-number">{String(index + 1).padStart(2, "0")}</span><div><h3>{question.label}</h3>
               <p>{detail.answers?.[question.id] ?? "Tidak dijawab"}</p>
-              {detail.files?.[question.id] && <a className="assessment-file-link" href={detail.files[question.id]} target="_blank" rel="noopener noreferrer"><Download size={15} /> Unduh berkas</a>}
+              {detail.files?.[question.id] && <button type="button" className="assessment-file-link" disabled={Boolean(downloadingFile)} onClick={() => downloadFile(detail.files[question.id])} aria-label={`Unduh berkas untuk ${question.label}`}>{downloadingFile === detail.files[question.id] ? <Loader2 size={15} className="assessment-spin" aria-hidden="true" /> : <Download size={15} aria-hidden="true" />} {downloadingFile === detail.files[question.id] ? "Mengunduh…" : "Unduh Berkas"}</button>}
             </div></article>)}</>
             : <div className="assessment-state assessment-state--quiet"><ClipboardCheck size={30} aria-hidden="true" /><h3>Baca, lalu beri penilaian</h3><p>Jawaban peserta akan tampil di sini. Pilihan peserta aktif ditandai pada tabel.</p></div>}
     </div>

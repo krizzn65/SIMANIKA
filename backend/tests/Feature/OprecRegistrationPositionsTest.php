@@ -35,7 +35,8 @@ class OprecRegistrationPositionsTest extends TestCase
             'nama' => $name, 'jabatan' => \App\Services\OprecAssessmentService::positions($name),
         ]));
         $payload = ['oprec_id' => $period->id, 'schema_version' => '1', 'nama' => 'Peserta Posisi', 'nim' => 'E3124001',
-            'tanggal_lahir' => '2004-01-01', 'angkatan' => '2024', 'jabatan_pilihan_1' => 'Sekretaris 2',
+            'tanggal_lahir' => '2004-01-01', 'angkatan' => '2024', 'status_kepengurusan' => 'Anggota Baru',
+            'persetujuan_data_benar' => 'on', 'persetujuan_penggunaan_data' => 'on', 'jabatan_pilihan_1' => 'Sekretaris 2',
             'divisi_pilihan_1' => (string) $divisions[0]->id, 'divisi_pilihan_2' => (string) $divisions[1]->id, 'divisi_pilihan_3' => (string) $divisions[2]->id];
         return compact('admin', 'user', 'period', 'divisions', 'payload');
     }
