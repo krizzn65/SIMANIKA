@@ -31,13 +31,16 @@
 }
 
 /* Global button base reset inside Admin to eliminate browser-native bevels without overriding classes */
-:where(.admin-layout-root) button {
-  font-family: var(--admin-font-sans);
-  cursor: pointer;
-  border: none;
-  background-color: transparent;
-  -webkit-appearance: none;
-  appearance: none;
+/* Layered so Tailwind utilities (bg-*, border) on admin buttons still apply. */
+@layer base {
+  :where(.admin-layout-root) button {
+    font-family: var(--admin-font-sans);
+    cursor: pointer;
+    border: none;
+    background-color: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+  }
 }
 
 /* Sidebar Navigation Link Styles */
