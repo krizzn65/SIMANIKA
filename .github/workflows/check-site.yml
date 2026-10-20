@@ -1,0 +1,17 @@
+name: Check live site
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Public home content (visi & misi)
+        run: curl -fsS https://himanika.wsmif.myhost.id/api/public/home | jq '{visi: .data.visi, misi: .data.misi}'
+      - name: Deployed landing bundle contains new missions
+        run: |
+          curl -fsS https://himanika.wsmif.myhost.id/ -o index.html
+          for js in $(grep -oE '/_next/static/chunks/[^"]+\.js' index.html | sort -u); do
+            curl -fsS "https://himanika.wsmif.myhost.id$js" | grep -q "Jembatan prestasi" && echo "found in $js"
+          done; true
