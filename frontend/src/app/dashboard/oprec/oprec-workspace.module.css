@@ -1137,3 +1137,54 @@
 .testReview dd { margin: 5px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .workspace :is(button, input, textarea, select):focus-visible, .testDialog button:focus-visible { outline: 2px solid var(--ws-blue); outline-offset: 2px; }
 @media (max-width: 600px) { .testSchedule, .testForm { grid-template-columns: 1fr; } .testActions button { width: 100%; } }
+
+/* Dynamic form: rows align to the top, labels wrap cleanly. */
+.workspace :global(.event-dynamic-form) > fieldset { align-items: start; }
+.workspace :global(.oprec-field-label-row) { align-items: flex-start; flex-wrap: wrap; row-gap: 4px; }
+.workspace :global(.oprec-field-label-row) > label { display: block; flex: 1 1 220px; }
+.workspace :global(.oprec-field-label-row .oprec-conditional-badge) { margin: 0 6px 0 4px; vertical-align: 1px; }
+.workspace :global(.oprec-field-example) { padding-top: 2px; }
+.workspace :global(.event-dynamic-field) input[type="file"] {
+  min-height: 56px;
+  padding: 10px 12px;
+  border: 1.5px dashed #b8c8e0;
+  background: #f8faff;
+  font-size: 13px;
+  color: var(--ws-muted);
+  cursor: pointer;
+}
+.workspace :global(.event-dynamic-field) input[type="file"]:hover { border-color: var(--ws-blue); background: #f2f6ff; }
+.workspace :global(.event-dynamic-field) input[type="file"]::file-selector-button {
+  margin-right: 12px;
+  padding: 8px 14px;
+  border: 0;
+  background: var(--ws-blue);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Consent card: full width, right above the submit button. */
+.workspace :global(.oprec-consents) {
+  grid-column: 1 / -1;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 20px;
+  border: 1px solid #c8d5e8;
+  border-left: 3px solid var(--ws-blue);
+  background: #f7f9fd;
+}
+.workspace :global(.oprec-consents h3) { font-size: 15px; }
+.workspace :global(.oprec-consents .event-dynamic-field) { gap: 0; }
+.workspace :global(.oprec-consents .event-dynamic-check) {
+  display: flex;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #dbe4f2;
+  background: #fff;
+  font-weight: 400;
+  color: var(--ws-ink);
+  transition: border-color .15s ease, background .15s ease;
+}
+.workspace :global(.oprec-consents .event-dynamic-check:hover) { border-color: #91baf7; }
+.workspace :global(.oprec-consents .event-dynamic-check:has(input:checked)) { border-color: var(--ws-blue); background: #eef4ff; }
+.workspace :global(.oprec-consents .event-dynamic-check span) { font-weight: 400; }

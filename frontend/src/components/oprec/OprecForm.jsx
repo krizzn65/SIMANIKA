@@ -64,8 +64,15 @@ function DivisionChoiceItem({ option, division, common, id, selected, onToggle }
 
 function Field({ field, error, inlineError = error, divisions = [], selectedDivisions = [], onToggleDivision, onNimChange }) {
   const id = `oprec-field-${field.name}`;
+  const isSpecificTarget =
+    (field.targetType === "specific" || field.target_type === "specific") &&
+    (field.targetDivisions || field.target_divisions)?.length > 0;
+  // Tall or labelled-up fields span both columns so neighbours never misalign.
   const isWide =
     Boolean(field.wide) ||
+    field.type === "file" ||
+    field.type === "textarea" ||
+    isSpecificTarget ||
     field.name === "divisi_pilihan_1" ||
     field.name === "divisi_pilihan_2" ||
     field.name === "divisi_pilihan_3";
