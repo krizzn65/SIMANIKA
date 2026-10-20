@@ -1,6 +1,7 @@
 import { AnnouncementCard } from "./announcement/AnnouncementCard";
 import { OprecPreview } from "./OprecPreview";
 import { OprecFaq } from "./OprecFaq";
+import { OprecBrief } from "./OprecBrief";
 import { divisionPreview } from "./divisionPreview";
 import { InView } from "@/components/motion/InView";
 
@@ -33,7 +34,16 @@ export function Oprec({ oprec, onRefresh }) {
   return <>
     <header className="oprec-hero oprec-container">
       <span className="oprec-mono oprec-eyebrow"><span aria-hidden="true" />HIMANIKA / OPEN RECRUITMENT</span>
-      <InView className="oprec-hero__row"><h1>{oprec?.headline || <>Ambil peran.<br /><em>Mulai ceritamu.</em></>}</h1><div><p>{oprec?.deskripsi || "Ada tempat untuk idemu, ruang untuk belajar, dan teman untuk melangkah bersama. Temukan peranmu di HIMANIKA."}</p><a className="oprec-button oprec-hero__button" href="#pendaftaran">Lihat pendaftaran & pengumuman <span aria-hidden="true">↗</span></a></div></InView>
+      <InView className="oprec-hero__row">
+        <div>
+          <h1 className={(oprec?.headline?.length || 0) > 24 ? "oprec-hero__title--long" : undefined}>{oprec?.headline || <>Ambil peran.<br /><em>Mulai ceritamu.</em></>}</h1>
+          {oprec?.periode && <p className="oprec-mono oprec-hero__period">PERIODE {oprec.periode}</p>}
+        </div>
+        <div className="oprec-hero__aside">
+          <OprecBrief text={oprec?.deskripsi || "Ada tempat untuk idemu, ruang untuk belajar, dan teman untuk melangkah bersama. Temukan peranmu di HIMANIKA."} />
+          <a className="oprec-button oprec-hero__button" href="#pendaftaran">Lihat pendaftaran & pengumuman <span aria-hidden="true">↗</span></a>
+        </div>
+      </InView>
     </header>
     <section className="oprec-divisions oprec-container" id="divisi-oprec" aria-labelledby="division-heading">
       <div className="oprec-section-heading"><div><h2 id="division-heading">Temukan tempatmu.</h2></div></div>
