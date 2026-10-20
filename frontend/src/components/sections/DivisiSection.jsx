@@ -188,46 +188,39 @@ const divisionStructures = {
     ],
   },
 
-  /* 04. Kominfo */
+  /* 04. Kominfo: Ketua Divisi -> Wakil Divisi -> Sekretaris Divisi -> [Bidang Media Publikasi: Staff] & [Bidang Desain Kreatif: Staff] */
   "04": {
     leader: {
-      role: "Koordinator",
-      title: "Koordinator Kominfo",
-      tag: "KOORDINATOR DIVISI",
+      role: "Ketua Divisi",
+      title: "Ketua Divisi Kominfo",
+      tag: "KETUA DIVISI",
     },
     vice: {
-      role: "Wakil Koordinator",
-      title: "Wakil Koordinator Kominfo",
-      tag: "SUB-KOORDINATOR",
+      role: "Wakil Divisi",
+      title: "Wakil Divisi Kominfo",
+      tag: "WAKIL DIVISI",
+    },
+    secretary: {
+      role: "Sekretaris Divisi",
+      title: "Sekretaris Divisi Kominfo",
+      tag: "SEKRETARIS DIVISI",
     },
     branches: [
       {
-        branchName: "MEDIA & PUBLIKASI",
+        branchName: "BIDANG MEDIA PUBLIKASI",
         roles: [
           {
-            role: "Staff Media Growth",
-            title: "Pengelolaan Media Sosial",
-            desc: "Strategi distribusi konten di Instagram, TikTok, dan kanal resmi himpunan.",
-          },
-          {
-            role: "Staff Copywriting",
-            title: "Redaksi & Jurnalistik",
-            desc: "Penulisan siaran pers, artikel berita, dan caption promosi kegiatan.",
+            role: "Staff Media Publikasi",
+            title: "Media Sosial, Publikasi & Dokumentasi",
           },
         ],
       },
       {
-        branchName: "KREATIF & MULTIMEDIA",
+        branchName: "BIDANG DESAIN KREATIF",
         roles: [
           {
-            role: "Staff Kreatif & Desain",
-            title: "Desain Grafis & Visual Asset",
-            desc: "Pembuatan identitas grafis, poster proker, dan layout feeds media sosial.",
-          },
-          {
-            role: "Staff Video Profile",
-            title: "Videografi & Motion Graphic",
-            desc: "Produksi video profil, aftermovie kegiatan, dan dokumentasi sinematik.",
+            role: "Staff Desain Kreatif",
+            title: "Desain Grafis, Visual & Multimedia",
           },
         ],
       },
