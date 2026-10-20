@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Public home content (visi & misi)
-        run: curl -fsS https://himanika.wsmif.myhost.id/api/public/home | jq '{visi: .data.visi, misi: .data.misi}'
+        run: |
+          curl -fsS https://himanika.wsmif.myhost.id/api/public/home | jq '{visi: .data.visi, misi: .data.misi}'
       - name: Deployed landing bundle contains new missions
         run: |
           curl -fsS https://himanika.wsmif.myhost.id/ -o index.html
