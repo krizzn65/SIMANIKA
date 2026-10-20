@@ -2,9 +2,9 @@ name: Check live site
 
 on:
   workflow_dispatch:
-  push:
-    branches: [only_deploy]
-    paths: [".github/workflows/check-site.yml"]
+  workflow_run:
+    workflows: ["Deploy frontend (FTP)"]
+    types: [completed]
 
 jobs:
   check:
