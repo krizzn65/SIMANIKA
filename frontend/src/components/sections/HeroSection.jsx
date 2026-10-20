@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { LogoMarquee } from "@/components/ui/LogoMarquee";
 import { SplitCta } from "@/components/ui/SplitCta";
@@ -24,13 +23,13 @@ export function HeroSection({ tagline, subtitle }) {
     <section className="hero" id="hero" aria-labelledby="hero-title" data-motion-active="true">
       <div className="hero-stage">
         <div className="hero-visual" aria-hidden="true">
-          <Image
+          <img
             alt="Maskot SIMANIKA di padang rumput"
-            fill
-            priority
-            quality={90}
+            decoding="async"
+            fetchPriority="high"
             sizes="100vw"
             src="/images/simanika-hero-mascot.webp"
+            srcSet="/images/simanika-hero-mascot-1200.webp 1200w, /images/simanika-hero-mascot.webp 1672w"
           />
           <div className="hero-visual__wash" />
           <div className="hero-visual__scanlines" />
