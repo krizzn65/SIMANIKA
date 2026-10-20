@@ -1,4 +1,5 @@
 import styles from "@/app/dashboard/oprec/oprec-workspace.module.css";
+import { FileUploadInput } from "@/components/ui/FileUploadInput";
 
 export function WrittenTestFields({ questions, answers, onAnswerChange, idPrefix = "test", preview = false }) {
   return questions.map((question, index) => {
@@ -18,7 +19,7 @@ export function WrittenTestFields({ questions, answers, onAnswerChange, idPrefix
     } else if (question.type === "checkbox") {
       control = <label className={styles.testConsent}><input type="checkbox" checked={value === "on"} required={question.required} onChange={(event) => setValue(event.target.checked ? "on" : "")} />Saya menyetujui pernyataan ini.</label>;
     } else if (question.type === "file") {
-      control = <input id={id} type="file" accept=".pdf,.jpg,.jpeg,.png" required={question.required} onChange={(event) => setValue(event.target.files?.[0] || null)} />;
+      control = <FileUploadInput id={id} accept=".pdf,.jpg,.jpeg,.png" required={question.required} onChange={(event) => setValue(event.target.files?.[0] || null)} />;
     } else {
       const type = ["email", "tel", "url", "number", "date"].includes(question.type) ? question.type : "text";
       control = <input id={id} type={type} required={question.required} maxLength={type === "text" ? 500 : 200} value={value} onChange={(event) => setValue(event.target.value)} />;

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { RotateCcw, Lock, AlertTriangle } from "lucide-react";
 import { DEFAULT_DIVISION_LOGOS, OPREC_FIXED_FIELDS, OPREC_REQUIRED_CONSENTS, validateOprecForm, validateOprecConsents, normalizeOprecNim, oprecNimProgramWarning, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
 import { api } from "@/services/api";
+import { FileUploadInput } from "@/components/ui/FileUploadInput";
 
 function getDivisionPositions(division) {
   if (!division) return [];
@@ -62,7 +63,7 @@ function DivisionChoiceItem({ option, division, common, id, selected, onToggle }
   );
 }
 
-function Field({ field, error, inlineError = error, divisions = [], selectedDivisions = [], onToggleDivision, onNimChange }) {
+function Field({ field, error, inlineError = error, divisions = [], selectedDivisions = [], onToggleDivision, onNimChange, onFileChange }) {
   const id = `oprec-field-${field.name}`;
   const isWide =
     Boolean(field.wide) ||
@@ -185,10 +186,11 @@ function Field({ field, error, inlineError = error, divisions = [], selectedDivi
   } else if (field.type === "file") {
     control = (
       <>
-        <input
+        <FileUploadInput
           {...common}
-          type="file"
+          invalid={Boolean(error)}
           accept={field.accept.join(",")}
+          onChange={onFileChange}
         />
         <small id={`${id}-file`}>
           {field.accept.map((ext) => ext.replace(".", "").toUpperCase()).join(", ")} · maksimal {field.maxSizeMB} MB
@@ -217,9 +219,10 @@ function Field({ field, error, inlineError = error, divisions = [], selectedDivi
     <div className={`event-dynamic-field ${isWide ? "event-dynamic-field--wide" : ""}`}>
       {field.type !== "checkbox" && (
         <div className="oprec-field-label-row">
-          <label htmlFor={id}>{labelText}</label>
+          <label htmlFor={id} style={{ display: "block" }}>{labelText}</label>
           {(field.exampleUrl || field.example_url || field.exampleFileUrl || field.example_file_url) && (
             <div className="oprec-field-example">
+              <span>{field.type === "file" ? "Contoh berkas:" : "Contoh:"}</span>
               <a href={field.exampleUrl || field.example_url || field.exampleFileUrl || field.example_file_url} target="_blank" rel="noopener noreferrer">
                 {field.exampleLabel || field.example_label || "Lihat contoh"}
               </a>
@@ -394,6 +397,16 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
     });
   }
 
+  function handleFileChange(event) {
+    const name = event.currentTarget.name;
+    setErrors((current) => {
+      if (!current[name]) return current;
+      const next = { ...current };
+      delete next[name];
+      return next;
+    });
+  }
+
   async function sendRegistration() {
     const form = pendingForm.current;
     const body = pendingBody.current;
@@ -538,6 +551,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
               error={field.name === "nim" ? nimInputError || (Array.isArray(errors.nim) ? errors.nim[0] : errors.nim) : errors[field.name]}
               inlineError={field.name === "nim" ? nimInputError : errors[field.name]}
               onNimChange={handleNimChange}
+              onFileChange={handleFileChange}
               divisions={oprec.divisiTersedia}
               selectedDivisions={selectedDivisions}
               onToggleDivision={toggleDivision}
@@ -726,6 +740,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
               divisions={oprec.divisiTersedia}
               selectedDivisions={selectedDivisions}
               onToggleDivision={toggleDivision}
+              onFileChange={handleFileChange}
             />
           ))}
 

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { api } from "@/services/api";
+import { FileUploadInput } from "@/components/ui/FileUploadInput";
 
 export function EventRegistrationForm({ event, onSuccess, compact = false }) {
   const errorRef = useRef(null);
@@ -56,7 +57,7 @@ export function EventRegistrationForm({ event, onSuccess, compact = false }) {
             field.type === "select" ? <select id={id} name={field.name} required={field.required} defaultValue=""><option value="">Pilih jawaban</option>{field.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> :
             field.type === "radio" ? <div className="event-dynamic-choices">{field.options.map((option, index) => <label key={option.value}><input type="radio" id={index === 0 ? id : undefined} name={field.name} value={option.value} required={field.required} /> {option.label}</label>)}</div> :
             field.type === "checkbox" ? <label className="event-dynamic-check"><input id={id} name={field.name} type="checkbox" value="on" required={field.required} /> {field.label}{field.required && <b aria-label="wajib"> *</b>}</label> :
-            field.type === "file" ? <><input id={id} name={field.name} type="file" required={field.required} accept=".pdf,.jpg,.jpeg,.png,.webp" /><small>PDF, JPG, PNG, WebP · maksimal 5 MB</small></> :
+            field.type === "file" ? <><FileUploadInput id={id} name={field.name} required={field.required} accept=".pdf,.jpg,.jpeg,.png,.webp" invalid={Boolean(errors[field.name])} onChange={() => setErrors((current) => { if (!current[field.name]) return current; const next = { ...current }; delete next[field.name]; return next; })} /><small>PDF, JPG, PNG, WebP · maksimal 5 MB</small></> :
             <input id={id} name={field.name} type={field.type} required={field.required} placeholder={field.placeholder || ""} />}
           {errors[field.name] && <small className="event-dynamic-error">{Array.isArray(errors[field.name]) ? errors[field.name][0] : errors[field.name]}</small>}
         </div>;

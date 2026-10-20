@@ -1308,25 +1308,91 @@ export default function OprecBuilder({ oprecId }) {
               </div>
 
 
-              {/* Advanced Technical Settings */}
+              {/* Pertanyaan Umum (FAQ) */}
               <section aria-labelledby="oprec-faq-editor-title" className="oprec-builder__advanced">
                 <h3 id="oprec-faq-editor-title">Pertanyaan umum (FAQ)</h3>
-                <p className="text-sm text-slate-600">Informasi ini tampil pada halaman OPREC untuk membantu calon anggota.</p>
-                {data.faq.map((item, index) => (
-                  <fieldset key={index} className="oprec-builder__field oprec-builder__faq-item">
-                    <legend className="text-sm font-semibold">FAQ {index + 1}</legend>
-                    <div className="oprec-builder__grid">
-                      <label className="wide">Pertanyaan
-                        <input maxLength={500} value={item.pertanyaan} onChange={(event) => set("faq", data.faq.map((faq, i) => i === index ? { ...faq, pertanyaan: event.target.value } : faq))} />
-                      </label>
-                      <label className="wide">Jawaban
-                        <textarea rows={3} maxLength={2000} value={item.jawaban} onChange={(event) => set("faq", data.faq.map((faq, i) => i === index ? { ...faq, jawaban: event.target.value } : faq))} />
-                      </label>
-                    </div>
-                    <button type="button" className="oprec-btn oprec-btn--danger oprec-btn--sm" aria-label={`Hapus FAQ ${index + 1}`} onClick={() => set("faq", data.faq.filter((_, i) => i !== index))}>Hapus FAQ</button>
-                  </fieldset>
-                ))}
-                <button type="button" className="oprec-btn oprec-btn--secondary oprec-btn--sm" disabled={data.faq.length >= 40} onClick={() => set("faq", [...data.faq, { pertanyaan: "", jawaban: "" }])}>Tambah FAQ</button>
+                <p className="text-sm text-slate-600 mb-3">Informasi ini tampil pada halaman OPREC untuk membantu calon anggota.</p>
+                {data.faq.length === 0 ? (
+                  <p className="text-xs text-slate-500 italic mb-3">
+                    Belum ada FAQ khusus. FAQ default organisasi akan digunakan jika daftar ini kosong.
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-4 mb-4">
+                    {data.faq.map((item, index) => (
+                      <div key={index} className="oprec-builder__field oprec-builder__faq-item">
+                        <div className="oprec-builder__field-head">
+                          <span className="oprec-builder__field-index">FAQ {String(index + 1).padStart(2, "0")}</span>
+                          <strong>{item.pertanyaan ? (item.pertanyaan.length > 60 ? item.pertanyaan.slice(0, 60) + "…" : item.pertanyaan) : `Pertanyaan FAQ ${index + 1}`}</strong>
+                          <div className="oprec-builder__field-actions">
+                            <button
+                              type="button"
+                              title="Hapus FAQ"
+                              aria-label={`Hapus FAQ ${index + 1}`}
+                              onClick={() => set("faq", data.faq.filter((_, i) => i !== index))}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="oprec-builder__grid">
+                          <label className="wide">
+                            <span>Pertanyaan <span className="oprec-builder__required">*</span></span>
+                            <input
+                              maxLength={500}
+                              placeholder="Contoh: Apakah mahasiswa semester 1 boleh mendaftar?"
+                              value={item.pertanyaan}
+                              onChange={(event) =>
+                                set(
+                                  "faq",
+                                  data.faq.map((faq, i) =>
+                                    i === index ? { ...faq, pertanyaan: event.target.value } : faq
+                                  )
+                                )
+                              }
+                            />
+                          </label>
+                          <label className="wide">
+                            <span>Jawaban <span className="oprec-builder__required">*</span></span>
+                            <textarea
+                              rows={3}
+                              maxLength={2000}
+                              placeholder="Tuliskan jawaban yang jelas dan informatif untuk calon pendaftar..."
+                              value={item.jawaban}
+                              onChange={(event) =>
+                                set(
+                                  "faq",
+                                  data.faq.map((faq, i) =>
+                                    i === index ? { ...faq, jawaban: event.target.value } : faq
+                                  )
+                                )
+                              }
+                            />
+                          </label>
+                        </div>
+                        <div className="oprec-builder__faq-footer">
+                          <button
+                            type="button"
+                            className="oprec-builder__delete-btn"
+                            aria-label={`Hapus FAQ ${index + 1}`}
+                            onClick={() => set("faq", data.faq.filter((_, i) => i !== index))}
+                          >
+                            <Trash2 size={13} aria-hidden="true" />
+                            <span>Hapus FAQ</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className="oprec-builder__add"
+                  disabled={data.faq.length >= 40}
+                  onClick={() => set("faq", [...data.faq, { pertanyaan: "", jawaban: "" }])}
+                >
+                  <Plus size={15} aria-hidden="true" />
+                  <span>Tambah FAQ Baru</span>
+                </button>
               </section>
               <div className="oprec-builder__advanced">
                 <button

@@ -675,6 +675,8 @@
   line-height: 1.6;
   font-weight: 400;
   margin: 0;
+  white-space: pre-line;
+  word-break: break-word;
 }
 
 .oprec-admin-overview__meta {
