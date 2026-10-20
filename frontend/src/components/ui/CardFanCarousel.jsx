@@ -63,7 +63,6 @@ function getSlotConfig(totalCards, slot) {
 export function CardFanCarousel({ cards }) {
   const containerRef = useRef(null);
   const [isInView, setIsInView] = useState(false);
-  // GSAP is only needed once the gallery approaches the viewport.
   const [gsap, setGsap] = useState(null);
   const isAnimating = useRef(false);
   const hasEntered = useRef(false);
@@ -101,7 +100,7 @@ export function CardFanCarousel({ cards }) {
           observer.disconnect();
         }
       },
-      { rootMargin: "300px 0px" },
+      { rootMargin: "900px 0px" },
     );
     observer.observe(container);
     return () => observer.disconnect();
@@ -150,11 +149,19 @@ export function CardFanCarousel({ cards }) {
     [centerIndex, totalCards, needsPagination, getVisibleMap],
   );
 
+  // Fetch GSAP once the browser is idle after load (or right away if the
+  // gallery is already near), so the cards are ready before they scroll in
+  // without adding to the initial page load.
   useEffect(() => {
-    if (!isInView || gsap) return undefined;
+    if (gsap) return undefined;
     let cancelled = false;
-    import("gsap").then((module) => { if (!cancelled) setGsap(() => module.default); });
-    return () => { cancelled = true; };
+    const load = () => import("gsap").then((module) => { if (!cancelled) setGsap(() => module.default); });
+    if (isInView || !("requestIdleCallback" in window)) {
+      const timer = window.setTimeout(load, isInView ? 0 : 1500);
+      return () => { cancelled = true; window.clearTimeout(timer); };
+    }
+    const idle = window.requestIdleCallback(load, { timeout: 3000 });
+    return () => { cancelled = true; window.cancelIdleCallback(idle); };
   }, [isInView, gsap]);
 
   useEffect(() => {
