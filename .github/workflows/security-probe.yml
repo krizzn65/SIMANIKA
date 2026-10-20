@@ -1,0 +1,29 @@
+name: Security probe (read-only, status codes only)
+
+on:
+  push:
+    branches: [only_deploy]
+    paths: [".github/workflows/security-probe.yml"]
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check sensitive paths are not publicly served
+        run: |
+          SITE=https://himanika.wsmif.myhost.id
+          # Only the HTTP status and size are printed; bodies are discarded.
+          for path in /laravel_app/.env /laravel_app/composer.json /laravel_app/storage/logs/laravel.log \
+                      /laravel_app/routes/api.php /laravel_app/artisan /laravel_app/config/app.php \
+                      /.env /info.php /php.ini /router.php /index.txt /.htaccess /.git/config \
+                      /laravel_app/storage/app/private/ /laravel_app/vendor/composer/installed.json \
+                      /api/admin/users /api/admin/dashboard /api/user/dashboard /api/auth/me; do
+            printf "%-55s %s\n" "$path" "$(curl -s -o /dev/null --max-time 20 -w '%{http_code} %{size_download}B %{content_type}' "$SITE$path")"
+          done
+      - name: Response headers on the home page and API
+        run: |
+          SITE=https://himanika.wsmif.myhost.id
+          echo "== /"; curl -sI --max-time 20 "$SITE/" | grep -iE "^(strict-transport|content-security|x-frame|x-content-type|referrer-policy|permissions-policy|server|x-powered)" || true
+          echo "== /api/ping"; curl -sI --max-time 20 "$SITE/api/ping" | grep -iE "^(strict-transport|content-security|x-frame|x-content-type|referrer-policy|access-control|server|x-powered)" || true
+          echo "== CORS from evil origin"; curl -sI --max-time 20 -H "Origin: https://evil.example" "$SITE/api/auth/me" | grep -iE "^access-control" || echo "(no CORS headers for foreign origin)"
+          echo "== debug mode"; curl -s --max-time 20 "$SITE/api/this-route-does-not-exist-$RANDOM" | head -c 160; echo
