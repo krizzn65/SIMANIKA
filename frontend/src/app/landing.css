@@ -1770,10 +1770,9 @@
     padding: 0.14rem 0.38rem;
     border-radius: 4px;
     line-height: 1.25;
-    white-space: nowrap;
+    white-space: normal;
     max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
   }
 
 .divisi-card__arrow {
@@ -3062,4 +3061,9 @@ html.motion-ok .reveal-word {
 .gallery-all-link:focus-visible {
   background: rgba(255, 255, 255, 0.14);
   border-color: #fff;
+}
+
+/* Phones: the decorative "SIMANIKA" code line collides with the section label. */
+@media (max-width: 540px) {
+  .about-code { display: none; }
 }

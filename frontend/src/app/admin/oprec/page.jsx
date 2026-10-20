@@ -509,7 +509,7 @@ export default function AdminOprecPage() {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -517,7 +517,7 @@ export default function AdminOprecPage() {
                 maxLength={100}
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setRegistrantPage(1); }}
-                className="pl-8 pr-3 py-1.5 rounded-none border border-slate-300 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 min-w-[200px]"
+                className="pl-8 pr-3 py-1.5 rounded-none border border-slate-300 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 w-full min-w-0 sm:w-auto sm:min-w-[200px]"
               />
             </div>
 

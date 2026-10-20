@@ -150,7 +150,7 @@
   .event-search { flex-basis: 100%; }
 }
 @media (max-width: 820px) {
-  .events-page { padding-top: 0; }
+  .events-page { padding-top: 3.75rem; }
   .events-directory { padding-top: 0.5rem; padding-bottom: 3rem; }
   .events-header { min-height: 3.1rem; display: flex; align-items: center; padding-right: 3.5rem; margin-bottom: 0; }
 

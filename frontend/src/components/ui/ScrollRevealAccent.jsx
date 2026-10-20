@@ -135,7 +135,7 @@ export function ScrollRevealAccent({ text }) {
                 </span>
               ))}
             </span>
-            {" "}
+            {wordIndex < words.length - 1 && " "}
           </Fragment>
         ))}
       </span>

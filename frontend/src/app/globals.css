@@ -2460,3 +2460,9 @@ html.motion-ok [data-hero-step] {
   pointer-events: none;
 }
 .site-header[data-scrolled]::after { opacity: 1; }
+
+/* Phones: larger tap targets for the footer link lists, same visual rhythm. */
+@media (max-width: 639px) {
+  .site-footer__nav { gap: 0.15rem; }
+  .site-footer__link { padding-block: 0.45rem; }
+}

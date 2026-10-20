@@ -649,7 +649,7 @@
   .oprec-countdown { gap: .35rem; }
 }
 @media (max-width: 820px) {
-  .oprec-page { padding-top: 0; }
+  .oprec-page { padding-top: 3.75rem; }
   .oprec-hero, .oprec-loading { padding-top: 0.5rem; }
   .oprec-eyebrow { min-height: 3.1rem; display: flex; align-items: center; padding-right: 3.5rem; }
   .oprec-hero__row, .oprec-faq-section, .oprec-skeleton__hero { grid-template-columns: 1fr; gap: 2rem; }

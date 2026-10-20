@@ -39,7 +39,7 @@ const divisions = [
     full: "Komunikasi & Informasi",
     description:
       "Mengelola seluruh kanal informasi digital organisasi, publikasi media sosial, dan memproduksi konten visual kreatif.",
-    programs: ["Media Growth", "Kreatif & Desain", "Video Profile"],
+    programs: ["Media Publikasi", "Desain Kreatif"],
     logo: "/images/divisi/kominfo.webp",
   },
   {
