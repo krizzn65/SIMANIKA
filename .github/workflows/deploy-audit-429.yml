@@ -1,0 +1,49 @@
+name: Deploy 429 audit (one-time)
+
+on:
+  push:
+    branches: [only_deploy]
+    paths: [".github/workflows/deploy-audit-429.yml"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      SITE: https://himanika.wsmif.myhost.id
+      BASE: 1543ef00d861999b1cc5600c4e875516a71137ff
+      FILES: app/Services/AuditTrail.php app/Http/Middleware/AuditFailureMiddleware.php
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: sudo apt-get install -y -qq lftp >/dev/null
+      - name: Back up and stop if the server copies changed
+        run: |
+          for f in $FILES; do
+            mkdir -p "backup/$(dirname $f)"
+            lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; get /laravel_app/$f -o backup/$f; bye"
+            if ! git show "$BASE:backend/$f" | diff -q -w -B --strip-trailing-cr - "backup/$f" >/dev/null; then
+              echo "::error::Server copy of $f differs from the repo; aborting."
+              git show "$BASE:backend/$f" | diff -w -B --strip-trailing-cr - "backup/$f" | head -40
+              exit 1
+            fi
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: audit-429-backup
+          path: backup/
+      - name: Upload
+        run: for f in $FILES; do lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; put backend/$f -o /laravel_app/$f; bye"; done
+      - name: Verify, roll back on failure
+        run: |
+          code() { curl -s -o /dev/null --max-time 20 -w '%{http_code}' "$@"; }
+          ping=$(code "$SITE/api/ping"); home=$(code "$SITE/api/public/home"); me=$(code -H "Accept: application/json" "$SITE/api/auth/me")
+          echo "ping=$ping home=$home me=$me"
+          if [ "$ping" != 200 ] || [ "$home" != 200 ] || [ "$me" != 401 ]; then
+            echo "::error::Check failed; restoring backups."
+            for f in $FILES; do lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; put backup/$f -o /laravel_app/$f; bye"; done
+            exit 1
+          fi
