@@ -18,7 +18,7 @@ class AuditFailureMiddleware
     {
         try {
             $response = $next($request);
-            if ($request->is('api/*') && ($response->getStatusCode() >= 500 || in_array($response->getStatusCode(), [401, 403], true))) {
+            if ($request->is('api/*') && ($response->getStatusCode() >= 500 || in_array($response->getStatusCode(), [401, 403, 429], true))) {
                 $this->record($request, $response->getStatusCode(), $request->attributes->get('audit_exception'));
                 if ($request->attributes->get('audit_request_id')) $response->headers->set('X-Request-ID', $request->attributes->get('audit_request_id'));
             }
@@ -32,7 +32,7 @@ class AuditFailureMiddleware
                     $error instanceof HttpExceptionInterface => $error->getStatusCode(),
                     default => 500,
                 };
-                if ($status >= 500 || in_array($status, [401, 403], true)) $this->record($request, $status, $error);
+                if ($status >= 500 || in_array($status, [401, 403, 429], true)) $this->record($request, $status, $error);
             }
             throw $error;
         }
