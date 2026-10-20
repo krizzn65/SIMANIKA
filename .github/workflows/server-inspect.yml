@@ -16,4 +16,4 @@ jobs:
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
-          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; pwd; cls -1 --sort=name /; echo ---; cls -1 -d /*/ ; echo ---; cls -1 /*/*/ | head -200; bye"
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; cls -1 /laravel_app/; echo ---; cls -l /laravel_app/routes/ /laravel_app/bootstrap/cache/ /laravel_app/app/Http/Middleware/ /laravel_app/app/Http/Controllers/Public/ /laravel_app/database/migrations/ | tail -80; echo ---; cls -l /index.php /router.php /.htaccess /info.php; bye"
