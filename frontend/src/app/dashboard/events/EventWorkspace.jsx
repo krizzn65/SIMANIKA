@@ -114,7 +114,7 @@ function WorkspaceContent({ eventId }) {
   </main>;
 }
 
-export function PaymentStatus({ status }) {
+function PaymentStatus({ status }) {
   return <strong className={status === "paid" ? styles.paid : status === "unpaid" ? styles.unpaid : styles.free}>{status === "paid" ? "Paid" : status === "unpaid" ? "Unpaid" : "Free"}</strong>;
 }
 

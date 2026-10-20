@@ -1,6 +1,6 @@
 "use client";
 
-export function HeroIcon({ className = "subnav-icon" }) {
+function HeroIcon({ className = "subnav-icon" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -18,7 +18,7 @@ export function HeroIcon({ className = "subnav-icon" }) {
   );
 }
 
-export function TentangIcon({ className = "subnav-icon" }) {
+function TentangIcon({ className = "subnav-icon" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -36,7 +36,7 @@ export function TentangIcon({ className = "subnav-icon" }) {
   );
 }
 
-export function VisiMisiIcon({ className = "subnav-icon" }) {
+function VisiMisiIcon({ className = "subnav-icon" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -54,7 +54,7 @@ export function VisiMisiIcon({ className = "subnav-icon" }) {
   );
 }
 
-export function DivisiIcon({ className = "subnav-icon" }) {
+function DivisiIcon({ className = "subnav-icon" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -74,7 +74,7 @@ export function DivisiIcon({ className = "subnav-icon" }) {
   );
 }
 
-export function GalleryIcon({ className = "subnav-icon" }) {
+function GalleryIcon({ className = "subnav-icon" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -93,7 +93,7 @@ export function GalleryIcon({ className = "subnav-icon" }) {
   );
 }
 
-export function TestimoniIcon({ className = "subnav-icon" }) {
+function TestimoniIcon({ className = "subnav-icon" }) {
   return (
     <svg
       viewBox="0 0 24 24"

@@ -15,9 +15,7 @@
 .simanika-signin-back-icon { width: 19px; height: 19px; flex: none; transition: transform 240ms cubic-bezier(.2,.8,.2,1); }
 .simanika-signin-brand-link:hover .simanika-signin-back-icon, .simanika-signin-brand-link:focus-visible .simanika-signin-back-icon { transform: translateX(-4px); }
 @media (prefers-reduced-motion: reduce) { .simanika-signin-brand-link:hover, .simanika-signin-brand-link:focus-visible, .simanika-signin-brand-link:hover .simanika-signin-back-icon, .simanika-signin-brand-link:focus-visible .simanika-signin-back-icon { transform: none; } }
-.simanika-signin-eyebrow { display: inline-flex; align-items: center; gap: .55rem; margin-bottom: .8rem; color: var(--blue-dark); }
-.simanika-signin-eyebrow__dot { width: 7px; height: 7px; background: var(--blue); flex: none; }
-.simanika-signin-eyebrow__text { font: .7rem/1.6 "IBM Plex Mono", monospace; letter-spacing: .06em; }
+
 .simanika-signin-title { font-family: "Press Start 2P", "IBM Plex Mono", monospace; font-size: clamp(1.18rem, 2.4vw, 1.9rem); font-weight: 400; letter-spacing: -.055em; line-height: 1.58; margin: 0 0 .75rem; color: var(--ink); text-shadow: .45px 0 currentColor; }
 .simanika-signin-title em { font-style: normal; color: var(--blue); }
 .simanika-signin-desc { color: var(--ink-muted); font-size: 1rem; line-height: 1.65; margin: 0 0 1.75rem; }

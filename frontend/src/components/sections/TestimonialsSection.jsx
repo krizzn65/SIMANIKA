@@ -31,5 +31,3 @@ export function TestimonialsSection({ testimonials }) {
     </section>
   );
 }
-
-export default TestimonialsSection;

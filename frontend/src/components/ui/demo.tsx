@@ -11,7 +11,7 @@ import { safeNextPath } from "@/lib/safeNextPath";
 import { STAFF_ROLES, adminHome, canAccessAdminPath } from "@/lib/roleAccess";
 import AuthFeedbackToast from "@/components/ui/AuthFeedbackToast";
 
-export const SignInPageDemo = () => {
+const SignInPageDemo = () => {
   const router = useRouter();
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackStatus, setFeedbackStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -136,9 +136,3 @@ export const SignInPageDemo = () => {
 };
 
 export default SignInPageDemo;
-
-import Component from "@/components/ui/testimonial-v2";
-
-export function DemoOne() {
-  return <Component />;
-}

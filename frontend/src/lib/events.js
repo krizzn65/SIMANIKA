@@ -1,4 +1,4 @@
-export const EVENT_CATEGORIES = [
+const EVENT_CATEGORIES = [
   ["", "Semua kategori"], ["hi-fest", "HI-FEST"], ["mic", "MIC"],
   ["imce", "IMCE"], ["lainnya", "Lainnya"],
 ];
@@ -8,7 +8,7 @@ export function eventCategoryLabel(value) {
   return EVENT_CATEGORIES.find(([key]) => key === normalized)?.[1] || category || "Lainnya";
 }
 
-export const EVENT_STATUSES = [
+const EVENT_STATUSES = [
   ["", "Semua waktu"], ["upcoming", "Akan datang"],
   ["ongoing", "Berlangsung"], ["selesai", "Selesai"],
 ];

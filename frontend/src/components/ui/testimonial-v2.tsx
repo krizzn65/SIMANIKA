@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from "framer-motion";
-import { Sun, Moon } from 'lucide-react';
 import './testimonial-v2.css';
 
 // --- Types ---
-export interface Testimonial {
+interface Testimonial {
   text: string;
   image: string;
   name: string;
@@ -14,7 +13,7 @@ export interface Testimonial {
 }
 
 // --- Default Data (Themed for SIMANIKA / HIMANIKA with verified Unsplash portraits) ---
-export const defaultTestimonials: Testimonial[] = [
+const defaultTestimonials: Testimonial[] = [
   {
     text: "Di HIMANIKA, aku pertama kali belajar bagaimana memimpin tim teknologi dan merilis produk dari nol. Pengalaman kolaborasi lintas divisi di SIMANIKA adalah modal terbesarku di industri saat ini.",
     image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
@@ -72,7 +71,7 @@ export const defaultTestimonials: Testimonial[] = [
 ];
 
 // --- Sub-Components ---
-export const TestimonialsColumn = (props: {
+const TestimonialsColumn = (props: {
   className?: string;
   testimonials: Testimonial[];
   duration?: number;
@@ -173,54 +172,3 @@ export const TestimonialMarqueeColumns = (props: {
     </div>
   );
 };
-
-// --- Full Section Component (as provided by 21st.dev template) ---
-export const TestimonialsSection = () => {
-  return (
-    <section 
-      aria-labelledby="testimonials-heading"
-      className="bg-transparent py-16 relative overflow-hidden"
-    >
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.15 }}
-        transition={{ 
-          duration: 0.8, 
-          ease: [0.16, 1, 0.3, 1]
-        }}
-        className="container px-4 z-10 mx-auto"
-      >
-        <TestimonialMarqueeColumns />
-      </motion.div>
-    </section>
-  );
-};
-
-// --- Main App Component ---
-export default function App() {
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDark]);
-
-  return (
-    <div className="w-screen min-h-screen bg-white dark:bg-neutral-950 transition-colors duration-300 flex flex-col justify-center relative selection:bg-primary selection:text-white">
-      {/* Dark Mode Toggle */}
-      <button 
-        onClick={() => setIsDark(!isDark)}
-        className="fixed top-6 right-6 z-50 p-3 rounded-full bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 border border-neutral-200 dark:border-neutral-800 shadow-xl hover:scale-110 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary/50"
-        aria-label="Toggle Dark Mode"
-      >
-        {isDark ? <Sun size={20} /> : <Moon size={20} />}
-      </button>
-
-      <TestimonialsSection />
-    </div>
-  );
-}

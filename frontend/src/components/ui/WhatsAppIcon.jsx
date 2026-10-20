@@ -13,4 +13,3 @@ export function WhatsAppIcon({ size = 20, className = "" }) {
     </svg>
   );
 }
-export default WhatsAppIcon;

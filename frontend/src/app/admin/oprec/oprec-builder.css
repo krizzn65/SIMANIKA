@@ -596,7 +596,6 @@
   border-color: #fca5a5 !important;
 }
 
-
 /* Division Cards */
 .oprec-builder__divisions {
   display: flex;
@@ -1318,15 +1317,6 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-.oprec-user-preview__div-quota {
-  font-size: 9px;
-  font-weight: 500;
-  color: #475569;
-  padding-top: 4px;
-  border-top: 1px dashed #e2e8f0;
-  margin-top: auto;
 }
 
 /* ==========================================================================
@@ -2091,22 +2081,6 @@
   box-shadow: 2px 2px 0 rgba(220, 38, 38, 0.12) !important;
 }
 
-.oprec-builder__preview-poster {
-  width: 100%;
-  max-height: 140px;
-  overflow: hidden;
-  border: 1px solid #cbd5e1;
-  background: #f8fafc;
-  margin-bottom: 0.75rem;
-}
-
-.oprec-builder__preview-poster img {
-  width: 100%;
-  height: 140px;
-  object-fit: cover;
-  display: block;
-}
-
 /* Division Logo Upload Component */
 .oprec-builder__division-logo-zone {
   display: flex;
@@ -2752,9 +2726,7 @@
   .oprec-builder__grid {
     grid-template-columns: 1fr;
   }
-  .oprec-builder__preview-divisions {
-    grid-template-columns: 1fr;
-  }
+
 }
 
 @media (prefers-reduced-motion: reduce) {

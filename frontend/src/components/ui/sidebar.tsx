@@ -8,7 +8,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 
-export interface Links {
+interface Links {
   label: string;
   href: string;
   icon: React.JSX.Element | React.ReactNode;
@@ -34,7 +34,7 @@ export const useSidebar = () => {
   return context;
 };
 
-export const SidebarProvider = ({
+const SidebarProvider = ({
   children,
   open: openProp,
   setOpen: setOpenProp,
@@ -109,7 +109,7 @@ export const SidebarBody = (props: React.ComponentProps<typeof motion.div>) => {
   );
 };
 
-export const DesktopSidebar = ({
+const DesktopSidebar = ({
   className,
   children,
   ...props
@@ -140,7 +140,7 @@ export const DesktopSidebar = ({
   );
 };
 
-export const MobileSidebar = ({
+const MobileSidebar = ({
   className,
   children,
   ...props

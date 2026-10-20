@@ -63,6 +63,8 @@ export function DivisiModal({ division, structure, onClose, icons }) {
             <div className="divisi-modal__icon-wrap">
               {division.logo ? (
                 <img
+                  loading="lazy"
+                  decoding="async"
                   src={division.logo}
                   alt={`Logo ${division.name}`}
                   className="divisi-modal__logo"

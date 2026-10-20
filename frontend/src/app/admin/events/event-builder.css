@@ -50,20 +50,6 @@
 @media (max-width: 900px) { .event-builder-grid { grid-template-columns: 1fr; } .event-builder-preview { position: static; } }
 @media (max-width: 560px) { .event-builder-two { grid-template-columns: 1fr; } .event-builder-title { flex-direction: column; } .event-builder-field-head { flex-wrap: wrap; } }
 
-.event-builder-responses { margin-top: 2rem; padding: 1.3rem; background: white; border: 1px solid #cad5e5; border-radius: 18px; display: grid; gap: 1rem; }
-.event-builder-responses h2 { margin: .3rem 0; }
-.event-builder-responses p { color: #52627a; }
-.event-builder-response-list { display: grid; gap: .8rem; }
-.event-builder-response-list article { border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; }
-.event-builder-response-list header { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; }
-.event-builder-response-list header small { color: #52627a; }
-.event-builder-response-list header span { color: #155eef; background: #eff6ff; padding: .2rem .5rem; border-radius: 99px; font-size: .8rem; }
-.event-builder-response-list dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .7rem; margin-bottom: 0; }
-.event-builder-response-list dt { color: #52627a; font-size: .85rem; }
-.event-builder-response-list dd { margin: .2rem 0 0; overflow-wrap: anywhere; }
-.event-builder-response-list dd button, .event-builder-pages button { color: #0f4bcb; text-decoration: underline; }
-.event-builder-pages { display: flex; justify-content: center; align-items: center; gap: 1rem; }
-
 /* Compact rounded builder pass.
  * Inspired by the restrained card/form rhythm in 21st.dev's form-builder collection:
  * https://21st.dev/community/components/explore/form-builder-react-js
@@ -137,10 +123,6 @@
 .event-builder-preview-empty { margin-top: .9rem; padding: .85rem; border: 1px dashed #c7d6e8; border-radius: 14px; background: #f7faff; font-size: .8rem; line-height: 1.45; }
 .event-builder-preview > .admin-btn { width: 100%; min-height: 3rem; margin-top: 1rem; border-radius: 14px; font-size: .825rem; }
 .event-builder-error, .event-builder-success { padding: .65rem .8rem; border-radius: 11px; font-size: .8rem; line-height: 1.4; }
-.event-builder-responses { margin-top: 1.25rem; padding: 1rem; border-radius: 16px; gap: .75rem; }
-.event-builder-responses h2 { font-size: 1.1rem; }
-.event-builder-response-list { gap: .6rem; }
-.event-builder-response-list article { border-radius: 12px; padding: .8rem; }
 
 @keyframes event-builder-card-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
 .event-builder-field { animation: event-builder-card-in 280ms ease-out both; }

@@ -91,7 +91,7 @@ function VisionVideo() {
         playsInline
         preload="metadata"
         className="vision-video"
-        src="/videos/animasi logo.mp4"
+        src="/videos/animasi-logo.mp4"
         onEnded={handleEnded}
       />
       <button
