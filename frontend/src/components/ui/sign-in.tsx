@@ -20,14 +20,14 @@ const GoogleIcon = () => (
 
 // --- TYPE DEFINITIONS ---
 
-export interface Testimonial {
+interface Testimonial {
   avatarSrc: string;
   name: string;
   handle: string;
   text: string;
 }
 
-export interface SignInPageProps {
+interface SignInPageProps {
   fieldRegister?: UseFormRegister<{ email: string; password: string; rememberMe: boolean }>;
   title?: React.ReactNode;
   description?: React.ReactNode;
@@ -333,5 +333,3 @@ export const SignInPage: React.FC<SignInPageProps> = ({
     </div>
   );
 };
-
-export default SignInPage;

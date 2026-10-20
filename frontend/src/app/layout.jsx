@@ -1,6 +1,7 @@
 import { ScrollReset } from "@/components/layout/ScrollReset";
 import { SessionTimeoutModal } from "@/components/auth/SessionTimeoutModal";
 import { DevNotice } from "@/components/layout/DevNotice";
+import { motionBootScript, motionCssVars } from "@/lib/motion";
 import "./globals.css";
 
 export const metadata = {
@@ -10,12 +11,12 @@ export const metadata = {
   icons: {
     icon: [
       {
-        url: "/images/logos/Logo MIF 2020.png",
+        url: "/images/logos/logo-mif-256.png",
         type: "image/png",
       },
     ],
-    shortcut: "/images/logos/Logo MIF 2020.png",
-    apple: "/images/logos/Logo MIF 2020.png",
+    shortcut: "/images/logos/logo-mif-256.png",
+    apple: "/images/logos/logo-mif-256.png",
   },
 };
 
@@ -25,8 +26,10 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning>
       <head>
+        <style dangerouslySetInnerHTML={{ __html: motionCssVars }} />
+        <script dangerouslySetInnerHTML={{ __html: motionBootScript }} />
         <script
           dangerouslySetInnerHTML={{
             __html:

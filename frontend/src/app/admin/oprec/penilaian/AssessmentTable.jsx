@@ -5,6 +5,7 @@ import { AlertCircle, Check, Download, Eye, Loader2, LockKeyhole, RefreshCw } fr
 import { toast } from "sonner";
 import { getOprecTableFields, getRegistrantFieldValue } from "@/lib/oprecRegistrants";
 import { downloadAuthenticatedFile, downloadErrorMessage } from "@/lib/downloadFile";
+import { PreviewButton, useFilePreview } from "@/components/admin/FilePreview";
 import { scoreTone, validScore } from "@/lib/oprecAssessment.mjs";
 import { CRITERIA, formattedTotal, scoreText } from "./assessmentFormat";
 
@@ -18,6 +19,7 @@ function SaveFeedback({ state, onRetry }) {
 export default function AssessmentTable({ data, loading, error, filtered, selectedId, draft, saveState, onChange, onSave, onCommentChange, onSelect, onDecide, onRetry, onReset, page, onPageChange }) {
   const scroll = useRef(null);
   const [downloadingFile, setDownloadingFile] = useState("");
+  const { openPreview, loadingUrl, preview } = useFilePreview();
   async function downloadFile(url, name) {
     if (!url || downloadingFile) return;
     setDownloadingFile(url);
@@ -63,7 +65,7 @@ export default function AssessmentTable({ data, loading, error, filtered, select
             <td className="assessment-pin assessment-pin--2"><span className="assessment-nim">{row.nim}</span></td>
             {row.choices.map((choice) => <td key={choice.order} className="assessment-choice"><strong>{choice.division || "—"}</strong><span>{choice.applied_position || "Jabatan tidak tercatat"}</span></td>)}
             <td>{row.angkatan || "—"}</td>
-            {fields.map((field) => { const value = fieldValue(row, field); return <td key={field.name} className="assessment-answer-cell">{value.downloadUrl ? <button type="button" className="assessment-file-link" disabled={Boolean(downloadingFile)} onClick={() => downloadFile(value.downloadUrl, value.fileName)} aria-label={`Unduh ${field.label || field.name} milik ${row.name}`}>{downloadingFile === value.downloadUrl ? <Loader2 size={15} className="assessment-spin" aria-hidden="true" /> : <Download size={15} aria-hidden="true" />} {downloadingFile === value.downloadUrl ? "Mengunduh…" : "Unduh Berkas"}</button> : <div>{value.text}</div>}</td>; })}
+            {fields.map((field) => { const value = fieldValue(row, field); return <td key={field.name} className="assessment-answer-cell">{value.downloadUrl ? <><PreviewButton className="assessment-file-link" url={value.downloadUrl} label={`${field.label || field.name} milik ${row.name}`} loadingUrl={loadingUrl} onPreview={() => openPreview(value.downloadUrl, value.fileName)} /><button type="button" className="assessment-file-link" disabled={Boolean(downloadingFile)} onClick={() => downloadFile(value.downloadUrl, value.fileName)} aria-label={`Unduh ${field.label || field.name} milik ${row.name}`}>{downloadingFile === value.downloadUrl ? <Loader2 size={15} className="assessment-spin" aria-hidden="true" /> : <Download size={15} aria-hidden="true" />} {downloadingFile === value.downloadUrl ? "Mengunduh…" : "Unduh Berkas"}</button></> : <div>{value.text}</div>}</td>; })}
             <td><button type="button" className={`assessment-button assessment-button--small ${selectedId === row.id ? "assessment-button--selected" : ""}`} onClick={(event) => onSelect(row, event.currentTarget)} aria-label={`Lihat jawaban Tes Tulis ${row.name}`} aria-pressed={selectedId === row.id}><Eye size={15} /> Lihat jawaban</button></td>
             {CRITERIA.map(([field, label]) => {
               const key = `${row.registration_id}:${field}`;
@@ -89,5 +91,6 @@ export default function AssessmentTable({ data, loading, error, filtered, select
     </div>
     {!loading && rows.length === 0 && !error && <div className="assessment-state"><h3>{filtered ? "Peserta tidak ditemukan" : "Belum ada peserta untuk dinilai"}</h3><p>{filtered ? "Coba kata pencarian atau filter yang berbeda." : "Peserta muncul setelah mengirim jawaban Tes Tulis."}</p>{filtered && <button type="button" className="assessment-button" onClick={onReset}>Reset pencarian & filter</button>}</div>}
     <footer className="assessment-pagination"><span>{data?.total ? `${(data.current_page - 1) * data.per_page + 1}–${Math.min(data.current_page * data.per_page, data.total)} dari ${data.total} peserta` : "0 peserta"}</span><div><button type="button" className="assessment-button assessment-button--small" disabled={loading || page <= 1} onClick={() => onPageChange(page - 1)}>Sebelumnya</button><span>{page} / {data?.last_page || 1}</span><button type="button" className="assessment-button assessment-button--small" disabled={loading || page >= (data?.last_page || 1)} onClick={() => onPageChange(page + 1)}>Berikutnya</button></div></footer>
+  {preview}
   </section>;
 }

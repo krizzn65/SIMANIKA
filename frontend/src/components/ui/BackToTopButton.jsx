@@ -1,10 +1,12 @@
 "use client";
 
+import { smoothScrollTo } from "@/components/motion/SmoothScroll";
+
 export function BackToTopButton() {
   return (
     <button
       type="button"
-      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      onClick={() => smoothScrollTo(0)}
       className="site-footer__top-btn"
       aria-label="Kembali ke atas"
       title="Kembali ke atas"

@@ -5,35 +5,36 @@ import { MissionAccordion } from "@/components/ui/MissionAccordion";
 import { ScrollRevealAccent } from "@/components/ui/ScrollRevealAccent";
 import { InteractiveGrid } from "@/components/ui/InteractiveGrid";
 import { ReplayIcon } from "@/components/ui/ReplayIcon";
+import { Parallax } from "@/components/motion/Parallax";
 
 const missions = [
   {
     index: "01",
-    title: "Potensi SDM yang unggul",
-    tag: "SDM",
+    title: "Wadah aspirasi",
+    tag: "ASPIRASI",
     description:
-      "Mengembangkan potensi SDM yang unggul serta membangun dan memelihara hubungan internal maupun eksternal.",
+      "Menampung aspirasi mahasiswa Manajemen Informatika di semua angkatan, khususnya di bidang teknologi informasi, dan menindaklanjutinya secara terbuka.",
   },
   {
     index: "02",
-    title: "Wadah aspirasi mahasiswa",
-    tag: "ASPIRASI",
+    title: "Skill dan karier",
+    tag: "KARIER",
     description:
-      "Menjadi wadah aspirasi mahasiswa Manajemen Informatika dalam seluruh bidang, khususnya teknologi informasi.",
+      "Menyelenggarakan pelatihan di bidang teknologi informasi yang relevan dengan kebutuhan industri, serta menghubungkan mahasiswa dengan alumni dan mitra industri untuk persiapan magang dan portofolio.",
   },
   {
     index: "03",
-    title: "Jiwa kewirausahaan",
-    tag: "INDUSTRI 4.0",
+    title: "Jembatan prestasi",
+    tag: "PRESTASI",
     description:
-      "Membangun jiwa kewirausahaan yang kreatif dan mampu bersaing di era Industri 4.0.",
+      "Menjadi jembatan bagi mahasiswa untuk berprestasi, melalui pendampingan, informasi, dan fasilitasi mengikuti kompetisi di tingkat kampus, nasional, hingga internasional.",
   },
   {
     index: "04",
-    title: "Keterampilan berwirausaha",
-    tag: "PROMOSI",
+    title: "Karakter dan wirausaha",
+    tag: "WIRAUSAHA",
     description:
-      "Meningkatkan keterampilan berwirausaha serta mengorganisasi acara-acara promosi dan pameran yang dihasilkan oleh pengurus HIMANIKA.",
+      "Membangun mahasiswa yang berintegritas, kolaboratif, dan berjiwa wirausaha lewat organisasi yang solid dan kekeluargaan.",
   },
 ];
 
@@ -91,7 +92,7 @@ function VisionVideo() {
         playsInline
         preload="metadata"
         className="vision-video"
-        src="/videos/animasi logo.mp4"
+        src="/videos/animasi-logo.mp4"
         onEnded={handleEnded}
       />
       <button
@@ -130,17 +131,17 @@ export function VisiMisiSection({ visi, misi }) {
 
         <h2 className="vision-title" id="vision-title">
           {visi ? visi : <>
-            Menjadi <ScrollRevealAccent text="wadah inovasi" /> dan{" "}
-            <ScrollRevealAccent text="pengembangan SDM" /> yang unggul secara
-            progresif dan berbasis entrepreneur dengan pemanfaatan teknologi
-            informasi.
+            Menjadi rumah tumbuh bagi mahasiswa Manajemen Informatika Polije
+            untuk menjadi <ScrollRevealAccent text="talenta digital terapan" />:
+            siap kerja, cakap data dan AI, berjiwa wirausaha, dan{" "}
+            <ScrollRevealAccent text="berdampak bagi masyarakat" />.
           </>}
         </h2>
 
         <div className="vision-content">
-          <div className="vision-video-panel">
+          <Parallax className="vision-video-panel">
             <VisionVideo />
-          </div>
+          </Parallax>
 
           <MissionAccordion items={displayedMissions} />
         </div>

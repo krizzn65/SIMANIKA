@@ -19,7 +19,7 @@
 .dashboard-header h1 { margin: 0; font-size: clamp(2.5rem, 5.4vw, 4.65rem); font-weight: 600; line-height: 1.05; letter-spacing: -.055em; }
 .dashboard-header h1 span { color: var(--blue); }
 .dashboard-intro { margin: .9rem 0 0; font-size: 1rem; color: var(--ink-muted); }
-.dashboard-state__links a, .dashboard-state button {
+.dashboard-state button {
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
@@ -36,7 +36,7 @@
   cursor: pointer;
   transition: background-color .18s ease, transform .18s ease;
 }
-.dashboard-state__links a:hover, .dashboard-state button:hover { background: var(--blue-dark); transform: translateY(-2px); }
+.dashboard-state button:hover { background: var(--blue-dark); transform: translateY(-2px); }
 .dashboard-page :is(a, button):focus-visible { outline: 3px solid var(--blue); outline-offset: 4px; }
 .dashboard-state {
   display: flex;
@@ -64,9 +64,7 @@
 .dashboard-state__mark svg { width: 48px; height: 48px; }
 .dashboard-state h2 { margin: 0; font-size: clamp(1.35rem, 2vw, 1.7rem); letter-spacing: -.035em; }
 .dashboard-state p { margin: .65rem 0 0; color: var(--ink-muted); line-height: 1.55; }
-.dashboard-state__links { display: flex; flex-wrap: wrap; justify-content: center; gap: .8rem; margin-top: 1.6rem; }
-.dashboard-state__links a:last-child { border-color: #b8c9e2; background: #fff; color: var(--blue-dark); }
-.dashboard-state__links a:last-child:hover { background: #eef4ff; }
+
 .dashboard-state button { margin-top: 1.5rem; }
 .dashboard-state__loading { width: 28px; height: 28px; border: 2px solid #d4e1f7; border-top-color: var(--blue); border-radius: 50%; animation: dashboard-spin .7s linear infinite; }
 @keyframes dashboard-spin { to { transform: rotate(360deg); } }
@@ -112,17 +110,16 @@
   .dashboard-entry__top, .dashboard-entry__bottom { flex-wrap: wrap; }
 }
 @media (max-width: 600px) {
-  .dashboard-page { padding-top: 3.5rem; padding-bottom: 3.5rem; }
+  .dashboard-page { padding-top: 4.75rem; padding-bottom: 3.5rem; }
   .dashboard-header { margin-bottom: 1.75rem; }
 }
 @media (max-width: 480px) {
-  .dashboard-page { padding-top: 3.25rem; padding-bottom: 3rem; }
+  .dashboard-page { padding-top: 4.5rem; padding-bottom: 3rem; }
   .dashboard-header { margin-bottom: 1.5rem; }
   .dashboard-header h1 { font-size: clamp(2rem, 8vw, 2.5rem); }
   .dashboard-intro { margin-top: .6rem; font-size: .95rem; }
   .dashboard-state { padding: 2rem 1.1rem; }
-  .dashboard-state__links { width: 100%; }
-  .dashboard-state__links a { flex: 1 1 100%; }
+
 }
 @media (prefers-reduced-motion: reduce) {
   .dashboard-page * { animation-duration: .01ms !important; transition-duration: .01ms !important; }

@@ -1,6 +1,5 @@
 import { getDefaultJabatan } from "../../lib/oprec";
 
-export { getDefaultJabatan };
 
 export const divisionPreview = [
   { id: "bph", nama: "BPH", namaLengkap: "Badan Pengurus Harian", deskripsi: "Mengatur arah dan koordinasi organisasi.", logo: "/images/divisi/bph.webp", jabatan: getDefaultJabatan("BPH") },

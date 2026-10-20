@@ -205,17 +205,24 @@
   transform: translateX(0);
   opacity: 1;
 }
-.register-feedback { margin: 1.25rem 0 0; padding: .8rem 1rem; border-left: 3px solid var(--blue); background: #eff6ff; color: var(--blue-dark); font-size: .88rem; line-height: 1.5; }
+
 .register-login { margin: 1.6rem 0 0; text-align: center; color: var(--ink-muted); font-size: .9rem; }
 .register-login a { color: var(--blue-dark); font-weight: 600; }
 .register-login a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .register-page :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
 @media (max-width: 640px) {
-  .register-page { padding: 1.5rem 1rem; }
-  .register-card { padding: 1.35rem; box-shadow: 5px 5px 0 #eaf0fb; }
-  .register-heading { margin: 1.8rem 0; }
+  .register-page { padding: 1.25rem 1rem; }
+  .register-card { padding: 1.25rem; box-shadow: 5px 5px 0 #eaf0fb; }
+  .register-heading { margin: 1.1rem 0 1.25rem; }
+  .register-heading h1 { font-size: 1.05rem; margin-bottom: .5rem; }
+  .register-heading p { font-size: .9rem; line-height: 1.55; }
+  .register-back { min-height: 40px; padding: .4rem .8rem; font-size: .8rem; box-shadow: 3px 3px 0 #dce5f4; }
+  .register-google, .register-submit { min-height: 44px; padding: .6rem 1rem; font-size: .92rem; }
+  .register-divider { margin: 1.1rem 0 .9rem; }
+  .register-form { gap: .85rem; }
+  .register-field input { min-height: 44px; padding: .6rem .85rem; }
   .register-pixel-corner {
-    width: 130px;
+    width: 110px;
     opacity: 0.8;
   }
 }

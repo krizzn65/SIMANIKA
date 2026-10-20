@@ -11,7 +11,7 @@ const toastCopy = {
   info: { label: "Info", Icon: Info },
 };
 
-export function AuthFeedbackToast({ status = "idle", message, onDismiss }) {
+function AuthFeedbackToast({ status = "idle", message, onDismiss }) {
   const reduced = useReducedMotion();
   const visible = status !== "idle" && Boolean(message);
   const copy = toastCopy[status] || toastCopy.info;

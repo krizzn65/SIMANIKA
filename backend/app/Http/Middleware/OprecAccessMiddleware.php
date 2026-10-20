@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Http\Controllers\Admin\OprecAnnouncementController;
 use App\Http\Controllers\Admin\OprecAssessmentController;
 use App\Http\Controllers\Admin\OprecController;
+use App\Http\Controllers\Admin\OprecRegistrantController;
 use App\Http\Controllers\Admin\OprecRegistrantExportController;
 use App\Http\Controllers\Admin\OprecWrittenTestController;
 use App\Models\User;
@@ -25,11 +26,12 @@ class OprecAccessMiddleware
                 OprecWrittenTestController::class.'@index',
                 OprecAnnouncementController::class.'@index', OprecAnnouncementController::class.'@show',
                 OprecAnnouncementController::class.'@poster',
+                OprecRegistrantController::class.'@index', OprecRegistrantController::class.'@download',
                 OprecRegistrantExportController::class.'@__invoke',
                 OprecRegistrantExportController::class,
             ], true);
-            // Leaders can export the registration list, but editing and direct file
-            // downloads still require management access. Assessment checks assignment.
+            // Leaders can read and export the registration list and open uploaded
+            // files; editing still requires management access. Assessment checks assignment.
             abort_unless($assessment || $summary, 403);
         }
         return $next($request);

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import gsap from "gsap";
 
 const MAX_VISIBLE = 7;
 const HALF = 3;
@@ -64,6 +63,7 @@ function getSlotConfig(totalCards, slot) {
 export function CardFanCarousel({ cards }) {
   const containerRef = useRef(null);
   const [isInView, setIsInView] = useState(false);
+  const [gsap, setGsap] = useState(null);
   const isAnimating = useRef(false);
   const hasEntered = useRef(false);
   const directionRef = useRef(null);
@@ -100,7 +100,7 @@ export function CardFanCarousel({ cards }) {
           observer.disconnect();
         }
       },
-      { rootMargin: "300px 0px" },
+      { rootMargin: "900px 0px" },
     );
     observer.observe(container);
     return () => observer.disconnect();
@@ -137,21 +137,50 @@ export function CardFanCarousel({ cards }) {
         direction === "right"
           ? (centerIndex + 1) % totalCards
           : (centerIndex - 1 + totalCards) % totalCards;
-      setLoadedIndices((previous) => {
-        const next = new Set(previous);
-        getVisibleMap(nextCenter).forEach((_, index) => next.add(index));
-        const ahead = direction === "right" ? HALF + 1 : -(HALF + 1);
-        next.add(((nextCenter + ahead) % totalCards + totalCards) % totalCards);
-        return next;
-      });
       setCenterIndex(nextCenter);
     },
-    [centerIndex, totalCards, needsPagination, getVisibleMap],
+    [centerIndex, totalCards],
   );
+
+  // Keep the visible cards plus two on each side downloaded and decoded, so a
+  // press of < or > shows a ready image instead of loading it then.
+  useEffect(() => {
+    if (!isInView || !totalCards) return;
+    const wanted = new Set(getVisibleMap(centerIndex).keys());
+    for (let step = 1; step <= 2; step++) {
+      wanted.add((centerIndex + HALF + step) % totalCards);
+      wanted.add(((centerIndex - HALF - step) % totalCards + totalCards) % totalCards);
+    }
+    wanted.forEach((index) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = cards[index].imgUrl;
+      image.decode?.().catch(() => {});
+    });
+    setLoadedIndices((previous) => {
+      if ([...wanted].every((index) => previous.has(index))) return previous;
+      return new Set([...previous, ...wanted]);
+    });
+  }, [isInView, centerIndex, totalCards, cards, getVisibleMap]);
+
+  // Fetch GSAP once the browser is idle after load (or right away if the
+  // gallery is already near), so the cards are ready before they scroll in
+  // without adding to the initial page load.
+  useEffect(() => {
+    if (gsap) return undefined;
+    let cancelled = false;
+    const load = () => import("gsap").then((module) => { if (!cancelled) setGsap(() => module.default); });
+    if (isInView || !("requestIdleCallback" in window)) {
+      const timer = window.setTimeout(load, isInView ? 0 : 1500);
+      return () => { cancelled = true; window.clearTimeout(timer); };
+    }
+    const idle = window.requestIdleCallback(load, { timeout: 3000 });
+    return () => { cancelled = true; window.cancelIdleCallback(idle); };
+  }, [isInView, gsap]);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || !totalCards || !isInView) return;
+    if (!container || !totalCards || !isInView || !gsap) return;
 
     const cardElements = Array.from(
       container.querySelectorAll(".fan-card"),
@@ -367,7 +396,7 @@ export function CardFanCarousel({ cards }) {
       if (leaveTimer) clearTimeout(leaveTimer);
       gsap.killTweensOf(cardElements);
     };
-  }, [centerIndex, totalCards, getVisibleMap, needsPagination, isInView]);
+  }, [centerIndex, totalCards, getVisibleMap, needsPagination, isInView, gsap]);
 
   if (!totalCards) return null;
 

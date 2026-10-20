@@ -6,18 +6,13 @@
 .simanika-pixel-corner { position: absolute; pointer-events: none; user-select: none; z-index: 0; width: clamp(140px, 18vw, 260px); height: auto; opacity: .88; transition: opacity 200ms ease; }
 .simanika-pixel-corner--tl { top: 0; left: 0; }
 .simanika-pixel-corner--bl { bottom: 0; left: 0; }
-@media (max-width: 640px) {
-  .simanika-pixel-corner { width: 125px; opacity: .75; }
-}
 .simanika-signin-box { width: 100%; max-width: 440px; position: relative; z-index: 2; }
 .simanika-signin-brand-link { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; gap: .65rem; padding: .65rem 1rem; border: 2px dashed #c0ccdd; border-radius: 4px; background: #fff; box-shadow: 5px 5px 0 #dce5f4; color: var(--ink); font-size: .875rem; font-weight: 600; text-decoration: none; margin-bottom: 1.5rem; transition: color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease; position: relative; z-index: 2; }
 .simanika-signin-brand-link:hover, .simanika-signin-brand-link:focus-visible { color: var(--blue-dark); border-color: var(--blue); box-shadow: 3px 3px 0 #c9d9f7; transform: translate(2px, 2px); }
 .simanika-signin-back-icon { width: 19px; height: 19px; flex: none; transition: transform 240ms cubic-bezier(.2,.8,.2,1); }
 .simanika-signin-brand-link:hover .simanika-signin-back-icon, .simanika-signin-brand-link:focus-visible .simanika-signin-back-icon { transform: translateX(-4px); }
 @media (prefers-reduced-motion: reduce) { .simanika-signin-brand-link:hover, .simanika-signin-brand-link:focus-visible, .simanika-signin-brand-link:hover .simanika-signin-back-icon, .simanika-signin-brand-link:focus-visible .simanika-signin-back-icon { transform: none; } }
-.simanika-signin-eyebrow { display: inline-flex; align-items: center; gap: .55rem; margin-bottom: .8rem; color: var(--blue-dark); }
-.simanika-signin-eyebrow__dot { width: 7px; height: 7px; background: var(--blue); flex: none; }
-.simanika-signin-eyebrow__text { font: .7rem/1.6 "IBM Plex Mono", monospace; letter-spacing: .06em; }
+
 .simanika-signin-title { font-family: "Press Start 2P", "IBM Plex Mono", monospace; font-size: clamp(1.18rem, 2.4vw, 1.9rem); font-weight: 400; letter-spacing: -.055em; line-height: 1.58; margin: 0 0 .75rem; color: var(--ink); text-shadow: .45px 0 currentColor; }
 .simanika-signin-title em { font-style: normal; color: var(--blue); }
 .simanika-signin-desc { color: var(--ink-muted); font-size: 1rem; line-height: 1.65; margin: 0 0 1.75rem; }
@@ -108,3 +103,25 @@
 .simanika-btn-social:disabled:hover { background: var(--surface-subtle); border-color: var(--blue); }
 .simanika-btn-spinner { width: 19px; height: 19px; flex: none; }
 @keyframes simanika-auth-spin { to { transform: rotate(360deg); } }
+
+/* Phones: tighter rhythm and compact controls so the Google option is visible
+   without scrolling. Inputs stay at 16px to avoid iOS zoom on focus. */
+@media (max-width: 640px) {
+  .simanika-pixel-corner { width: 110px; opacity: .75; }
+  .simanika-signin-form-col { padding: 1.25rem 1.25rem 1.5rem; }
+  .simanika-signin-box > .flex { gap: .85rem; }
+  .simanika-signin-brand-link { min-height: 40px; padding: .4rem .8rem; margin-bottom: .75rem; font-size: .8rem; box-shadow: 3px 3px 0 #dce5f4; }
+  .simanika-signin-back-icon { width: 16px; height: 16px; }
+  .simanika-signin-title { font-size: 1.05rem; margin: 0; }
+  .simanika-signin-desc { font-size: .9rem; line-height: 1.55; margin: 0; }
+  .simanika-signin-box form > * + * { margin-top: 0; }
+  .simanika-form-group { margin-bottom: .8rem; }
+  .simanika-form-label { margin-bottom: .35rem; font-size: .82rem; }
+  .simanika-glass-input input { min-height: 44px; padding: .6rem .85rem; }
+  .simanika-form-row { margin: .25rem 0 .75rem; font-size: .8rem; }
+  .simanika-checkbox-label, .simanika-form-row > .simanika-link { min-height: 40px; }
+  .simanika-btn-primary, .simanika-btn-social { min-height: 44px; padding: .6rem 1rem; font-size: .92rem; }
+  .simanika-btn-primary { box-shadow: 2px 2px 0 #b9cfff; }
+  .simanika-divider { margin: .9rem 0 .75rem; }
+  .simanika-foot-note { margin-top: 1rem; font-size: .8rem; }
+}

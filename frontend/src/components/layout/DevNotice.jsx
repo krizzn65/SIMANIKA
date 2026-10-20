@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AlertTriangle, ArrowRight, X } from "lucide-react";
+import { useScrollLock } from "@/components/motion/SmoothScroll";
 import "./dev-notice.css";
 
 const STORAGE_KEY = "simanika-dev-notice-seen";
@@ -29,6 +30,7 @@ export function DevNotice() {
   const dialogRef = useRef(null);
   const fabRef = useRef(null);
   const hidden = pathname.startsWith("/admin");
+  useScrollLock(open && !hidden);
 
   useEffect(() => {
     let seen = false;
@@ -73,6 +75,7 @@ export function DevNotice() {
       <div
         ref={dialogRef}
         className="dev-notice-card"
+        data-lenis-prevent
         role="dialog"
         aria-modal="true"
         aria-labelledby="dev-notice-title"

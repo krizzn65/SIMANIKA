@@ -20,16 +20,25 @@ export function downloadErrorMessage(error) {
   return error?.message || "Berkas gagal diunduh. Coba lagi atau hubungi pengelola.";
 }
 
-export async function downloadAuthenticatedFile(downloadUrl, fileName) {
+// Fetches a protected file as a blob; the caller must revoke `objectUrl`.
+export async function fetchAuthenticatedFile(downloadUrl) {
   const path = new URL(downloadUrl, window.location.origin).pathname;
   if (path !== API_PREFIX && !path.startsWith(`${API_PREFIX}/`)) throw new Error("Tautan berkas tidak valid.");
   const response = await api.get(path.slice(API_PREFIX.length), { responseType: "blob", timeout: 60000 });
-  const objectUrl = URL.createObjectURL(response.data);
+  return { blob: response.data, objectUrl: URL.createObjectURL(response.data), headerName: fileNameFromHeaders(response.headers) };
+}
+
+export function saveObjectUrl(objectUrl, fileName) {
   const link = document.createElement("a");
   link.href = objectUrl;
-  link.download = fileName || fileNameFromHeaders(response.headers) || "berkas-oprec";
+  link.download = fileName || "berkas-oprec";
   document.body.appendChild(link);
   link.click();
   link.remove();
+}
+
+export async function downloadAuthenticatedFile(downloadUrl, fileName) {
+  const { objectUrl, headerName } = await fetchAuthenticatedFile(downloadUrl);
+  saveObjectUrl(objectUrl, fileName || headerName);
   window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 }

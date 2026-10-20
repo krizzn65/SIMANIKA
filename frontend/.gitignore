@@ -7,3 +7,4 @@ npm-debug.log*
 .next-announcement-check/
 
 .next-announcement-production/
+.test-profile/

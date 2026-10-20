@@ -24,6 +24,7 @@ import {
   Megaphone,
   ScrollText,
   Images,
+  GalleryHorizontalEnd,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Toaster } from "sonner";
@@ -55,6 +56,11 @@ const adminLinks = [
     label: "Pengaturan Landing Page",
     href: "/admin/content",
     icon: <Images className="h-5 w-5 flex-shrink-0" />,
+  },
+  {
+    label: "Galeri Kegiatan",
+    href: "/admin/galeri",
+    icon: <GalleryHorizontalEnd className="h-5 w-5 flex-shrink-0" />,
   },
   {
     label: "Merchandise",
@@ -92,6 +98,7 @@ function adminBreadcrumb(pathname) {
     events: "Kelola Event",
     oprec: "Kelola OPREC",
     content: "Pengaturan Landing Page",
+    galeri: "Galeri Kegiatan",
     merchandise: "Merchandise",
     logs: "Log Sistem",
     settings: "Pengaturan",
@@ -157,7 +164,7 @@ function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
                     {expanded ? (
                       <button
                         type="button"
-                        className={`admin-nav-link flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-blue-50/90 hover:bg-white/15 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white`}
+                        className="admin-nav-link flex w-full cursor-pointer appearance-none items-center gap-3 rounded-xl border-0 bg-transparent px-3 py-2.5 text-sm font-medium text-blue-50/90 hover:bg-white/15 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
                         aria-expanded={oprecMenuOpen}
                         aria-controls="admin-oprec-submenu"
                         onClick={() => setOprecMenuOpen((value) => !value)}
@@ -223,7 +230,7 @@ function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
 }
 
 export default function AdminLayout({ children }) {
-  const pathname = usePathname();
+  const pathname = usePathname()?.replace(/(.)\/+$/, "$1") || "/";
   const router = useRouter();
   const { user, logout } = useAuth();
 
@@ -258,15 +265,15 @@ export default function AdminLayout({ children }) {
             </div>
 
             <div className="flex items-center gap-3">
-              <Link
+              {/* Full page load: the public site is a separate shell from the admin console. */}
+              <a
                 href="/"
                 className="admin-btn admin-btn--secondary admin-btn--sm"
                 title="Ke Website Utama"
-                prefetch={true}
               >
                 <Globe aria-hidden="true" className="w-4 h-4 text-blue-600" />
                 <span>Lihat Website</span>
-              </Link>
+              </a>
             </div>
           </header>
 

@@ -56,6 +56,8 @@ Route::prefix('public')->group(function () {
     Route::post('/oprec/{oprec}/announcement/result', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'result'])->middleware('throttle:oprec-result-view');
     Route::get('/events/posters/{filename}', [PublicEventController::class, 'poster'])->name('public.event-poster');
     Route::get('/events/guidebooks/{filename}', [EventGuidebookController::class, 'download'])->name('public.event-guidebook');
+    Route::get('/gallery-albums', [\App\Http\Controllers\Public\GalleryAlbumController::class, 'index']);
+    Route::get('/gallery-albums/{slug}', [\App\Http\Controllers\Public\GalleryAlbumController::class, 'show']);
     Route::get('/events', [PublicEventController::class, 'index']);
     Route::get('/events/{slug}', [PublicEventController::class, 'show']);
     Route::get('/oprec/posters/{filename}', [PublicOprecController::class, 'poster'])->name('public.oprec-poster');
@@ -97,6 +99,14 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
             Route::post('/testimonials', [AdminHomeContentController::class, 'storeTestimonial']);
             Route::post('/testimonials/{id}', [AdminHomeContentController::class, 'updateTestimonial'])->whereNumber('id');
             Route::delete('/testimonials/{id}', [AdminHomeContentController::class, 'destroyTestimonial'])->whereNumber('id');
+        });
+        Route::middleware('admin:content')->prefix('gallery-albums')->controller(\App\Http\Controllers\Admin\GalleryAlbumController::class)->group(function () {
+            Route::get('/', 'index');
+            Route::post('/', 'store');
+            Route::put('/{id}', 'update')->whereNumber('id');
+            Route::delete('/{id}', 'destroy')->whereNumber('id');
+            Route::post('/{id}/photos', 'storePhotos')->whereNumber('id');
+            Route::delete('/{id}/photos/{photo}', 'destroyPhoto')->whereNumber(['id', 'photo']);
         });
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->middleware('admin:dashboard');
         Route::middleware('admin:logs')->group(function () {

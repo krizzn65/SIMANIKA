@@ -52,7 +52,6 @@
   box-shadow: 0 4px 14px rgba(10, 60, 179, 0.25) !important;
 }
 
-
 .admin-nav-link.active span,
 .admin-nav-link.active .admin-nav-icon,
 .admin-nav-link.active svg {
@@ -556,11 +555,8 @@
   }
 }
 
-
-
 /* Shared polish: one type scale, one icon rhythm, and visible keyboard focus. */
-.admin-layout-root .font-mono,
-.admin-layout-root .admin-mono {
+.admin-layout-root .font-mono {
   font-family: var(--admin-font-mono);
 }
 
@@ -600,7 +596,6 @@
   }
 }
 
-
 /* Readability floor: admin controls must not fall back to 10–12px text. */
 .admin-layout-root :is(input, select, textarea) {
   font-family: var(--admin-font-sans);
@@ -634,7 +629,6 @@
   font-size: 1rem !important;
   line-height: 1.35;
 }
-
 
 /* Event editor: compact, proportional hierarchy without shrinking other admin pages. */
 .admin-event-modal {

@@ -2,11 +2,13 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import "./events.css";
 import "./event-detail-view.css";
+import { SmoothScroll } from "@/components/motion/SmoothScroll";
 
 export default function EventsLayout({ children }) {
   return (
     <div className="site-root">
       <div className="site-main-content">
+        <SmoothScroll />
         <Navbar />
         <main id="event-content" className="events-page">{children}</main>
       </div>

@@ -8,6 +8,7 @@ import { api } from "@/services/api";
 import { oprecState } from "@/lib/oprec";
 import { OprecCountdown } from "./OprecCountdown";
 import Link from "next/link";
+import { useScrollLock } from "@/components/motion/SmoothScroll";
 
 function formatOprecDate(value) {
   if (!value) return null;
@@ -35,6 +36,7 @@ export function OprecDetailModal({ isOpen, onClose, oprec }) {
   const [error, setError] = useState("");
   const [posterFailed, setPosterFailed] = useState(false);
   const modalRef = useRef(null);
+  useScrollLock(isOpen);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -139,7 +141,7 @@ export function OprecDetailModal({ isOpen, onClose, oprec }) {
       aria-modal="true"
       aria-labelledby="oprec-modal-title"
     >
-      <div className="oprec-modal-card" ref={modalRef}>
+      <div className="oprec-modal-card" ref={modalRef} data-lenis-prevent>
         {/* Close Button */}
         <button
           type="button"

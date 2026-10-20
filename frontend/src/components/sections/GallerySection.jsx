@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { CardFanCarousel } from "@/components/ui/CardFanCarousel";
 import { PixelCorner } from "@/components/ui/PixelCorner";
+import { InView } from "@/components/motion/InView";
 
 /* ── Default placeholder gallery images ──
    These will be replaced with dynamic images from the backend API.
@@ -67,7 +69,7 @@ export function GallerySection({ images }) {
 
         <PixelCorner position="top-right" className="gallery-pixel-corner" />
 
-        <header className="gallery-header">
+        <InView as="header" className="gallery-header">
           <p className="gallery-eyebrow">
             <span aria-hidden="true" />
             04 / GALERI KEGIATAN
@@ -80,7 +82,10 @@ export function GallerySection({ images }) {
             Dokumentasi kegiatan, event, dan kolaborasi HIMANIKA yang telah
             menjadi bagian dari perjalanan kami.
           </p>
-        </header>
+          <Link className="gallery-all-link" href="/galeri">
+            Lihat semua dokumentasi <span aria-hidden="true">↗</span>
+          </Link>
+        </InView>
 
         {galleryImages.length ? (
           <CardFanCarousel key={galleryImages.map((img) => img.imgUrl).join("|")} cards={galleryImages} />
