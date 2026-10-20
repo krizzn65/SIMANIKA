@@ -26,9 +26,10 @@ jobs:
           for f in routes/api.php app/Http/Middleware/OprecAccessMiddleware.php app/Http/Controllers/Public/HomeContentController.php; do
             mkdir -p "backup/$(dirname "$f")"
             lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; get /laravel_app/$f -o backup/$f; bye"
-            if ! git show "$BASE:backend/$f" | diff -q - "backup/$f" >/dev/null; then
+            # Files uploaded from Windows carry CRLF line endings; compare content only.
+            if ! git show "$BASE:backend/$f" | diff -q --strip-trailing-cr - "backup/$f" >/dev/null; then
               echo "::error::Server copy of $f differs from the repo; aborting without changes."
-              git show "$BASE:backend/$f" | diff - "backup/$f" | head -60
+              git show "$BASE:backend/$f" | diff --strip-trailing-cr - "backup/$f" | head -60
               exit 1
             fi
             echo "OK (identical to repo): $f"
