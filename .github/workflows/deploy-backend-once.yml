@@ -1,0 +1,87 @@
+name: Deploy backend (gallery albums + leader access)
+
+on:
+  push:
+    branches: [only_deploy]
+    paths: [".github/workflows/deploy-backend-once.yml"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      SITE: https://himanika.wsmif.myhost.id
+      BASE: a7f9d24c74f152598e529c2270d98c65aff0465f
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: sudo apt-get install -y -qq lftp >/dev/null
+
+      - name: Back up server files and stop if they differ from the repo
+        run: |
+          mkdir -p backup
+          for f in routes/api.php app/Http/Middleware/OprecAccessMiddleware.php app/Http/Controllers/Public/HomeContentController.php; do
+            mkdir -p "backup/$(dirname "$f")"
+            lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; get /laravel_app/$f -o backup/$f; bye"
+            if ! git show "$BASE:backend/$f" | diff -q - "backup/$f" >/dev/null; then
+              echo "::error::Server copy of $f differs from the repo; aborting without changes."
+              git show "$BASE:backend/$f" | diff - "backup/$f" | head -60
+              exit 1
+            fi
+            echo "OK (identical to repo): $f"
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: server-backup
+          path: backup/
+
+      - name: Upload backend files
+        working-directory: backend
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no;
+            put routes/api.php -o /laravel_app/routes/api.php;
+            put app/Http/Middleware/OprecAccessMiddleware.php -o /laravel_app/app/Http/Middleware/OprecAccessMiddleware.php;
+            put app/Http/Controllers/Public/HomeContentController.php -o /laravel_app/app/Http/Controllers/Public/HomeContentController.php;
+            put app/Http/Controllers/Public/GalleryAlbumController.php -o /laravel_app/app/Http/Controllers/Public/GalleryAlbumController.php;
+            put app/Http/Controllers/Admin/GalleryAlbumController.php -o /laravel_app/app/Http/Controllers/Admin/GalleryAlbumController.php;
+            put database/migrations/2026_10_20_000001_create_gallery_albums.php -o /laravel_app/database/migrations/2026_10_20_000001_create_gallery_albums.php;
+            bye"
+          echo "Uploaded 6 files."
+
+      - name: Run the gallery migration through a one-time script
+        run: |
+          TOKEN=$(openssl rand -hex 24)
+          NAME="mig-$(openssl rand -hex 10).php"
+          echo "::add-mask::$TOKEN"
+          echo "$NAME" > script-name.txt
+          sed "s/__TOKEN__/$TOKEN/" > "$NAME" <<'PHP'
+          <?php
+          if (!hash_equals('__TOKEN__', (string) ($_GET['t'] ?? ''))) { http_response_code(404); exit; }
+          header('Content-Type: text/plain');
+          require __DIR__.'/laravel_app/vendor/autoload.php';
+          $app = require __DIR__.'/laravel_app/bootstrap/app.php';
+          $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+          $status = $kernel->call('migrate', ['--force' => true, '--path' => 'database/migrations/2026_10_20_000001_create_gallery_albums.php']);
+          echo $kernel->output(), "\nstatus=", $status, "\n";
+          $kernel->call('optimize:clear');
+          echo $kernel->output();
+          PHP
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; put $NAME -o /$NAME; bye"
+          curl -sS --max-time 120 "$SITE/$NAME?t=$TOKEN" | tee result.txt
+          grep -q "status=0" result.txt
+
+      - name: Remove the one-time script
+        if: always()
+        run: |
+          [ -f script-name.txt ] || exit 0
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; rm /$(cat script-name.txt); bye" && echo "Script removed."
+
+      - name: Verify the live API
+        run: |
+          echo -n "gallery-albums HTTP "; curl -sS -o /dev/null -w "%{http_code}\n" "$SITE/api/public/gallery-albums"
+          curl -sS "$SITE/api/public/gallery-albums" | head -c 300; echo
+          echo -n "home HTTP "; curl -sS -o /dev/null -w "%{http_code}\n" "$SITE/api/public/home"
