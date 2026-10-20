@@ -33,7 +33,7 @@ class HomeContentController extends Controller
 
     public function image(string $kind, string $filename)
     {
-        abort_unless(in_array($kind, ['gallery', 'testimonials'], true) && preg_match('~^[A-Za-z0-9_-]+\.(?:jpe?g|png|webp)$~i', $filename), 404);
+        abort_unless(in_array($kind, ['gallery', 'testimonials', 'albums'], true) && preg_match('~^[A-Za-z0-9_-]+\.(?:jpe?g|png|webp)$~i', $filename), 404);
         $path = "landing/{$kind}/{$filename}";
         abort_unless(Storage::disk('public')->exists($path), 404);
         return Storage::disk('public')->response($path, null, ['Cache-Control' => 'public, max-age=86400']);

@@ -3043,3 +3043,23 @@ html.motion-ok .reveal-word {
 @keyframes fan-card-shimmer {
   to { background-position: -250% 0; }
 }
+
+.gallery-all-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 1.25rem;
+  padding: 0.6rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+.gallery-all-link:hover,
+.gallery-all-link:focus-visible {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: #fff;
+}

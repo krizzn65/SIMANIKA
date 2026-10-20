@@ -24,6 +24,7 @@ import {
   Megaphone,
   ScrollText,
   Images,
+  GalleryHorizontalEnd,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Toaster } from "sonner";
@@ -55,6 +56,11 @@ const adminLinks = [
     label: "Pengaturan Landing Page",
     href: "/admin/content",
     icon: <Images className="h-5 w-5 flex-shrink-0" />,
+  },
+  {
+    label: "Galeri Kegiatan",
+    href: "/admin/galeri",
+    icon: <GalleryHorizontalEnd className="h-5 w-5 flex-shrink-0" />,
   },
   {
     label: "Merchandise",
@@ -92,6 +98,7 @@ function adminBreadcrumb(pathname) {
     events: "Kelola Event",
     oprec: "Kelola OPREC",
     content: "Pengaturan Landing Page",
+    galeri: "Galeri Kegiatan",
     merchandise: "Merchandise",
     logs: "Log Sistem",
     settings: "Pengaturan",

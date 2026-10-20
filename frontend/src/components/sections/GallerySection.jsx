@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CardFanCarousel } from "@/components/ui/CardFanCarousel";
 import { PixelCorner } from "@/components/ui/PixelCorner";
 import { InView } from "@/components/motion/InView";
@@ -81,6 +82,9 @@ export function GallerySection({ images }) {
             Dokumentasi kegiatan, event, dan kolaborasi HIMANIKA yang telah
             menjadi bagian dari perjalanan kami.
           </p>
+          <Link className="gallery-all-link" href="/galeri">
+            Lihat semua dokumentasi <span aria-hidden="true">↗</span>
+          </Link>
         </InView>
 
         {galleryImages.length ? (
