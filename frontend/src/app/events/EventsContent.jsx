@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { EventFilters } from "@/components/events/EventFilters";
 import { EventList } from "@/components/events/EventList";
+import { EventGridSkeleton } from "@/components/events/EventSkeletons";
 import { eventFilters, normalizeEvent } from "@/lib/events";
 import { publicApi } from "@/services/publicApi";
 
@@ -26,5 +27,5 @@ export default function EventsContent() {
       .catch(() => { if (!controller.signal.aborted) setResult({ ...empty, unavailable: true }); });
     return () => controller.abort();
   }, [filters.search, filters.kategori, filters.status, filters.page]);
-  return <><EventFilters filters={filters} />{result ? <EventList result={result} filters={filters} /> : <p role="status">Memuat event...</p>}</>;
+  return <><EventFilters filters={filters} />{result ? <EventList result={result} filters={filters} /> : <EventGridSkeleton />}</>;
 }

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { EventDetailView } from "@/components/events/EventDetailView";
 import { publicApi } from "@/services/publicApi";
 import { normalizeEvent } from "@/lib/events";
+import { EventDetailSkeleton } from "@/components/events/EventSkeletons";
 
 export default function EventDetailContent() {
   const slug = useSearchParams().get("slug");
@@ -24,7 +25,7 @@ export default function EventDetailContent() {
       .catch((error) => { if (!controller.signal.aborted) setState({ loading: false, event: null, error: error.response?.status === 404 ? "Event tidak ditemukan." : "Event belum bisa dimuat. Coba lagi nanti." }); });
     return () => controller.abort();
   }, [slug]);
-  if (state.loading) return <p className="event-container" role="status">Memuat event...</p>;
+  if (state.loading) return <EventDetailSkeleton />;
   if (!state.event) return <p className="event-container" role="alert">{state.error}</p>;
   return <EventDetailView event={state.event} />;
 }

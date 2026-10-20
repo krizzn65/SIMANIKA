@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import EventsContent from "./EventsContent";
+import { EventPageSkeleton } from "@/components/events/EventSkeletons";
 
 export const metadata = {
   title: "Event — SIMANIKA",
@@ -15,7 +16,7 @@ export default function EventsPage() {
             <span aria-hidden="true" />HIMANIKA / EVENTS
           </span>
         </header>
-        <Suspense fallback={<p role="status">Memuat event...</p>}><EventsContent /></Suspense>
+        <Suspense fallback={<EventPageSkeleton />}><EventsContent /></Suspense>
       </div>
       <aside className="event-bottom-note event-container"><span className="event-mono">SETIAP PERTEMUAN, ADA CERITA.</span><p>Datang dengan rasa ingin tahu.<br /><strong>Pulang dengan sesuatu yang baru.</strong></p><a href="/#gallery">Kenali kegiatan HIMANIKA <span aria-hidden="true">↗</span></a></aside>
     </>

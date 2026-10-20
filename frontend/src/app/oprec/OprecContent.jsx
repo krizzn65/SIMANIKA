@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Oprec } from "@/components/oprec/Oprec";
 import { normalizeOprec } from "@/lib/oprec";
 import { publicApi } from "@/services/publicApi";
+import { OprecSkeleton } from "@/components/oprec/OprecSkeleton";
 
 export default function OprecContent() {
   const [state, setState] = useState({ loading: true, oprec: null, error: false });
@@ -22,7 +23,7 @@ export default function OprecContent() {
   return (
     <>
       {state.loading ? (
-        <p role="status">Memuat OPREC...</p>
+        <OprecSkeleton />
       ) : state.error ? (
         <p role="alert">Informasi OPREC belum bisa dimuat. Muat ulang halaman untuk mencoba lagi.</p>
       ) : (
