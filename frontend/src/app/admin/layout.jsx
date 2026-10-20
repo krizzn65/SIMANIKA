@@ -157,7 +157,7 @@ function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
                     {expanded ? (
                       <button
                         type="button"
-                        className={`admin-nav-link flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-blue-50/90 hover:bg-white/15 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white`}
+                        className="admin-nav-link flex w-full cursor-pointer appearance-none items-center gap-3 rounded-xl border-0 bg-transparent px-3 py-2.5 text-sm font-medium text-blue-50/90 hover:bg-white/15 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
                         aria-expanded={oprecMenuOpen}
                         aria-controls="admin-oprec-submenu"
                         onClick={() => setOprecMenuOpen((value) => !value)}
@@ -223,7 +223,7 @@ function AdminSidebarNav({ pathname, displayName, user, handleLogout }) {
 }
 
 export default function AdminLayout({ children }) {
-  const pathname = usePathname();
+  const pathname = usePathname()?.replace(/(.)\/+$/, "$1") || "/";
   const router = useRouter();
   const { user, logout } = useAuth();
 

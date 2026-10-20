@@ -2049,8 +2049,10 @@ svg {
 }
 
 /* Parallax curtain reveal footer is strictly scoped to desktop screens (>= 1024px)
-   On mobile, sticky bottom: 0 caused scroll anchoring jumps and snap-to-footer issues */
-@media (min-width: 1024px) {
+   On mobile, sticky bottom: 0 caused scroll anchoring jumps and snap-to-footer issues.
+   It also needs a viewport taller than the footer: on short screens (e.g. a phone
+   in desktop mode) the sticky footer's top would stay hidden behind the content. */
+@media (min-width: 1024px) and (min-height: 800px) {
   .site-main-content {
     min-height: 100vh;
   }

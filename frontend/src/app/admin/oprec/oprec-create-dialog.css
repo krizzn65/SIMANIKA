@@ -1064,3 +1064,9 @@
     transition: none;
   }
 }
+
+.oprec-file-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
