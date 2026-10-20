@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { api } from "@/services/api";
 import { landingTextDefaults } from "@/lib/landingText";
+import { optimizeGalleryImage } from "@/lib/optimizeOprecImage";
 import "./content.css";
 
 function getErrorMessage(error, defaultMsg = "Terjadi kesalahan saat memproses data.") {
@@ -126,9 +127,11 @@ function AddGalleryBatchModal({ existingGallery = [], onClose, onSaved }) {
     setError("");
 
     try {
+      setUploadProgress(`Mengoptimalkan ${queue.length} foto…`);
+      const files = await Promise.all(queue.map((item) => optimizeGalleryImage(item.file)));
       const formData = new FormData();
       queue.forEach((item, index) => {
-        formData.append(`images[${index}]`, item.file);
+        formData.append(`images[${index}]`, files[index]);
         formData.append(`alts[${index}]`, item.alt.trim() || `Foto Galeri ${item.order}`);
         formData.append(`sort_orders[${index}]`, String(parseInt(item.order, 10) || 0));
       });
@@ -371,9 +374,8 @@ function EditGalleryModal({ item, onClose, onSaved }) {
     const body = new FormData();
     body.append("alt", alt.trim());
     body.append("sort_order", String(parseInt(order, 10) || 0));
-    if (file) body.append("image", file);
-
     try {
+      if (file) body.append("image", await optimizeGalleryImage(file));
       await api.post(`/admin/home-content/gallery/${item.id}`, body);
       toast.success("Foto galeri berhasil diperbarui.");
       await onSaved();

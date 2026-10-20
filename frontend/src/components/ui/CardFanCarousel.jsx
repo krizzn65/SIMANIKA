@@ -140,6 +140,8 @@ export function CardFanCarousel({ cards }) {
       setLoadedIndices((previous) => {
         const next = new Set(previous);
         getVisibleMap(nextCenter).forEach((_, index) => next.add(index));
+        const ahead = direction === "right" ? HALF + 1 : -(HALF + 1);
+        next.add(((nextCenter + ahead) % totalCards + totalCards) % totalCards);
         return next;
       });
       setCenterIndex(nextCenter);
@@ -380,8 +382,11 @@ export function CardFanCarousel({ cards }) {
                   src={card.imgUrl}
                   loading="eager"
                   decoding="async"
+                  fetchPriority={index === centerIndex ? "high" : "low"}
                   alt={card.alt || `Galeri HIMANIKA ${index + 1}`}
                   className="fan-card__img"
+                  onLoad={(e) => e.currentTarget.classList.add("is-loaded")}
+                  ref={(img) => { if (img?.complete && img.naturalWidth) img.classList.add("is-loaded"); }}
                 />
               )}
             </div>

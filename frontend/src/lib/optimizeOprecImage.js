@@ -61,3 +61,45 @@ export async function optimizeOprecImage(file) {
     URL.revokeObjectURL(objectUrl);
   }
 }
+
+// Gallery photos are shown at most ~1000px wide on 2x screens, so 1920px on the
+// long edge keeps them sharp while cutting multi-MB camera shots to a few
+// hundred KB. Small files that are already within bounds are kept as-is.
+const GALLERY_MAX_EDGE = 1920;
+
+export async function optimizeGalleryImage(file) {
+  if (!file || !IMAGE_TYPES.has(file.type)) return file;
+
+  const objectUrl = URL.createObjectURL(file);
+  const image = new Image();
+  try {
+    await new Promise((resolve, reject) => {
+      image.onload = resolve;
+      image.onerror = reject;
+      image.src = objectUrl;
+    });
+    const width = image.naturalWidth;
+    const height = image.naturalHeight;
+    if (!width || !height) return file;
+
+    const scale = Math.min(1, GALLERY_MAX_EDGE / Math.max(width, height));
+    if (scale === 1 && file.size <= 400 * 1024) return file;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(width * scale);
+    canvas.height = Math.round(height * scale);
+    const context = canvas.getContext("2d");
+    if (!context) return file;
+    context.imageSmoothingQuality = "high";
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    const blob = await webpBlob(canvas, 0.86).catch(() => null);
+    if (!blob || blob.size >= file.size) return file;
+    const name = file.name.replace(/\.[^.]+$/, "") || "galeri";
+    return new File([blob], `${name}.webp`, { type: "image/webp", lastModified: Date.now() });
+  } catch {
+    return file;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}

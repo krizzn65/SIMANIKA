@@ -5083,6 +5083,12 @@ svg {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  background: linear-gradient(110deg, rgba(255, 255, 255, 0.08) 30%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.08) 70%) 0 0 / 250% 100%;
+  animation: fan-card-shimmer 1.4s linear infinite;
+}
+
+.fan-card__inner:has(.fan-card__img.is-loaded) {
+  animation: none;
 }
 
 .fan-card__img {
@@ -5092,6 +5098,20 @@ svg {
   height: 100%;
   object-fit: cover;
   display: block;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.fan-card__img.is-loaded {
+  opacity: 1;
+}
+
+@keyframes fan-card-shimmer {
+  to { background-position: -250% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fan-card__inner { animation: none; }
 }
 
 /* ── Pagination Nav ── */
