@@ -37,13 +37,11 @@
   background: #fff;
   color: var(--ink, #0a1020);
   cursor: pointer;
-  transition: background-color 0.18s, border-color 0.18s, color 0.18s, transform 0.18s;
 }
 .dev-notice-close:hover {
   background: #eef4ff;
   border-color: var(--blue, #155eef);
   color: var(--blue, #155eef);
-  transform: rotate(90deg);
 }
 
 .dev-notice-head {
