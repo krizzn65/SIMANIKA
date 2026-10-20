@@ -39,6 +39,8 @@ class AuditTrail
         $download = $method === 'GET' && (str_contains($route, '/files/') || str_contains($route, '/export/'));
         if ($status < 500 && !in_array($status, [401, 403], true) && !in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true) && !$download) return;
         if (str_starts_with($route, 'api/admin/logs') && $status < 400) return;
+        // Every page load by a signed-out visitor asks who is logged in; that 401 is expected, not a failed access.
+        if ($method === 'GET' && $route === 'api/auth/me' && $status === 401) return;
 
         $module = $this->module($route);
         $action = $this->action($route, $method, $module, $download);
