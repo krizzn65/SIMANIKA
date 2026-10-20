@@ -54,13 +54,23 @@ class AppServiceProvider extends ServiceProvider
                 ]);
         });
 
+        // Every API route: generous enough for a campus network sharing one IP,
+        // but stops scripted flooding. Signed-in users are counted per account.
+        RateLimiter::for('api', fn ($request) => $request->user()
+            ? Limit::perMinute(300)->by('api-user:'.$request->user()->getAuthIdentifier())
+            : Limit::perMinute(300)->by('api-ip:'.($request->ip() ?? 'unknown')));
+
         RateLimiter::for('auth', fn ($request) => [
             Limit::perMinute(60)->by('ip:'.($request->ip() ?? 'unknown')),
             Limit::perMinute(10)->by(hash('sha256', ($request->ip() ?? 'unknown').'|'.strtolower((string) $request->input('email', '')))),
+            // Password guessing from many IPs against one account.
+            Limit::perHour(30)->by('auth-email:'.self::emailKey($request)),
         ]);
         RateLimiter::for('password', fn ($request) => [
             Limit::perMinute(20)->by('ip:'.($request->ip() ?? 'unknown')),
             Limit::perMinute(5)->by(hash('sha256', ($request->ip() ?? 'unknown').'|'.strtolower((string) $request->input('email', '')))),
+            // Reset-email bombing of one inbox from many IPs.
+            Limit::perHour(10)->by('password-email:'.self::emailKey($request)),
         ]);
         RateLimiter::for('oauth', fn ($request) => Limit::perMinute(20)->by('ip:'.($request->ip() ?? 'unknown')));
         // OPREC requests can share the Next proxy's IP. Limit the authenticated
@@ -79,6 +89,12 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(20)->by('ip:'.($request->ip() ?? 'unknown')),
             Limit::perMinute(5)->by(self::oprecRateKey($request, 'nim')),
         ]);
+    }
+
+    private static function emailKey($request): string
+    {
+        $email = $request->input('email', '');
+        return hash('sha256', strtolower(trim(is_string($email) ? $email : '')));
     }
 
     private static function oprecRateKey($request, string $field): string

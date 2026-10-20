@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(AuditFailureMiddleware::class);
         $middleware->statefulApi();
+        $middleware->throttleApi();
         $middleware->api(append: [AuditTrailMiddleware::class, NoStoreApiResponse::class]);
         $middleware->redirectGuestsTo(fn (Request $request) => $request->is('api/*') ? null : '/login');
         $middleware->alias(['admin' => AdminMiddleware::class]);
