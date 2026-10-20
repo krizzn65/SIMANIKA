@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { TechCornerBracket } from "@/components/ui/TechCornerBracket";
 import { CloseSmallIcon } from "@/components/ui/CloseSmallIcon";
+import { useScrollLock } from "@/components/motion/SmoothScroll";
 
 export function DivisiModal({ division, structure, onClose, icons }) {
   const modalRef = useRef(null);
   const isOpen = Boolean(division && structure);
   const [closeHoverKey, setCloseHoverKey] = useState(0);
+  useScrollLock(isOpen);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -39,7 +41,7 @@ export function DivisiModal({ division, structure, onClose, icons }) {
       }}
       role="presentation"
     >
-      <div className="divisi-modal-frame">
+      <div className="divisi-modal-frame" data-lenis-prevent>
         <TechCornerBracket
           position="top-right"
           className="divisi-modal__frame-corner divisi-modal__frame-corner--tr"

@@ -4,6 +4,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import "./announcement.css";
+import { useScrollLock } from "@/components/motion/SmoothScroll";
 
 export function Button({ variant = "primary", className = "", type = "button", ...props }) {
   return <button type={type} className={`oa-button oa-button--${variant} ${className}`} {...props} />;
@@ -24,9 +25,10 @@ export function Table({ children, ...props }) {
   return <div className="oa-table-scroll" tabIndex={0} aria-label="Daftar peserta diterima, dapat digulir horizontal"><table className="oa-table" {...props}>{children}</table></div>;
 }
 export function Modal({ open, onOpenChange, title, description, children, triggerRef, busy = false }) {
+  useScrollLock(open);
   return <Dialog.Root open={open} onOpenChange={(next) => { if (!busy) onOpenChange(next); }}>
     <Dialog.Portal><Dialog.Overlay className="oa-overlay" />
-      <Dialog.Content className="oa-dialog" onCloseAutoFocus={(event) => { if (triggerRef?.current) { event.preventDefault(); triggerRef.current.focus(); } }}
+      <Dialog.Content className="oa-dialog" data-lenis-prevent onCloseAutoFocus={(event) => { if (triggerRef?.current) { event.preventDefault(); triggerRef.current.focus(); } }}
         onPointerDownOutside={(event) => { if (busy) event.preventDefault(); }} onEscapeKeyDown={(event) => { if (busy) event.preventDefault(); }}>
         <header className="oa-dialog-header"><Dialog.Title className="oa-dialog-title">{title}</Dialog.Title><Dialog.Description className="oa-muted">{description}</Dialog.Description></header>
         {children}

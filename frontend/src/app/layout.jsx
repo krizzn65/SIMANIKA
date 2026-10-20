@@ -1,6 +1,7 @@
 import { ScrollReset } from "@/components/layout/ScrollReset";
 import { SessionTimeoutModal } from "@/components/auth/SessionTimeoutModal";
 import { DevNotice } from "@/components/layout/DevNotice";
+import { motionBootScript, motionCssVars } from "@/lib/motion";
 import "./globals.css";
 
 export const metadata = {
@@ -25,8 +26,10 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning>
       <head>
+        <style dangerouslySetInnerHTML={{ __html: motionCssVars }} />
+        <script dangerouslySetInnerHTML={{ __html: motionBootScript }} />
         <script
           dangerouslySetInnerHTML={{
             __html:

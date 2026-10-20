@@ -11,6 +11,8 @@ import { SubNavIcon } from "@/components/ui/SubNavIcon";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useAuth } from "@/hooks/useAuth";
 import { STAFF_ROLES, adminHome, ROLE_LABELS } from "@/lib/roleAccess";
+import { MOTION } from "@/lib/motion";
+import { smoothScrollTo, useScrollLock } from "@/components/motion/SmoothScroll";
 
 const links = [
   { href: "/", icon: "home", label: "Home" },
@@ -106,6 +108,15 @@ export function Navbar() {
   const [accountError, setAccountError] = useState("");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileHomeExpanded, setMobileHomeExpanded] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  useScrollLock(open);
+
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > MOTION.navThreshold);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
   const [activeSection, setActiveSection] = useState("");
   const { user: account, checked, checkError, retryCheck, logout } = useAuth();
   const menuButtonRef = useRef(null);
@@ -243,7 +254,7 @@ export function Navbar() {
     // If already on "/", toggle dropdown and scroll smoothly to top
     e.preventDefault();
     setIsHomeMenuOpen((prev) => !prev);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    smoothScrollTo(0);
   };
 
   const handleSectionClick = (event, sectionId) => {
@@ -253,14 +264,14 @@ export function Navbar() {
     event.preventDefault();
     if (sectionId === "hero") {
       window.history.replaceState(null, "", "/");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      smoothScrollTo(0);
       return;
     }
 
     const section = document.getElementById(sectionId);
     if (!section) return;
     window.history.replaceState(null, "", `/#${sectionId}`);
-    section.scrollIntoView({ behavior: "smooth", block: "start" });
+    smoothScrollTo(section);
   };
 
   // Hover & click handlers for Account menu
@@ -385,7 +396,7 @@ export function Navbar() {
   }, [open]);
 
   return (
-    <header className="site-header">
+    <header className="site-header" data-scrolled={scrolled ? "" : undefined}>
       <div className="site-header__container">
         {/* Left: Brand / Logo */}
         <div className="site-header__left">
@@ -398,7 +409,7 @@ export function Navbar() {
               if (pathname !== "/") {
                 window.scrollTo({ top: 0, left: 0, behavior: "instant" });
               } else {
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                smoothScrollTo(0);
               }
             }}
           >
@@ -698,6 +709,7 @@ export function Navbar() {
             <aside
               aria-label="Navigasi mobile"
               className="mobile-drawer"
+              data-lenis-prevent
               id="mobile-navigation"
               ref={drawerRef}
             >
@@ -745,7 +757,7 @@ export function Navbar() {
                               if (pathname !== "/") {
                                 window.scrollTo({ top: 0, left: 0, behavior: "instant" });
                               } else {
-                                window.scrollTo({ top: 0, behavior: "smooth" });
+                                smoothScrollTo(0);
                               }
                             }}
                           >

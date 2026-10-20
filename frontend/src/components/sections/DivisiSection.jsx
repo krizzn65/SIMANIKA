@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { PixelCorner } from "@/components/ui/PixelCorner";
 import { DivisiModal } from "@/components/ui/DivisiModal";
+import { InView } from "@/components/motion/InView";
 
 const divisions = [
   {
@@ -389,7 +390,7 @@ export function DivisiSection() {
       <div className="divisi-shell">
         <PixelCorner position="top-right" />
 
-        <header className="divisi-header">
+        <InView as="header" className="divisi-header">
           <p className="divisi-eyebrow">
             <span aria-hidden="true" />
             03 / DIVISI KAMI
@@ -402,9 +403,9 @@ export function DivisiSection() {
             Setiap divisi memiliki peran strategis dalam menggerakkan program
             kerja dan membangun ekosistem organisasi. Klik kartu untuk melihat bagan struktur organisasi.
           </p>
-        </header>
+        </InView>
 
-        <div className="divisi-bento" role="list" aria-label="Daftar divisi HIMANIKA">
+        <InView stagger className="divisi-bento" role="list" aria-label="Daftar divisi HIMANIKA">
           {divisions.map((div, i) => {
             const isFeatured = i === 0;
 
@@ -467,7 +468,7 @@ export function DivisiSection() {
               </article>
             );
           })}
-        </div>
+        </InView>
       </div>
 
       {/* Organizational Flowchart Modal */}

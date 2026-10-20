@@ -5,6 +5,7 @@ import { MissionAccordion } from "@/components/ui/MissionAccordion";
 import { ScrollRevealAccent } from "@/components/ui/ScrollRevealAccent";
 import { InteractiveGrid } from "@/components/ui/InteractiveGrid";
 import { ReplayIcon } from "@/components/ui/ReplayIcon";
+import { Parallax } from "@/components/motion/Parallax";
 
 const missions = [
   {
@@ -138,9 +139,9 @@ export function VisiMisiSection({ visi, misi }) {
         </h2>
 
         <div className="vision-content">
-          <div className="vision-video-panel">
+          <Parallax className="vision-video-panel">
             <VisionVideo />
-          </div>
+          </Parallax>
 
           <MissionAccordion items={displayedMissions} />
         </div>

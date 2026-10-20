@@ -3,6 +3,9 @@ import Link from "next/link";
 import { LogoMarquee } from "@/components/ui/LogoMarquee";
 import { SplitCta } from "@/components/ui/SplitCta";
 import { landingTextDefaults } from "@/lib/landingText";
+import { MOTION } from "@/lib/motion";
+import { CountUp } from "@/components/motion/CountUp";
+import { RevealWords, countWords } from "@/components/motion/RevealWords";
 
 function ArrowUpRight() {
   return (
@@ -13,6 +16,10 @@ function ArrowUpRight() {
 }
 
 export function HeroSection({ tagline, subtitle }) {
+  const title = tagline || landingTextDefaults.hero_tagline;
+  const words = countWords(title) + 1;
+  // Supporting elements follow the title words, 80ms apart.
+  const step = (index) => ({ "data-hero-step": "", style: { "--hero-delay": `${(words * MOTION.stagger + index * MOTION.heroStagger) * 1000}ms` } });
   return (
     <section className="hero" id="hero" aria-labelledby="hero-title" data-motion-active="true">
       <div className="hero-stage">
@@ -31,18 +38,18 @@ export function HeroSection({ tagline, subtitle }) {
 
         <div className="hero-grid">
           <div className="hero-copy">
-            <p className="hero-eyebrow">
+            <p className="hero-eyebrow" {...step(0)}>
               <span className="hero-eyebrow__signal" aria-hidden="true" />
               HIMANIKA / 2026
             </p>
             <h1 id="hero-title">
-              <span>{tagline || landingTextDefaults.hero_tagline}</span>
-              <strong>HIMANIKA</strong>
+              <span><RevealWords text={title} /></span>
+              <strong><RevealWords text="HIMANIKA" startIndex={words - 1} /></strong>
             </h1>
-            <p className="hero-description">
+            <p className="hero-description" {...step(1)}>
               {subtitle || landingTextDefaults.hero_subtitle}
             </p>
-            <div className="hero-actions">
+            <div className="hero-actions" {...step(2)}>
               <SplitCta href="/events">Jelajahi Event</SplitCta>
               <Link className="hero-text-link" href="/oprec">
                 Gabung HIMANIKA
@@ -52,10 +59,10 @@ export function HeroSection({ tagline, subtitle }) {
           </div>
         </div>
 
-        <div className="trust-strip">
+        <div className="trust-strip" {...step(3)}>
           <div className="trust-strip__inner">
             <p>
-              <strong>350+ mahasiswa</strong>
+              <strong><CountUp to={350} suffix="+" /> mahasiswa</strong>
               bertumbuh bersama melalui karya, competition, dan kolaborasi.
             </p>
             <LogoMarquee />
