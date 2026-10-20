@@ -137,17 +137,31 @@ export function CardFanCarousel({ cards }) {
         direction === "right"
           ? (centerIndex + 1) % totalCards
           : (centerIndex - 1 + totalCards) % totalCards;
-      setLoadedIndices((previous) => {
-        const next = new Set(previous);
-        getVisibleMap(nextCenter).forEach((_, index) => next.add(index));
-        const ahead = direction === "right" ? HALF + 1 : -(HALF + 1);
-        next.add(((nextCenter + ahead) % totalCards + totalCards) % totalCards);
-        return next;
-      });
       setCenterIndex(nextCenter);
     },
-    [centerIndex, totalCards, needsPagination, getVisibleMap],
+    [centerIndex, totalCards],
   );
+
+  // Keep the visible cards plus two on each side downloaded and decoded, so a
+  // press of < or > shows a ready image instead of loading it then.
+  useEffect(() => {
+    if (!isInView || !totalCards) return;
+    const wanted = new Set(getVisibleMap(centerIndex).keys());
+    for (let step = 1; step <= 2; step++) {
+      wanted.add((centerIndex + HALF + step) % totalCards);
+      wanted.add(((centerIndex - HALF - step) % totalCards + totalCards) % totalCards);
+    }
+    wanted.forEach((index) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = cards[index].imgUrl;
+      image.decode?.().catch(() => {});
+    });
+    setLoadedIndices((previous) => {
+      if ([...wanted].every((index) => previous.has(index))) return previous;
+      return new Set([...previous, ...wanted]);
+    });
+  }, [isInView, centerIndex, totalCards, cards, getVisibleMap]);
 
   // Fetch GSAP once the browser is idle after load (or right away if the
   // gallery is already near), so the cards are ready before they scroll in
