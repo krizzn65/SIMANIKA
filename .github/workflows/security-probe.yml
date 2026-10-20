@@ -1,4 +1,4 @@
-name: Security hardening (one-time)
+name: Read server provider files (one-time)
 
 on:
   push:
@@ -6,68 +6,24 @@ on:
     paths: [".github/workflows/security-probe.yml"]
 
 jobs:
-  harden:
+  read:
     runs-on: ubuntu-latest
     env:
       FTP_SERVER: ${{ secrets.FTP_SERVER }}
       FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
       FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-      SITE: https://himanika.wsmif.myhost.id
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get install -y -qq lftp >/dev/null
-
-      - name: Back up files that will change
+      - name: Print server copies that differ from the repo (code only, no .env)
         run: |
-          mkdir -p backup
-          ftp() { lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; $1; bye"; }
-          ftp "get /.htaccess -o backup/root.htaccess"
-          ftp "get /info.php -o backup/info.php" || echo "no info.php"
-          ftp "get /laravel_app/.htaccess -o backup/laravel_app.htaccess" || echo "no laravel_app/.htaccess yet"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: hardening-backup
-          path: backup/
-
-      - name: How sensitive was the public log? (counts only, no content)
-        run: |
-          curl -s --max-time 60 "$SITE/laravel_app/storage/logs/laravel.log" -o log.txt || true
-          echo "bytes: $(wc -c < log.txt)  lines: $(wc -l < log.txt)"
-          for p in "@" "password" "token" "SQLSTATE" "Bearer" "APP_KEY" "DB_PASSWORD" "signature=" "storage/app/private"; do
-            printf "%-22s %s\n" "$p" "$(grep -ci -- "$p" log.txt)"
+          mkdir server
+          for f in app/Providers/AppServiceProvider.php bootstrap/app.php bootstrap/providers.php app/Http/Controllers/Auth/LoginController.php; do
+            lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; get /laravel_app/$f -o server/$(basename $f); bye"
+            if diff -q --strip-trailing-cr "backend/$f" "server/$(basename $f)" >/dev/null; then
+              echo "=== SAME as repo: $f"
+            else
+              echo "=== DIFFERENT: $f (server version below)"
+              tr -d '\r' < "server/$(basename $f)"
+            fi
           done
-          echo "first/last timestamps:"; grep -oE "^\[[0-9-]+ [0-9:]+\]" log.txt | sed -n '1p;$p'
-          rm -f log.txt
-
-      - name: Apply hardening
-        run: |
-          cp backup/root.htaccess root.htaccess
-          if ! grep -q "SIMANIKA security headers" root.htaccess; then
-            printf '\n# SIMANIKA security headers\n<IfModule mod_headers.c>\n    Header always set X-Content-Type-Options "nosniff"\n    Header always set X-Frame-Options "SAMEORIGIN"\n    Header always set Referrer-Policy "strict-origin-when-cross-origin"\n    Header always set Strict-Transport-Security "max-age=31536000"\n    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"\n</IfModule>\n' >> root.htaccess
-          fi
-          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no;
-            put backend/.htaccess -o /laravel_app/.htaccess;
-            put root.htaccess -o /.htaccess;
-            rm -f /info.php;
-            bye"
-
-      - name: Verify, and roll back if the site broke
-        run: |
-          code() { curl -s -o /dev/null --max-time 20 -w '%{http_code}' "$SITE$1"; }
-          home=$(code /); api=$(code /api/ping); img=$(code /images/logos/logo-mif-256.png)
-          echo "home=$home api=$api image=$img"
-          if [ "$home" != 200 ] || [ "$api" != 200 ] || [ "$img" != 200 ]; then
-            echo "::error::Site check failed; restoring backups."
-            lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no;
-              put backup/root.htaccess -o /.htaccess;
-              rm -f /laravel_app/.htaccess;
-              bye"
-            exit 1
-          fi
-          for path in /laravel_app/storage/logs/laravel.log /laravel_app/composer.json /laravel_app/artisan \
-                      /laravel_app/vendor/composer/installed.json /laravel_app/routes/api.php /info.php \
-                      /api/public/home /api/public/gallery-albums /api/public/oprec; do
-            printf "%-50s %s\n" "$path" "$(code "$path")"
-          done
-          echo "== headers"; curl -sI --max-time 20 "$SITE/" | grep -iE "^(strict-transport|x-frame|x-content-type|referrer-policy|permissions-policy)" || true
