@@ -1,0 +1,19 @@
+name: Inspect server layout (read-only)
+
+on:
+  push:
+    branches: [only_deploy]
+    paths: [".github/workflows/server-inspect.yml"]
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - run: sudo apt-get install -y -qq lftp >/dev/null
+      - name: List FTP directories (no file contents)
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; pwd; cls -1 --sort=name /; echo ---; cls -1 -d /*/ ; echo ---; cls -1 /*/*/ | head -200; bye"
