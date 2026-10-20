@@ -1,3 +1,4 @@
+import "./landing.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { LandingManagedSections } from "@/components/sections/LandingManagedSections";
 import { MotionVisibility } from "@/components/ui/MotionVisibility";
