@@ -14,6 +14,9 @@ export function ProtectedRoute({ children, admin = false }) {
 
   useEffect(() => {
     if (!checked || checkError || sessionExpired) return;
+    // While navigating out of the admin area (e.g. "Lihat Website"), this guard
+    // still sees the new path for a moment; it must not pull the user back.
+    if (admin && !pathname?.startsWith("/admin")) return;
     if (!isAuthenticated) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
     else if (!user?.emailVerifiedAt) router.replace("/verify-email");
     else if (admin && (!isAdmin || !canAccessAdminPath(user?.role, pathname))) router.replace(isAdmin ? adminHome(user?.role) : "/");

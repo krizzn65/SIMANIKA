@@ -265,15 +265,15 @@ export default function AdminLayout({ children }) {
             </div>
 
             <div className="flex items-center gap-3">
-              <Link
+              {/* Full page load: the public site is a separate shell from the admin console. */}
+              <a
                 href="/"
                 className="admin-btn admin-btn--secondary admin-btn--sm"
                 title="Ke Website Utama"
-                prefetch={true}
               >
                 <Globe aria-hidden="true" className="w-4 h-4 text-blue-600" />
                 <span>Lihat Website</span>
-              </Link>
+              </a>
             </div>
           </header>
 
