@@ -39,6 +39,17 @@ export function ScrollReset() {
         clearTimeout(timer);
       };
     }
+
+    // Links such as /#gallery: land on that section, re-aligning once late
+    // content (images, API sections) has settled above it.
+    const target = () => document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+    const align = () => target()?.scrollIntoView({ block: "start", behavior: "instant" });
+    const frame = requestAnimationFrame(align);
+    const timer = setTimeout(align, 400);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
   }, [pathname]);
 
   return null;
