@@ -4,10 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Oprec } from "@/components/oprec/Oprec";
 import { normalizeOprec } from "@/lib/oprec";
 import { publicApi } from "@/services/publicApi";
-import { OprecDevNoticeModal } from "@/components/oprec/OprecDevNoticeModal";
 
 export default function OprecContent() {
-  const [showNotice, setShowNotice] = useState(true);
   const [state, setState] = useState({ loading: true, oprec: null, error: false });
   const refresh = useCallback(async () => {
     try {
@@ -23,7 +21,6 @@ export default function OprecContent() {
 
   return (
     <>
-      <OprecDevNoticeModal isOpen={showNotice} onClose={() => setShowNotice(false)} />
       {state.loading ? (
         <p role="status">Memuat OPREC...</p>
       ) : state.error ? (
