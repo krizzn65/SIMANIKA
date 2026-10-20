@@ -68,7 +68,7 @@ export default function RegisterForm() {
     }
   }, (errors) => {
     setSubmitState("error");
-    showFeedback("error", errors.nama?.message || errors.email?.message || errors.password?.message || "Periksa kembali form pendaftaran.");
+    showFeedback("error", errors.nama?.message || errors.email?.message || errors.password?.message || errors.passwordConfirmation?.message || "Periksa kembali form pendaftaran.");
   });
 
   const handleGoogle = () => {
@@ -198,6 +198,20 @@ export default function RegisterForm() {
                     <Eye className="w-5 h-5" />
                   )}
                 </button>
+              </div>
+            </div>
+            <div className="register-field">
+              <label htmlFor="register-password-confirmation">Konfirmasi Password</label>
+              <div className="register-input-wrap">
+                <input
+                  id="register-password-confirmation"
+                  name="passwordConfirmation"
+                  {...registerField("passwordConfirmation")}
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  placeholder="Ulangi kata sandi"
+                  required
+                />
               </div>
             </div>
             <button

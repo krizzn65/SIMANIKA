@@ -56,8 +56,8 @@
                                 <td style="padding:28px 34px 0;">
                                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                                         <tr>
-                                            <td align="center" style="background:#155eef;border-radius:8px;box-shadow:4px 4px 0 #c9dafc;">
-                                                <a href="{{ $actionUrl }}" style="display:block;padding:16px 24px;color:#ffffff;font-size:16px;font-weight:700;line-height:20px;text-decoration:none;border-radius:8px;">{{ $actionLabel }} &rarr;</a>
+                                            <td align="center" style="background:#155eef;border:1px solid #155eef;box-shadow:4px 4px 0 #c9dafc;">
+                                                <a href="{{ $actionUrl }}" style="display:block;padding:16px 24px;color:#ffffff;font-size:16px;font-weight:700;line-height:20px;text-decoration:none;">{{ $actionLabel }} &rarr;</a>
                                             </td>
                                         </tr>
                                     </table>
