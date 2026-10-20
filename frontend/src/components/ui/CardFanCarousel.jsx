@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import gsap from "gsap";
 
 const MAX_VISIBLE = 7;
 const HALF = 3;
@@ -64,6 +63,8 @@ function getSlotConfig(totalCards, slot) {
 export function CardFanCarousel({ cards }) {
   const containerRef = useRef(null);
   const [isInView, setIsInView] = useState(false);
+  // GSAP is only needed once the gallery approaches the viewport.
+  const [gsap, setGsap] = useState(null);
   const isAnimating = useRef(false);
   const hasEntered = useRef(false);
   const directionRef = useRef(null);
@@ -150,8 +151,15 @@ export function CardFanCarousel({ cards }) {
   );
 
   useEffect(() => {
+    if (!isInView || gsap) return undefined;
+    let cancelled = false;
+    import("gsap").then((module) => { if (!cancelled) setGsap(() => module.default); });
+    return () => { cancelled = true; };
+  }, [isInView, gsap]);
+
+  useEffect(() => {
     const container = containerRef.current;
-    if (!container || !totalCards || !isInView) return;
+    if (!container || !totalCards || !isInView || !gsap) return;
 
     const cardElements = Array.from(
       container.querySelectorAll(".fan-card"),
@@ -367,7 +375,7 @@ export function CardFanCarousel({ cards }) {
       if (leaveTimer) clearTimeout(leaveTimer);
       gsap.killTweensOf(cardElements);
     };
-  }, [centerIndex, totalCards, getVisibleMap, needsPagination, isInView]);
+  }, [centerIndex, totalCards, getVisibleMap, needsPagination, isInView, gsap]);
 
   if (!totalCards) return null;
 

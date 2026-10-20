@@ -19,3 +19,10 @@ jobs:
           for js in $(grep -oE '/_next/static/chunks/[^"]+\.js' index.html | sort -u); do
             curl -fsS "https://himanika.wsmif.myhost.id$js" | grep -q "Jembatan prestasi" && echo "found in $js"
           done; true
+      - name: Lighthouse mobile performance (3 runs)
+        run: |
+          for i in 1 2 3; do
+            npx --yes lighthouse@12 https://himanika.wsmif.myhost.id/ --only-categories=performance --form-factor=mobile \
+              --chrome-flags="--headless=new --no-sandbox" --output=json --output-path=lh.json --quiet
+            jq -r '"score \(.categories.performance.score*100)  FCP \(.audits["first-contentful-paint"].displayValue)  LCP \(.audits["largest-contentful-paint"].displayValue)  TBT \(.audits["total-blocking-time"].displayValue)  CLS \(.audits["cumulative-layout-shift"].displayValue)"' lh.json
+          done
