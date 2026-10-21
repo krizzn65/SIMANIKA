@@ -5,9 +5,9 @@ import { Area, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts
 import { ChartContainer, ChartTooltip } from "@/components/ui/line-charts-1";
 
 const SERIES = [
-  { key: "users", label: "Akun baru", color: "#155eef" },
-  { key: "events", label: "Pendaftaran Event", color: "#0e9384" },
-  { key: "oprec", label: "Pendaftaran OPREC", color: "#7a5af8" },
+  { key: "users", label: "Akun baru", short: "Akun", color: "#155eef" },
+  { key: "events", label: "Pendaftaran Event", short: "Event", color: "#0e9384" },
+  { key: "oprec", label: "Pendaftaran OPREC", short: "OPREC", color: "#7a5af8" },
 ];
 const RANGES = [7, 30, 90];
 
@@ -35,7 +35,6 @@ export function DashboardTrendChart({ trends, loading }) {
   const series = SERIES.find((item) => item.key === seriesKey);
 
   const rows = useMemo(() => (trends || []).slice(-range), [trends, range]);
-  const total = rows.reduce((sum, row) => sum + row[seriesKey], 0);
   const chartConfig = { [seriesKey]: { label: series.label, color: series.color } };
 
   return (
@@ -44,7 +43,7 @@ export function DashboardTrendChart({ trends, loading }) {
         <div>
           <h2 className="text-base font-bold text-slate-900">Tren Pendaftaran</h2>
           <p className="text-xs text-slate-500">
-            {loading ? "Memuat data..." : <><span className="font-semibold text-slate-800">{total}</span> {series.label.toLowerCase()} dalam {range} hari terakhir</>}
+            Jumlah pendaftaran per hari, {range} hari terakhir (WIB)
           </p>
         </div>
         <div className="flex border border-slate-200" role="group" aria-label="Rentang waktu">
@@ -57,17 +56,26 @@ export function DashboardTrendChart({ trends, loading }) {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 px-5 pt-4" role="tablist" aria-label="Pilih data">
-        {SERIES.map((item) => (
-          <button key={item.key} type="button" role="tab" aria-selected={seriesKey === item.key} onClick={() => setSeriesKey(item.key)}
-            className={`inline-flex items-center gap-2 border px-3 py-1.5 text-xs font-semibold transition-colors ${seriesKey === item.key ? "border-slate-900 bg-slate-50 text-slate-900" : "border-slate-200 bg-white text-slate-500 hover:text-slate-800"}`}>
-            <span className="size-2.5 rounded-full" style={{ background: item.color }} aria-hidden="true" />
-            {item.label}
-          </button>
-        ))}
+      <div className="grid grid-cols-3 gap-2 px-4 pt-4 sm:gap-3 sm:px-5" role="tablist" aria-label="Pilih data">
+        {SERIES.map((item) => {
+          const active = seriesKey === item.key;
+          const sum = rows.reduce((acc, row) => acc + row[item.key], 0);
+          return (
+            <button key={item.key} type="button" role="tab" aria-selected={active} onClick={() => setSeriesKey(item.key)}
+              className={`flex flex-col items-start gap-1.5 border-2 px-3 py-2.5 text-left transition-colors sm:px-4 ${active ? "border-solid" : "border-dashed border-slate-300 bg-white hover:border-slate-400"}`}
+              style={active ? { borderColor: item.color, background: `${item.color}0f` } : undefined}>
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold sm:text-xs" style={{ color: active ? item.color : "#64748b" }}>
+                <span className="size-2 shrink-0" style={{ background: item.color }} aria-hidden="true" />
+                <span className="sm:hidden">{item.short}</span>
+                <span className="hidden sm:inline">{item.label}</span>
+              </span>
+              <span className={`text-lg font-bold leading-none sm:text-2xl ${active ? "text-slate-900" : "text-slate-400"}`}>{loading ? "–" : sum}</span>
+            </button>
+          );
+        })}
       </div>
 
-      <div className="px-2.5 pb-4 pt-2">
+      <div className="px-2.5 pb-4 pt-4">
         {loading ? (
           <div className="h-[300px] animate-pulse bg-slate-50" />
         ) : (
