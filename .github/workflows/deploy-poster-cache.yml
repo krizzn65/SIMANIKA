@@ -1,0 +1,49 @@
+name: Deploy poster compression and caching (one-time)
+
+on:
+  push:
+    branches: [only_deploy]
+    paths: [".github/workflows/deploy-poster-cache.yml"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      SITE: https://himanika.wsmif.myhost.id
+      BASE: c1bfe46a0d7513e39f1320634cd93df61d7d4f1e
+      FILES: app/Http/Controllers/Admin/OprecController.php app/Http/Controllers/Public/PublicOprecController.php app/Http/Middleware/NoStoreApiResponse.php
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: sudo apt-get install -y -qq lftp >/dev/null
+      - name: Back up and stop if the server copies changed
+        run: |
+          for f in $FILES; do
+            mkdir -p "backup/$(dirname $f)"
+            lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; get /laravel_app/$f -o backup/$f; bye"
+            git show "$BASE:backend/$f" | diff -q -w -B --strip-trailing-cr - "backup/$f" >/dev/null || { echo "::error::Server copy of $f differs; aborting."; git show "$BASE:backend/$f" | diff -w -B --strip-trailing-cr - "backup/$f" | head -40; exit 1; }
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: poster-cache-backup
+          path: backup/
+      - name: Upload
+        run: for f in $FILES; do lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; put backend/$f -o /laravel_app/$f; bye"; done
+      - name: Verify, roll back on failure
+        run: |
+          code() { curl -s -o /dev/null --max-time 20 -w '%{http_code}' "$@"; }
+          ping=$(code "$SITE/api/ping"); oprec=$(code -H "Accept: application/json" "$SITE/api/public/oprec"); me=$(code -H "Accept: application/json" "$SITE/api/auth/me")
+          poster=$(curl -s --max-time 20 -H "Accept: application/json" "$SITE/api/public/oprec" | grep -oE 'https?:[^"]*oprec\\?/posters\\?/[A-Za-z0-9._-]+' | head -1 | sed 's#\\/#/#g')
+          echo "ping=$ping oprec=$oprec me=$me poster=$poster"
+          if [ -n "$poster" ]; then curl -s -o /dev/null -D - --max-time 30 "$poster" | grep -iE "^(HTTP|cache-control|content-length|content-type)"; fi
+          meCache=$(curl -s -D - -o /dev/null --max-time 20 -H "Accept: application/json" "$SITE/api/auth/me" | grep -i "^cache-control" | tr -d '\r')
+          echo "auth/me $meCache"
+          if [ "$ping" != 200 ] || [ "$oprec" != 200 ] || [ "$me" != 401 ] || ! echo "$meCache" | grep -q no-store; then
+            echo "::error::Check failed; restoring backups."
+            for f in $FILES; do lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; put backup/$f -o /laravel_app/$f; bye"; done
+            exit 1
+          fi
