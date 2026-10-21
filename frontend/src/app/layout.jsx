@@ -1,6 +1,7 @@
 import { ScrollReset } from "@/components/layout/ScrollReset";
 import { SessionTimeoutModal } from "@/components/auth/SessionTimeoutModal";
 import { DevNotice } from "@/components/layout/DevNotice";
+import { MaintenanceGate } from "@/components/layout/MaintenanceGate";
 import { motionBootScript, motionCssVars } from "@/lib/motion";
 import "./globals.css";
 
@@ -39,7 +40,7 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <ScrollReset />
-        {children}
+        <MaintenanceGate>{children}</MaintenanceGate>
         <SessionTimeoutModal />
         <DevNotice />
       </body>
