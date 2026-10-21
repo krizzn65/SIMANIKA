@@ -19,6 +19,7 @@ const links = [
   { href: "/events", icon: "event", label: "Event" },
   { href: "/oprec", icon: "oprec", label: "OPREC" },
   { href: "/merchandise", icon: "merchandise", label: "Merchandise" },
+  { href: "/testimoni", icon: "testimoni", label: "Testimoni" },
 ];
 
 const landingSections = [

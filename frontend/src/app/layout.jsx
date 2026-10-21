@@ -1,3 +1,4 @@
+import Script from "next/script";
 import { ScrollReset } from "@/components/layout/ScrollReset";
 import { SessionTimeoutModal } from "@/components/auth/SessionTimeoutModal";
 import { DevNotice } from "@/components/layout/DevNotice";
@@ -30,8 +31,10 @@ export default function RootLayout({ children }) {
     <html lang="id" suppressHydrationWarning>
       <head>
         <style dangerouslySetInnerHTML={{ __html: motionCssVars }} />
-        <script dangerouslySetInnerHTML={{ __html: motionBootScript }} />
-        <script
+        <Script id="motion-boot" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: motionBootScript }} />
+        <Script
+          id="scroll-restoration"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html:
               "try{if('scrollRestoration' in history){history.scrollRestoration='manual';}}catch(e){}",

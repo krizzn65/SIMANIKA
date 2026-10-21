@@ -34,6 +34,7 @@ use App\Http\Controllers\User\DashboardController;
 use App\Http\Controllers\User\EventWorkspaceController;
 use App\Http\Controllers\User\EventGroupSubmissionController;
 use App\Http\Controllers\User\TeamMemberController;
+use App\Http\Controllers\User\UserTestimonialController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ping', fn () => response()->json(['status' => 'ok']));
@@ -48,6 +49,7 @@ Route::prefix('auth')->group(function () {
 Route::prefix('public')->group(function () {
     Route::get('/home', [PublicHomeContentController::class, 'index']);
     Route::get('/home/images/{kind}/{filename}', [PublicHomeContentController::class, 'image'])->name('public.home-image');
+    Route::get('/testimonials', [PublicHomeContentController::class, 'testimonials']);
     Route::get('/oprec/{oprec}/announcement', [\App\Http\Controllers\Public\OprecAnnouncementController::class, 'show']);
     Route::get('/oprec/{oprec}/guidebook', [PublicOprecController::class, 'guidebook'])->name('public.oprec-guidebook');
     Route::get('/oprec/{oprec}/examples/{field}', [PublicOprecController::class, 'questionExample'])->name('public.oprec-example');
@@ -88,6 +90,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/user/events/{event}/enroll', EventEnrollmentController::class)->middleware('throttle:auth');
     Route::post('/user/events/{event}/create-team', CreateEventTeamController::class)->middleware('throttle:auth');
     Route::post('/user/events/{event}/join-team', JoinEventTeamController::class)->middleware('throttle:auth');
+    Route::get('/user/testimonials', [UserTestimonialController::class, 'index']);
+    Route::post('/user/testimonials', [UserTestimonialController::class, 'store'])->middleware('throttle:6,1');
 
     Route::prefix('admin')->middleware('admin')->group(function () {
         Route::middleware('admin:content')->prefix('home-content')->group(function () {
@@ -100,6 +104,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
             Route::post('/testimonials', [AdminHomeContentController::class, 'storeTestimonial']);
             Route::post('/testimonials/{id}', [AdminHomeContentController::class, 'updateTestimonial'])->whereNumber('id');
             Route::delete('/testimonials/{id}', [AdminHomeContentController::class, 'destroyTestimonial'])->whereNumber('id');
+            Route::patch('/testimonials/{id}/visibility', [AdminHomeContentController::class, 'toggleTestimonialVisibility'])->whereNumber('id');
+            Route::patch('/testimonials/{id}/status', [AdminHomeContentController::class, 'updateTestimonialStatus'])->whereNumber('id');
         });
         Route::middleware('admin:content')->prefix('gallery-albums')->controller(\App\Http\Controllers\Admin\GalleryAlbumController::class)->group(function () {
             Route::get('/', 'index');
