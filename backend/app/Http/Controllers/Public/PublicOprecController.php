@@ -15,7 +15,8 @@ class PublicOprecController extends Controller
         abort_unless(preg_match('/^[a-zA-Z0-9._-]+\.(jpe?g|png|webp)$/i', $filename), 404);
         $path = 'oprec/posters/'.$filename;
         abort_unless(Storage::disk('public')->exists($path), 404);
-        return response()->file(Storage::disk('public')->path($path), ['Cache-Control' => 'public, max-age=3600']);
+        // Uploaded names are random and never reused, so browsers may keep them for a year.
+        return response()->file(Storage::disk('public')->path($path), ['Cache-Control' => 'public, max-age=31536000, immutable']);
     }
 
     public function guidebook(Oprec $oprec)
