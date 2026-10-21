@@ -99,7 +99,7 @@ export function DevNotice() {
             <a
               key={dev.phone}
               className="dev-notice-wa"
-              href={`https://wa.me/${dev.phone}?text=${encodeURIComponent(`Halo ${dev.name}, saya ingin melaporkan kendala/bug pada website SIMANIKA.`)}`}
+              href={`https://wa.me/${dev.phone}?text=${encodeURIComponent(`Halo Kak ${dev.name}, saya ingin melaporkan kendala/bug pada website SIMANIKA.`)}`}
               target="_blank"
               rel="noopener noreferrer"
             >

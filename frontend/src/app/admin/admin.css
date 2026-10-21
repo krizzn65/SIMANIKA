@@ -31,14 +31,16 @@
 }
 
 /* Global button base reset inside Admin to eliminate browser-native bevels without overriding classes */
+/* Skip buttons that carry their own Tailwind bg/border utilities, otherwise
+   this unlayered reset beats them (e.g. the active pagination button). */
 :where(.admin-layout-root) button {
   font-family: var(--admin-font-sans);
   cursor: pointer;
-  border: none;
-  background-color: transparent;
   -webkit-appearance: none;
   appearance: none;
 }
+:where(.admin-layout-root) button:where(:not([class*="bg-"])) { background-color: transparent; }
+:where(.admin-layout-root) button:where(:not([class*="border"])) { border: none; }
 
 /* Sidebar Navigation Link Styles */
 .admin-nav-link {

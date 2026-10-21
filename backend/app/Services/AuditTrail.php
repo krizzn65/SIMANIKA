@@ -6,6 +6,7 @@ use App\Models\AuditEntry;
 use App\Models\Oprec;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class AuditTrail
@@ -37,12 +38,16 @@ class AuditTrail
         $route = $request->route()?->uri() ?? $request->path();
         $method = $request->method();
         $download = $method === 'GET' && (str_contains($route, '/files/') || str_contains($route, '/export/'));
-        if ($status < 500 && !in_array($status, [401, 403], true) && !in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true) && !$download) return;
+        if ($status < 500 && !in_array($status, [401, 403, 429], true) && !in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true) && !$download) return;
         if (str_starts_with($route, 'api/admin/logs') && $status < 400) return;
+        // Every page load by a signed-out visitor asks who is logged in; that 401 is expected, not a failed access.
+        if ($method === 'GET' && $route === 'api/auth/me' && $status === 401) return;
+        // A flood produces thousands of 429s; one row per IP per minute is enough evidence.
+        if ($status === 429 && !Cache::add('audit-429:'.($request->ip() ?? 'unknown'), true, 60)) return;
 
         $module = $this->module($route);
         $action = $this->action($route, $method, $module, $download);
-        $kind = $status >= 500 ? 'error' : (in_array($status, [401, 403], true) || $module === 'auth' || str_contains($route, '/verify') ? 'security' : 'activity');
+        $kind = $status >= 500 ? 'error' : (in_array($status, [401, 403, 429], true) || $module === 'auth' || str_contains($route, '/verify') ? 'security' : 'activity');
         $result = $status >= 400 ? 'failed' : 'success';
         $context = [];
         if (!in_array($module, ['auth', 'public'], true)) {
@@ -80,6 +85,11 @@ class AuditTrail
             } elseif ($action === 'auth.logout') {
                 $context['auth_description'] = 'Pengguna keluar dari sesi akun.';
             }
+        }
+
+        if ($status === 429) {
+            $context['error_type'] = 'HTTP_429';
+            $context['error_description'] = 'Permintaan dari IP ini melewati batas dan ditolak. Dicatat sekali per menit per IP.';
         }
 
         // Rincian error untuk seluruh modul sistem

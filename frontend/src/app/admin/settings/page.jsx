@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Server, User, CheckCircle2 } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/roleAccess";
+import { MaintenanceCard } from "./MaintenanceCard";
 
 export default function AdminSettingsPage() {
   const { user } = useAuth();
@@ -52,6 +53,8 @@ export default function AdminSettingsPage() {
           </div>
         </div>
       </div>
+
+      <MaintenanceCard />
 
       {/* System & Architecture Info */}
       <div className="admin-card">

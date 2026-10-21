@@ -62,6 +62,7 @@ Route::prefix('public')->group(function () {
     Route::get('/events/{slug}', [PublicEventController::class, 'show']);
     Route::get('/oprec/posters/{filename}', [PublicOprecController::class, 'poster'])->name('public.oprec-poster');
     Route::get('/oprec', [PublicOprecController::class, 'index']);
+    Route::get('/status', [\App\Http\Controllers\MaintenanceController::class, 'show']);
     Route::post('/oprec/{oprec}/result', [PublicOprecController::class, 'result'])->middleware('throttle:oprec-result');
 });
 
@@ -109,6 +110,10 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
             Route::delete('/{id}/photos/{photo}', 'destroyPhoto')->whereNumber(['id', 'photo']);
         });
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->middleware('admin:dashboard');
+        Route::middleware('admin:settings')->group(function () {
+            Route::get('/maintenance', [\App\Http\Controllers\MaintenanceController::class, 'show']);
+            Route::put('/maintenance', [\App\Http\Controllers\MaintenanceController::class, 'update']);
+        });
         Route::middleware('admin:logs')->group(function () {
             Route::get('/logs', [AuditLogController::class, 'index']);
             Route::get('/logs/{entry}', [AuditLogController::class, 'show']);
