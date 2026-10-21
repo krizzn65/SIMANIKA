@@ -1,0 +1,49 @@
+name: Deploy maintenance switch (one-time)
+
+on:
+  push:
+    branches: [only_deploy]
+    paths: [".github/workflows/deploy-maintenance.yml"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      SITE: https://himanika.wsmif.myhost.id
+      BASE: be6072e90d5814759204a9f2f1252107149a25bc
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: sudo apt-get install -y -qq lftp >/dev/null
+      - name: Back up and stop if the server copy changed
+        run: |
+          mkdir -p backup
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; get /laravel_app/routes/api.php -o backup/api.php; cls -1 /laravel_app/bootstrap/cache/; bye" | tee cache.txt
+          if grep -q "routes-v" cache.txt; then echo "::error::Route cache present; new routes would not load. Aborting."; exit 1; fi
+          git show "$BASE:backend/routes/api.php" | diff -q -w -B --strip-trailing-cr - backup/api.php >/dev/null || { echo "::error::Server routes/api.php differs; aborting."; git show "$BASE:backend/routes/api.php" | diff -w -B --strip-trailing-cr - backup/api.php | head -40; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: maintenance-backup
+          path: backup/
+      - name: Upload
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no;
+            put backend/app/Http/Controllers/MaintenanceController.php -o /laravel_app/app/Http/Controllers/MaintenanceController.php;
+            put backend/routes/api.php -o /laravel_app/routes/api.php;
+            bye"
+      - name: Verify, roll back on failure
+        run: |
+          code() { curl -s -o /dev/null --max-time 20 -w '%{http_code}' "$@"; }
+          ping=$(code "$SITE/api/ping"); home=$(code "$SITE/api/public/home")
+          status=$(curl -s --max-time 20 -H "Accept: application/json" "$SITE/api/public/status")
+          put=$(code -X PUT -H "Accept: application/json" "$SITE/api/admin/maintenance")
+          echo "ping=$ping home=$home status=$status put_without_login=$put"
+          if [ "$ping" != 200 ] || [ "$home" != 200 ] || ! echo "$status" | grep -q '"maintenance":false' || [ "$put" = 200 ] || [ "$put" = 500 ] || [ "$put" = 404 ]; then
+            echo "::error::Check failed; restoring backup."
+            lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; put backup/api.php -o /laravel_app/routes/api.php; rm -f /laravel_app/app/Http/Controllers/MaintenanceController.php; bye"
+            exit 1
+          fi
