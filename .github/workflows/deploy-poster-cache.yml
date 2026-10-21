@@ -1,4 +1,4 @@
-name: Deploy poster compression and caching (one-time)
+name: Deploy poster compression and caching (one-time, retry)
 
 on:
   push:
@@ -40,8 +40,8 @@ jobs:
           poster=$(curl -s --max-time 20 -H "Accept: application/json" "$SITE/api/public/oprec" | grep -oE 'https?:[^"]*oprec\\?/posters\\?/[A-Za-z0-9._-]+' | head -1 | sed 's#\\/#/#g')
           echo "ping=$ping oprec=$oprec me=$me poster=$poster"
           if [ -n "$poster" ]; then curl -s -o /dev/null -D - --max-time 30 "$poster" | grep -iE "^(HTTP|cache-control|content-length|content-type)"; fi
-          meCache=$(curl -s -D - -o /dev/null --max-time 20 -H "Accept: application/json" "$SITE/api/auth/me" | grep -i "^cache-control" | tr -d '\r')
-          echo "auth/me $meCache"
+          meCache=$(curl -s -D - -o /dev/null --max-time 20 -H "Accept: application/json" "$SITE/api/ping" | grep -i "^cache-control" | tr -d '\r')
+          echo "api/ping $meCache"
           if [ "$ping" != 200 ] || [ "$oprec" != 200 ] || [ "$me" != 401 ] || ! echo "$meCache" | grep -q no-store; then
             echo "::error::Check failed; restoring backups."
             for f in $FILES; do lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; put backup/$f -o /laravel_app/$f; bye"; done
