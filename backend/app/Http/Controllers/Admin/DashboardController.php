@@ -36,24 +36,6 @@ class DashboardController extends Controller
                 'createdAt' => $r->created_at?->toIso8601String(),
             ]);
 
-        $recentEvents = Event::withCount(['registrations', 'teams'])
-            ->latest()
-            ->take(5)
-            ->get()
-            ->map(fn ($e) => [
-                'id' => $e->id,
-                'slug' => $e->slug,
-                'judul' => $e->judul,
-                'kategori' => $e->kategori,
-                'status' => $e->status,
-                'tipePendaftaran' => $e->tipe_pendaftaran,
-                'totalPendaftar' => $e->tipe_pendaftaran === 'tim'
-                    ? $e->teams_count
-                    : $e->registrations_count,
-                'totalTim' => $e->teams_count,
-                'tanggalMulai' => $e->tanggal_mulai ? (is_string($e->tanggal_mulai) ? $e->tanggal_mulai : $e->tanggal_mulai->format('Y-m-d')) : null,
-            ]);
-
         return response()->json([
             'stats' => [
                 'totalUsers' => $totalUsers,
@@ -71,7 +53,29 @@ class DashboardController extends Controller
                 'pengumumanPublished' => (bool) $activeOprec->pengumuman_published,
             ] : null,
             'recentRegistrations' => $recentRegistrations,
-            'recentEvents' => $recentEvents,
+            'trends' => $this->dailyTrends(90),
         ]);
+    }
+
+    /** Daily sign-ups for the dashboard chart, bucketed by WIB date, zero-filled. */
+    private function dailyTrends(int $days): array
+    {
+        $tz = 'Asia/Jakarta';
+        $start = now($tz)->startOfDay()->subDays($days - 1);
+        $series = ['users' => User::query(), 'events' => EventRegistration::query(), 'oprec' => OprecRegistration::query()];
+        $counts = [];
+        foreach ($series as $key => $query) {
+            $query->where('created_at', '>=', $start->copy()->utc())->pluck('created_at')
+                ->each(function ($at) use (&$counts, $key, $tz) {
+                    $day = $at->copy()->setTimezone($tz)->toDateString();
+                    $counts[$day][$key] = ($counts[$day][$key] ?? 0) + 1;
+                });
+        }
+        $rows = [];
+        for ($day = $start->copy(); $day->lte(now($tz)); $day->addDay()) {
+            $date = $day->toDateString();
+            $rows[] = ['date' => $date, 'users' => $counts[$date]['users'] ?? 0, 'events' => $counts[$date]['events'] ?? 0, 'oprec' => $counts[$date]['oprec'] ?? 0];
+        }
+        return $rows;
     }
 }

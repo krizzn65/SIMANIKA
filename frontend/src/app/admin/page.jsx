@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/services/api";
 import { AdminErrorNotice } from "./AdminErrorNotice";
-import { eventCategoryLabel } from "@/lib/events";
+import { DashboardTrendChart } from "./DashboardTrendChart";
 import {
   Users,
   Calendar,
@@ -149,77 +149,9 @@ export default function AdminDashboardPage() {
 
       {/* Main Sections Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Recent Events (2 Cols) */}
+        {/* Left Column: sign-up trend chart (2 Cols) */}
         <div className="lg:col-span-2 flex flex-col gap-6">
-          <div className="admin-card">
-            <div className="admin-card-header">
-              <div>
-                <h2 className="text-base font-bold text-slate-900">Event & Competition Terbaru</h2>
-                <p className="text-xs text-slate-500">Daftar event yang terdaftar di dalam sistem.</p>
-              </div>
-              <Link href="/admin/events" className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1">
-                <span>Lihat Semua</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            <div className="admin-table-container">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Judul Event</th>
-                    <th>Kategori</th>
-                    <th>Status</th>
-                    <th>Peserta / Tim</th>
-                    <th>Tipe</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td colSpan={5} className="text-center py-8 text-slate-400">
-                        Memuat data event...
-                      </td>
-                    </tr>
-                  ) : !data?.recentEvents?.length ? (
-                    <tr>
-                      <td colSpan={5} className="text-center py-8 text-slate-400">
-                        Belum ada event yang dibuat.
-                      </td>
-                    </tr>
-                  ) : (
-                    data.recentEvents.map((e) => (
-                      <tr key={e.id}>
-                        <td className="font-semibold text-slate-800">
-                          <Link href="/admin/events" className="hover:text-blue-600 transition-colors">
-                            {e.judul}
-                          </Link>
-                        </td>
-                        <td>
-                          <span className="admin-badge admin-badge--neutral uppercase text-[10px]">
-                            {eventCategoryLabel(e.kategori)}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`admin-badge admin-badge--${e.status}`}>
-                            {e.status}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="font-mono text-xs font-semibold text-slate-700">
-                            {e.totalPendaftar} {e.tipePendaftaran === "tim" ? "Tim" : "Peserta"}
-                          </span>
-                        </td>
-                        <td className="capitalize text-xs text-slate-500">
-                          {e.tipePendaftaran}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <DashboardTrendChart trends={data?.trends} loading={loading} />
         </div>
 
         {/* Right Column: Active OPREC status & quick links */}
