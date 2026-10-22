@@ -123,34 +123,30 @@ export function SessionTimeoutModal() {
       aria-describedby="session-timeout-desc"
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4 animate-in fade-in duration-200"
     >
-      <div className="w-full max-w-md bg-white border border-slate-200 shadow-2xl rounded-2xl p-6 sm:p-8 text-center flex flex-col items-center">
-        {/* Icon Badge */}
-        <div className="w-16 h-16 rounded-full bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-600 mb-5 shadow-sm">
-          <Clock className="w-8 h-8" aria-hidden="true" />
+      <div className="w-full max-w-md border border-slate-200 border-t-4 border-t-[#155eef] bg-white p-6 shadow-[6px_6px_0_rgba(16,27,45,0.12)] sm:p-8">
+        <div className="mb-5 flex items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-amber-200 bg-amber-50 text-amber-600" aria-hidden="true">
+            <Clock className="h-5 w-5" />
+          </span>
+          <span className="font-['IBM_Plex_Mono',monospace] text-xs font-semibold uppercase tracking-[0.12em] text-[#0f48c2]">
+            SIMANIKA / Sesi Kedaluwarsa
+          </span>
         </div>
 
-        {/* Eyebrow */}
-        <span className="px-3 py-1 rounded-full text-[11px] font-mono font-semibold uppercase tracking-wider bg-amber-100 text-amber-800 mb-3">
-          Sesi Kedaluwarsa
-        </span>
-
-        {/* Title */}
-        <h2 id="session-timeout-title" className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
+        <h2 id="session-timeout-title" className="mb-2 text-2xl font-bold tracking-tight text-slate-900">
           Sesi Anda Telah Berakhir
         </h2>
 
-        {/* Description */}
-        <p id="session-timeout-desc" className="text-sm text-slate-600 leading-relaxed mb-6">
+        <p id="session-timeout-desc" className="mb-6 text-sm leading-relaxed text-slate-600">
           Anda telah melewati batas waktu <strong>2 jam</strong> tanpa aktivitas. Demi keamanan akun Anda, sesi login telah dinonaktifkan secara otomatis.
         </p>
 
-        {/* Action Button */}
         <button
           type="button"
           onClick={handleReturnToLogin}
-          className="w-full inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium text-sm shadow-md shadow-blue-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
+          className="inline-flex min-h-[48px] w-full cursor-pointer items-center justify-center gap-2.5 border-0 bg-[#155eef] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#0f48c2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155eef]"
         >
-          <LogIn className="w-4 h-4" aria-hidden="true" />
+          <LogIn className="h-4 w-4" aria-hidden="true" />
           <span>Kembali ke Halaman Login</span>
         </button>
       </div>
