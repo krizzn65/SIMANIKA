@@ -24,6 +24,7 @@ import {
   Clock,
   User,
 } from "lucide-react";
+import { useConfirmDialog } from "@/app/admin/useConfirmDialog";
 import { api } from "@/services/api";
 import { landingTextDefaults } from "@/lib/landingText";
 import { optimizeGalleryImage } from "@/lib/optimizeOprecImage";
@@ -859,6 +860,7 @@ function DeleteConfirmModal({ kind, item, onClose, onConfirm, busy }) {
    Form Teks Landing Page (Hero, Tentang, Visi-Misi)
    ───────────────────────────────────────────────────────────── */
 function TextManager({ content, onSaved }) {
+  const [confirmDialog, confirm] = useConfirmDialog();
   const [values, setValues] = useState(() => ({
     hero_tagline: content.hero_tagline || landingTextDefaults.hero_tagline,
     hero_subtitle: content.hero_subtitle || landingTextDefaults.hero_subtitle,
@@ -900,8 +902,8 @@ function TextManager({ content, onSaved }) {
     }
   }
 
-  function handleResetDefault() {
-    if (!window.confirm("Kembalikan seluruh teks ke konfigurasi standar bawaan sistem?")) return;
+  async function handleResetDefault() {
+    if (!(await confirm({ title: "Kembalikan teks bawaan?", message: "Seluruh teks landing page akan dikembalikan ke konfigurasi standar bawaan sistem.", confirmLabel: "Ya, kembalikan" }))) return;
     setValues({
       hero_tagline: landingTextDefaults.hero_tagline,
       hero_subtitle: landingTextDefaults.hero_subtitle,
@@ -914,6 +916,7 @@ function TextManager({ content, onSaved }) {
 
   return (
     <form className="content-text-container" onSubmit={handleSubmit}>
+      {confirmDialog}
       {notice && (
         <div className="content-alert content-alert--success" role="status">
           <CheckCircle2 size={18} />
@@ -1109,6 +1112,7 @@ export default function AdminContentPage() {
   const [actionBusyId, setActionBusyId] = useState(null);
   const [testiFormOpen, setTestiFormOpen] = useState(null);
   const [testiFormBusy, setTestiFormBusy] = useState(false);
+  const [confirmDialog, confirm] = useConfirmDialog();
 
   // Modals state
   const [addGalleryOpen, setAddGalleryOpen] = useState(false);
@@ -1160,7 +1164,7 @@ export default function AdminContentPage() {
 
   async function handleToggleTestiForm() {
     const next = !testiFormOpen;
-    if (next && !window.confirm("Buka pengisian testimoni? Card testimoni akan muncul di dashboard semua user.")) return;
+    if (next && !(await confirm({ title: "Buka pengisian testimoni?", message: "Card testimoni akan muncul di dashboard semua user. Kiriman masuk sebagai \"Menunggu Persetujuan\" sampai Anda setujui.", confirmLabel: "Ya, buka pengisian" }))) return;
     setTestiFormBusy(true);
     try {
       const { data } = await api.put("/admin/home-content/testimonial-form", { open: next });
@@ -1206,6 +1210,7 @@ export default function AdminContentPage() {
 
   return (
     <div className="content-console">
+      {confirmDialog}
       {/* Hero Header */}
       <header className="content-hero">
         <div className="content-hero-text">

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ExternalLink, FolderOpen, Images, Loader2, Pencil, Plus, RefreshCw, Trash2, UploadCloud, X } from "lucide-react";
 import { api } from "@/services/api";
+import { useConfirmDialog } from "@/app/admin/useConfirmDialog";
 import { optimizeGalleryImage } from "@/lib/optimizeOprecImage";
 import { formatAlbumDate } from "@/lib/galleryAlbums";
 import "../content/content.css";
@@ -154,6 +155,7 @@ function PhotoManager({ album, onClose, onChanged }) {
 }
 
 export default function AdminGalleryPage() {
+  const [confirmDialog, confirm] = useConfirmDialog();
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(null);
@@ -174,7 +176,7 @@ export default function AdminGalleryPage() {
   useEffect(() => { load(); }, [load]);
 
   async function removeAlbum(album) {
-    if (!window.confirm(`Hapus album “${album.title}” beserta ${album.photo_count} fotonya?`)) return;
+    if (!(await confirm({ title: "Hapus album?", message: `Album “${album.title}” beserta ${album.photo_count} fotonya akan dihapus permanen.`, confirmLabel: "Ya, hapus", tone: "danger" }))) return;
     setDeleting(album.id);
     try {
       await api.delete(`/admin/gallery-albums/${album.id}`);
@@ -189,6 +191,7 @@ export default function AdminGalleryPage() {
 
   return (
     <div className="content-console">
+      {confirmDialog}
       <header className="content-hero">
         <div className="content-hero-text">
           <div className="content-eyebrow"><span className="content-eyebrow-dot" /><span>PENGATURAN KONTEN // GALERI KEGIATAN</span></div>

@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { Construction } from "lucide-react";
 import { api } from "@/services/api";
+import { useConfirmDialog } from "@/app/admin/useConfirmDialog";
 
 export function MaintenanceCard() {
   const [state, setState] = useState(null);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [confirmDialog, confirm] = useConfirmDialog();
 
   useEffect(() => {
     api.get("/admin/maintenance")
@@ -17,7 +19,7 @@ export function MaintenanceCard() {
   }, []);
 
   const save = async (maintenance) => {
-    if (maintenance && !window.confirm("Aktifkan mode maintenance? Pengunjung dan peserta akan melihat halaman 503 sampai mode ini dimatikan.")) return;
+    if (maintenance && !state?.maintenance && !(await confirm({ title: "Aktifkan mode maintenance?", message: "Pengunjung dan peserta akan melihat halaman 503 sampai mode ini dimatikan. Staf tetap bisa memakai dashboard.", confirmLabel: "Ya, aktifkan", tone: "danger" }))) return;
     setSaving(true);
     setFeedback(null);
     try {
@@ -35,6 +37,7 @@ export function MaintenanceCard() {
 
   return (
     <div className="admin-card">
+      {confirmDialog}
       <div className="admin-card-header">
         <div className="flex items-center gap-2">
           <Construction className="w-4 h-4 text-blue-600" aria-hidden="true" />
