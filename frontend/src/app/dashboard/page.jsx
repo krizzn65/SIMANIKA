@@ -73,6 +73,26 @@ function RegistrationCard({ item, onComplete }) {
   );
 }
 
+// Shown only while an admin has the testimonial form open.
+function TestimonialCard({ submitted }) {
+  return (
+    <article className="dashboard-entry dashboard-entry--testimonial">
+      <div className="dashboard-entry__top">
+        <span className="dashboard-entry__type">TESTIMONI</span>
+        {submitted && <span className="dashboard-entry__status dashboard-entry__status--accepted">Terkirim</span>}
+      </div>
+      <div className="dashboard-entry__body">
+        <h2>Ceritakan pengalamanmu di HIMANIKA</h2>
+        <p>{submitted ? "Terima kasih, testimonimu sudah kami terima." : "Tulis kesan singkatmu dan unggah foto profil untuk ditampilkan di website SIMANIKA."}</p>
+      </div>
+      <div className="dashboard-entry__bottom">
+        <span>{submitted ? "Sekali kirim per periode" : "Pengisian sedang dibuka"}</span>
+        {!submitted && <Link href="/dashboard/testimoni/">Isi testimoni <span aria-hidden="true">↗</span></Link>}
+      </div>
+    </article>
+  );
+}
+
 function DashboardContent() {
   const router = useRouter();
   const { user } = useAuth();
@@ -80,6 +100,7 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [testimonial, setTestimonial] = useState(null);
 
   useEffect(() => {
     if (STAFF_ROLES.includes(user?.role)) {
@@ -106,6 +127,11 @@ function DashboardContent() {
     return () => controller.abort();
   }, [user?.id, user?.role, attempt]);
 
+  useEffect(() => {
+    if (!user || STAFF_ROLES.includes(user?.role)) return;
+    api.get("/user/testimonial").then(({ data }) => setTestimonial(data?.data ?? null)).catch(() => setTestimonial(null));
+  }, [user?.id, user?.role]);
+
   if (STAFF_ROLES.includes(user?.role)) {
     return null;
   }
@@ -120,6 +146,12 @@ function DashboardContent() {
             <p className="dashboard-intro">Semua kegiatan yang kamu ikuti, dalam satu tempat.</p>
           </div>
         </header>
+
+        {testimonial?.open && (
+          <section className="dashboard-list dashboard-list--testimonial" aria-label="Testimoni">
+            <div className="dashboard-grid"><TestimonialCard submitted={testimonial.submitted} /></div>
+          </section>
+        )}
 
         {loading ? (
           <div className="dashboard-state" role="status" aria-live="polite">

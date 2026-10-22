@@ -124,3 +124,6 @@
 @media (prefers-reduced-motion: reduce) {
   .dashboard-page * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+.dashboard-list--testimonial { margin-bottom: 2rem; }
+.dashboard-entry--testimonial { border-top-color: #7a5af8; }
+.dashboard-entry--testimonial .dashboard-entry__type { color: #5b3fd1; }

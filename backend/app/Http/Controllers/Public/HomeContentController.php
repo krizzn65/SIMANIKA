@@ -55,31 +55,6 @@ class HomeContentController extends Controller
         ]]);
     }
 
-    public function testimonials()
-    {
-        $content = DB::table('site_contents')->orderBy('id')->first();
-        if (!$content) return response()->json(['data' => []]);
-
-        $testimonials = DB::table('testimonials')
-            ->where('site_content_id', $content->id)
-            ->where('status', 'approved')
-            ->where('is_visible', true)
-            ->orderBy('sort_order')
-            ->latest('id')
-            ->get()
-            ->map(fn ($item) => [
-                'id' => $item->id,
-                'nama' => $item->nama,
-                'angkatan' => $item->angkatan,
-                'quote' => $item->quote,
-                'foto_url' => self::imageUrl($item->foto),
-                'sort_order' => $item->sort_order,
-                'created_at' => $item->created_at ?? null,
-            ]);
-
-        return response()->json(['data' => $testimonials]);
-    }
-
     public function image(string $kind, string $filename)
     {
         abort_unless(in_array($kind, ['gallery', 'testimonials', 'albums'], true) && preg_match('~^[A-Za-z0-9_-]+\.(?:jpe?g|png|webp)$~i', $filename), 404);

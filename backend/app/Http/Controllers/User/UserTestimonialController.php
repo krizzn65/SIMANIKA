@@ -3,90 +3,71 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Public\HomeContentController as PublicHomeContentController;
+use App\Support\ImageCompressor;
+use App\Support\TestimonialForm;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
+// Dashboard testimonial card: only while an admin has the form open, once per opening.
 class UserTestimonialController extends Controller
 {
-    private function contentId(): int
+    public function show(Request $request): JsonResponse
     {
-        $id = DB::table('site_contents')->orderBy('id')->value('id');
-        if ($id) return $id;
-        return DB::table('site_contents')->insertGetId(['created_at' => now(), 'updated_at' => now()]);
+        $form = TestimonialForm::current();
+        return response()->json(['data' => [
+            'open' => $form['open'],
+            'submitted' => $form['open'] && $this->submittedThisRound($request->user()->getKey(), $form),
+        ]]);
     }
 
-    public function index(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $userId = $request->user()->id;
-        $items = DB::table('testimonials')
-            ->where('user_id', $userId)
-            ->orderByDesc('id')
-            ->get()
-            ->map(fn ($item) => [
-                'id' => $item->id,
-                'nama' => $item->nama,
-                'angkatan' => $item->angkatan,
-                'quote' => $item->quote,
-                'foto_url' => PublicHomeContentController::imageUrl($item->foto),
-                'status' => $item->status ?? 'pending',
-                'is_visible' => (bool) ($item->is_visible ?? false),
-                'created_at' => $item->created_at,
-            ]);
+        $form = TestimonialForm::current();
+        abort_unless($form['open'], 409, 'Pengisian testimoni sedang ditutup.');
+        $userId = $request->user()->getKey();
+        abort_if($this->submittedThisRound($userId, $form), 409, 'Kamu sudah mengirim testimoni.');
 
-        return response()->json(['data' => $items]);
-    }
-
-    public function store(Request $request)
-    {
-        $user = $request->user();
-
-        $validated = $request->validate([
-            'quote' => ['required', 'string', 'min:10', 'max:1500'],
-            'angkatan' => ['nullable', 'string', 'max:120'],
-            'photo' => ['nullable', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+        $data = $request->validate([
+            'nama' => ['required', 'string', 'max:120'],
+            'angkatan' => ['required', 'string', 'max:120'],
+            'quote' => ['required', 'string', 'min:20', 'max:600'],
+            'photo' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
         ], [
-            'quote.required' => 'Pesan testimoni wajib diisi.',
-            'quote.min' => 'Pesan testimoni minimal 10 karakter.',
-            'quote.max' => 'Pesan testimoni maksimal 1500 karakter.',
+            'photo.required' => 'Foto profil wajib diunggah.',
+            'quote.min' => 'Testimoni minimal 20 karakter.',
         ]);
 
-        $contentId = $this->contentId();
-
-        $photoPath = null;
-        if ($request->hasFile('photo')) {
-            $photoPath = $request->file('photo')->store('landing/testimonials', 'public');
-        } elseif (!empty($user->foto_profil)) {
-            $photoPath = $user->foto_profil;
-        }
-
-        $nextSortOrder = (DB::table('testimonials')->where('site_content_id', $contentId)->max('sort_order') ?? 0) + 1;
-
-        $displayName = !empty($user->name) ? $user->name : (!empty($user->nama) ? $user->nama : explode('@', $user->email)[0]);
-
-        $id = DB::table('testimonials')->insertGetId([
-            'site_content_id' => $contentId,
-            'user_id' => $user->id,
-            'nama' => $displayName,
-            'angkatan' => !empty($validated['angkatan']) ? trim($validated['angkatan']) : 'Mahasiswa HIMANIKA',
-            'quote' => trim($validated['quote']),
-            'foto' => $photoPath,
-            'sort_order' => $nextSortOrder,
-            // Shown on the public landing page, so an admin approves it first.
-            'status' => 'pending',
-            'is_visible' => false,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        return response()->json([
-            'message' => 'Testimoni terkirim dan sedang menunggu persetujuan admin.',
-            'data' => [
-                'id' => $id,
+        $photo = ImageCompressor::store($request->file('photo'), 'landing/testimonials', 600)
+            ?? $request->file('photo')->store('landing/testimonials', 'public');
+        try {
+            DB::table('testimonials')->insert([
+                'site_content_id' => TestimonialForm::contentId(),
+                'user_id' => $userId,
+                'nama' => trim($data['nama']),
+                'angkatan' => trim($data['angkatan']),
+                'quote' => trim($data['quote']),
+                'foto' => $photo,
+                'sort_order' => 0,
+                // Shown on the landing page, so an admin approves it first.
                 'status' => 'pending',
                 'is_visible' => false,
-            ],
-        ], 201);
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } catch (\Throwable $error) {
+            Storage::disk('public')->delete($photo);
+            throw $error;
+        }
+
+        return response()->json(['message' => 'Terima kasih! Testimonimu sudah kami terima.'], 201);
+    }
+
+    private function submittedThisRound(int $userId, array $form): bool
+    {
+        return DB::table('testimonials')->where('user_id', $userId)
+            ->when($form['opened_at'], fn ($query, $openedAt) => $query->where('created_at', '>=', $openedAt))
+            ->exists();
     }
 }

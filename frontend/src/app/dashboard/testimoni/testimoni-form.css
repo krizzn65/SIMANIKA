@@ -1,0 +1,10 @@
+.testimonial-page { max-width: 760px; }
+.testimonial-page__back { display: inline-block; margin-bottom: 1.25rem; color: var(--blue-dark); font-size: .9rem; font-weight: 600; text-decoration: none; }
+.testimonial-page__back:hover { text-decoration: underline; text-underline-offset: 3px; }
+.testimonial-form { border-radius: 0; border-top: 3px solid #7a5af8; }
+.testimonial-form__count { align-self: flex-end; font-variant-numeric: tabular-nums; }
+.testimonial-form__photo { display: flex; align-items: center; gap: 1rem; }
+.testimonial-form__photo > :last-child { flex: 1; min-width: 0; }
+.testimonial-form__preview { display: grid; flex: none; place-items: center; width: 72px; height: 72px; overflow: hidden; border: 1px dashed #aebccf; border-radius: 50%; background: #f5f8fc; color: #7b8aa0; font-size: .75rem; }
+.testimonial-form__preview img { width: 100%; height: 100%; object-fit: cover; }
+.testimonial-form .event-dynamic-field > :is(input, textarea) { border-radius: 0; }

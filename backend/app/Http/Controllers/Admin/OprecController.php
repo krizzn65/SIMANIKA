@@ -7,10 +7,10 @@ use App\Http\Requests\Oprec\SaveOprecRequest;
 use App\Http\Resources\OprecResource;
 use App\Models\Oprec;
 use App\Models\OprecDivision;
+use App\Support\ImageCompressor;
 use App\Support\OprecSchema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -23,38 +23,10 @@ class OprecController extends Controller
     {
         $field = $request->hasFile('logo') ? 'logo' : 'poster';
         $request->validate([$field => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120']]);
-        $path = $this->storeCompressedImage($request->file($field), 'oprec/posters')
+        $path = ImageCompressor::store($request->file($field), 'oprec/posters')
             ?? $request->file($field)->store('oprec/posters', 'public');
         if (!$path) return response()->json(['message' => 'Berkas tidak dapat disimpan. Periksa izin storage hosting.'], 507);
         return response()->json(['url' => route('public.oprec-poster', ['filename' => basename($path)])]);
-    }
-
-    /**
-     * Posters are shown on the public site; phone photos and exports are often
-     * several MB. Re-encode to WebP at most 1400px wide so the page loads fast.
-     * Returns null (caller keeps the original) when GD cannot handle the file.
-     */
-    private function storeCompressedImage(\Illuminate\Http\UploadedFile $file, string $dir): ?string
-    {
-        if (!function_exists('imagewebp') || !($source = @imagecreatefromstring((string) file_get_contents($file->getRealPath())))) return null;
-        $width = imagesx($source);
-        $height = imagesy($source);
-        $scale = min(1, 1400 / max(1, $width));
-        $image = $source;
-        if ($scale < 1) {
-            $image = imagecreatetruecolor((int) round($width * $scale), (int) round($height * $scale));
-            imagealphablending($image, false);
-            imagesavealpha($image, true);
-            imagecopyresampled($image, $source, 0, 0, 0, 0, imagesx($image), imagesy($image), $width, $height);
-            imagedestroy($source);
-        }
-        ob_start();
-        $ok = imagewebp($image, null, 82);
-        $data = ob_get_clean();
-        imagedestroy($image);
-        if (!$ok || !$data || strlen($data) >= $file->getSize()) return null;
-        $path = $dir.'/'.Str::random(40).'.webp';
-        return Storage::disk('public')->put($path, $data) ? $path : null;
     }
 
     public function uploadGuidebook(Request $request)

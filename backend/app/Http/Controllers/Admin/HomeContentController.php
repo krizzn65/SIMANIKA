@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Public\HomeContentController as PublicHomeContentController;
+use App\Support\TestimonialForm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -213,6 +214,17 @@ class HomeContentController extends Controller
         }
         if ($item->foto && $path !== $item->foto && str_starts_with($item->foto, 'landing/testimonials/')) Storage::disk('public')->delete($item->foto);
         return response()->json(['data' => ['id' => $id]]);
+    }
+
+    public function testimonialForm()
+    {
+        return response()->json(['data' => ['open' => TestimonialForm::current()['open']]]);
+    }
+
+    public function updateTestimonialForm(Request $request)
+    {
+        $data = $request->validate(['open' => ['required', 'boolean']]);
+        return response()->json(['data' => ['open' => TestimonialForm::set($data['open'])['open']]]);
     }
 
     public function toggleTestimonialVisibility(int $id)
