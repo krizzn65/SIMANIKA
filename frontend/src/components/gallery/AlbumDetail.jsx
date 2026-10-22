@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowUpRight, ChevronLeft, ChevronRight, FolderOpen, X } from "lucide-react";
 import { publicApi } from "@/services/publicApi";
 import { formatAlbumDate, safeDriveUrl, validAlbumSlug } from "@/lib/galleryAlbums";
-import AnimatedContent from "@/components/ui/AnimatedContent";
+import { InView } from "@/components/motion/InView";
 import { useScrollLock } from "@/components/motion/SmoothScroll";
 
 function Lightbox({ photos, index, onChange, onClose }) {
@@ -85,7 +85,7 @@ export function AlbumDetail() {
   return (
     <div className="galeri-container galeri-directory">
       {back}
-      <AnimatedContent blur={6} as="header" className="galeri-header galeri-header--album">
+      <InView as="header" className="galeri-header galeri-header--album">
         <span className="galeri-mono galeri-eyebrow"><span aria-hidden="true" />{album.event_date ? formatAlbumDate(album.event_date).toUpperCase() : "GALERI KEGIATAN"} · {photos.length} FOTO</span>
         <h1>{album.title}</h1>
         {album.description && <p>{album.description}</p>}
@@ -94,16 +94,16 @@ export function AlbumDetail() {
             <FolderOpen size={18} aria-hidden="true" /> Lihat dokumentasi lengkap di Google Drive <ArrowUpRight size={16} aria-hidden="true" />
           </a>
         )}
-      </AnimatedContent>
+      </InView>
 
       {photos.length ? (
-        <AnimatedContent stagger={0.08} distance={50} className="galeri-photos">
+        <InView stagger className="galeri-photos">
           {photos.map((photo, index) => (
             <button key={photo.id} type="button" className="galeri-photo" onClick={() => setOpen(index)} aria-label={`Perbesar foto ${index + 1}${photo.alt ? `: ${photo.alt}` : ""}`}>
               <img src={photo.image_url} alt={photo.alt || ""} loading={index < 6 ? "eager" : "lazy"} decoding="async" />
             </button>
           ))}
-        </AnimatedContent>
+        </InView>
       ) : (
         <div className="galeri-empty"><p>Belum ada foto di album ini{driveUrl ? ", lihat dokumentasi lengkap di Google Drive." : "."}</p></div>
       )}

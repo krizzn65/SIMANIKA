@@ -3,7 +3,7 @@ import { OprecPreview } from "./OprecPreview";
 import { OprecFaq } from "./OprecFaq";
 import { OprecBrief } from "./OprecBrief";
 import { divisionPreview } from "./divisionPreview";
-import AnimatedContent from "@/components/ui/AnimatedContent";
+import { InView } from "@/components/motion/InView";
 
 const defaultFaq = [
   { pertanyaan: "Bagaimana cara mendaftar OPREC?", jawaban: "Saat pendaftaran dibuka, formulir akan tampil di bagian pendaftaran pada halaman ini. Lengkapi kolom yang diminta, unggah berkas jika diperlukan, lalu kirim. Pastikan kamu melihat konfirmasi bahwa pendaftaran berhasil diterima." },
@@ -34,7 +34,7 @@ export function Oprec({ oprec, onRefresh }) {
   return <>
     <header className="oprec-hero oprec-container">
       <span className="oprec-mono oprec-eyebrow"><span aria-hidden="true" />HIMANIKA / OPEN RECRUITMENT</span>
-      <AnimatedContent blur={6} className="oprec-hero__row">
+      <InView className="oprec-hero__row">
         <div>
           <h1 className={(oprec?.headline?.length || 0) > 24 ? "oprec-hero__title--long" : undefined}>{oprec?.headline || <>Ambil peran.<br /><em>Mulai ceritamu.</em></>}</h1>
           {oprec?.periode && <p className="oprec-mono oprec-hero__period">PERIODE {oprec.periode}</p>}
@@ -43,12 +43,12 @@ export function Oprec({ oprec, onRefresh }) {
           <OprecBrief text={oprec?.deskripsi || "Ada tempat untuk idemu, ruang untuk belajar, dan teman untuk melangkah bersama. Temukan peranmu di HIMANIKA."} />
           <a className="oprec-button oprec-hero__button" href="#pendaftaran">Lihat pendaftaran & pengumuman <span aria-hidden="true">↗</span></a>
         </div>
-      </AnimatedContent>
+      </InView>
     </header>
     <section className="oprec-divisions oprec-container" id="divisi-oprec" aria-labelledby="division-heading">
       <div className="oprec-section-heading"><div><h2 id="division-heading">Temukan tempatmu.</h2></div></div>
       {!hasOpenDivisions && <p className="oprec-division-context">Setiap divisi di HIMANIKA punya peran dan fokusnya masing-masing. Kenali lebih dekat dan temukan ruang terbaik untuk kamu berkarya serta berkembang.</p>}
-      <AnimatedContent stagger={0.08} distance={50} className="oprec-division-grid">{divisions.map((division, i) => {
+      <InView stagger className="oprec-division-grid">{divisions.map((division, i) => {
         const namaLengkap = division.namaLengkap || divisionNames.get(division.nama.toLowerCase());
         return <article className="oprec-division" key={`${division.id}-${i}`}>
           <div className="oprec-division__top"><DivisionLogo division={division} /><span className="oprec-division__number oprec-mono">{String(i + 1).padStart(2, "0")}</span></div>
@@ -56,13 +56,13 @@ export function Oprec({ oprec, onRefresh }) {
           {namaLengkap && <span className="oprec-division__full">{namaLengkap}</span>}
           <p>{division.deskripsi || "Informasi peran divisi akan diumumkan oleh pengurus."}</p>
         </article>;
-      })}</AnimatedContent>
+      })}</InView>
     </section>
     <section className="oprec-registration-section" id="pendaftaran" aria-labelledby="registration-heading"><div className="oprec-container">
       <div className="oprec-section-heading"><div><h2 id="registration-heading">Pendaftaran & pengumuman.</h2></div></div>
       <OprecPreview key={oprec?.poster || "no-poster"} oprec={oprec ? { ...oprec, pengumuman: { published: false, tanggal: null, pesan: "" } } : null} initialNow={Date.now()} onRefresh={onRefresh} />
       {oprec?.announcement && <AnnouncementCard key={oprec.id} periodId={oprec.id} period={oprec.periode} announcement={oprec.announcement} serverNow={oprec.serverNow || new Date().toISOString()} />}
     </div></section>
-    <section className="oprec-faq-section oprec-container" id="faq-oprec" aria-labelledby="faq-heading"><AnimatedContent blur={6}><h2 id="faq-heading">Masih penasaran?</h2><p>Hal-hal yang perlu kamu tahu<br />sebelum mengambil langkah pertama.</p></AnimatedContent><OprecFaq faq={faq} /></section>
+    <section className="oprec-faq-section oprec-container" id="faq-oprec" aria-labelledby="faq-heading"><InView><h2 id="faq-heading">Masih penasaran?</h2><p>Hal-hal yang perlu kamu tahu<br />sebelum mengambil langkah pertama.</p></InView><OprecFaq faq={faq} /></section>
   </>;
 }

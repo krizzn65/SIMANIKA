@@ -1,6 +1,6 @@
 import { TestimonialMarqueeColumns } from "@/components/ui/testimonial-v2";
 import { PixelCorner } from "@/components/ui/PixelCorner";
-import AnimatedContent from "@/components/ui/AnimatedContent";
+import { InView } from "@/components/motion/InView";
 
 export function TestimonialsSection({ testimonials }) {
   return (
@@ -16,7 +16,7 @@ export function TestimonialsSection({ testimonials }) {
         <PixelCorner position="bottom-left" />
         <PixelCorner position="bottom-right" />
 
-        <AnimatedContent blur={6} as="header" className="testimonials-header">
+        <InView as="header" className="testimonials-header">
           <p className="testimonials-eyebrow">
             <span aria-hidden="true" />
             05 / TESTIMONI
@@ -24,7 +24,7 @@ export function TestimonialsSection({ testimonials }) {
           <h2 className="testimonials-title" id="testimonials-title">
             Apa kata mereka?
           </h2>
-        </AnimatedContent>
+        </InView>
 
         {/* 21st.dev Testimonial V2 Scrolling Columns */}
         {testimonials?.length === 0 ? <p>Testimoni sedang disiapkan.</p> : <TestimonialMarqueeColumns testimonials={testimonials} />}

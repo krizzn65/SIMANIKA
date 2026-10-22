@@ -2421,16 +2421,20 @@ svg {
   pointer-events: none;
 }
 
+html.motion-ok [data-reveal]:not([data-inview]),
+html.motion-ok [data-reveal-stagger]:not([data-inview]) > *,
 html.motion-ok .reveal-word,
 html.motion-ok [data-hero-step] {
   opacity: 0;
   transform: translate3d(0, var(--motion-distance), 0);
 }
 
-/* AnimatedContent: hidden only until GSAP takes over (or fails to load). */
-html.motion-ok [data-ac]:not([data-ac-done]),
-html.motion-ok [data-ac-stagger]:not([data-ac-done]) > * {
-  opacity: 0;
+html.motion-ok [data-reveal]:not([data-revealed]),
+html.motion-ok [data-reveal-stagger]:not([data-revealed]) > * {
+  transition:
+    opacity var(--motion-duration) var(--motion-ease),
+    transform var(--motion-duration) var(--motion-ease);
+  transition-delay: calc(var(--reveal-delay, 0ms) + var(--reveal-i, 0) * var(--motion-stagger));
 }
 
 /* Hero plays on load: words first, then supporting elements 80ms apart. */

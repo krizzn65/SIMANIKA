@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CardFanCarousel } from "@/components/ui/CardFanCarousel";
 import { PixelCorner } from "@/components/ui/PixelCorner";
-import AnimatedContent from "@/components/ui/AnimatedContent";
+import { InView } from "@/components/motion/InView";
 
 /* ── Default placeholder gallery images ──
    These will be replaced with dynamic images from the backend API.
@@ -69,7 +69,7 @@ export function GallerySection({ images }) {
 
         <PixelCorner position="top-right" className="gallery-pixel-corner" />
 
-        <AnimatedContent blur={6} as="header" className="gallery-header">
+        <InView as="header" className="gallery-header">
           <p className="gallery-eyebrow">
             <span aria-hidden="true" />
             04 / GALERI KEGIATAN
@@ -85,7 +85,7 @@ export function GallerySection({ images }) {
           <Link className="gallery-all-link" href="/galeri">
             Lihat semua dokumentasi <span aria-hidden="true">↗</span>
           </Link>
-        </AnimatedContent>
+        </InView>
 
         {galleryImages.length ? (
           <CardFanCarousel key={galleryImages.map((img) => img.imgUrl).join("|")} cards={galleryImages} />
