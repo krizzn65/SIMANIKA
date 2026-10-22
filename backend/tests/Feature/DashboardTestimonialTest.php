@@ -80,13 +80,14 @@ class DashboardTestimonialTest extends TestCase
         $this->actingAs($admin, 'sanctum')->getJson('/api/admin/home-content/testimonial-invite')->assertJsonPath('data', null);
     }
 
-    public function test_photo_is_required(): void
+    public function test_without_a_photo_the_account_photo_is_used(): void
     {
         $admin = $this->admin();
         $user = $this->user('photo@example.test');
+        $user->forceFill(['foto_profil' => 'https://lh3.googleusercontent.com/a/avatar'])->save();
         $token = $this->actingAs($admin, 'sanctum')->postJson('/api/admin/home-content/testimonial-invite')->json('data.token');
         $this->actingAs($user, 'sanctum')->postJson('/api/user/testimonial/claim', ['token' => $token])->assertOk();
-        $this->actingAs($user, 'sanctum')->postJson('/api/user/testimonial', ['nama' => 'A', 'angkatan' => 'B', 'quote' => str_repeat('x', 30)])
-            ->assertStatus(422)->assertJsonValidationErrors('photo');
+        $this->actingAs($user, 'sanctum')->postJson('/api/user/testimonial', ['nama' => 'A', 'angkatan' => 'B', 'quote' => str_repeat('x', 30)])->assertCreated();
+        $this->assertSame('https://lh3.googleusercontent.com/a/avatar', DB::table('testimonials')->where('user_id', $user->id)->value('foto'));
     }
 }

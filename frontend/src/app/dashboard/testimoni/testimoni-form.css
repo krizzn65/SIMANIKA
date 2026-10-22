@@ -8,3 +8,4 @@
 .testimonial-form__preview { display: grid; flex: none; place-items: center; width: 72px; height: 72px; overflow: hidden; border: 1px dashed #aebccf; border-radius: 50%; background: #f5f8fc; color: #7b8aa0; font-size: .75rem; }
 .testimonial-form__preview img { width: 100%; height: 100%; object-fit: cover; }
 .testimonial-form .event-dynamic-field > :is(input, textarea) { border-radius: 0; }
+.testimonial-form__optional { color: var(--ink-muted); font-weight: 400; }

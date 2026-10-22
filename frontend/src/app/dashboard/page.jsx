@@ -97,7 +97,7 @@ function TestimonialCard({ submitted }) {
       </div>
       <div className="dashboard-entry__body">
         <h2>Ceritakan pengalamanmu di HIMANIKA</h2>
-        <p>{submitted ? "Terima kasih, testimonimu sudah kami terima." : "Tulis kesan singkatmu dan unggah foto profil untuk ditampilkan di website SIMANIKA."}</p>
+        <p>{submitted ? "Terima kasih, testimonimu sudah kami terima." : "Tulis kesan singkatmu tentang HIMANIKA untuk ditampilkan di website SIMANIKA."}</p>
       </div>
       <div className="dashboard-entry__bottom">
         <span>{submitted ? "Testimoni sudah dikirim" : "Undangan dari pengurus"}</span>

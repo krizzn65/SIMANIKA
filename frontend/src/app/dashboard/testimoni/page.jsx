@@ -43,6 +43,7 @@ function TestimonialForm() {
     if (!form.reportValidity()) return;
     const body = new FormData(form);
     const photo = body.get("photo");
+    if (photo instanceof File && photo.size === 0) body.delete("photo");
     if (photo instanceof File && photo.size > 5 * 1024 * 1024) {
       setErrors({ photo: ["Foto maksimal 5 MB."] }); setMessage("Periksa foto yang dipilih.");
       requestAnimationFrame(() => errorRef.current?.focus());
@@ -88,11 +89,11 @@ function TestimonialForm() {
           <small className="testimonial-form__count" aria-live="polite">{quote.length}/{QUOTE_MAX}</small>
         </div>
         <div className="event-dynamic-field">
-          <label htmlFor="testimoni-photo">Foto profil<b aria-label="wajib"> *</b></label>
-          <small>Foto wajah yang jelas. JPG, PNG, atau WebP · maksimal 5 MB.</small>
+          <label htmlFor="testimoni-photo">Foto profil <span className="testimonial-form__optional">(opsional)</span></label>
+          <small>Kosongkan untuk memakai foto akunmu (misalnya foto Google). JPG, PNG, atau WebP · maksimal 5 MB.</small>
           <div className="testimonial-form__photo">
-            <span className="testimonial-form__preview" aria-hidden="true">{preview ? <img src={preview} alt="" /> : <span>Foto</span>}</span>
-            <FileUploadInput id="testimoni-photo" name="photo" required accept=".jpg,.jpeg,.png,.webp" invalid={Boolean(errors.photo)} onChange={pickPhoto} emptyText="Belum ada foto dipilih" />
+            <span className="testimonial-form__preview" aria-hidden="true">{preview || user?.fotoProfil ? <img src={preview || user.fotoProfil} alt="" referrerPolicy="no-referrer" /> : <span>Foto</span>}</span>
+            <FileUploadInput id="testimoni-photo" name="photo" accept=".jpg,.jpeg,.png,.webp" invalid={Boolean(errors.photo)} onChange={pickPhoto} emptyText={user?.fotoProfil ? "Memakai foto akun" : "Belum ada foto dipilih"} />
           </div>
         </div>
       </fieldset>

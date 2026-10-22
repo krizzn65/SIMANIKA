@@ -50,14 +50,16 @@ class UserTestimonialController extends Controller
             'nama' => ['required', 'string', 'max:120'],
             'angkatan' => ['required', 'string', 'max:120'],
             'quote' => ['required', 'string', 'min:20', 'max:600'],
-            'photo' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'photo' => ['nullable', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
         ], [
-            'photo.required' => 'Foto profil wajib diunggah.',
             'quote.min' => 'Testimoni minimal 20 karakter.',
         ]);
 
-        $photo = ImageCompressor::store($request->file('photo'), 'landing/testimonials', 600)
-            ?? $request->file('photo')->store('landing/testimonials', 'public');
+        // Without an upload, fall back to the account photo (e.g. the Google avatar URL).
+        $uploaded = $request->hasFile('photo')
+            ? (ImageCompressor::store($request->file('photo'), 'landing/testimonials', 600) ?? $request->file('photo')->store('landing/testimonials', 'public'))
+            : null;
+        $photo = $uploaded ?? $request->user()->foto_profil;
         try {
             DB::transaction(function () use ($data, $userId, $member, $photo) {
                 // Claimed atomically so a double submit cannot create two rows.
@@ -80,7 +82,7 @@ class UserTestimonialController extends Controller
                 ]);
             });
         } catch (\Throwable $error) {
-            Storage::disk('public')->delete($photo);
+            if ($uploaded) Storage::disk('public')->delete($uploaded);
             throw $error;
         }
 
