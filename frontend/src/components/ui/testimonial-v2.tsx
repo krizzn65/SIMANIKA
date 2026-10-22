@@ -154,11 +154,14 @@ export const TestimonialMarqueeColumns = (props: {
     ? props.testimonials 
     : defaultTestimonials;
 
+  // Always fill three columns: with few testimonials the list repeats, each
+  // column starting at a different item so neighbours never line up.
   const count = items.length;
-  const colSize = Math.ceil(count / 3);
-  const firstColumn = items.slice(0, colSize);
-  const secondColumn = items.slice(colSize, colSize * 2);
-  const thirdColumn = items.slice(colSize * 2);
+  const perColumn = Math.max(3, Math.ceil(count / 3));
+  const column = (offset: number) => count
+    ? Array.from({ length: perColumn }, (_, i) => items[(offset * perColumn + i) % count])
+    : [];
+  const [firstColumn, secondColumn, thirdColumn] = [column(0), column(1), column(2)];
 
   return (
     <div 
