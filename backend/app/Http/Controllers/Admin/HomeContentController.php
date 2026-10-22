@@ -227,7 +227,7 @@ class HomeContentController extends Controller
             'quota' => ['nullable', 'integer', 'min:1', 'max:1000'],
             'expires_at' => ['nullable', 'date', 'after:now'],
         ]);
-        return response()->json(['data' => $this->invitePayload(TestimonialInvite::create($data['quota'] ?? null, $data['expires_at'] ?? null))], 201);
+        return response()->json(['data' => $this->invitePayload(TestimonialInvite::create($data['quota'] ?? null, $request->date('expires_at')?->setTimezone(config('app.timezone'))->toDateTimeString()))], 201);
     }
 
     public function revokeTestimonialInvite()

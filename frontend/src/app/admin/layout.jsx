@@ -281,7 +281,7 @@ export default function AdminLayout({ children }) {
             {children}
           </main>
         </div>
-        <Toaster position="top-right" richColors />
+        <Toaster position="top-center" richColors />
       </div>
     </AdminRoute>
   );
