@@ -1,0 +1,87 @@
+name: Deploy testimonial form backend (one-time)
+
+on:
+  push:
+    branches: [only_deploy]
+    paths: [".github/workflows/deploy-testimonials.yml"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      SITE: https://himanika.wsmif.myhost.id
+      BASE: 56bd517
+      CHANGED: routes/api.php app/Http/Controllers/Admin/HomeContentController.php app/Http/Controllers/Public/HomeContentController.php
+      MIGRATION: database/migrations/2026_10_21_000001_add_status_and_user_to_testimonials_table.php
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: sudo apt-get install -y -qq lftp >/dev/null
+      - name: Back up and stop if the server copies changed
+        run: |
+          for f in $CHANGED; do
+            mkdir -p "backup/$(dirname $f)"
+            lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; get /laravel_app/$f -o backup/$f; bye"
+            git show "$BASE:backend/$f" | diff -q -w -B --strip-trailing-cr - "backup/$f" >/dev/null || { echo "::error::Server copy of $f differs; aborting."; git show "$BASE:backend/$f" | diff -w -B --strip-trailing-cr - "backup/$f" | head -40; exit 1; }
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: testimonials-backup
+          path: backup/
+
+      - name: Upload migration and new controller (not yet routed)
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no;
+            put backend/$MIGRATION -o /laravel_app/$MIGRATION;
+            put backend/app/Http/Controllers/User/UserTestimonialController.php -o /laravel_app/app/Http/Controllers/User/UserTestimonialController.php;
+            bye"
+
+      - name: Run the testimonial migration through a one-time script
+        run: |
+          TOKEN=$(openssl rand -hex 24)
+          NAME="mig-$(openssl rand -hex 10).php"
+          echo "$NAME" > script-name.txt
+          sed "s/__TOKEN__/$TOKEN/" > "$NAME" <<'PHP'
+          <?php
+          if (!hash_equals('__TOKEN__', (string) ($_GET['t'] ?? ''))) { http_response_code(404); exit; }
+          header('Content-Type: text/plain');
+          require __DIR__.'/laravel_app/vendor/autoload.php';
+          $app = require __DIR__.'/laravel_app/bootstrap/app.php';
+          $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+          $status = $kernel->call('migrate', ['--force' => true, '--path' => 'database/migrations/2026_10_21_000001_add_status_and_user_to_testimonials_table.php']);
+          echo $kernel->output(), "\nstatus=", $status, "\n";
+          echo 'columns=', implode(',', Illuminate\Support\Facades\Schema::getColumnListing('testimonials')), "\n";
+          echo 'rows=', Illuminate\Support\Facades\DB::table('testimonials')->count(), "\n";
+          $kernel->call('optimize:clear');
+          echo $kernel->output();
+          PHP
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; put $NAME -o /$NAME; bye"
+          curl -sS --max-time 120 "$SITE/$NAME?t=$TOKEN" | tee result.txt
+          grep -q "status=0" result.txt
+          grep -q "columns=.*status.*is_visible" result.txt
+
+      - name: Remove the one-time script
+        if: always()
+        run: |
+          [ -f script-name.txt ] || exit 0
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; rm /$(cat script-name.txt); bye" && echo "Script removed."
+
+      - name: Upload the code that uses the new columns
+        run: for f in $CHANGED; do lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; put backend/$f -o /laravel_app/$f; bye"; done
+
+      - name: Verify, roll back code on failure
+        run: |
+          code() { curl -s -o /dev/null --max-time 20 -w '%{http_code}' "$@"; }
+          ping=$(code "$SITE/api/ping"); home=$(code "$SITE/api/public/home"); list=$(code "$SITE/api/public/testimonials")
+          mine=$(code -H "Accept: application/json" "$SITE/api/user/testimonials")
+          echo "ping=$ping home=$home public_testimonials=$list user_testimonials_without_login=$mine"
+          curl -s --max-time 20 "$SITE/api/public/testimonials" | head -c 300; echo
+          if [ "$ping" != 200 ] || [ "$home" != 200 ] || [ "$list" != 200 ] || [ "$mine" != 401 ]; then
+            echo "::error::Check failed; restoring previous code (new columns are harmless to it)."
+            for f in $CHANGED; do lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; put backup/$f -o /laravel_app/$f; bye"; done
+            exit 1
+          fi
