@@ -816,6 +816,37 @@
   cursor: not-allowed;
 }
 
+/* FAQ Item Footer & Delete Button */
+.oprec-builder__faq-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.oprec-builder__delete-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 0;
+}
+
+.oprec-builder__delete-btn:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+  color: #b91c1c;
+}
+
 /* Advanced Settings Accordion */
 .oprec-builder__advanced {
   margin-top: 16px;
@@ -1090,6 +1121,8 @@
   line-height: 1.5;
   color: #475569;
   margin: 0;
+  white-space: pre-line;
+  word-break: break-word;
 }
 
 /* IFEST-style Registration Card */

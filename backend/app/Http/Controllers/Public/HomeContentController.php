@@ -25,10 +25,59 @@ class HomeContentController extends Controller
 
         $gallery = DB::table('galleries')->where('site_content_id', $content->id)->orderBy('sort_order')->orderBy('id')->get()
             ->map(fn ($item) => ['id' => $item->id, 'image_url' => self::imageUrl($item->image), 'alt' => $item->alt, 'sort_order' => $item->sort_order]);
-        $testimonials = DB::table('testimonials')->where('site_content_id', $content->id)->orderBy('sort_order')->orderBy('id')->get()
-            ->map(fn ($item) => ['id' => $item->id, 'nama' => $item->nama, 'angkatan' => $item->angkatan, 'quote' => $item->quote, 'foto_url' => self::imageUrl($item->foto), 'sort_order' => $item->sort_order]);
+        $testimonials = DB::table('testimonials')
+            ->where('site_content_id', $content->id)
+            ->where('status', 'approved')
+            ->where('is_visible', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->map(fn ($item) => [
+                'id' => $item->id,
+                'nama' => $item->nama,
+                'angkatan' => $item->angkatan,
+                'quote' => $item->quote,
+                'foto_url' => self::imageUrl($item->foto),
+                'sort_order' => $item->sort_order,
+                'created_at' => $item->created_at ?? null,
+            ]);
 
-        return response()->json(['data' => ['hero_tagline' => $content->hero_tagline, 'hero_subtitle' => $content->hero_subtitle, 'about' => $content->about, 'visi' => $content->visi, 'misi' => json_decode($content->misi ?? '[]', true) ?: [], 'gallery_managed' => (bool) $content->gallery_managed || $gallery->isNotEmpty(), 'testimonials_managed' => (bool) $content->testimonials_managed || $testimonials->isNotEmpty(), 'gallery' => $gallery, 'testimonials' => $testimonials]]);
+        return response()->json(['data' => [
+            'hero_tagline' => $content->hero_tagline,
+            'hero_subtitle' => $content->hero_subtitle,
+            'about' => $content->about,
+            'visi' => $content->visi,
+            'misi' => json_decode($content->misi ?? '[]', true) ?: [],
+            'gallery_managed' => (bool) $content->gallery_managed || $gallery->isNotEmpty(),
+            'testimonials_managed' => (bool) $content->testimonials_managed || $testimonials->isNotEmpty(),
+            'gallery' => $gallery,
+            'testimonials' => $testimonials,
+        ]]);
+    }
+
+    public function testimonials()
+    {
+        $content = DB::table('site_contents')->orderBy('id')->first();
+        if (!$content) return response()->json(['data' => []]);
+
+        $testimonials = DB::table('testimonials')
+            ->where('site_content_id', $content->id)
+            ->where('status', 'approved')
+            ->where('is_visible', true)
+            ->orderBy('sort_order')
+            ->latest('id')
+            ->get()
+            ->map(fn ($item) => [
+                'id' => $item->id,
+                'nama' => $item->nama,
+                'angkatan' => $item->angkatan,
+                'quote' => $item->quote,
+                'foto_url' => self::imageUrl($item->foto),
+                'sort_order' => $item->sort_order,
+                'created_at' => $item->created_at ?? null,
+            ]);
+
+        return response()->json(['data' => $testimonials]);
     }
 
     public function image(string $kind, string $filename)

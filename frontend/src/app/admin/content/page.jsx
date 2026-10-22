@@ -18,6 +18,11 @@ import {
   Sparkles,
   Layers,
   Quote,
+  Eye,
+  EyeOff,
+  Check,
+  Clock,
+  User,
 } from "lucide-react";
 import { api } from "@/services/api";
 import { landingTextDefaults } from "@/lib/landingText";
@@ -520,6 +525,7 @@ function TestimonialModal({ item, existingTestimonials = [], onClose, onSaved })
   const [photoUrl, setPhotoUrl] = useState(item?.foto_url || "");
   const [photo, setPhoto] = useState(null);
   const [order, setOrder] = useState(String(defaultOrder));
+  const [isVisible, setIsVisible] = useState(item ? Boolean(item.is_visible) : true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
@@ -548,6 +554,8 @@ function TestimonialModal({ item, existingTestimonials = [], onClose, onSaved })
     body.append("angkatan", role.trim());
     body.append("quote", quote.trim());
     body.append("sort_order", String(parseInt(order, 10) || 0));
+    body.append("status", "approved");
+    body.append("is_visible", isVisible ? "1" : "0");
     if (photo) {
       body.append("photo", photo);
     } else if (photoUrl && photoUrl.trim()) {
@@ -743,6 +751,24 @@ function TestimonialModal({ item, existingTestimonials = [], onClose, onSaved })
                 required
                 disabled={busy}
               />
+            </div>
+
+            {/* Visibilitas Publik */}
+            <div className="content-field">
+              <label className="content-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={isVisible}
+                  onChange={(e) => setIsVisible(e.target.checked)}
+                  disabled={busy}
+                />
+                <div>
+                  <strong>Tampilkan ke Publik</strong>
+                  <div style={{ fontSize: "12px", color: "var(--cc-ink-muted)", marginTop: "2px" }}>
+                    Centang untuk mempublikasikan testimoni ini di Landing Page & Halaman Testimoni.
+                  </div>
+                </div>
+              </label>
             </div>
           </div>
 
@@ -1079,6 +1105,8 @@ export default function AdminContentPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("gallery");
+  const [testiFilter, setTestiFilter] = useState("all");
+  const [actionBusyId, setActionBusyId] = useState(null);
 
   // Modals state
   const [addGalleryOpen, setAddGalleryOpen] = useState(false);
@@ -1108,6 +1136,34 @@ export default function AdminContentPage() {
 
   const nextGalleryOrder = useMemo(() => calculateNextOrder(content.gallery), [content.gallery]);
   const nextTestiOrder = useMemo(() => calculateNextOrder(content.testimonials), [content.testimonials]);
+
+  const visibleTestiCount = useMemo(() => {
+    return (content.testimonials || []).filter((t) => Boolean(t.is_visible)).length;
+  }, [content.testimonials]);
+
+  const hiddenTestiCount = useMemo(() => {
+    return (content.testimonials || []).filter((t) => !t.is_visible).length;
+  }, [content.testimonials]);
+
+  const filteredTestimonials = useMemo(() => {
+    const list = content.testimonials || [];
+    if (testiFilter === "visible") return list.filter((t) => Boolean(t.is_visible));
+    if (testiFilter === "hidden") return list.filter((t) => !t.is_visible);
+    return list;
+  }, [content.testimonials, testiFilter]);
+
+  async function handleToggleVisibility(testi) {
+    setActionBusyId(testi.id);
+    try {
+      const res = await api.patch(`/admin/home-content/testimonials/${testi.id}/visibility`);
+      toast.success(res.data?.message || "Visibilitas berhasil diperbarui.");
+      await load(true);
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Gagal mengubah visibilitas testimoni."));
+    } finally {
+      setActionBusyId(null);
+    }
+  }
 
   // Handle Delete
   async function handleDeleteConfirm() {
@@ -1362,7 +1418,7 @@ export default function AdminContentPage() {
                   <div className="content-stat-info">
                     <span className="content-stat-tag">TOTAL TESTIMONI</span>
                     <span className="content-stat-val">{content.testimonials.length} Testimoni</span>
-                    <span className="content-stat-desc">Kutipan alumni & anggota</span>
+                    <span className="content-stat-desc">Kutipan alumni & pengguna</span>
                   </div>
                   <div className="content-stat-icon">
                     <MessageSquare size={22} />
@@ -1371,16 +1427,28 @@ export default function AdminContentPage() {
 
                 <div className="content-stat-card">
                   <div className="content-stat-info">
-                    <span className="content-stat-tag">STATUS SLIDER</span>
-                    <span className="content-stat-val">
-                      {content.testimonials.length > 0 ? "Testimoni Kustom" : "Testimoni Bawaan"}
-                    </span>
+                    <span className="content-stat-tag">DITAMPILKAN PUBLIK</span>
+                    <span className="content-stat-val">{visibleTestiCount} Testimoni Aktif</span>
+                    <span className="content-stat-desc">Tayang di Landing Page & /testimoni</span>
+                  </div>
+                  <div className="content-stat-icon" style={{ background: "#f0fdf4", color: "#16a34a" }}>
+                    <CheckCircle2 size={22} />
+                  </div>
+                </div>
+
+                <div
+                  className="content-stat-card"
+                  style={hiddenTestiCount > 0 ? { borderColor: "#cbd5e1", background: "#f8fafc" } : {}}
+                >
+                  <div className="content-stat-info">
+                    <span className="content-stat-tag">DISEMBUNYIKAN</span>
+                    <span className="content-stat-val">{hiddenTestiCount} Disembunyikan</span>
                     <span className="content-stat-desc">
-                      {content.testimonials.length > 0 ? "Menampilkan testimoni buatanmu" : "Menggunakan contoh bawaan"}
+                      {hiddenTestiCount > 0 ? "Disembunyikan oleh admin dari publik" : "Semua testimoni sedang aktif"}
                     </span>
                   </div>
                   <div className="content-stat-icon">
-                    <Quote size={22} />
+                    <EyeOff size={22} />
                   </div>
                 </div>
 
@@ -1399,8 +1467,11 @@ export default function AdminContentPage() {
               {/* Action Bar */}
               <div className="content-section-header">
                 <div className="content-section-title">
-                  <h2>Daftar Testimoni Landing Page</h2>
-                  <p>Kutipan dan cerita pengalaman mahasiswa serta alumni HIMANIKA.</p>
+                  <h2>Daftar Testimoni Landing Page & Publik</h2>
+                  <p>
+                    Testimoni dari pengguna otomatis langsung tayang. Anda dapat mengatur visibilitas (sembunyikan/tampilkan)
+                    kapan saja dengan satu kali klik.
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -1412,48 +1483,138 @@ export default function AdminContentPage() {
                 </button>
               </div>
 
+              {/* Filter Tabs */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+                <div className="content-testi-filters" role="tablist" aria-label="Filter status testimoni">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={testiFilter === "all"}
+                    className={`content-filter-btn ${testiFilter === "all" ? "content-filter-btn--active" : ""}`}
+                    onClick={() => setTestiFilter("all")}
+                  >
+                    <span>Semua</span>
+                    <span className="content-filter-count">{content.testimonials.length}</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={testiFilter === "visible"}
+                    className={`content-filter-btn ${testiFilter === "visible" ? "content-filter-btn--active" : ""}`}
+                    onClick={() => setTestiFilter("visible")}
+                  >
+                    <span>🟢 Ditampilkan Publik</span>
+                    <span className="content-filter-count">{visibleTestiCount}</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={testiFilter === "hidden"}
+                    className={`content-filter-btn ${testiFilter === "hidden" ? "content-filter-btn--active" : ""}`}
+                    onClick={() => setTestiFilter("hidden")}
+                  >
+                    <span>⚪ Disembunyikan</span>
+                    <span className="content-filter-count">{hiddenTestiCount}</span>
+                  </button>
+                </div>
+
+                <span style={{ fontSize: "12px", color: "var(--cc-ink-muted)" }}>
+                  Menampilkan {filteredTestimonials.length} dari {content.testimonials.length} testimoni
+                </span>
+              </div>
+
               {/* Testimonials Grid */}
-              {content.testimonials.length > 0 ? (
+              {filteredTestimonials.length > 0 ? (
                 <div className="content-testimonials-grid">
-                  {content.testimonials.map((testi) => (
+                  {filteredTestimonials.map((testi) => (
                     <article key={testi.id} className="content-testimonial-card">
-                      <div className="content-testimonial-header">
-                        <div className="content-author-box">
-                          {testi.foto_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={testi.foto_url} alt="" className="content-avatar" />
-                          ) : (
-                            <div className="content-avatar-fallback">
-                              {testi.nama ? testi.nama.charAt(0).toUpperCase() : "A"}
+                      <div>
+                        {/* Header: User Avatar & Role */}
+                        <div className="content-testimonial-header">
+                          <div className="content-author-box">
+                            {testi.foto_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={testi.foto_url} alt="" className="content-avatar" />
+                            ) : (
+                              <div className="content-avatar-fallback">
+                                {testi.nama ? testi.nama.charAt(0).toUpperCase() : "A"}
+                              </div>
+                            )}
+                            <div className="content-author-meta">
+                              <span className="content-author-name">{testi.nama}</span>
+                              <span className="content-author-role">{testi.angkatan || "HIMANIKA"}</span>
                             </div>
-                          )}
-                          <div className="content-author-meta">
-                            <span className="content-author-name">{testi.nama}</span>
-                            <span className="content-author-role">{testi.angkatan || "HIMANIKA"}</span>
                           </div>
+
+                          <span className="content-order-badge" style={{ position: "static" }} title="Urutan tampilan">
+                            #{String(testi.sort_order).padStart(2, "0")}
+                          </span>
                         </div>
 
-                        <span className="content-order-badge" style={{ position: "static" }}>
-                          #{String(testi.sort_order).padStart(2, "0")}
-                        </span>
+                        {/* Status Badge */}
+                        <div style={{ marginTop: "10px", marginBottom: "8px" }}>
+                          {testi.is_visible ? (
+                            <span className="content-testi-badge content-testi-badge--visible">
+                              <CheckCircle2 size={12} />
+                              <span>Ditampilkan Publik</span>
+                            </span>
+                          ) : (
+                            <span className="content-testi-badge content-testi-badge--hidden">
+                              <EyeOff size={12} />
+                              <span>Disembunyikan</span>
+                            </span>
+                          )}
+                        </div>
+
+                        {/* User Sender Attribution */}
+                        {testi.user_account_name ? (
+                          <div className="content-testi-sender" title={`Dikirim dari akun user ID: ${testi.user_id}`}>
+                            <User size={13} style={{ flexShrink: 0 }} />
+                            <span>
+                              Pengirim: <strong>{testi.user_account_name}</strong> {testi.user_email ? `(${testi.user_email})` : ""}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="content-testi-sender" style={{ opacity: 0.75 }}>
+                            <Sparkles size={13} style={{ flexShrink: 0 }} />
+                            <span>Dibuat langsung oleh Admin</span>
+                          </div>
+                        )}
+
+                        <p className="content-quote-text" style={{ marginTop: "12px" }}>
+                          {testi.quote}
+                        </p>
                       </div>
 
-                      <p className="content-quote-text">{testi.quote}</p>
+                      {/* Card Action Buttons */}
+                      <div className="content-card-actions" style={{ flexWrap: "wrap", marginTop: "12px" }}>
+                        <button
+                          type="button"
+                          className={`content-card-btn ${!testi.is_visible ? "content-card-btn--approve" : ""}`}
+                          onClick={() => handleToggleVisibility(testi)}
+                          disabled={actionBusyId === testi.id}
+                          title={testi.is_visible ? "Sembunyikan dari publik" : "Tampilkan ke publik"}
+                        >
+                          {testi.is_visible ? <EyeOff size={13} /> : <Eye size={13} />}
+                          <span>{testi.is_visible ? "Sembunyikan" : "Tampilkan"}</span>
+                        </button>
 
-                      <div className="content-card-actions">
                         <button
                           type="button"
                           className="content-card-btn"
                           onClick={() => setTestiModal({ open: true, item: testi })}
+                          disabled={actionBusyId === testi.id}
                           title="Ubah testimoni"
                         >
                           <Edit3 size={13} />
                           <span>Ubah</span>
                         </button>
+
                         <button
                           type="button"
                           className="content-card-btn content-card-btn--danger"
                           onClick={() => setDeleteModal({ open: true, kind: "testimonials", item: testi, busy: false })}
+                          disabled={actionBusyId === testi.id}
                           title="Hapus testimoni"
                         >
                           <Trash2 size={13} />
@@ -1468,19 +1629,28 @@ export default function AdminContentPage() {
                   <div className="content-empty-icon">
                     <MessageSquare size={26} />
                   </div>
-                  <h3 className="content-empty-title">Belum Ada Testimoni Kustom</h3>
+                  <h3 className="content-empty-title">
+                    {testiFilter === "visible"
+                      ? "Tidak Ada Testimoni yang Sedang Ditampilkan"
+                      : testiFilter === "hidden"
+                      ? "Tidak Ada Testimoni yang Disembunyikan"
+                      : "Belum Ada Testimoni"}
+                  </h3>
                   <p className="content-empty-desc">
-                    Landing page saat ini menggunakan testimoni bawaan sistem. Tambahkan cerita dan apresiasi mahasiswa
-                    untuk menginspirasi calon pendaftar.
+                    {testiFilter === "hidden"
+                      ? "Semua testimoni saat ini aktif dan dapat dibaca oleh publik."
+                      : "Belum ada testimoni tersimpan. Anda dapat menambahkannya secara manual atau menunggu inputan dari pengguna."}
                   </p>
-                  <button
-                    type="button"
-                    className="content-btn content-btn--primary"
-                    onClick={() => setTestiModal({ open: true, item: null })}
-                  >
-                    <Plus size={16} />
-                    <span>Tambah Testimoni Pertama</span>
-                  </button>
+                  {testiFilter === "all" && (
+                    <button
+                      type="button"
+                      className="content-btn content-btn--primary"
+                      onClick={() => setTestiModal({ open: true, item: null })}
+                    >
+                      <Plus size={16} />
+                      <span>Tambah Testimoni Pertama</span>
+                    </button>
+                  )}
                 </div>
               )}
             </div>

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { api } from "@/services/api";
+import { FileUploadInput } from "@/components/ui/FileUploadInput";
 
 export function EventGroupForm({ eventId, group, onSuccess }) {
   const errorRef = useRef(null);
@@ -50,7 +51,7 @@ export function EventGroupForm({ eventId, group, onSuccess }) {
             field.type === "select" ? <select id={id} name={field.name} required={required} defaultValue={field.value || ""}><option value="">Pilih jawaban</option>{field.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> :
             field.type === "radio" ? <div className="event-dynamic-choices">{field.options.map((option, index) => <label key={option.value}><input type="radio" id={index === 0 ? id : undefined} name={field.name} value={option.value} defaultChecked={field.value === option.value} required={required} /> {option.label}</label>)}</div> :
             field.type === "checkbox" ? <label className="event-dynamic-check"><input id={id} name={field.name} type="checkbox" value="on" defaultChecked={Boolean(field.value)} required={required} /> {field.label}{field.required && <b aria-label="wajib"> *</b>}</label> :
-            field.type === "file" ? <><input id={id} name={field.name} type="file" required={required} accept=".pdf,.jpg,.jpeg,.png,.webp" /><small>PDF, JPG, PNG, WebP · maksimal 5 MB</small>{field.downloadUrl && <a href={field.downloadUrl} target="_blank" rel="noopener noreferrer">Lihat berkas tersimpan <ArrowUpRight size={14} aria-hidden="true" /></a>}</> :
+            field.type === "file" ? <><FileUploadInput id={id} name={field.name} required={required} accept=".pdf,.jpg,.jpeg,.png,.webp" invalid={Boolean(errors[field.name])} emptyText={field.downloadUrl ? "Belum memilih berkas baru" : undefined} onChange={() => setErrors((current) => { if (!current[field.name]) return current; const next = { ...current }; delete next[field.name]; return next; })} /><small>PDF, JPG, PNG, WebP · maksimal 5 MB</small>{field.downloadUrl && <a href={field.downloadUrl} target="_blank" rel="noopener noreferrer">Lihat berkas tersimpan <ArrowUpRight size={14} aria-hidden="true" /></a>}</> :
             <input id={id} name={field.name} type={field.type} required={required} defaultValue={field.value || ""} placeholder={field.placeholder || ""} />}
           {errors[field.name] && <small className="event-dynamic-error">{Array.isArray(errors[field.name]) ? errors[field.name][0] : errors[field.name]}</small>}
         </div>;

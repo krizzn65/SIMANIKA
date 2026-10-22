@@ -12,7 +12,38 @@ class HomeContentController extends Controller
 {
     public function index(PublicHomeContentController $public)
     {
-        return $public->index();
+        $response = $public->index();
+        $data = $response->getData(true);
+        $contentId = $this->contentId();
+
+        $allTestimonials = DB::table('testimonials')
+            ->leftJoin('users', 'testimonials.user_id', '=', 'users.id')
+            ->where('testimonials.site_content_id', $contentId)
+            ->orderBy('testimonials.sort_order')
+            ->orderByDesc('testimonials.id')
+            ->select([
+                'testimonials.*',
+                'users.email as user_email',
+                'users.name as user_account_name',
+            ])
+            ->get()
+            ->map(fn ($item) => [
+                'id' => $item->id,
+                'user_id' => $item->user_id,
+                'nama' => $item->nama,
+                'angkatan' => $item->angkatan,
+                'quote' => $item->quote,
+                'foto_url' => PublicHomeContentController::imageUrl($item->foto),
+                'sort_order' => $item->sort_order,
+                'status' => $item->status ?? 'approved',
+                'is_visible' => (bool) ($item->is_visible ?? true),
+                'user_email' => $item->user_email,
+                'user_account_name' => $item->user_account_name,
+                'created_at' => $item->created_at,
+            ]);
+
+        $data['data']['testimonials'] = $allTestimonials;
+        return response()->json($data);
     }
 
     private function contentId(): int
@@ -135,7 +166,19 @@ class HomeContentController extends Controller
         try {
             $id = DB::transaction(function () use ($data, $path) {
                 $contentId = $this->contentId();
-                $id = DB::table('testimonials')->insertGetId(['site_content_id' => $contentId, 'nama' => trim($data['nama']), 'angkatan' => $data['angkatan'] ?? null, 'quote' => trim($data['quote']), 'foto' => $path, 'sort_order' => $data['sort_order'] ?? 0]);
+                $id = DB::table('testimonials')->insertGetId([
+                    'site_content_id' => $contentId,
+                    'user_id' => null,
+                    'nama' => trim($data['nama']),
+                    'angkatan' => $data['angkatan'] ?? null,
+                    'quote' => trim($data['quote']),
+                    'foto' => $path,
+                    'sort_order' => $data['sort_order'] ?? 0,
+                    'status' => $data['status'] ?? 'approved',
+                    'is_visible' => isset($data['is_visible']) ? (bool) $data['is_visible'] : true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
                 DB::table('site_contents')->where('id', $contentId)->update(['testimonials_managed' => true, 'updated_at' => now()]);
                 return $id;
             });
@@ -154,13 +197,67 @@ class HomeContentController extends Controller
         $path = $request->hasFile('photo') ? $request->file('photo')->store('landing/testimonials', 'public') : ($data['photo_url'] ?? $item->foto);
         if ($path === PublicHomeContentController::imageUrl($item->foto)) $path = $item->foto;
         try {
-            DB::table('testimonials')->where('id', $id)->update(['nama' => trim($data['nama']), 'angkatan' => $data['angkatan'] ?? null, 'quote' => trim($data['quote']), 'foto' => $path, 'sort_order' => $data['sort_order'] ?? $item->sort_order]);
+            DB::table('testimonials')->where('id', $id)->update([
+                'nama' => trim($data['nama']),
+                'angkatan' => $data['angkatan'] ?? null,
+                'quote' => trim($data['quote']),
+                'foto' => $path,
+                'sort_order' => $data['sort_order'] ?? $item->sort_order,
+                'status' => $data['status'] ?? $item->status,
+                'is_visible' => isset($data['is_visible']) ? (bool) $data['is_visible'] : (bool) $item->is_visible,
+                'updated_at' => now(),
+            ]);
         } catch (\Throwable $error) {
             if ($request->hasFile('photo')) Storage::disk('public')->delete($path);
             throw $error;
         }
         if ($item->foto && $path !== $item->foto && str_starts_with($item->foto, 'landing/testimonials/')) Storage::disk('public')->delete($item->foto);
         return response()->json(['data' => ['id' => $id]]);
+    }
+
+    public function toggleTestimonialVisibility(int $id)
+    {
+        $item = DB::table('testimonials')->where('id', $id)->first();
+        abort_unless($item, 404);
+        $newVisible = !((bool) $item->is_visible);
+        DB::table('testimonials')->where('id', $id)->update([
+            'is_visible' => $newVisible,
+            'status' => 'approved',
+            'updated_at' => now(),
+        ]);
+        return response()->json([
+            'message' => $newVisible ? 'Testimoni sekarang ditampilkan ke publik.' : 'Testimoni disembunyikan dari publik.',
+            'data' => ['id' => $id, 'is_visible' => $newVisible],
+        ]);
+    }
+
+    public function updateTestimonialStatus(Request $request, int $id)
+    {
+        $data = $request->validate([
+            'status' => ['required', 'string', 'in:approved,pending,rejected'],
+            'is_visible' => ['nullable', 'boolean'],
+        ]);
+        $item = DB::table('testimonials')->where('id', $id)->first();
+        abort_unless($item, 404);
+
+        $updates = [
+            'status' => $data['status'],
+            'updated_at' => now(),
+        ];
+        if (isset($data['is_visible'])) {
+            $updates['is_visible'] = (bool) $data['is_visible'];
+        } elseif ($data['status'] === 'approved') {
+            $updates['is_visible'] = true;
+        } elseif ($data['status'] === 'rejected') {
+            $updates['is_visible'] = false;
+        }
+
+        DB::table('testimonials')->where('id', $id)->update($updates);
+
+        return response()->json([
+            'message' => 'Status testimoni berhasil diperbarui.',
+            'data' => ['id' => $id, 'status' => $data['status'], 'is_visible' => $updates['is_visible'] ?? (bool) $item->is_visible],
+        ]);
     }
 
     public function destroyTestimonial(int $id)
@@ -182,6 +279,8 @@ class HomeContentController extends Controller
             'photo' => $this->imageRule(false),
             'photo_url' => ['nullable', 'url:http,https', 'max:2048'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
+            'status' => ['nullable', 'string', 'in:approved,pending,rejected'],
+            'is_visible' => ['nullable', 'boolean'],
         ];
     }
 }

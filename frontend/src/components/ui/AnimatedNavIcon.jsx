@@ -36,6 +36,19 @@ export function AnimatedNavIcon({ name }) {
     );
   }
 
+  if (name === "testimoni") {
+    return (
+      <svg {...commonProps} stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
+        <path
+          className="nav-icon__testi-bubble"
+          d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+        />
+        <path className="nav-icon__testi-line-1" d="M8 9h8" />
+        <path className="nav-icon__testi-line-2" d="M8 13h5" />
+      </svg>
+    );
+  }
+
   if (name === "merchandise") {
     return (
       <svg {...commonProps}>
