@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Public\HomeContentController as PublicHomeContentController;
-use App\Support\TestimonialForm;
+use App\Support\TestimonialInvite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -216,15 +216,39 @@ class HomeContentController extends Controller
         return response()->json(['data' => ['id' => $id]]);
     }
 
-    public function testimonialForm()
+    public function testimonialInvite()
     {
-        return response()->json(['data' => ['open' => TestimonialForm::current()['open']]]);
+        return response()->json(['data' => $this->invitePayload(TestimonialInvite::active())]);
     }
 
-    public function updateTestimonialForm(Request $request)
+    public function createTestimonialInvite(Request $request)
     {
-        $data = $request->validate(['open' => ['required', 'boolean']]);
-        return response()->json(['data' => ['open' => TestimonialForm::set($data['open'])['open']]]);
+        $data = $request->validate([
+            'quota' => ['nullable', 'integer', 'min:1', 'max:1000'],
+            'expires_at' => ['nullable', 'date', 'after:now'],
+        ]);
+        return response()->json(['data' => $this->invitePayload(TestimonialInvite::create($data['quota'] ?? null, $data['expires_at'] ?? null))], 201);
+    }
+
+    public function revokeTestimonialInvite()
+    {
+        TestimonialInvite::revoke();
+        return response()->json(['data' => null]);
+    }
+
+    private function invitePayload(?object $invite): ?array
+    {
+        if (!$invite) return null;
+        $members = DB::table('testimonial_invite_users')->where('testimonial_invite_id', $invite->id);
+        return [
+            'token' => $invite->token,
+            'quota' => $invite->quota,
+            'expires_at' => $invite->expires_at,
+            'expired' => !TestimonialInvite::usable($invite),
+            'joined' => (clone $members)->count(),
+            'submitted' => (clone $members)->whereNotNull('submitted_at')->count(),
+            'created_at' => $invite->created_at,
+        ];
     }
 
     public function toggleTestimonialVisibility(int $id)

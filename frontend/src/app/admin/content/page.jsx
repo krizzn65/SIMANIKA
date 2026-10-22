@@ -25,6 +25,7 @@ import {
   User,
 } from "lucide-react";
 import { useConfirmDialog } from "@/app/admin/useConfirmDialog";
+import { TestimonialInviteCard } from "./TestimonialInviteCard";
 import { api } from "@/services/api";
 import { landingTextDefaults } from "@/lib/landingText";
 import { optimizeGalleryImage } from "@/lib/optimizeOprecImage";
@@ -1110,9 +1111,6 @@ export default function AdminContentPage() {
   const [activeTab, setActiveTab] = useState("gallery");
   const [testiFilter, setTestiFilter] = useState("all");
   const [actionBusyId, setActionBusyId] = useState(null);
-  const [testiFormOpen, setTestiFormOpen] = useState(null);
-  const [testiFormBusy, setTestiFormBusy] = useState(false);
-  const [confirmDialog, confirm] = useConfirmDialog();
 
   // Modals state
   const [addGalleryOpen, setAddGalleryOpen] = useState(false);
@@ -1158,25 +1156,6 @@ export default function AdminContentPage() {
     return list;
   }, [content.testimonials, testiFilter]);
 
-  useEffect(() => {
-    api.get("/admin/home-content/testimonial-form").then(({ data }) => setTestiFormOpen(Boolean(data?.data?.open))).catch(() => setTestiFormOpen(null));
-  }, []);
-
-  async function handleToggleTestiForm() {
-    const next = !testiFormOpen;
-    if (next && !(await confirm({ title: "Buka pengisian testimoni?", message: "Card testimoni akan muncul di dashboard semua user. Kiriman masuk sebagai \"Menunggu Persetujuan\" sampai Anda setujui.", confirmLabel: "Ya, buka pengisian" }))) return;
-    setTestiFormBusy(true);
-    try {
-      const { data } = await api.put("/admin/home-content/testimonial-form", { open: next });
-      setTestiFormOpen(Boolean(data?.data?.open));
-      toast.success(next ? "Pengisian testimoni dibuka." : "Pengisian testimoni ditutup.");
-    } catch (err) {
-      toast.error(getErrorMessage(err, "Gagal mengubah status pengisian testimoni."));
-    } finally {
-      setTestiFormBusy(false);
-    }
-  }
-
   async function handleToggleVisibility(testi) {
     setActionBusyId(testi.id);
     try {
@@ -1210,7 +1189,6 @@ export default function AdminContentPage() {
 
   return (
     <div className="content-console">
-      {confirmDialog}
       {/* Hero Header */}
       <header className="content-hero">
         <div className="content-hero-text">
@@ -1438,21 +1416,7 @@ export default function AdminContentPage() {
           {/* TAB 2: TESTIMONI */}
           {activeTab === "testimonials" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              {/* User submission switch */}
-              <div className="admin-card">
-                <div className="admin-card-body flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-base font-bold text-slate-900">Pengisian Testimoni oleh User</h2>
-                      {testiFormOpen !== null && <span className={`admin-badge ${testiFormOpen ? "admin-badge--published" : "admin-badge--draft"}`}>{testiFormOpen ? "DIBUKA" : "DITUTUP"}</span>}
-                    </div>
-                    <p className="mt-1 text-xs text-slate-500">Saat dibuka, card testimoni muncul di dashboard user. Setiap user bisa mengirim satu kali per periode, dan kiriman masuk sebagai &quot;Menunggu Persetujuan&quot;.</p>
-                  </div>
-                  <button type="button" className={`admin-btn ${testiFormOpen ? "admin-btn--secondary" : "admin-btn--primary"}`} disabled={testiFormBusy || testiFormOpen === null} onClick={handleToggleTestiForm}>
-                    {testiFormBusy ? "Menyimpan..." : testiFormOpen ? "Tutup pengisian" : "Buka pengisian"}
-                  </button>
-                </div>
-              </div>
+              <TestimonialInviteCard />
 
               {/* Summary Stats */}
               <div className="content-stats-grid">

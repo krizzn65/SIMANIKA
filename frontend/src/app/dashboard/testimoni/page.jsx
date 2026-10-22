@@ -61,7 +61,7 @@ function TestimonialForm() {
 
   if (!state) return <div className="dashboard-state" role="status"><span className="dashboard-state__loading" aria-hidden="true" /><p>Memuat formulir...</p></div>;
   if (done || state.submitted) return <div className="event-form-feedback" role="status"><h3>Testimoni terkirim.</h3><p>Terima kasih sudah berbagi cerita tentang HIMANIKA.</p><Link href="/dashboard/">Kembali ke dashboard</Link></div>;
-  if (!state.open) return <div className="event-form-feedback" role="status"><h3>Pengisian testimoni sedang ditutup.</h3><p>{state.error ? "Formulir belum bisa dimuat. Coba lagi nanti." : "Formulir akan muncul di dashboard saat dibuka kembali oleh pengurus."}</p><Link href="/dashboard/">Kembali ke dashboard</Link></div>;
+  if (!state.open) return <div className="event-form-feedback" role="status"><h3>Formulir testimoni belum tersedia.</h3><p>{state.error ? "Formulir belum bisa dimuat. Coba lagi nanti." : "Formulir ini hanya bisa dibuka lewat link testimoni dari pengurus HIMANIKA, dan link tersebut mungkin sudah tidak berlaku."}</p><Link href="/dashboard/">Kembali ke dashboard</Link></div>;
 
   return (
     <form className="event-dynamic-form testimonial-form" onSubmit={submit} aria-busy={pending}>

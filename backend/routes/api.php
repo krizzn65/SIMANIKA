@@ -90,6 +90,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/user/events/{event}/create-team', CreateEventTeamController::class)->middleware('throttle:auth');
     Route::post('/user/events/{event}/join-team', JoinEventTeamController::class)->middleware('throttle:auth');
     Route::get('/user/testimonial', [UserTestimonialController::class, 'show']);
+    Route::post('/user/testimonial/claim', [UserTestimonialController::class, 'claim'])->middleware('throttle:20,1');
     Route::post('/user/testimonial', [UserTestimonialController::class, 'store'])->middleware('throttle:6,1');
 
     Route::prefix('admin')->middleware('admin')->group(function () {
@@ -103,8 +104,9 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
             Route::post('/testimonials', [AdminHomeContentController::class, 'storeTestimonial']);
             Route::post('/testimonials/{id}', [AdminHomeContentController::class, 'updateTestimonial'])->whereNumber('id');
             Route::delete('/testimonials/{id}', [AdminHomeContentController::class, 'destroyTestimonial'])->whereNumber('id');
-            Route::get('/testimonial-form', [AdminHomeContentController::class, 'testimonialForm']);
-            Route::put('/testimonial-form', [AdminHomeContentController::class, 'updateTestimonialForm']);
+            Route::get('/testimonial-invite', [AdminHomeContentController::class, 'testimonialInvite']);
+            Route::post('/testimonial-invite', [AdminHomeContentController::class, 'createTestimonialInvite']);
+            Route::delete('/testimonial-invite', [AdminHomeContentController::class, 'revokeTestimonialInvite']);
             Route::patch('/testimonials/{id}/visibility', [AdminHomeContentController::class, 'toggleTestimonialVisibility'])->whereNumber('id');
             Route::patch('/testimonials/{id}/status', [AdminHomeContentController::class, 'updateTestimonialStatus'])->whereNumber('id');
         });

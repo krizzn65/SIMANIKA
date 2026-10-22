@@ -11,6 +11,7 @@ import { STAFF_ROLES, adminHome } from "@/lib/roleAccess";
 import { CalendarPlusIcon } from "@/components/ui/CalendarPlusIcon";
 import { UsersRound } from "lucide-react";
 import { eventCategoryLabel } from "@/lib/events";
+import { PENDING_INVITE_KEY } from "@/lib/testimonialInvite";
 import "../events/events.css";
 import "./dashboard.css";
 import "./dashboard-actions.css";
@@ -73,7 +74,20 @@ function RegistrationCard({ item, onComplete }) {
   );
 }
 
-// Shown only while an admin has the testimonial form open.
+// A testimonial link opened before signing in is kept in the browser and claimed
+// here, so it survives the login (including Google, which drops ?next=).
+async function loadTestimonial() {
+  let token = null;
+  try { token = localStorage.getItem(PENDING_INVITE_KEY); } catch {}
+  if (token) {
+    await api.post("/user/testimonial/claim", { token }).catch(() => {});
+    try { localStorage.removeItem(PENDING_INVITE_KEY); } catch {}
+  }
+  const { data } = await api.get("/user/testimonial");
+  return data?.data ?? null;
+}
+
+// Shown only to accounts that opened the testimonial link shared by an admin.
 function TestimonialCard({ submitted }) {
   return (
     <article className="dashboard-entry dashboard-entry--testimonial">
@@ -86,7 +100,7 @@ function TestimonialCard({ submitted }) {
         <p>{submitted ? "Terima kasih, testimonimu sudah kami terima." : "Tulis kesan singkatmu dan unggah foto profil untuk ditampilkan di website SIMANIKA."}</p>
       </div>
       <div className="dashboard-entry__bottom">
-        <span>{submitted ? "Sekali kirim per periode" : "Pengisian sedang dibuka"}</span>
+        <span>{submitted ? "Testimoni sudah dikirim" : "Undangan dari pengurus"}</span>
         {!submitted && <Link href="/dashboard/testimoni/">Isi testimoni <span aria-hidden="true">↗</span></Link>}
       </div>
     </article>
@@ -129,7 +143,7 @@ function DashboardContent() {
 
   useEffect(() => {
     if (!user || STAFF_ROLES.includes(user?.role)) return;
-    api.get("/user/testimonial").then(({ data }) => setTestimonial(data?.data ?? null)).catch(() => setTestimonial(null));
+    loadTestimonial().then(setTestimonial).catch(() => setTestimonial(null));
   }, [user?.id, user?.role]);
 
   if (STAFF_ROLES.includes(user?.role)) {
@@ -147,12 +161,6 @@ function DashboardContent() {
           </div>
         </header>
 
-        {testimonial?.open && (
-          <section className="dashboard-list dashboard-list--testimonial" aria-label="Testimoni">
-            <div className="dashboard-grid"><TestimonialCard submitted={testimonial.submitted} /></div>
-          </section>
-        )}
-
         {loading ? (
           <div className="dashboard-state" role="status" aria-live="polite">
             <span className="dashboard-state__loading" aria-hidden="true" />
@@ -163,7 +171,7 @@ function DashboardContent() {
             <p>Pendaftaran belum bisa dimuat.</p>
             <button type="button" onClick={() => setAttempt((value) => value + 1)}>Coba lagi <span aria-hidden="true">↗</span></button>
           </div>
-        ) : items.length === 0 ? (
+        ) : items.length === 0 && !testimonial?.open ? (
           <div className="dashboard-state dashboard-state--empty">
             <div className="dashboard-state__mark">
               <CalendarPlusIcon size={48} />
@@ -175,6 +183,7 @@ function DashboardContent() {
           <section className="dashboard-list" aria-label="Daftar pendaftaran saya">
             <div className="dashboard-list__count">{items.length} PENDAFTARAN TERCATAT</div>
             <div className="dashboard-grid">
+              {testimonial?.open && <TestimonialCard submitted={testimonial.submitted} />}
               {items.map((item) => <RegistrationCard key={item.key} item={item} onComplete={() => setAttempt((value) => value + 1)} />)}
             </div>
           </section>
