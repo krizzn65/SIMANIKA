@@ -489,34 +489,6 @@
   color: #334155;
 }
 
-.testimoni-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 2px;
-}
-
-.testimoni-badge--pending {
-  background: #fefce8;
-  color: #854d0e;
-  border: 1px solid #fef08a;
-}
-
-.testimoni-badge--approved {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
-}
-
-.testimoni-badge--hidden {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5e1;
-}
-
 .testimoni-history-quote {
   font-size: 0.88rem;
   line-height: 1.6;
@@ -869,7 +841,6 @@
 .testimoni-history-card { min-width: 0; padding: 22px 24px; border: 1px solid #d4dfed; border-left: 3px solid #155eef; border-radius: 0; background: #fff; }
 .testimoni-history-quote { display: block; margin: 0; overflow: visible; color: #34445c; font-size: 1rem; line-height: 1.65; font-style: normal; }
 .testimoni-history-empty { padding: 28px; border: 1px dashed #b5c8e4; background: #fff; color: #526278; line-height: 1.6; }
-.testimoni-badge { padding: 4px 7px; border-radius: 0; }
 
 .testimoni-list-section { padding: 0 0 clamp(74px, 8vw, 110px); border: 0; scroll-margin-top: 90px; }
 .testimoni-section-head { align-items: end; margin-bottom: 28px; padding-bottom: 22px; border-bottom: 1px solid #c8d6e8; }

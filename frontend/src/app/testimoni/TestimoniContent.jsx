@@ -12,9 +12,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   CheckCircle2,
-  Clock,
-  XCircle,
-  EyeOff,
   Sparkles,
   RefreshCw,
 } from "lucide-react";
@@ -232,7 +229,7 @@ export default function TestimoniContent() {
                     <div className="testimoni-success-actions">
                       <a href="#riwayat-testimoni-title" className="testimoni-btn testimoni-btn--primary">
                         <Quote size={14} />
-                        <span>Lihat Status Testimoni</span>
+                        <span>Lihat Riwayat Pengisian</span>
                       </a>
                       <button
                         type="button"
@@ -286,7 +283,6 @@ export default function TestimoniContent() {
                       <Sparkles size={15} />
                       <span>
                         Testimoni yang kamu kirimkan akan ditinjau admin terlebih dahulu sebelum tampil ke publik.
-                        Status tinjauannya bisa kamu lihat di Riwayat Pengisian.
                       </span>
                     </div>
 
@@ -324,7 +320,7 @@ export default function TestimoniContent() {
             <div>
               <span className="testimoni-tag">CERITA YANG PERNAH DIKIRIM</span>
               <h2 id="riwayat-testimoni-title">Riwayat Pengisian</h2>
-              <p>Lihat kembali testimoni yang pernah kamu kirim dan status tampilnya.</p>
+              <p>Lihat kembali testimoni yang pernah kamu kirim.</p>
             </div>
             {!loadingMine && <span className="testimoni-count-pill">{myTestimonials.length} testimoni</span>}
           </div>
@@ -336,22 +332,6 @@ export default function TestimoniContent() {
                 <article key={item.id} className="testimoni-history-card">
                   <div className="testimoni-history-top">
                     <span className="testimoni-history-role">{item.angkatan || "Mahasiswa HIMANIKA"}</span>
-                    {item.status === "pending" ? (
-                      <span className="testimoni-badge testimoni-badge--hidden">
-                        <Clock size={11} />
-                        <span>Menunggu persetujuan admin</span>
-                      </span>
-                    ) : item.status === "rejected" ? (
-                      <span className="testimoni-badge testimoni-badge--hidden">
-                        <XCircle size={11} />
-                        <span>Tidak disetujui</span>
-                      </span>
-                    ) : !item.is_visible && (
-                      <span className="testimoni-badge testimoni-badge--hidden">
-                        <EyeOff size={11} />
-                        <span>Disembunyikan oleh Admin</span>
-                      </span>
-                    )}
                   </div>
                   <p className="testimoni-history-quote">“{item.quote}”</p>
                 </article>
