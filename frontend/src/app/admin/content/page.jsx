@@ -1558,6 +1558,11 @@ export default function AdminContentPage() {
                               <CheckCircle2 size={12} />
                               <span>Ditampilkan Publik</span>
                             </span>
+                          ) : testi.status === "pending" ? (
+                            <span className="content-testi-badge content-testi-badge--hidden">
+                              <Clock size={12} />
+                              <span>Menunggu Persetujuan</span>
+                            </span>
                           ) : (
                             <span className="content-testi-badge content-testi-badge--hidden">
                               <EyeOff size={12} />
@@ -1596,7 +1601,7 @@ export default function AdminContentPage() {
                           title={testi.is_visible ? "Sembunyikan dari publik" : "Tampilkan ke publik"}
                         >
                           {testi.is_visible ? <EyeOff size={13} /> : <Eye size={13} />}
-                          <span>{testi.is_visible ? "Sembunyikan" : "Tampilkan"}</span>
+                          <span>{testi.is_visible ? "Sembunyikan" : testi.status === "pending" ? "Setujui & Tampilkan" : "Tampilkan"}</span>
                         </button>
 
                         <button

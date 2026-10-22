@@ -12,6 +12,8 @@ import {
   ArrowRight,
   ArrowUpRight,
   CheckCircle2,
+  Clock,
+  XCircle,
   EyeOff,
   Sparkles,
   RefreshCw,
@@ -222,15 +224,15 @@ export default function TestimoniContent() {
                 {submittedSuccess ? (
                   <div className="testimoni-success-box">
                     <CheckCircle2 size={36} className="text-emerald-600" />
-                    <h3>Testimoni Berhasil Ditampilkan!</h3>
+                    <h3>Testimoni Berhasil Dikirim!</h3>
                     <p>
-                      Terima kasih atas ceritamu. Testimoni kamu sudah tersimpan dan langsung tampil di halaman ini serta
-                      landing page SIMANIKA.
+                      Terima kasih atas ceritamu. Testimoni kamu sedang ditinjau admin dan akan tampil di halaman ini serta
+                      landing page SIMANIKA setelah disetujui.
                     </p>
                     <div className="testimoni-success-actions">
-                      <a href="#daftar-testimoni" className="testimoni-btn testimoni-btn--primary">
+                      <a href="#riwayat-testimoni-title" className="testimoni-btn testimoni-btn--primary">
                         <Quote size={14} />
-                        <span>Lihat Testimoni di Bawah</span>
+                        <span>Lihat Status Testimoni</span>
                       </a>
                       <button
                         type="button"
@@ -283,8 +285,8 @@ export default function TestimoniContent() {
                     <div className="testimoni-form-notice">
                       <Sparkles size={15} />
                       <span>
-                        Testimoni yang kamu kirimkan akan langsung tampil ke publik. Admin berhak mengatur visibilitas
-                        atau menyembunyikan komentar jika diperlukan.
+                        Testimoni yang kamu kirimkan akan ditinjau admin terlebih dahulu sebelum tampil ke publik.
+                        Status tinjauannya bisa kamu lihat di Riwayat Pengisian.
                       </span>
                     </div>
 
@@ -334,7 +336,17 @@ export default function TestimoniContent() {
                 <article key={item.id} className="testimoni-history-card">
                   <div className="testimoni-history-top">
                     <span className="testimoni-history-role">{item.angkatan || "Mahasiswa HIMANIKA"}</span>
-                    {!item.is_visible && (
+                    {item.status === "pending" ? (
+                      <span className="testimoni-badge testimoni-badge--hidden">
+                        <Clock size={11} />
+                        <span>Menunggu persetujuan admin</span>
+                      </span>
+                    ) : item.status === "rejected" ? (
+                      <span className="testimoni-badge testimoni-badge--hidden">
+                        <XCircle size={11} />
+                        <span>Tidak disetujui</span>
+                      </span>
+                    ) : !item.is_visible && (
                       <span className="testimoni-badge testimoni-badge--hidden">
                         <EyeOff size={11} />
                         <span>Disembunyikan oleh Admin</span>

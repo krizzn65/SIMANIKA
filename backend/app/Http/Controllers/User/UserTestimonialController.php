@@ -73,18 +73,19 @@ class UserTestimonialController extends Controller
             'quote' => trim($validated['quote']),
             'foto' => $photoPath,
             'sort_order' => $nextSortOrder,
-            'status' => 'approved',
-            'is_visible' => true,
+            // Shown on the public landing page, so an admin approves it first.
+            'status' => 'pending',
+            'is_visible' => false,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
         return response()->json([
-            'message' => 'Testimoni Anda berhasil dikirim dan langsung ditampilkan!',
+            'message' => 'Testimoni terkirim dan sedang menunggu persetujuan admin.',
             'data' => [
                 'id' => $id,
-                'status' => 'approved',
-                'is_visible' => true,
+                'status' => 'pending',
+                'is_visible' => false,
             ],
         ], 201);
     }
