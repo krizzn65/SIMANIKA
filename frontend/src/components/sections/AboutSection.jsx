@@ -1,7 +1,7 @@
 import { ScrollRevealText } from "@/components/ui/ScrollRevealText";
 import { PixelCorner } from "@/components/ui/PixelCorner";
 import { landingTextDefaults } from "@/lib/landingText";
-import { InView } from "@/components/motion/InView";
+import AnimatedContent from "@/components/ui/AnimatedContent";
 import { Parallax } from "@/components/motion/Parallax";
 
 const pillars = [
@@ -51,11 +51,11 @@ export function AboutSection({ about }) {
         </div>
 
         <div className="about-details">
-          <InView className="about-copy">
+          <AnimatedContent blur={6} className="about-copy">
             {paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-          </InView>
+          </AnimatedContent>
 
-          <InView stagger className="about-pillars" role="list" aria-label="Fokus HIMANIKA">
+          <AnimatedContent stagger={0.08} distance={50} className="about-pillars" role="list" aria-label="Fokus HIMANIKA">
             {pillars.map((pillar) => (
               <article className="about-pillar" role="listitem" key={pillar.index}>
                 <span className="about-pillar__index">// {pillar.index}</span>
@@ -66,7 +66,7 @@ export function AboutSection({ about }) {
                 <span className="about-pillar__signal" aria-hidden="true" />
               </article>
             ))}
-          </InView>
+          </AnimatedContent>
         </div>
       </div>
     </section>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Images } from "lucide-react";
 import { publicApi } from "@/services/publicApi";
 import { formatAlbumDate, validAlbumSlug } from "@/lib/galleryAlbums";
-import { InView } from "@/components/motion/InView";
+import AnimatedContent from "@/components/ui/AnimatedContent";
 
 export function AlbumList() {
   const [state, setState] = useState({ loading: true, albums: [], error: false });
@@ -37,7 +37,7 @@ export function AlbumList() {
   }
 
   return (
-    <InView stagger className="galeri-grid">
+    <AnimatedContent stagger={0.08} distance={50} className="galeri-grid">
       {state.albums.map((album) => (
         <Link key={album.id} className="galeri-card" href={`/galeri/detail?slug=${album.slug}`}>
           <div className="galeri-card__cover">
@@ -53,6 +53,6 @@ export function AlbumList() {
           </div>
         </Link>
       ))}
-    </InView>
+    </AnimatedContent>
   );
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { eventListHref } from "@/lib/events";
 import { EventCard } from "./EventCard";
-import { InView } from "@/components/motion/InView";
+import AnimatedContent from "@/components/ui/AnimatedContent";
 
 export function EventList({ result, filters }) {
   const filtered = Boolean(filters.search || filters.kategori || filters.status || filters.page > 1);
@@ -15,7 +15,7 @@ export function EventList({ result, filters }) {
         </div>
       )}
       {result.events.length ? (
-        <InView stagger className="event-grid">{result.events.map((event) => <EventCard key={event.slug} event={event} now={now} />)}</InView>
+        <AnimatedContent stagger={0.08} distance={50} className="event-grid">{result.events.map((event) => <EventCard key={event.slug} event={event} now={now} />)}</AnimatedContent>
       ) : (
         <div className="event-empty">
           <div className="event-empty__inventory" aria-hidden="true"><span>+</span></div>

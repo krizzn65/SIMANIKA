@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { InView } from "@/components/motion/InView";
+import AnimatedContent from "@/components/ui/AnimatedContent";
 
 export function MissionAccordion({ items }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   return (
-    <InView stagger className="mission-accordion">
+    <AnimatedContent stagger={0.08} distance={50} className="mission-accordion">
       {items.map((item, index) => {
         const isActive = activeIndex === index;
         const panelId = `mission-panel-${item.index}`;
@@ -49,6 +49,6 @@ export function MissionAccordion({ items }) {
           </article>
         );
       })}
-    </InView>
+    </AnimatedContent>
   );
 }
