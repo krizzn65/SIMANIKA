@@ -1,0 +1,39 @@
+name: Inspect last errors and deploy invite fix (one-time)
+
+on:
+  push:
+    branches: [only_deploy]
+    paths: [".github/workflows/deploy-invite-fix.yml"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      SITE: https://himanika.wsmif.myhost.id
+      BASE: ca630db10df6d967bfd35628696a7cadd49e7546
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: sudo apt-get install -y -qq lftp >/dev/null
+      - name: Show the latest logged errors (first line only)
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; get /laravel_app/storage/logs/laravel.log -o laravel.log; bye" || true
+          [ -f laravel.log ] && grep -E "^\[[0-9-]+ [0-9:]+\] [a-z]+\.ERROR" laravel.log | tail -5 | cut -c1-260 || echo "no log"
+      - name: Back up and stop if the server copy changed
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; get /laravel_app/app/Http/Controllers/Admin/HomeContentController.php -o backup.php; bye"
+          git show "$BASE:backend/app/Http/Controllers/Admin/HomeContentController.php" | diff -q -w -B --strip-trailing-cr - backup.php >/dev/null || { echo "::error::Server copy differs; aborting."; exit 1; }
+      - name: Upload
+        run: lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; put backend/app/Http/Controllers/Admin/HomeContentController.php -o /laravel_app/app/Http/Controllers/Admin/HomeContentController.php; bye"
+      - name: Verify, roll back on failure
+        run: |
+          code() { curl -s -o /dev/null --max-time 20 -w '%{http_code}' "$@"; }
+          ping=$(code "$SITE/api/ping"); home=$(code "$SITE/api/public/home"); invite=$(code -H "Accept: application/json" "$SITE/api/admin/home-content/testimonial-invite")
+          echo "ping=$ping home=$home invite=$invite"
+          if [ "$ping" != 200 ] || [ "$home" != 200 ] || [ "$invite" != 401 ]; then
+            lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; put backup.php -o /laravel_app/app/Http/Controllers/Admin/HomeContentController.php; bye"; exit 1
+          fi
