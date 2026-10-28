@@ -15,6 +15,7 @@ async function main() {
   const positionsOnly = process.argv.includes('--positions-only');
   const adminFormsOnly = process.argv.includes('--admin-forms-only');
   const summaryOnly = process.argv.includes('--summary-only');
+  const whatsAppOnly = process.argv.includes('--whatsapp-only');
   if (summaryOnly) registered = true;
   let builderSaveAttempts = 0; let editAttempts = 0; let savedEdit;
   let releaseBuilderResponse; let builderResponseGate = Promise.resolve();
@@ -69,8 +70,8 @@ async function main() {
     } catch (error) { errors.push(error.message); res.writeHead(500); res.end('{}'); }
   });
   await new Promise(resolve => backend.listen(19092, '127.0.0.1', resolve));
-  const next = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'start', '--port', '3010'], {
-    env: { ...process.env, API_BASE_URL: 'http://127.0.0.1:19092/api' }, stdio: ['ignore', 'ignore', 'pipe'] });
+  const next = spawn(process.execPath, ['node_modules/next/dist/bin/next', whatsAppOnly ? 'dev' : 'start', ...(whatsAppOnly ? ['--webpack'] : []), '--port', '3010'], {
+    env: { ...process.env, API_BASE_URL: 'http://127.0.0.1:19092/api', ...(whatsAppOnly ? { NEXT_PUBLIC_API_BASE_URL: origin + '/api', NEXT_DIST_DIR: '.next/oprec-browser-dist' } : {}) }, stdio: ['ignore', 'ignore', 'pipe'] });
   next.stderr.on('data', data => process.stderr.write(data));
   const chromePath = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
   const profile = path.resolve('.next', 'oprec-user-browser-' + process.pid);
@@ -100,7 +101,7 @@ async function main() {
       else if (url.pathname.endsWith('/auth/me')) {
         await profileGate;
         if (role === 'expired') { status = 401; payload = { message: 'Unauthenticated' }; }
-        else payload = { data: { id: 50, name: 'Peserta Uji', role } };
+        else payload = { data: { id: 50, name: 'Peserta Uji', role, emailVerifiedAt: '2026-10-01T00:00:00Z' } };
       }
       else if (url.pathname.includes('/admin/oprec/') && url.pathname.endsWith('/written-test') && scheduleOnly) {
         const stage = { id: 901, headline: 'Tes Jadwal', published: scheduleLocked, submissions_count: scheduleLocked ? 1 : 0,
@@ -113,8 +114,16 @@ async function main() {
       else if (url.pathname.endsWith('/user/oprec/enroll')) {
         assert.equal(Number(JSON.parse(request.postData).oprec_id), 900); enrollmentAttempts++; payload = { data: { enrolled: true } };
       }
+      else if (whatsAppOnly && url.pathname.endsWith('/user/oprec/register')) {
+        registrationAttempts++;
+        if (registrationAttempts === 1) { status = 503; payload = { message: 'Temporary failure' }; }
+        else { registered = true; status = 201; payload = { data: { submitted: true } }; }
+      }
       else if (url.pathname.endsWith('/user/dashboard')) payload = { data: { items: [] } };
-      else if (url.pathname.endsWith('/user/oprec/workspace')) payload = { data: { oprec: period, enrolled: true, registration: registration(), announced: released } };
+      else if (url.pathname.endsWith('/user/oprec/workspace')) payload = { data: {
+        oprec: { ...period, link_grup_wa: registered ? 'https://chat.whatsapp.com/SyntheticInvite' : null },
+        enrolled: true, registration: registration(), announced: released,
+      } };
       else if (url.pathname.endsWith('/written-test') && request.method === 'GET') payload = { data: {
         id: 901, headline: 'Tes Uji', ready: true, active: true, server_now: new Date().toISOString(),
         tanggal_buka: '2000-01-01T00:00:00Z', tanggal_tutup: '2099-01-01T00:00:00Z',
@@ -340,15 +349,29 @@ async function main() {
     await waitFor(`document.querySelector('.event-form-feedback[role="alert"]')`);
     assert.equal(registrationAttempts, 0);
     for (const id of [1, 2, 3]) await evaluate(`document.querySelector('#oprec-divisi-${id}').click()`);
-    await evaluate(`{ const status=document.querySelector('[name="status_kepengurusan"]');status.value='Melanjutkan Periode kedua';status.dispatchEvent(new Event('change',{bubbles:true})); document.querySelector('[name="persetujuan_data_benar"]').click(); document.querySelector('[name="persetujuan_penggunaan_data"]').click(); }`);
+    await evaluate(`{ const status=document.querySelector('[name="status_kepengurusan"]'); if (status) { status.value='Melanjutkan Periode kedua'; status.dispatchEvent(new Event('change',{bubbles:true})); } document.querySelector('[name="persetujuan_data_benar"]').click(); document.querySelector('[name="persetujuan_penggunaan_data"]').click(); }`);
     await evaluate(`document.querySelector('.event-dynamic-form').requestSubmit()`);
     await waitFor(`document.querySelector('.oprec-submit-dialog')`); await click('Ya, kirim formulir');
-    await waitFor(`document.querySelector('.event-form-feedback')?.textContent.includes('belum bisa')`);
+    await waitFor(`document.querySelector('.event-form-feedback')?.textContent.includes('Temporary failure')`);
     assert.equal(registered, false);
+    assert.equal(await evaluate(`Boolean(document.querySelector('#oprec-wa-dialog-title'))`), false);
     await evaluate(`document.querySelector('.event-dynamic-form').requestSubmit()`);
     await waitFor(`document.querySelector('.oprec-submit-dialog')`); await click('Ya, kirim formulir');
-    await waitFor(`document.body?.innerText.includes('Pendaftaran Berhasil Dikirim') && document.body?.innerText.includes('Kerjakan sekarang')`);
+    await waitFor(`document.querySelector('#oprec-wa-dialog-title') && document.body?.innerText.includes('Kerjakan sekarang')`);
     assert.equal(registrationAttempts, 2);
+    assert.equal(await evaluate(`document.querySelector('[role="dialog"][aria-labelledby="oprec-wa-dialog-title"] a')?.getAttribute('href')`), 'https://chat.whatsapp.com/SyntheticInvite');
+    assert.ok(await evaluate(`document.querySelector('a[href="https://chat.whatsapp.com/SyntheticInvite"]') !== null`));
+    await click('Nanti saja');
+    await waitFor(`!document.querySelector('#oprec-wa-dialog-title')`);
+    if (whatsAppOnly) {
+      await send('Page.reload');
+      await waitFor(`document.body?.innerText.includes('Pendaftaran Berhasil Dikirim')`);
+      assert.equal(await evaluate(`Boolean(document.querySelector('#oprec-wa-dialog-title'))`), false);
+      assert.ok(await evaluate(`document.querySelector('a[href="https://chat.whatsapp.com/SyntheticInvite"]') !== null`));
+      assert.deepEqual(errors, []);
+      console.log('PASS: WhatsApp dialog appears only after confirmed registration, closes, and stays closed after reload while the group link remains available.');
+      return;
+    }
     assert.equal(await evaluate(`Boolean(document.querySelector('#test-alasan_melanjutkan_kepengurusan_2026'))`), false);
     await click('Kerjakan sekarang');
     await waitFor(`document.querySelector('#test-alasan_melanjutkan_kepengurusan_2026') && !document.body?.innerText.includes('Pendaftaran Berhasil Dikirim')`);
@@ -357,6 +380,7 @@ async function main() {
     await click('Kirim jawaban'); await click('Ya, kirim jawaban');
     await waitFor(`document.body?.innerText.includes('Jawaban Tes Tulis Terkirim')`);
     await send('Page.reload'); await waitFor(`document.body?.innerText.includes('Jawaban Tes Tulis Terkirim')`);
+    assert.equal(await evaluate(`Boolean(document.querySelector('#oprec-wa-dialog-title'))`), false);
     assert.equal(testAttempts, 2);
     released = true;
     const verified = await evaluate(`fetch('/api/oprec/result',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({oprec_id:900,nim:'e3124001',tanggal_lahir:'2004-01-01'})}).then(r=>r.json())`);
@@ -382,7 +406,7 @@ async function main() {
     }
     assert.ok(!requests.some(url => url.includes('/registrants') || url.includes('/submissions')));
     assert.deepEqual(errors, []);
-    console.log('PASS: user registration validation/upload/failure/retry, test failure/retry/refresh, result cookie/accepted/rejected, session expiry, leader read-only pages, 4 viewports, no runtime exceptions.');
+    console.log('PASS: user registration validation/upload/failure/retry, WhatsApp dialog only after confirmed registration, test failure/retry/refresh, result cookie/accepted/rejected, session expiry, leader read-only pages, 4 viewports, no runtime exceptions.');
   } finally {
     socket?.close(); chrome.kill(); next.kill(); await new Promise(resolve => backend.close(resolve));
     // Profile remains an ignored build artifact for diagnostics; never use tracked browser profiles.

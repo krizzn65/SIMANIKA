@@ -37,7 +37,11 @@ function WorkspaceContent({ oprecId }) {
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [workingOnTest, setWorkingOnTest] = useState(false);
+  const [whatsAppDialogLink, setWhatsAppDialogLink] = useState("");
   const abortRef = useRef(null);
+  const whatsAppDialogRef = useRef(null);
+  const whatsAppCloseRef = useRef(null);
+  const whatsAppCardLinkRef = useRef(null);
 
   const load = useCallback(async () => {
     abortRef.current?.abort();
@@ -50,6 +54,7 @@ function WorkspaceContent({ oprecId }) {
       if (!response.data?.data?.oprec) throw new Error("Data OPREC belum dapat dimuat.");
       setData(response.data.data);
       setError("");
+      return response.data.data;
     } catch (err) {
       if (!controller.signal.aborted) {
         if (err.response?.status === 404) setData(null);
@@ -62,6 +67,47 @@ function WorkspaceContent({ oprecId }) {
       }
     }
   }, [oprecId]);
+
+  const handleRegistrationSuccess = useCallback(async () => {
+    const workspace = await load();
+    if (!workspace?.registration) return;
+    const link = workspace.oprec?.link_grup_wa || workspace.oprec?.linkGrupWa
+      || workspace.registration.link_grup_wa || workspace.registration.linkGrupWa;
+    if (link) setWhatsAppDialogLink(link);
+  }, [load]);
+
+  useEffect(() => {
+    if (!whatsAppDialogLink) return;
+    const previousFocus = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    whatsAppCloseRef.current?.focus();
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setWhatsAppDialogLink("");
+      } else if (event.key === "Tab") {
+        const focusable = [...(whatsAppDialogRef.current?.querySelectorAll('button:not([disabled]), a[href]') || [])];
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
+      else whatsAppCardLinkRef.current?.focus();
+    };
+  }, [whatsAppDialogLink]);
 
   useEffect(() => {
     if (STAFF_ROLES.includes(user?.role)) {
@@ -244,6 +290,7 @@ function WorkspaceContent({ oprecId }) {
                       Bergabunglah ke grup WhatsApp resmi untuk mendapatkan arahan teknis, tanya jawab, dan info tahapan seleksi selanjutnya.
                     </p>
                     <a
+                      ref={whatsAppCardLinkRef}
                       href={waLink}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -290,7 +337,7 @@ function WorkspaceContent({ oprecId }) {
                   </div>
                 ) : (
                   normalizedOprec && oprecState(normalizedOprec).key === "open" ? (
-                    <OprecForm oprec={normalizedOprec} onSuccess={load} draftScope={user?.id} />
+                    <OprecForm oprec={normalizedOprec} onSuccess={handleRegistrationSuccess} draftScope={user?.id} />
                   ) : <p className={styles.loading}>Formulir pendaftaran belum dibuka atau sudah ditutup.</p>
                 )}
               </section>}
@@ -300,6 +347,24 @@ function WorkspaceContent({ oprecId }) {
           </>
         )}
       </div>
+      {whatsAppDialogLink && (
+        <div className={styles.waDialogOverlay} onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setWhatsAppDialogLink("");
+        }}>
+          <section ref={whatsAppDialogRef} className={styles.waDialog} role="dialog" aria-modal="true" aria-labelledby="oprec-wa-dialog-title" aria-describedby="oprec-wa-dialog-description">
+            <div className={styles.waDialogIcon}><WhatsAppIcon size={26} /></div>
+            <span className={styles.waDialogEyebrow}>PENDAFTARAN BERHASIL</span>
+            <h2 id="oprec-wa-dialog-title">Data sudah tersimpan. Yuk, gabung grup peserta!</h2>
+            <p id="oprec-wa-dialog-description">Masuk ke grup WhatsApp resmi untuk menerima arahan teknis, tanya jawab, dan informasi tahapan seleksi. Tautannya juga tersedia di halaman ini jika kamu ingin bergabung nanti.</p>
+            <div className={styles.waDialogActions}>
+              <button ref={whatsAppCloseRef} type="button" onClick={() => setWhatsAppDialogLink("")}>Nanti saja</button>
+              <a href={whatsAppDialogLink} target="_blank" rel="noopener noreferrer" onClick={() => setWhatsAppDialogLink("")}>
+                <WhatsAppIcon size={17} /> Masuk Grup WhatsApp <ArrowUpRight size={15} aria-hidden="true" />
+              </a>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }

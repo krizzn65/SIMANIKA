@@ -877,6 +877,91 @@
   outline-offset: 2px;
 }
 
+.waDialogOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(7, 17, 31, .68);
+  backdrop-filter: blur(4px);
+}
+
+.waDialog {
+  width: min(100%, 480px);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: clamp(24px, 4vw, 36px);
+  border: 1px solid var(--ws-border);
+  border-top: 4px solid #25d366;
+  background: #fff;
+  box-shadow: 8px 8px 0 rgba(37, 211, 102, .18), 0 24px 52px rgba(7, 17, 31, .25);
+}
+
+.waDialogIcon {
+  display: grid;
+  width: 50px;
+  height: 50px;
+  place-items: center;
+  margin-bottom: 22px;
+  border: 1px solid #a7eac0;
+  background: #e8fbf0;
+  color: #138e46;
+}
+
+.waDialogEyebrow {
+  color: #087443;
+  font: 600 11px/1.4 "IBM Plex Mono", ui-monospace, monospace;
+  letter-spacing: .09em;
+}
+
+.waDialog h2 {
+  margin: 10px 0 12px;
+  color: var(--ws-ink);
+  font-size: clamp(22px, 4vw, 28px);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -.035em;
+}
+
+.waDialog p {
+  margin: 0;
+  color: var(--ws-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.waDialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.waDialogActions button,
+.waDialogActions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--ws-border);
+  background: #fff;
+  color: var(--ws-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.waDialogActions button:hover { background: #f2f6fc; }
+.waDialogActions a { border-color: #1ea952; background: #25d366; color: #fff; }
+.waDialogActions a:hover { background: #20bd5a; }
+.waDialogActions :is(button, a):focus-visible { outline: 2px solid #087443; outline-offset: 3px; }
+
 .workspace :global(.oprec-submit-dialog__overlay) {
   position: fixed;
   inset: 0;
@@ -947,6 +1032,9 @@
   .workspace :global(.oprec-submit-dialog) { padding: 22px 18px; }
   .workspace :global(.oprec-submit-dialog__actions) { flex-direction: column-reverse; }
   .workspace :global(.oprec-submit-dialog__actions button) { width: 100%; }
+  .waDialogOverlay { padding: 16px; }
+  .waDialogActions { flex-direction: column; }
+  .waDialogActions :is(button, a) { width: 100%; }
 }
 
 .mainColumn { display: grid; gap: 22px; min-width: 0; }
