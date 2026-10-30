@@ -1,0 +1,28 @@
+name: Health probe (read-only, one-time)
+
+on:
+  push:
+    branches: [only_deploy]
+    paths: [".github/workflows/health-probe.yml"]
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    env:
+      HOST: himanika.wsmif.myhost.id
+    steps:
+      - name: DNS
+        run: |
+          getent ahostsv4 $HOST | head -2; echo "AAAA:"; getent ahostsv6 $HOST | head -2 || echo "no IPv6"
+          dig +short $HOST A @8.8.8.8; dig +short $HOST AAAA @8.8.8.8; dig +short $HOST A @1.1.1.1 || true
+      - name: Repeated HTTPS checks (20x)
+        run: |
+          for i in $(seq 1 20); do
+            curl -s -o /dev/null --max-time 20 -w "%{http_code} %{time_connect}s/%{time_total}s ip=%{remote_ip}\n" "https://$HOST/" || echo "FAIL exit=$?"
+            sleep 1
+          done
+      - name: HTTP, TLS and API
+        run: |
+          curl -s -o /dev/null -w "http -> %{http_code} %{redirect_url}\n" --max-time 20 "http://$HOST/" || echo "http FAIL exit=$?"
+          echo | openssl s_client -connect $HOST:443 -servername $HOST 2>/dev/null | openssl x509 -noout -dates -subject -issuer || echo "TLS check failed"
+          for p in /api/ping /api/public/home /testimoni/undangan/; do curl -s -o /dev/null -w "$p %{http_code}\n" --max-time 20 "https://$HOST$p" || echo "$p FAIL"; done
