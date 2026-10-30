@@ -1,0 +1,43 @@
+name: Deploy client error reports (one-time)
+
+on:
+  push:
+    branches: [only_deploy]
+    paths: [".github/workflows/deploy-client-errors.yml"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      SITE: https://himanika.wsmif.myhost.id
+      BASE: 55b710253e2e0fb96a43eae43c7af83179008708
+      CHANGED: routes/api.php app/Services/AuditTrail.php
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: sudo apt-get install -y -qq lftp >/dev/null
+      - name: Back up and stop if the server copies changed
+        run: |
+          for f in $CHANGED; do
+            mkdir -p "backup/$(dirname $f)"
+            lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; get /laravel_app/$f -o backup/$f; bye"
+            git show "$BASE:backend/$f" | diff -q -w -B --strip-trailing-cr - "backup/$f" >/dev/null || { echo "::error::Server copy of $f differs; aborting."; git show "$BASE:backend/$f" | diff -w -B --strip-trailing-cr - "backup/$f" | head -30; exit 1; }
+          done
+      - name: Upload (new controller first)
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; put backend/app/Http/Controllers/Public/ClientErrorController.php -o /laravel_app/app/Http/Controllers/Public/ClientErrorController.php; bye"
+          for f in $CHANGED; do lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; put backend/$f -o /laravel_app/$f; bye"; done
+      - name: Verify, roll back on failure
+        run: |
+          code() { curl -s -o /dev/null --max-time 20 -w '%{http_code}' "$@"; }
+          ping=$(code "$SITE/api/ping"); home=$(code "$SITE/api/public/home"); bad=$(code -X POST -H "Accept: application/json" -H "Content-Type: application/json" -d '{"reports":[]}' "$SITE/api/public/client-errors")
+          echo "ping=$ping home=$home client_errors_empty=$bad"
+          if [ "$ping" != 200 ] || [ "$home" != 200 ] || [ "$bad" != 422 ]; then
+            echo "::error::Check failed; restoring backups."
+            for f in $CHANGED; do lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "$FTP_SERVER" -e "set ssl:verify-certificate no; put backup/$f -o /laravel_app/$f; bye"; done
+            exit 1
+          fi
