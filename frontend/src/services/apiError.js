@@ -25,6 +25,6 @@ export function apiErrorMessage(error) {
   if (status === 413) return "Berkas terlalu besar. Periksa batas ukuran unggahan.";
   if (status === 507) return safeMessage(body?.message) ? body.message : "Penyimpanan server penuh atau belum dapat ditulis.";
   if (status === 429) return "Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi.";
-  if (!error.response) return "Tidak dapat terhubung ke server. Periksa koneksi lalu coba lagi.";
+  if (!error.response) return "Koneksi ke server terputus. Coba gunakan jaringan lain (misalnya data seluler), lalu ulangi.";
   return "Layanan sedang bermasalah. Data belum tersimpan; coba lagi nanti atau hubungi pengelola.";
 }

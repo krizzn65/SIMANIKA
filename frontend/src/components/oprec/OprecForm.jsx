@@ -431,7 +431,9 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
       setSuccess(true);
       onSuccess?.();
     } catch (cause) {
-      showErrors(cause.response?.data?.errors || {}, cause.response?.data?.message || "Koneksi terputus atau layanan belum tersedia. Pastikan status pendaftaran sebelum mencoba kembali.");
+      showErrors(cause.response?.data?.errors || {}, !cause.response
+        ? "Koneksi ke server terputus, jawabanmu belum terkirim. Coba gunakan jaringan lain (misalnya data seluler), lalu kirim ulang."
+        : cause.response.data?.message || "Pendaftaran belum berhasil dikirim. Pastikan status pendaftaran sebelum mencoba kembali.");
     } finally {
       pendingForm.current = null;
       pendingBody.current = null;

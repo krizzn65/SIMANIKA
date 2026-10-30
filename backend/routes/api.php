@@ -64,6 +64,7 @@ Route::prefix('public')->group(function () {
     Route::get('/oprec/posters/{filename}', [PublicOprecController::class, 'poster'])->name('public.oprec-poster');
     Route::get('/oprec', [PublicOprecController::class, 'index']);
     Route::get('/status', [\App\Http\Controllers\MaintenanceController::class, 'show']);
+    Route::post('/client-errors', [\App\Http\Controllers\Public\ClientErrorController::class, 'store'])->middleware('throttle:10,1');
     Route::post('/oprec/{oprec}/result', [PublicOprecController::class, 'result'])->middleware('throttle:oprec-result');
 });
 
