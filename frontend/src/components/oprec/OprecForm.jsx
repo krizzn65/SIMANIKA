@@ -424,7 +424,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
     setErrors({});
     setMessage("");
     try {
-      const { data: result } = await api.post("/user/oprec/register", body, { headers: { "Content-Type": "multipart/form-data" }, timeout: 25000 });
+      const { data: result } = await api.post("/user/oprec/register", body, { headers: { "Content-Type": "multipart/form-data" }, timeout: 60000 });
       if (result.data?.submitted !== true) throw new Error("Invalid response");
       try { sessionStorage.removeItem(draftKey); } catch {}
       form.reset();
