@@ -31,7 +31,7 @@ class OprecController extends Controller
 
     public function uploadGuidebook(Request $request)
     {
-        $request->validate(['guidebook' => ['required', 'file', 'mimes:pdf', 'max:10240']]);
+        $request->validate(['guidebook' => ['required', 'file', 'mimes:pdf', 'max:8192']]);
         $path = $request->file('guidebook')->store('oprec/guidebooks', 'local');
         return response()->json(['data' => ['path' => $path]], 201);
     }

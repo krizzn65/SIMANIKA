@@ -79,7 +79,7 @@ const adminLinks = [
   },
 ];
 
-const isOprecRegistrationRoute = (pathname) => pathname === "/admin/oprec" || pathname === "/admin/oprec/edit";
+const isOprecRegistrationRoute = (pathname) => pathname === "/admin/oprec" || pathname === "/admin/oprec/edit" || pathname === "/admin/oprec/tambah-peserta";
 const isOprecWrittenTestRoute = (pathname) => pathname === "/admin/oprec/test" || pathname.startsWith("/admin/oprec/test/");
 const isOprecAssessmentRoute = (pathname) => pathname === "/admin/oprec/penilaian" || pathname.startsWith("/admin/oprec/penilaian/");
 
@@ -91,6 +91,7 @@ function adminBreadcrumb(pathname) {
   if (isOprecAssessmentRoute(pathname)) return "Kelola OPREC > Penilaian";
   if (isOprecAnnouncementRoute(pathname)) return "Kelola OPREC > Pengumuman";
   if (pathname === "/admin/oprec") return "Kelola OPREC > Pendaftaran";
+  if (pathname === "/admin/oprec/tambah-peserta") return "Kelola OPREC > Tambah Peserta";
   if (isOprecRegistrationRoute(pathname) && pathname !== "/admin/oprec") return "Kelola OPREC > Edit Formulir";
   if (/^\/admin\/events\/[^/]+$/.test(pathname)) return "Kelola Event > Formulir Event";
   const labels = {

@@ -5,10 +5,11 @@ import { RotateCcw, Lock, AlertTriangle } from "lucide-react";
 import { DEFAULT_DIVISION_LOGOS, OPREC_FIXED_FIELDS, OPREC_REQUIRED_CONSENTS, validateOprecForm, validateOprecConsents, normalizeOprecNim, oprecNimProgramWarning, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
 import { api } from "@/services/api";
 import { FileUploadInput } from "@/components/ui/FileUploadInput";
+import { safeDriveUrl } from "@/lib/oprecSheetImport.mjs";
 
 function getDivisionPositions(division) {
   if (!division) return [];
-  return getDefaultJabatan(division.nama);
+  return getDefaultJabatan(division.nama || "");
 }
 
 const SYSTEM_IDENTIFIERS = OPREC_FIXED_FIELDS.map((field) => field.name);
@@ -19,13 +20,17 @@ const DRAFT_MAX_BYTES = 100_000;
 
 function DivisionChoiceItem({ option, division, common, id, selected, onToggle }) {
   const [imgError, setImgError] = useState(false);
-  const name = division?.nama || option.label;
-  const fullName = division?.namaLengkap;
+  const name = division?.nama || option?.label || "";
+  const fullName = division?.namaLengkap || division?.nama_lengkap || "";
   const key = name?.toLowerCase()?.trim();
-  const logoSrc = (!imgError && (division?.logo || DEFAULT_DIVISION_LOGOS[key])) || null;
+  const logoSrc = (!imgError && (division?.logo || (key ? DEFAULT_DIVISION_LOGOS[key] : null))) || null;
 
   return (
-    <label className={`oprec-division-choice ${selected > 0 ? "oprec-division-choice--selected" : ""}`} key={option.value}>
+    <label
+      className={`oprec-division-choice ${selected > 0 ? "oprec-division-choice--selected" : ""}`}
+      key={option.value}
+      style={{ position: "relative" }}
+    >
       <input
         {...common}
         id={`${id}-${option.value}`}
@@ -34,6 +39,7 @@ function DivisionChoiceItem({ option, division, common, id, selected, onToggle }
         className="oprec-division-choice__input"
         checked={selected > 0}
         onChange={() => onToggle(option.value)}
+        style={{ position: "absolute", top: 0, left: 0, opacity: 0, width: "1px", height: "1px", pointerEvents: "none" }}
       />
       <span
         className={`oprec-division-choice__indicator ${selected > 0 ? "oprec-division-choice__indicator--selected" : ""}`}
@@ -52,7 +58,7 @@ function DivisionChoiceItem({ option, division, common, id, selected, onToggle }
         />
       ) : (
         <span className="oprec-division-choice__fallback" aria-hidden="true">
-          {name.slice(0, 2).toUpperCase()}
+          {(name || "DV").slice(0, 2).toUpperCase()}
         </span>
       )}
       <span className="oprec-division-choice__text">
@@ -63,7 +69,7 @@ function DivisionChoiceItem({ option, division, common, id, selected, onToggle }
   );
 }
 
-function Field({ field, error, inlineError = error, divisions = [], selectedDivisions = [], onToggleDivision, onNimChange, onFileChange }) {
+function Field({ field, error, inlineError = error, divisions = [], selectedDivisions = [], onToggleDivision, onNimChange, onFileChange, sourceUrl }) {
   const id = `oprec-field-${field.name}`;
   const isSpecificTarget =
     (field.targetType === "specific" || field.target_type === "specific") &&
@@ -102,8 +108,8 @@ function Field({ field, error, inlineError = error, divisions = [], selectedDivi
         .map((target) => {
           const div = divisions.find(
             (d, idx) =>
-              String(d.id ?? idx).toLowerCase() === String(target).toLowerCase() ||
-              d.nama?.toLowerCase() === String(target).toLowerCase()
+              String(d?.id ?? idx).toLowerCase().trim() === String(target ?? "").toLowerCase().trim() ||
+              (d?.nama ? String(d.nama).toLowerCase().trim() === String(target ?? "").toLowerCase().trim() : false)
           );
           return div?.nama || target;
         })
@@ -164,11 +170,11 @@ function Field({ field, error, inlineError = error, divisions = [], selectedDivi
     control = (
       <select {...common} defaultValue="">
         <option value="" disabled={field.required}>
-          Pilih {field.label.toLowerCase()}
+          Pilih {(field.label || "pilihan").toLowerCase()}
         </option>
-        {field.options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
+        {(Array.isArray(field.options) ? field.options : []).map((option) => (
+          <option key={typeof option === "object" && option !== null ? option.value : option} value={typeof option === "object" && option !== null ? option.value : option}>
+            {typeof option === "object" && option !== null ? option.label : option}
           </option>
         ))}
       </select>
@@ -176,7 +182,7 @@ function Field({ field, error, inlineError = error, divisions = [], selectedDivi
   } else if (field.type === "radio") {
     control = (
       <div className="event-dynamic-choices">
-        {field.options.map((option, index) => (
+        {(Array.isArray(field.options) ? field.options : []).map((option, index) => (
           <label key={option.value}>
             <input {...common} id={`${id}-${index}`} type="radio" value={option.value} />{" "}
             <span>{option.label}</span>
@@ -191,16 +197,29 @@ function Field({ field, error, inlineError = error, divisions = [], selectedDivi
       </label>
     );
   } else if (field.type === "file") {
+    const rawAccept = field.accept;
+    const acceptList = Array.isArray(rawAccept) && rawAccept.length > 0
+      ? rawAccept
+      : typeof rawAccept === "string" && rawAccept.trim()
+      ? rawAccept.split(",").map((s) => s.trim()).filter(Boolean)
+      : [".pdf", ".jpg", ".jpeg", ".png"];
+    const maxSize = field.maxSizeMB || field.max_size_mb || 5;
     control = (
       <>
+
+        {safeDriveUrl(sourceUrl) && (
+          <small>
+            Referensi Google Form: <a href={safeDriveUrl(sourceUrl)} target="_blank" rel="noopener noreferrer">Buka berkas di Drive</a>. Unduh lalu unggah berkasnya di sini.
+          </small>
+        )}
         <FileUploadInput
           {...common}
           invalid={Boolean(error)}
-          accept={field.accept.join(",")}
+          accept={acceptList.join(",")}
           onChange={onFileChange}
         />
         <small id={`${id}-file`}>
-          {field.accept.map((ext) => ext.replace(".", "").toUpperCase()).join(", ")} · maksimal {field.maxSizeMB} MB
+          {acceptList.map((ext) => String(ext).replace(".", "").toUpperCase()).join(", ")} · maksimal {maxSize} MB
         </small>
       </>
     );
@@ -248,7 +267,7 @@ function Field({ field, error, inlineError = error, divisions = [], selectedDivi
   );
 }
 
-export function OprecForm({ oprec, onSuccess, draftScope }) {
+export function OprecForm({ oprec, onSuccess, draftScope, adminEntry }) {
   const [pending, setPending] = useState(false);
   const [errors, setErrors] = useState({});
   const [nimInputError, setNimInputError] = useState(null);
@@ -307,6 +326,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
   }, [selectedDivisions, oprec.divisiTersedia]);
 
   function saveDraft() {
+    if (adminEntry) return;
     if (!draftReady.current || !formRef.current) return;
     try {
       const formData = new FormData(formRef.current);
@@ -325,6 +345,36 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
 
   useEffect(() => {
     draftReady.current = false;
+    if (adminEntry) {
+      const form = formRef.current;
+      form?.reset();
+      const fillAnswers = () => {
+        for (const field of oprec.formFields) {
+          if (field.type === "file" || isDivisionField(field.name)) continue;
+          const value = adminEntry.values?.[field.name] || "";
+          const controls = form?.querySelectorAll(`[name="${field.name}"]`) || [];
+          if (field.type === "checkbox") controls.forEach((control) => { control.checked = value === "on"; });
+          else if (field.type === "radio") controls.forEach((control) => { control.checked = control.value === value; });
+          else if (controls[0]) controls[0].value = field.name === "nim" ? normalizeOprecNim(value) : value;
+        }
+        for (const consent of OPREC_REQUIRED_CONSENTS) {
+          const control = form?.querySelector(`[name="${consent.name}"]`);
+          if (control) control.checked = adminEntry.values?.[consent.name] === "on";
+        }
+      };
+      fillAnswers();
+      const selected = [1, 2, 3].map((rank) => adminEntry.values?.[`divisi_pilihan_${rank}`]).filter(Boolean).map(String);
+      const allowed = new Set((oprec.divisiTersedia || []).map((division, idx) => String(division.id ?? idx)));
+      setSelectedDivisions([...new Set(selected.filter((id) => allowed.has(id)))].slice(0, 3));
+      setSelectedJabatan({
+        1: adminEntry.values?.jabatan_pilihan_1 || "",
+        2: adminEntry.values?.jabatan_pilihan_2 || "",
+        3: adminEntry.values?.jabatan_pilihan_3 || "",
+      });
+      setNimInputError(oprecNimProgramWarning(adminEntry.values?.nim));
+      const frame = requestAnimationFrame(fillAnswers);
+      return () => cancelAnimationFrame(frame);
+    }
     try {
       const raw = sessionStorage.getItem(draftKey);
       const draft = raw ? JSON.parse(raw) : null;
@@ -352,12 +402,14 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
       const restoredJabatan = draft.selectedJabatan && typeof draft.selectedJabatan === "object" ? draft.selectedJabatan : {};
       setSelectedJabatan({ 1: typeof restoredJabatan[1] === "string" ? restoredJabatan[1] : "", 2: typeof restoredJabatan[2] === "string" ? restoredJabatan[2] : "", 3: typeof restoredJabatan[3] === "string" ? restoredJabatan[3] : "" });
     } catch {
-      try { sessionStorage.removeItem(draftKey); } catch {}
+      if (!adminEntry) {
+        try { sessionStorage.removeItem(draftKey); } catch {}
+      }
     } finally {
       const frame = requestAnimationFrame(() => { draftReady.current = true; });
       return () => cancelAnimationFrame(frame);
     }
-  }, [draftKey, oprec.formFields, oprec.divisiTersedia]);
+  }, [draftKey, oprec.formFields, oprec.divisiTersedia, adminEntry?.seedKey]);
 
   useEffect(() => {
     saveDraft();
@@ -424,11 +476,14 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
     setErrors({});
     setMessage("");
     try {
-      const { data: result } = await api.post("/user/oprec/register", body, { headers: { "Content-Type": "multipart/form-data" }, timeout: 60000 });
+      const endpoint = adminEntry ? `/admin/oprec/${oprec.id}/registrants` : "/user/oprec/register";
+      const { data: result } = await api.post(endpoint, body, { headers: { "Content-Type": "multipart/form-data" }, timeout: 240000 });
       if (result.data?.submitted !== true) throw new Error("Invalid response");
-      try { sessionStorage.removeItem(draftKey); } catch {}
+      if (!adminEntry) {
+        try { sessionStorage.removeItem(draftKey); } catch {}
+      }
       form.reset();
-      setSuccess(true);
+      if (!adminEntry) setSuccess(true);
       onSuccess?.();
     } catch (cause) {
       showErrors(cause.response?.data?.errors || {}, !cause.response
@@ -445,6 +500,10 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
   function submit(event) {
     event.preventDefault();
     if (submitting.current || confirmOpen) return;
+    if (adminEntry && !adminEntry.accountReady) {
+      showErrors({}, "Pilih email akun peserta yang sudah ditemukan sebelum mengirim.");
+      return;
+    }
     const form = event.currentTarget;
     const body = new FormData(form);
     selectedDivisions.forEach((value, index) => body.set(`divisi_pilihan_${index + 1}`, value));
@@ -455,6 +514,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
         body.set(`jabatan_pilihan_${rank}`, "");
       }
     });
+    if (adminEntry && adminEntry.email) body.set("email", adminEntry.email.trim().toLowerCase());
     const nextErrors = { ...validateOprecForm(oprec.formFields, body, Date.now(), oprec.divisiTersedia), ...validateOprecConsents(body) };
     if (Object.keys(nextErrors).length) {
       showErrors(nextErrors, "Periksa kolom yang ditandai sebelum mengirim.");
@@ -464,8 +524,8 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
     for (const value of body.values()) {
       if (typeof value !== "string") total += value.size;
     }
-    if (total > 11 * 1024 * 1024) {
-      showErrors({}, "Total berkas maksimal 11 MB. Perkecil ukuran berkasmu.");
+    if (total > 20 * 1024 * 1024) {
+      showErrors({}, "Total berkas maksimal 20 MB. Perkecil ukuran berkasmu.");
       return;
     }
     body.set("oprec_id", oprec.id);
@@ -561,6 +621,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
               inlineError={field.name === "nim" ? nimInputError : errors[field.name]}
               onNimChange={handleNimChange}
               onFileChange={handleFileChange}
+              sourceUrl={adminEntry?.files?.[field.name]}
               divisions={oprec.divisiTersedia}
               selectedDivisions={selectedDivisions}
               onToggleDivision={toggleDivision}
@@ -639,6 +700,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
                 const positions = getDivisionPositions(division);
                 const currentChoice = selectedJabatan[rank] || "";
                 const slotError = errors[`jabatan_pilihan_${rank}`];
+                const divDisplayName = division?.nama || `Divisi #${rank}`;
 
                 return (
                   <div
@@ -654,8 +716,8 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
                         Pilihan #{rank}
                       </span>
                       {isUnlocked ? (
-                        <span className="oprec-jabatan-slot__div-badge" title={division.namaLengkap || division.nama}>
-                          {division.nama}
+                        <span className="oprec-jabatan-slot__div-badge" title={division.namaLengkap || divDisplayName}>
+                          {divDisplayName}
                         </span>
                       ) : (
                         <span className="oprec-jabatan-slot__locked-badge">
@@ -670,7 +732,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
                         htmlFor={`oprec-jabatan-select-${rank}`}
                         className="oprec-jabatan-slot__label"
                       >
-                        Jabatan {isUnlocked ? `di ${division.nama}` : `Pilihan ${rank}`}
+                        Jabatan {isUnlocked ? `di ${divDisplayName}` : `Pilihan ${rank}`}
                         {isUnlocked && <b aria-label="wajib"> *</b>}
                       </label>
                       <div className="oprec-jabatan-slot__select-wrap">
@@ -693,8 +755,9 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
                             </option>
                           ) : positions.length > 1 ? (
                             <>
+
                               <option value="" disabled>
-                                -- Pilih Jabatan di {division.nama} --
+                                -- Pilih Jabatan di {divDisplayName} --
                               </option>
                               {positions.map((pos) => (
                                 <option key={pos} value={pos}>
@@ -750,6 +813,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
               selectedDivisions={selectedDivisions}
               onToggleDivision={toggleDivision}
               onFileChange={handleFileChange}
+              sourceUrl={adminEntry?.files?.[field.name]}
             />
           ))}
 
@@ -762,7 +826,7 @@ export function OprecForm({ oprec, onSuccess, draftScope }) {
         </section>
       </fieldset>
       <div className="event-group-submit">
-        <button className="event-button" type="submit" disabled={pending || confirmOpen || selectedDivisions.length !== 3}>
+        <button className="event-button" type="submit" disabled={pending || confirmOpen || selectedDivisions.length !== 3 || (adminEntry && !adminEntry.accountReady)}>
           {pending ? "Mengirim…" : "Kirim"}
         </button>
       </div>

@@ -72,12 +72,13 @@ class OprecAccessAuditTest extends TestCase
         foreach ([false, true] as $assigned) {
             if ($assigned) DB::table('oprec_assessment_assignments')->insert(['oprec_id' => $f['period']->id, 'user_id' => $f['leader']->id,
                 'assigned_by' => $f['owner']->id, 'created_at' => now(), 'updated_at' => now()]);
-            foreach ([$base.'/registrants', $base.'/written-test', $base.'/written-test/submissions',
+            $this->getJson($base.'/registrants')->assertOk();
+            foreach ([$base.'/written-test', $base.'/written-test/submissions',
                 $base.'/written-test/submissions/'.$f['submission']->id,
-                $base.'/registrants/'.$f['registration']->id.'/files/cv',
                 $base.'/written-test/submissions/'.$f['submission']->id.'/files/reason'] as $url) $this->getJson($url)->assertForbidden();
             foreach ([['POST', '/api/admin/oprec'], ['PUT', $base], ['DELETE', $base],
                 ['POST', '/api/admin/oprec/upload-poster'], ['POST', '/api/admin/oprec/upload-logo'],
+                ['POST', $base.'/registrants'],
                 ['POST', $base.'/written-test'], ['PUT', $base.'/written-test'],
                 ['DELETE', $base.'/written-test/submissions/'.$f['submission']->id],
                 ['PUT', $base.'/registrants/'.$f['registration']->id.'/form'],
@@ -213,6 +214,88 @@ class OprecAccessAuditTest extends TestCase
         Storage::disk('local')->assertExists($path);
         $this->postJson('/api/user/oprec/register', $payload + ['cv' => $pdf()])->assertConflict();
         $this->assertSame([$path], Storage::disk('local')->allFiles("oprec/{$f['period']->id}"));
+    }
+
+    public function test_registration_accepts_20_mb_of_files_and_rejects_more(): void
+    {
+        $f = $this->fixture();
+        $f['period']->update(['form_fields' => [...$f['period']->form_fields,
+            ['name' => 'file_a', 'type' => 'file', 'accept' => ['.pdf'], 'maxSizeMB' => 8],
+            ['name' => 'file_b', 'type' => 'file', 'accept' => ['.pdf'], 'maxSizeMB' => 8],
+            ['name' => 'file_c', 'type' => 'file', 'accept' => ['.pdf'], 'maxSizeMB' => 8],
+            ['name' => 'file_d', 'type' => 'file', 'accept' => ['.pdf'], 'maxSizeMB' => 10],
+        ]]);
+        $payload = ['oprec_id' => $f['period']->id, 'schema_version' => '1', 'nim' => 'E318889',
+            'tanggal_lahir' => '2004-01-01', 'nama' => 'Peserta Upload', 'angkatan' => '2024',
+            'status_kepengurusan' => 'Anggota Baru',
+            'persetujuan_data_benar' => 'on', 'persetujuan_penggunaan_data' => 'on'];
+        foreach ([1, 2, 3] as $rank) $payload["divisi_pilihan_$rank"] = (string) $f['divisions'][$rank - 1]->id;
+        $payload['jabatan_pilihan_1'] = 'Sekretaris 2';
+        $files = fn () => [
+            'file_a' => UploadedFile::fake()->create('a.pdf', 8192, 'application/pdf'),
+            'file_b' => UploadedFile::fake()->create('b.pdf', 8192, 'application/pdf'),
+            'file_c' => UploadedFile::fake()->create('c.pdf', 4096, 'application/pdf'),
+        ];
+
+        $first = $this->verifiedUser(['email' => 'limit-ok@audit.test']);
+        $this->actingAs($first, 'sanctum')->postJson('/api/user/oprec/register', $payload + $files())
+            ->assertCreated();
+
+        $second = $this->verifiedUser(['email' => 'limit-over@audit.test']);
+        $this->actingAs($second, 'sanctum')->postJson('/api/user/oprec/register', array_replace($payload,
+            ['nim' => 'E318890']) + $files() + [
+            'file_d' => UploadedFile::fake()->createWithContent('d.pdf', "%PDF-1.4\n%%EOF"),
+        ])->assertStatus(413)->assertJsonPath('message', 'Ukuran total berkas maksimal 20 MB.');
+        $this->assertDatabaseMissing('oprec_registrations', ['user_id' => $second->id]);
+        $this->postJson('/api/user/oprec/register', array_replace($payload, ['nim' => 'E318890']) + [
+            'file_d' => UploadedFile::fake()->create('d.pdf', 8193, 'application/pdf'),
+        ])->assertUnprocessable()->assertJsonValidationErrors('file_d');
+    }
+
+    public function test_admin_can_import_closed_period_registration_into_existing_account(): void
+    {
+        $f = $this->fixture();
+        $f['period']->update(['status' => 'closed', 'tanggal_tutup' => now()->subMinute()]);
+        $f['period']->update(['form_fields' => [...$f['period']->form_fields,
+            ['name' => 'ktm_sim_online', 'label' => 'Foto KTM', 'type' => 'file', 'required' => true,
+                'accept' => ['.pdf'], 'maxSizeMB' => 2]]]);
+        $admin = $this->verifiedUser(['email' => 'import-admin@audit.test', 'password' => 'audit-password']);
+        $admin->forceFill(['role' => 'admin'])->save();
+        $participant = $this->verifiedUser(['email' => 'imported@audit.test', 'password' => 'audit-password']);
+        $payload = [
+            'email' => 'IMPORTED@AUDIT.TEST', 'schema_version' => '1', 'nim' => 'E316789',
+            'tanggal_lahir' => '2005-02-03', 'nama' => 'Peserta Cadangan', 'angkatan' => '2024',
+            'status_kepengurusan' => 'Anggota Baru', 'persetujuan_data_benar' => 'on',
+            'persetujuan_penggunaan_data' => 'on',
+        ];
+        foreach ([1, 2, 3] as $rank) {
+            $payload["divisi_pilihan_{$rank}"] = (string) $f['divisions'][$rank - 1]->id;
+        }
+        $payload['jabatan_pilihan_1'] = 'Wakil Ketua Umum';
+        $url = "/api/admin/oprec/{$f['period']->id}/registrants";
+        $lookup = $url.'/account';
+
+        $this->actingAs($f['leader'], 'sanctum')->postJson($url, $payload)->assertForbidden();
+        $this->getJson($lookup.'?email=imported%40audit.test')->assertForbidden();
+        $this->getJson($lookup.'?q=imported')->assertForbidden();
+        $this->actingAs($admin, 'sanctum')->postJson($url, array_replace($payload, ['email' => 'missing@audit.test']))
+            ->assertUnprocessable()->assertJsonValidationErrors('email');
+        $this->getJson($lookup.'?email=missing%40audit.test')->assertOk()->assertJsonPath('data.exists', false);
+        $this->getJson($lookup.'?email=IMPORTED%40AUDIT.TEST')->assertOk()->assertJsonPath('data.exists', true)->assertJsonPath('data.alreadyRegistered', false);
+        $this->getJson($lookup.'?q=imported')->assertOk()->assertJsonFragment(['email' => 'imported@audit.test']);
+        $this->getJson($lookup.'?q=%25%5F')->assertOk()->assertJsonPath('data.matches', []);
+        $this->postJson($url, array_replace($payload, ['tanggal_lahir' => '']))
+            ->assertUnprocessable()->assertJsonValidationErrors('tanggal_lahir');
+        $this->postJson($url, $payload)->assertUnprocessable()->assertJsonValidationErrors('ktm_sim_online');
+        $pdf = UploadedFile::fake()->createWithContent('ktm.pdf', "%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF");
+        $this->postJson($url, $payload + ['ktm_sim_online' => $pdf])->assertCreated()->assertJsonPath('data.submitted', true);
+        $this->assertDatabaseHas('oprec_registrations', ['oprec_id' => $f['period']->id, 'user_id' => $participant->id, 'nim' => 'E316789']);
+        Storage::disk('local')->assertExists($f['period']->registrations()->where('user_id', $participant->id)->firstOrFail()->file_uploads['ktm_sim_online']);
+        $this->postJson($url, $payload)->assertConflict();
+        $this->getJson($lookup.'?email=imported%40audit.test')->assertOk()->assertJsonPath('data.alreadyRegistered', true);
+        $this->getJson($lookup.'?q=imported')->assertOk()->assertJsonPath('data.matches.0.alreadyRegistered', true);
+        $this->actingAs($participant, 'sanctum')->getJson("/api/user/oprec/workspace?oprec_id={$f['period']->id}")
+            ->assertOk()->assertJsonPath('data.registration.nim', 'E316789');
     }
 
     public function test_oprec_rate_limit_is_per_account_and_cannot_be_bypassed_with_form_email(): void

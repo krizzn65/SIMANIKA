@@ -91,7 +91,7 @@ export function normalizeFields(fields = []) {
       name: field.name, type: field.type, label: text(field.label), required: field.required === true,
       help: text(field.help), placeholder: text(field.placeholder), options, accept, min, max,
       maxLength: Math.min(Math.max(count(field.maxLength ?? field.max_length) ?? (field.type === "textarea" ? 3000 : 255), 1), 5000),
-      maxSizeMB: Math.min(Math.max(count(field.maxSizeMB ?? field.max_size_mb) ?? 5, 1), 10),
+      maxSizeMB: Math.min(Math.max(count(field.maxSizeMB ?? field.max_size_mb) ?? 5, 1), 8),
       targetType: field.target_type ?? field.targetType ?? "all",
       targetDivisions: Array.isArray(field.target_divisions ?? field.targetDivisions)
         ? (field.target_divisions ?? field.targetDivisions).map(String).filter(Boolean)
@@ -196,14 +196,14 @@ export function isFieldApplicable(field, choices = [], divisions = []) {
     const div = (divisions || []).find(
       (d, idx) =>
         String(d.id ?? idx).toLowerCase() === val ||
-        d.nama?.toLowerCase().trim() === val ||
-        d.namaLengkap?.toLowerCase().trim() === val
+        (d?.nama ? String(d.nama).toLowerCase().trim() === val : false) ||
+        ((d?.namaLengkap || d?.nama_lengkap) ? String(d.namaLengkap || d.nama_lengkap).toLowerCase().trim() === val : false)
     );
     return [
       val,
       div?.id != null ? String(div.id).trim().toLowerCase() : null,
-      div?.nama?.toLowerCase().trim(),
-      div?.namaLengkap?.toLowerCase().trim(),
+      div?.nama ? String(div.nama).toLowerCase().trim() : null,
+      (div?.namaLengkap || div?.nama_lengkap) ? String(div.namaLengkap || div.nama_lengkap).toLowerCase().trim() : null,
     ].filter(Boolean);
   });
   return targetDivisions.some((target) => {
@@ -250,7 +250,7 @@ export function validateOprecForm(fields, form, now = Date.now(), divisions = []
   }
   for (let index = 0; index < 3; index++) {
     const rank = index + 1;
-    const division = divisions.find((item) => String(item.id) === choices[index]);
+    const division = divisions.find((item, idx) => String(item.id ?? idx) === choices[index] || (item.nama && item.nama.toLowerCase() === String(choices[index]).toLowerCase()));
     const positions = getDefaultJabatan(division?.nama || "");
     if (choices[index] && (form.has(`jabatan_pilihan_${rank}`) || positions.length > 1)) {
       const val = form.get(`jabatan_pilihan_${rank}`);
@@ -272,7 +272,8 @@ export function validateOprecForm(fields, form, now = Date.now(), divisions = []
     if (empty) { if (field.required) errors[field.name] = `${field.label} wajib diisi.`; continue; }
     if (file) {
       const extension = `.${String(value.name || "").split(".").pop().toLowerCase()}`;
-      if (typeof value.size !== "number" || !field.accept.includes(extension)) errors[field.name] = `Gunakan berkas ${field.accept.join(", ")}.`;
+      const rawAccept = Array.isArray(field.accept) && field.accept.length > 0 ? field.accept : [".pdf", ".jpg", ".jpeg", ".png"];
+      if (typeof value.size !== "number" || !rawAccept.includes(extension)) errors[field.name] = `Gunakan berkas ${rawAccept.join(", ")}.`;
       else if (value.size > field.maxSizeMB * 1024 * 1024) errors[field.name] = `Ukuran maksimal ${field.maxSizeMB} MB.`;
       continue;
     }
@@ -288,7 +289,7 @@ export function validateOprecForm(fields, form, now = Date.now(), divisions = []
     else if (field.type === "tel" && !/^[0-9+() .-]{5,30}$/.test(value)) errors[field.name] = "Isi nomor telepon yang valid (5–30 karakter).";
     else if (field.type === "url" && !validHttpUrl(value)) errors[field.name] = "Isi link http:// atau https:// yang valid.";
     else if (field.type === "number" && (!Number.isFinite(Number(value)) || (field.min !== null && Number(value) < field.min) || (field.max !== null && Number(value) > field.max))) errors[field.name] = "Angka berada di luar batas yang diperbolehkan.";
-    else if (["select", "radio"].includes(field.type) && !field.options.some((option) => option.value === value)) errors[field.name] = "Pilih salah satu pilihan yang tersedia.";
+    else if (["select", "radio"].includes(field.type) && Array.isArray(field.options) && !field.options.some((option) => (typeof option === "object" && option !== null ? option.value : option) === value)) errors[field.name] = "Pilih salah satu pilihan yang tersedia.";
     else if (field.type === "checkbox" && value !== "on") errors[field.name] = "Nilai persetujuan tidak valid.";
   }
   return errors;

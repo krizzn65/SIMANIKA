@@ -18,7 +18,7 @@ export function AdminGuidebookField({ type, value, file, onTypeChange, onValueCh
     {type === "file" && <div className="rounded-lg border border-slate-300 bg-white p-3">
       <label className="mb-2 flex items-center gap-2 font-medium text-slate-700" htmlFor="event-guidebook-file"><FileText size={18} aria-hidden="true" /> Berkas PDF</label>
       <input id="event-guidebook-file" type="file" accept=".pdf,application/pdf" onChange={onFileChange} required={!value} className="block min-h-11 w-full text-slate-800" />
-      <p className="mt-2 text-slate-600">PDF maksimal 10 MB. {file ? `Dipilih: ${file.name}` : value ? "Berkas tersimpan. Pilih file baru untuk mengganti." : "Pilih berkas untuk diunggah."}</p>
+      <p className="mt-2 text-slate-600">PDF maksimal 8 MB. {file ? `Dipilih: ${file.name}` : value ? "Berkas tersimpan. Pilih file baru untuk mengganti." : "Pilih berkas untuk diunggah."}</p>
     </div>}
     {type === "link" && <div>
       <label className="mb-1 flex items-center gap-2 font-medium text-slate-700" htmlFor="event-guidebook-url"><Link2 size={18} aria-hidden="true" /> Tautan guidebook</label>

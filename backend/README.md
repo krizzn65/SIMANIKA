@@ -14,7 +14,7 @@ Untuk hosting kampus dengan MySQL 8.0.30, phpMyAdmin, dan FTP tanpa terminal, gu
 
 Di Windows, jalankan `dev.bat` dari root proyek. Script tersebut membuat konfigurasi PHP sementara dengan `extension_dir` sesuai lokasi `php.exe` di PATH; ini mengatasi instalasi PHP lokal yang masih menunjuk ke direktori ekstensi lama tanpa mengubah `php.ini` global.
 
-Atur PHP `upload_max_filesize=10M` dan `post_max_size=12M` untuk berkas OPREC. File pendaftar tersimpan di disk privat `storage/app/private`, jangan memakai `storage:link` untuk berkas itu.
+Hosting saat ini mengatur PHP melalui cPanel: `upload_max_filesize=8M`, `post_max_size=32M`, `max_input_time=60`, `max_execution_time=30`, dan `memory_limit=128M`. Pendaftaran OPREC membatasi 8 MB per berkas, 20 MB gabungan berkas, dan 22 MB per request. `max_input_time=60` dapat memutus unggahan besar pada koneksi lambat. File pendaftar tersimpan di disk privat `storage/app/private`, jangan memakai `storage:link` untuk berkas itu.
 
 Frontend dan backend dengan sesi Sanctum harus memakai host yang sama untuk development (`localhost` di kedua sisi, bukan campuran `localhost`/`127.0.0.1`). Produksi harus memakai subdomain dengan parent domain yang sama, HTTPS, `SESSION_DOMAIN`, `SANCTUM_STATEFUL_DOMAINS`, dan `CORS_ALLOWED_ORIGINS` yang sesuai. Jangan memakai wildcard origin bersama cookie.
 

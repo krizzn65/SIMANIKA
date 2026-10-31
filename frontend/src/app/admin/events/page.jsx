@@ -302,8 +302,8 @@ export default function AdminEventsPage() {
   const handleGuidebookFileChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (file.type !== "application/pdf" || file.size > 10 * 1024 * 1024) {
-      setFormError("Guidebook harus PDF dengan ukuran maksimal 10 MB.");
+    if (file.type !== "application/pdf" || file.size > 8 * 1024 * 1024) {
+      setFormError("Guidebook harus PDF dengan ukuran maksimal 8 MB.");
       setGuidebookFile(null);
       event.target.value = "";
       return;

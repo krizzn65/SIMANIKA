@@ -136,6 +136,8 @@ test("birth date handles leap days, impossible dates and future dates", () => {
 });
 test("files have type and size limits", () => {
   const fields = normalizeFields([...identity, { name: "cv", type: "file", label: "CV", accept: [".pdf"], maxSizeMB: 1 }]);
+  const legacyFields = normalizeFields([...identity, { name: "cv", type: "file", label: "CV", accept: [".pdf"], maxSizeMB: 10 }]);
+  assert.equal(legacyFields.find((field) => field.name === "cv").maxSizeMB, 8);
   const form = new FormData(); form.set("nim", "E312345"); form.set("tanggal_lahir", "2004-02-29");
   form.set("cv", new Blob(["document"], { type: "application/pdf" }), "cv.pdf");
   assert.deepEqual(validateOprecForm(fields, form), {});

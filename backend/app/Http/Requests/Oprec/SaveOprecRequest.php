@@ -44,7 +44,7 @@ class SaveOprecRequest extends FormRequest
             'form_fields.*.example_file' => ['nullable', 'string', 'regex:~^oprec/question-examples/[A-Za-z0-9_-]+\.pdf$~', 'max:255'],
             'form_fields.*.example_file_name' => ['nullable', 'string', 'max:255'],
             'form_fields.*.maxLength' => ['nullable', 'integer', 'min:1', 'max:5000'],
-            'form_fields.*.maxSizeMB' => ['nullable', 'integer', 'min:1', 'max:10'],
+            'form_fields.*.maxSizeMB' => ['nullable', 'integer', 'min:1', 'max:8'],
             'form_fields.*.min' => ['nullable', 'numeric'], 'form_fields.*.max' => ['nullable', 'numeric'],
             'form_fields.*.options' => ['nullable', 'array', 'max:100'],
             'form_fields.*.options.*.value' => ['required_with:form_fields.*.options', 'string', 'max:150'],

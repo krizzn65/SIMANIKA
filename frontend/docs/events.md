@@ -101,7 +101,7 @@ properti majemuk, misalnya `tanggal_mulai`, `tipe_pendaftaran`, `team_settings`.
   oleh React. HTML tidak dieksekusi. Editor rich text/Markdown admin perlu renderer
   tersanitasi saat dikembangkan; jangan mengirim markup untuk tampilan awal ini.
 - Poster unggahan disimpan pada disk publik, tetapi dibaca lewat `GET /api/public/events/posters/{filename}` sehingga tidak bergantung pada symlink `/storage`. URL poster lama dinormalisasi oleh resource event; file yang tidak ada tetap menghasilkan 404.
-- Admin dapat memilih guidebook opsional berupa PDF maksimal 10 MB atau tautan HTTPS. PDF diunggah melalui `POST /api/admin/events/upload-guidebook` dan dibuka melalui `GET /api/public/events/guidebooks/{filename}`. Tombol Guidebook hanya muncul bila sumber valid tersedia.
+- Admin dapat memilih guidebook opsional berupa PDF maksimal 8 MB atau tautan HTTPS. PDF diunggah melalui `POST /api/admin/events/upload-guidebook` dan dibuka melalui `GET /api/public/events/guidebooks/{filename}`. Tombol Guidebook hanya muncul bila sumber valid tersedia.
 - Poster disarankan WebP/AVIF, maksimal lebar 1280px, target <200KB. CDN sebaiknya
   menyediakan thumbnail. UI menjaga rasio 16:10, `object-fit: contain` agar isi
   poster tidak terpotong, lazy loading di daftar dan fallback bila gambar rusak.

@@ -6,7 +6,7 @@ Peserta yang memiliki Tes Tulis aktif melihat jadwal dan tombol **Kerjakan sekar
 
 ## Pertanyaan bawaan dan ringkasan peserta — 16 Oktober 2026
 
-Periode OPREC memakai sembilan pertanyaan wajib sebelum Divisi Pilihan: Nama lengkap, NIM, Tanggal lahir, Angkatan, Golongan (A–E), Nomor WA, unggah KTM/SIM Online, unggah Surat Pernyataan, dan Status Kepengurusan. Pilihan status adalah Anggota Baru atau Melanjutkan Periode kedua. Dua persetujuan wajib selalu tampil setelah semua pertanyaan tambahan admin dan diperiksa frontend serta backend. Kedua berkas menerima PDF/JPG/JPEG/PNG hingga 5 MB per berkas; batas gabungan pendaftaran tetap 11 MB. Periode lama yang belum menyimpan Status Kepengurusan menerima field bawaan ini dari API dan backend. Batas field formulir adalah 41 termasuk sembilan field sistem, agar form lama dapat mempertahankan semua pertanyaan tambahannya.
+Periode OPREC memakai sembilan pertanyaan wajib sebelum Divisi Pilihan: Nama lengkap, NIM, Tanggal lahir, Angkatan, Golongan (A–E), Nomor WA, unggah KTM/SIM Online, unggah Surat Pernyataan, dan Status Kepengurusan. Pilihan status adalah Anggota Baru atau Melanjutkan Periode kedua. Dua persetujuan wajib selalu tampil setelah semua pertanyaan tambahan admin dan diperiksa frontend serta backend. Kedua berkas menerima PDF/JPG/JPEG/PNG hingga 5 MB per berkas; batas gabungan pendaftaran 20 MB. Periode lama yang belum menyimpan Status Kepengurusan menerima field bawaan ini dari API dan backend. Batas field formulir adalah 41 termasuk sembilan field sistem, agar form lama dapat mempertahankan semua pertanyaan tambahannya.
 
 Peserta berstatus Melanjutkan Periode kedua mendapat pertanyaan Tes Tulis wajib berupa paragraf: **Alasan melanjutkan Kepengurusan 2026**. Pertanyaan dibuat oleh sistem, berlaku hanya bagi peserta tersebut, dan ikut tampil pada rincian penilaian serta tabel jawaban admin. Anggota Baru tidak melihat pertanyaan ini. Pratinjau editor Tes Tulis menyediakan simulasi status kepengurusan.
 
@@ -73,7 +73,7 @@ Keputusan terbaru pada bagian ini menggantikan hak Pengurus yang lebih luas dala
 - Submit mengulang pemeriksaan skema dan data divisi dalam transaksi; enrollment mengambil lock periode agar konsisten dengan submit. Perubahan formulir setelah pengumuman dijadwalkan ditolak, termasuk ketika versi skema dinaikkan.
 - Koreksi NIM duplikat oleh admin mengembalikan 409 dengan rollback, bukan error 500. Menghapus pendaftaran juga membersihkan berkas Tes Tulis yang sebelumnya tertinggal setelah cascade database.
 - Hasil di workspace/dashboard memakai aturan rilis bersama dan tidak terbuka pada periode draft. Respons workspace yang sudah dibatalkan tidak lagi menimpa data terbaru.
-- Batas gabungan berkas 11 MB diperiksa di backend pendaftaran dan Tes Tulis; Tes Tulis juga menolak request dengan Content-Length di atas 12 MB.
+- Batas gabungan berkas pendaftaran 20 MB diperiksa di browser dan backend, dengan batas request 22 MB. Tes Tulis tetap membatasi berkas gabungan 11 MB dan menolak Content-Length di atas 12 MB.
 
 ### Pembersihan dan verifikasi
 
@@ -201,8 +201,8 @@ form karena susunan kolom berubah. Jangan ubah skema periode aktif tanpa alasan.
 - `required`, `help`, `placeholder`, `maxLength`, `min`/`max` angka, `options`,
   `accept`, `maxSizeMB` ditangani. Pilihan divisi kedua dapat ditambahkan sebagai
   field select opsional; backend memvalidasi pasangan pilihan dan kuotanya.
-- File dibatasi pdf/jpg/jpeg/png, maksimal 10MB per file dan total request 12MB
-  (UI membatasi total berkas 11MB untuk overhead). Backend harus memvalidasi MIME/
+- File dibatasi pdf/jpg/jpeg/png, maksimal 8 MB per file, 20 MB gabungan berkas, dan 22 MB per request
+  untuk overhead multipart. Backend harus memvalidasi MIME/
   signature, menyimpan privat, dan menjalankan validasi schema otoritatif.
 - `schemaVersion` diubah jika skema berubah, lalu dicocokkan pada submit di Next
   dan backend untuk mencegah kiriman menggunakan formulir lama.

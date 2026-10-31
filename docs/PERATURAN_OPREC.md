@@ -325,7 +325,7 @@ Server memeriksa ulang syarat dalam transaksi dengan lock periode. Aturan saat i
 
 ## 13. Berkas, keamanan API, dan konsistensi data
 
-- Berkas pendaftaran menerima PDF/JPG/JPEG/PNG sesuai skema, maksimal **10 MB per berkas** atau batas field yang lebih kecil. Berkas Tes Tulis menerima format yang sama dengan batas **5 MB per berkas**. Jumlah berkas dalam satu kiriman maksimal **11 MB**; request maksimal **12 MB** untuk menyediakan overhead multipart.
+- Berkas pendaftaran menerima PDF/JPG/JPEG/PNG sesuai skema, maksimal **8 MB per berkas** atau batas field yang lebih kecil. Jumlah berkas pendaftaran dalam satu kiriman maksimal **20 MB**; request maksimal **22 MB** untuk menyediakan overhead multipart. Berkas Tes Tulis menerima format yang sama dengan batas **5 MB per berkas** dan **11 MB** gabungan.
 - Batas gabungan berkas diperiksa backend pada pendaftaran dan Tes Tulis. Tes Tulis juga menolak Content-Length di atas 12 MB.
 - Poster pendaftaran/logo divisi menerima JPG/PNG/WebP maksimal **5 MB** dan digunakan sebagai aset publik. Berkas peserta dan poster pengumuman memakai penyimpanan privat sesuai aturan akses masing-masing.
 - Server memvalidasi tipe/MIME isi berkas, bukan hanya nama ekstensi. Path internal storage tidak boleh dikirim sebagai pengganti tautan unduh yang terotorisasi.

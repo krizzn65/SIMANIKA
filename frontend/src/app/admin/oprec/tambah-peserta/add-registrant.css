@@ -1,0 +1,451 @@
+.add-oprec {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px;
+  color: #172033;
+}
+
+.add-oprec__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #245b88;
+  font-size: 13px;
+  font-weight: 650;
+  margin-bottom: 20px;
+}
+
+.add-oprec__heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 20px;
+  padding: 0 0 22px;
+  border-bottom: 1px solid #dbe3eb;
+}
+
+.add-oprec__eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #536b82;
+}
+
+.add-oprec__heading h1 {
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  margin: 7px 0;
+}
+
+.add-oprec__heading p {
+  font-size: 14px;
+  color: #5c6e7c;
+  line-height: 1.55;
+}
+
+.add-oprec__period {
+  flex-shrink: 0;
+  border: 1px solid #d5e1ed;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #285c86;
+  background: #f7faff;
+}
+
+.add-oprec__layout {
+  display: grid;
+  grid-template-columns: minmax(255px, 300px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  margin-top: 22px;
+}
+
+.add-oprec__aside {
+  display: grid;
+  gap: 16px;
+  position: sticky;
+  top: 20px;
+}
+
+.add-oprec__panel {
+  background: #fff;
+  border: 1px solid #dce5ee;
+  padding: 18px;
+}
+
+.add-oprec__panel h2 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 15px;
+  font-weight: 750;
+  margin-bottom: 8px;
+}
+
+.add-oprec__panel p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #617182;
+  margin: 8px 0 13px;
+}
+
+.add-oprec__panel textarea {
+  width: 100%;
+  min-height: 85px;
+  resize: vertical;
+  border: 1px solid #c9d4df;
+  padding: 9px;
+  font-size: 12px;
+  margin: 10px 0;
+}
+
+.add-oprec__panel > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 650;
+  color: #315778;
+}
+
+.add-oprec__panel > button:hover,
+.add-oprec__panel > button.selected {
+  background: #ecf3fb;
+  color: #155eef;
+}
+
+.add-oprec__panel > button:disabled {
+  opacity: 0.5;
+}
+
+.add-oprec__panel > button small {
+  display: block;
+  font-weight: 400;
+  color: #6a7987;
+  overflow-wrap: anywhere;
+}
+
+.add-oprec__upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px dashed #9db9da;
+  padding: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #245c95;
+  cursor: pointer;
+}
+
+.add-oprec__upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.add-oprec__main {
+  min-width: 0;
+  min-height: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  background-image: none !important;
+  color: #172033;
+}
+
+.add-oprec__form-heading {
+  margin-bottom: 17px;
+}
+
+.add-oprec__form-heading h2 {
+  font-size: 20px;
+  font-weight: 750;
+  margin: 5px 0;
+}
+
+.add-oprec__form-heading p {
+  font-size: 13px;
+  color: #607080;
+}
+
+.add-oprec__account {
+  background: #fff;
+  border: 1px solid #dce5ee;
+  padding: 20px;
+  margin-bottom: 15px;
+}
+
+.add-oprec__account label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 7px;
+}
+
+.add-oprec__account b {
+  color: #be3641;
+}
+
+.add-oprec__account input {
+  display: block;
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid #9eafc2;
+  font-size: 14px;
+}
+
+.add-oprec__account input:focus-visible {
+  outline: 2px solid #155eef;
+  outline-offset: 2px;
+}
+
+.add-oprec__account-status {
+  font-size: 12px;
+  margin-top: 8px;
+  color: #5d6e7c;
+}
+
+.add-oprec__account-status--found {
+  color: #137848;
+}
+
+.add-oprec__account-status--duplicate,
+.add-oprec__account-status--missing,
+.add-oprec__account-status--error {
+  color: #ad3f3d;
+}
+
+.add-oprec__account-results {
+  border: 1px solid #c9d6e5;
+  border-top: 0;
+  max-height: 260px;
+  overflow: auto;
+  background: #fff;
+}
+
+.add-oprec__account-results button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+  border-top: 1px solid #edf1f6;
+  font-size: 12px;
+  color: #233d58;
+}
+
+.add-oprec__account-results button:hover,
+.add-oprec__account-results button:focus-visible {
+  background: #edf4ff;
+  outline: 2px solid #155eef;
+  outline-offset: -2px;
+}
+
+.add-oprec__account-results button:disabled {
+  color: #84919e;
+  background: #f7f8fa;
+  cursor: not-allowed;
+}
+
+.add-oprec__account-results strong,
+.add-oprec__account-results small {
+  display: block;
+}
+
+.add-oprec__account-results small {
+  margin-top: 2px;
+  color: #687c8f;
+  overflow-wrap: anywhere;
+}
+
+.add-oprec__account-results em {
+  flex: none;
+  font-size: 11px;
+  font-style: normal;
+  color: #a0443d;
+}
+
+.add-oprec__account-status--selected {
+  color: #137848;
+}
+
+.add-oprec__notice {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 12px;
+  margin: 12px 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.add-oprec__notice--error {
+  background: #fff0ee;
+  color: #9f3833;
+  border: 1px solid #f0cbc7;
+}
+
+.add-oprec__notice--success {
+  background: #ecf8ef;
+  color: #137649;
+  border: 1px solid #c8e7d1;
+}
+
+.add-oprec__hint {
+  font-size: 12px;
+  line-height: 1.55;
+  color: #4d6478;
+  background: #f4f8fd;
+  border-left: 3px solid #759ed0;
+  padding: 10px 12px;
+  margin-bottom: 15px;
+}
+
+.add-oprec__references {
+  border: 1px solid #dce5ee;
+  background: #fff;
+  margin-bottom: 15px;
+  font-size: 12px;
+}
+
+.add-oprec__references summary {
+  padding: 10px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.add-oprec__references > div {
+  padding: 0 12px 10px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.add-oprec__references p {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-wrap: anywhere;
+  background: #f7f9fc;
+  padding: 9px;
+}
+
+.add-oprec__references strong {
+  color: #40556a;
+}
+
+.add-oprec__references a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #155eef;
+  text-decoration: underline;
+}
+
+.add-oprec__main .event-dynamic-form {
+  background: #fff;
+  border: 1px solid #dce5ee;
+  padding: 22px;
+}
+
+.add-oprec__main .oprec-division-choice {
+  position: relative !important;
+}
+
+.add-oprec__main .oprec-division-choice input[type="checkbox"],
+.add-oprec__main .oprec-division-choice__input {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  opacity: 0 !important;
+  width: 1px !important;
+  height: 1px !important;
+  pointer-events: none !important;
+}
+
+.add-oprec__main .event-group-submit button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.add-oprec__period-selector-wrap {
+  flex-shrink: 0;
+}
+
+.add-oprec__period-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-oprec__period-select-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #536b82;
+}
+
+.add-oprec__period-select {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e3a5f;
+  background: #f7faff;
+  border: 1px solid #bfd3e6;
+  cursor: pointer;
+  outline: none;
+}
+
+.add-oprec__period-select:focus-visible {
+  border-color: #155eef;
+  box-shadow: 0 0 0 2px rgba(21, 94, 239, 0.2);
+}
+
+.add-oprec__spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .add-oprec__layout {
+    grid-template-columns: 1fr;
+  }
+  .add-oprec__aside {
+    position: static;
+  }
+}
+
+@media (max-width: 650px) {
+  .add-oprec {
+    padding: 14px;
+  }
+  .add-oprec__heading {
+    align-items: start;
+    flex-direction: column;
+  }
+  .add-oprec__heading h1 {
+    font-size: 25px;
+  }
+  .add-oprec__main .event-dynamic-form > fieldset,
+  .add-oprec__references > div {
+    grid-template-columns: 1fr;
+  }
+}

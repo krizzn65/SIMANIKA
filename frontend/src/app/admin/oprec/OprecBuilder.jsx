@@ -641,8 +641,8 @@ export default function OprecBuilder({ oprecId }) {
 
   const handleGuidebookFile = async (file) => {
     if (!file) return;
-    if (file.type !== "application/pdf" || file.size > 10 * 1024 * 1024) {
-      setError("Guidebook harus berupa PDF dengan ukuran maksimal 10 MB.");
+    if (file.type !== "application/pdf" || file.size > 8 * 1024 * 1024) {
+      setError("Guidebook harus berupa PDF dengan ukuran maksimal 8 MB.");
       return;
     }
     setUploadingGuidebook(true);
@@ -812,7 +812,7 @@ export default function OprecBuilder({ oprecId }) {
                 accept: field.accept?.length
                   ? field.accept
                   : [".pdf", ".jpg", ".jpeg", ".png"],
-                maxSizeMB: Number(field.maxSizeMB || 5),
+                maxSizeMB: Math.min(Number(field.maxSizeMB || 5), 8),
               }
             : {}),
           ...(["text", "email", "tel", "url", "textarea"].includes(field.type)
@@ -1302,7 +1302,7 @@ export default function OprecBuilder({ oprecId }) {
                     <input type="file" accept="application/pdf,.pdf" className="hidden" disabled={uploadingGuidebook} onChange={(event) => { handleGuidebookFile(event.target.files?.[0]); event.target.value = ""; }} />
                     <UploadCloud size={26} className={data.guidebook ? "text-green-600" : "text-slate-400"} />
                     <span className="oprec-builder__poster-pick-btn">{data.guidebook ? "Ganti Guidebook PDF" : "Pilih Guidebook PDF"}</span>
-                    <small>{data.guidebook ? "Guidebook tersimpan dan siap ditampilkan untuk peserta." : "Wajib sebelum pendaftaran dipublikasikan · PDF maks. 10 MB"}</small>
+                    <small>{data.guidebook ? "Guidebook tersimpan dan siap ditampilkan untuk peserta." : "Wajib sebelum pendaftaran dipublikasikan · PDF maks. 8 MB"}</small>
                   </label>
                 </div>
               </div>

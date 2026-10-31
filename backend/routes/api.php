@@ -183,6 +183,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
             Route::put('/oprec/{oprec}', [AdminOprecController::class, 'update']);
             Route::delete('/oprec/{oprec}', [AdminOprecController::class, 'destroy']);
             Route::get('/oprec/{oprec}/registrants', [OprecRegistrantController::class, 'index']);
+            Route::get('/oprec/{oprec}/registrants/account', [OprecRegistrantController::class, 'lookupAccount']);
+            Route::post('/oprec/{oprec}/registrants', [OprecRegistrantController::class, 'store']);
             Route::get('/oprec/{oprec}/registrants/export/{format}', \App\Http\Controllers\Admin\OprecRegistrantExportController::class);
             Route::put('/oprec/{oprec}/registrants/{registration}/form', [OprecRegistrantController::class, 'updateForm']);
             Route::put('/oprec/{oprec}/registrants/{registration}', [OprecRegistrantController::class, 'update']);

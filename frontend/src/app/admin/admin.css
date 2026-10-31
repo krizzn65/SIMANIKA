@@ -18,15 +18,23 @@
   --admin-focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.22);
 }
 
+html:has(.admin-layout-root),
+body:has(.admin-layout-root) {
+  height: 100%;
+  overflow: hidden;
+}
+
 .admin-layout-root {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
   background-color: var(--admin-bg);
   color: var(--admin-text-main);
   font-family: var(--admin-font-sans);
-  overflow-x: hidden;
+  overflow: hidden;
   width: 100%;
 }
 

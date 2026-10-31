@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Oprec;
 use App\Models\OprecRegistration;
 use App\Models\OprecTestSubmission;
+use App\Models\User;
+use App\Services\OprecRegistrationSubmission;
 use App\Support\OprecRegistrationFields;
 use App\Support\SearchSql;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -20,6 +22,53 @@ use Illuminate\Validation\ValidationException;
 
 class OprecRegistrantController extends Controller
 {
+    public function lookupAccount(Request $request, Oprec $oprec)
+    {
+        abort_unless(in_array($request->user()->effectiveRole(), ['super_admin', 'admin'], true), 403);
+        if ($request->has('q')) {
+            $data = $request->validate(['q' => ['required', 'string', 'min:2', 'max:100']]);
+            $term = mb_strtolower(trim($data['q']));
+            if (mb_strlen($term) < 2) throw ValidationException::withMessages(['q' => ['Ketik minimal 2 karakter.']]);
+            $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $term);
+            $pattern = "%{$escaped}%";
+            $matches = User::query()->select(['id', 'name', 'email'])
+                ->where(fn ($query) => $query->whereRaw(SearchSql::lowerLike('name'), [$pattern])
+                    ->orWhereRaw(SearchSql::lowerLike('email'), [$pattern]))
+                ->withExists(['oprecRegistrations as already_registered' => fn ($query) => $query->where('oprec_id', $oprec->id)])
+                ->orderBy('name')->orderBy('id')->limit(8)->get()
+                ->map(fn ($owner) => [
+                    'name' => $owner->name,
+                    'email' => $owner->email,
+                    'alreadyRegistered' => (bool) $owner->already_registered,
+                ]);
+            return response()->json(['data' => ['matches' => $matches]])->header('Cache-Control', 'no-store');
+        }
+        $data = $request->validate(['email' => ['required', 'email', 'max:254']]);
+        $email = mb_strtolower(trim($data['email']));
+        $owner = User::whereRaw('LOWER(email) = ?', [$email])->first(['id', 'name']);
+        return response()->json(['data' => [
+            'exists' => (bool) $owner,
+            'name' => $owner?->name,
+            'alreadyRegistered' => $owner ? $oprec->registrations()->where('user_id', $owner->id)->exists() : false,
+        ]])->header('Cache-Control', 'no-store');
+    }
+
+    public function store(Request $request, Oprec $oprec, OprecRegistrationSubmission $submission)
+    {
+        abort_unless(in_array($request->user()->effectiveRole(), ['super_admin', 'admin'], true), 403);
+        $identity = $request->validate(['email' => ['required', 'email', 'max:254']]);
+        $email = mb_strtolower(trim($identity['email']));
+        $owner = User::whereRaw('LOWER(email) = ?', [$email])->first();
+        if (!$owner) {
+            throw ValidationException::withMessages(['email' => ['Akun dengan email ini belum ada. Minta peserta membuat dan memverifikasi akun terlebih dahulu.']]);
+        }
+        if ($oprec->registrations()->where('user_id', $owner->id)->exists()) {
+            return response()->json(['message' => 'Akun ini sudah terdaftar pada periode OPREC tersebut.'], 409);
+        }
+        $request->merge(['oprec_id' => $oprec->id]);
+        return $submission->submit($request, $owner, true, $oprec);
+    }
+
     public function index(Request $request, Oprec $oprec)
     {
         $filters = $request->validate([
@@ -300,7 +349,7 @@ class OprecRegistrantController extends Controller
         abort_unless(is_string($existing) && str_starts_with($existing, "oprec/{$oprec->id}/") && !Storage::disk('local')->exists($existing), 409,
             'Berkas masih tersedia. Muat ulang daftar pendaftar.');
         $extensions = array_map(fn ($value) => ltrim(strtolower($value), '.'), $definition['accept'] ?? ['.pdf', '.jpg', '.jpeg', '.png']);
-        $maxKilobytes = min(10240, max(1, (int) ($definition['maxSizeMB'] ?? 10)) * 1024);
+        $maxKilobytes = min(8192, max(1, (int) ($definition['maxSizeMB'] ?? 8)) * 1024);
         $request->validate(['file' => ['required', 'file', 'max:'.$maxKilobytes, 'mimes:'.implode(',', $extensions)]]);
         $extension = strtolower($request->file('file')->getClientOriginalExtension());
         $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($request->file('file')->getRealPath());

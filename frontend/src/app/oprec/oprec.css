@@ -932,6 +932,7 @@
 }
 
 .oprec-division-choice {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -960,6 +961,8 @@
 .oprec-division-choice input[type="checkbox"],
 .oprec-division-choice__input {
   position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
   opacity: 0 !important;
   width: 1px !important;
   height: 1px !important;

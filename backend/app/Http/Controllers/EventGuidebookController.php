@@ -9,7 +9,7 @@ class EventGuidebookController extends Controller
 {
     public function upload(Request $request)
     {
-        $request->validate(['guidebook' => ['required', 'file', 'mimes:pdf', 'max:10240']]);
+        $request->validate(['guidebook' => ['required', 'file', 'mimes:pdf', 'max:8192']]);
 
         $path = $request->file('guidebook')->store('events/guidebooks', 'public');
 
