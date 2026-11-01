@@ -1090,3 +1090,8 @@ Keputusan arsitektur / desain penting yang diambil selama pengembangan.
 - [x] Batas file OPREC diselaraskan ke 8 MB pada frontend, validasi backend, koreksi berkas admin, dan editor skema; guidebook OPREC serta Event juga maksimal 8 MB. Total pendaftaran OPREC tetap 20 MB dengan request maksimal 22 MB. Skema lama yang mencantumkan 10 MB dibatasi efektif ke 8 MB saat dipakai.
 - [x] Verifikasi lokal: 84 tes backend OPREC/Event (1032 assertion), 19 tes helper frontend, build statis 38 halaman, dan pemeriksaan diff lulus.
 - [ ] Nilai efektif PHP pada endpoint `/api` tetap perlu dicek melalui `ini_get()` dari web hosting. Dengan `max_input_time=60`, kiriman 20 MB pada jaringan lambat masih dapat terputus; jika terjadi, ubah melalui cPanel bersama penyedia hosting. Salinan cPanel-generated di repo harus diselaraskan ulang bila pengaturan panel berubah.
+
+## Retensi log admin — 1 November 2026
+
+- [x] Perintah `audit:prune` dan jadwal harian 00.05 WIB menghapus `audit_entries` sebelum batas lima tanggal kalender dari hari ini. Dry-run dan batas tepat pukul 00.00 WIB diverifikasi di SQLite in-memory; 2 tes/13 assertion lulus.
+- [ ] Setelah `backend/routes/console.php` terunggah, aktifkan Cron Jobs hosting untuk menjalankan `php artisan schedule:run` tiap menit. Verifikasi `php artisan schedule:list`, pratinjau `php artisan audit:prune --dry-run`, lalu pastikan log lama hilang setelah jadwal berjalan pada database produksi.

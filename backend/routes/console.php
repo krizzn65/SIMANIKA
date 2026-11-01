@@ -2,10 +2,28 @@
 
 use App\Services\OprecSimulationCleanup;
 use App\Services\OprecRegistrationPositionCorrection;
+use App\Models\AuditEntry;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Facades\Storage;
+
+Artisan::command('audit:prune {--dry-run : Tampilkan jumlah log yang akan dihapus}', function () {
+    // Keep today and the previous five calendar dates in the admin's WIB timezone.
+    $cutoff = now('Asia/Jakarta')->startOfDay()->subDays(5)->utc();
+    // MySQL TIMESTAMP comparisons use the configured connection timezone.
+    $dbCutoff = match (config('database.default')) {
+        'sqlite' => $cutoff->format('Y-m-d H:i:s'),
+        'mysql' => $cutoff->copy()->setTimezone(config('database.connections.mysql.timezone') ?? 'UTC')->format('Y-m-d H:i:s'),
+        default => $cutoff->toIso8601String(),
+    };
+    $query = AuditEntry::query()->where('created_at', '<', $dbCutoff);
+    $count = $this->option('dry-run') ? $query->count() : $query->delete();
+    $this->info(($this->option('dry-run') ? 'Akan dihapus: ' : 'Dihapus: ').$count.' log sebelum '.$cutoff->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s').' WIB.');
+})->purpose('Hapus log sistem yang lebih tua dari lima hari kalender WIB');
+
+Schedule::command('audit:prune')->dailyAt('00:05')->timezone('Asia/Jakarta');
 
 Artisan::command('oprec:normalize-registration-positions {period : ID periode} {--dry-run : Periksa tanpa mengubah data}', function () {
     $period = (string) $this->argument('period');

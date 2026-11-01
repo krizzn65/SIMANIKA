@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { RotateCcw, Lock, AlertTriangle } from "lucide-react";
 import { DEFAULT_DIVISION_LOGOS, OPREC_FIXED_FIELDS, OPREC_REQUIRED_CONSENTS, validateOprecForm, validateOprecConsents, normalizeOprecNim, oprecNimProgramWarning, getDefaultJabatan, isFieldApplicable } from "@/lib/oprec";
 import { api } from "@/services/api";
+import { hostingProtectionMessage } from "@/services/apiError";
 import { FileUploadInput } from "@/components/ui/FileUploadInput";
 import { safeDriveUrl } from "@/lib/oprecSheetImport.mjs";
 
@@ -478,7 +479,7 @@ export function OprecForm({ oprec, onSuccess, draftScope, adminEntry }) {
     try {
       const endpoint = adminEntry ? `/admin/oprec/${oprec.id}/registrants` : "/user/oprec/register";
       const { data: result } = await api.post(endpoint, body, { headers: { "Content-Type": "multipart/form-data" }, timeout: 240000 });
-      if (result.data?.submitted !== true) throw new Error("Invalid response");
+      if (result.data?.submitted !== true) throw new Error("Respons pendaftaran tidak sesuai. Periksa status pendaftaran di halaman ini.");
       if (!adminEntry) {
         try { sessionStorage.removeItem(draftKey); } catch {}
       }
@@ -486,9 +487,31 @@ export function OprecForm({ oprec, onSuccess, draftScope, adminEntry }) {
       if (!adminEntry) setSuccess(true);
       onSuccess?.();
     } catch (cause) {
-      showErrors(cause.response?.data?.errors || {}, !cause.response
-        ? "Koneksi ke server terputus, jawabanmu belum terkirim. Coba gunakan jaringan lain (misalnya data seluler), lalu kirim ulang."
-        : cause.response.data?.message || "Pendaftaran belum berhasil dikirim. Pastikan status pendaftaran sebelum mencoba kembali.");
+      // A lost response does not prove that the server rejected the submission.
+      if (!adminEntry && !cause.response) {
+        try {
+          const { data: status } = await api.get("/user/oprec/workspace", {
+            params: { oprec_id: oprec.id }, timeout: 10000,
+          });
+          if (status.data?.registration) {
+            try { sessionStorage.removeItem(draftKey); } catch {}
+            form.reset();
+            setSuccess(true);
+            onSuccess?.();
+            return;
+          }
+        } catch {
+          // Keep the form intact so the participant can check again later.
+        }
+      }
+      const note = cause.message === hostingProtectionMessage
+        ? "Perlindungan hosting menolak permintaan. Periksa status pendaftaran di halaman ini, lalu hubungi pengelola jika belum tercatat."
+        : !cause.response && ["ECONNABORTED", "ETIMEDOUT"].includes(cause.code)
+          ? "Waktu unggah habis. Status pendaftaran belum dapat dipastikan. Periksa kembali halaman ini sebelum mengirim ulang."
+          : !cause.response && cause.code === "ERR_NETWORK"
+            ? "Server tidak memberikan respons. Status pendaftaran belum dapat dipastikan. Periksa kembali halaman ini sebelum mengirim ulang."
+            : cause.response?.data?.message || cause.message || "Pendaftaran belum berhasil dikirim. Periksa status pendaftaran sebelum mencoba kembali.";
+      showErrors(cause.response?.data?.errors || {}, note);
     } finally {
       pendingForm.current = null;
       pendingBody.current = null;
