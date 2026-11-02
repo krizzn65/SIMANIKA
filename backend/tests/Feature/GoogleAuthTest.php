@@ -288,8 +288,11 @@ class GoogleAuthTest extends TestCase
         config(['services.google.client_id' => 'dummy-client-id', 'services.google.client_secret' => 'dummy-client-secret']);
         $this->withSession(['state' => 'expected-state'])
             ->get('/api/auth/google/callback?code=fake-code&state=wrong-state')
-            ->assertRedirect('http://localhost:3000/login?error=google_failed');
+            ->assertRedirect('http://localhost:3000/login?error=google_interrupted');
         $this->assertGuest('web');
+        // An interrupted login is the user's browser, not a system error.
+        $entry = \App\Models\AuditEntry::where('action', 'auth.login')->latest('id')->first();
+        $this->assertSame(['security', 'google_state_mismatch'], [$entry->kind, $entry->context['error_code']]);
     }
 
     public function test_google_callback_handles_user_cancellation(): void

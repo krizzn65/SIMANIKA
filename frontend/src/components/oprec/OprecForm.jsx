@@ -7,6 +7,7 @@ import { api } from "@/services/api";
 import { hostingProtectionMessage } from "@/services/apiError";
 import { FileUploadInput } from "@/components/ui/FileUploadInput";
 import { safeDriveUrl } from "@/lib/oprecSheetImport.mjs";
+import { compressUploadImages } from "@/lib/compressUploadImages";
 
 function getDivisionPositions(division) {
   if (!division) return [];
@@ -270,6 +271,7 @@ function Field({ field, error, inlineError = error, divisions = [], selectedDivi
 
 export function OprecForm({ oprec, onSuccess, draftScope, adminEntry }) {
   const [pending, setPending] = useState(false);
+  const [progress, setProgress] = useState(null);
   const [errors, setErrors] = useState({});
   const [nimInputError, setNimInputError] = useState(null);
   const [message, setMessage] = useState("");
@@ -478,7 +480,12 @@ export function OprecForm({ oprec, onSuccess, draftScope, adminEntry }) {
     setMessage("");
     try {
       const endpoint = adminEntry ? `/admin/oprec/${oprec.id}/registrants` : "/user/oprec/register";
-      const { data: result } = await api.post(endpoint, body, { headers: { "Content-Type": "multipart/form-data" }, timeout: 240000 });
+      setProgress(0);
+      const { data: result } = await api.post(endpoint, body, {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 240000,
+        onUploadProgress: (event) => event.total && setProgress(Math.min(99, Math.round((event.loaded / event.total) * 100))),
+      });
       if (result.data?.submitted !== true) throw new Error("Respons pendaftaran tidak sesuai. Periksa status pendaftaran di halaman ini.");
       if (!adminEntry) {
         try { sessionStorage.removeItem(draftKey); } catch {}
@@ -517,10 +524,11 @@ export function OprecForm({ oprec, onSuccess, draftScope, adminEntry }) {
       pendingBody.current = null;
       submitting.current = false;
       setPending(false);
+      setProgress(null);
     }
   }
 
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault();
     if (submitting.current || confirmOpen) return;
     if (adminEntry && !adminEntry.accountReady) {
@@ -528,7 +536,13 @@ export function OprecForm({ oprec, onSuccess, draftScope, adminEntry }) {
       return;
     }
     const form = event.currentTarget;
-    const body = new FormData(form);
+    // Shrink phone photos first: large uploads tend to stall on the hosting.
+    submitting.current = true;
+    setPending(true);
+    const acceptsJpeg = (name) => (oprec.formFields.find((field) => field.name === name)?.accept || [".jpg"]).some((ext) => /\.jpe?g$/i.test(ext));
+    const body = await compressUploadImages(new FormData(form), acceptsJpeg);
+    submitting.current = false;
+    setPending(false);
     selectedDivisions.forEach((value, index) => body.set(`divisi_pilihan_${index + 1}`, value));
     [1, 2, 3].forEach((rank) => {
       if (selectedJabatan[rank]) {
@@ -850,7 +864,7 @@ export function OprecForm({ oprec, onSuccess, draftScope, adminEntry }) {
       </fieldset>
       <div className="event-group-submit">
         <button className="event-button" type="submit" disabled={pending || confirmOpen || selectedDivisions.length !== 3 || (adminEntry && !adminEntry.accountReady)}>
-          {pending ? "Mengirim…" : "Kirim"}
+          {pending ? (progress === null ? "Menyiapkan…" : `Mengunggah… ${progress}%`) : "Kirim"}
         </button>
       </div>
     </form>
@@ -865,7 +879,7 @@ export function OprecForm({ oprec, onSuccess, draftScope, adminEntry }) {
           <p id="oprec-submit-dialog-description">Periksa kembali seluruh jawabanmu. Setelah formulir dikirim, data pendaftaran tidak dapat diedit.</p>
           <div className="oprec-submit-dialog__actions">
             <button ref={confirmCancelRef} type="button" onClick={dismissConfirmation} disabled={pending}>Periksa lagi</button>
-            <button type="button" onClick={sendRegistration} disabled={pending}>{pending ? "Mengirim..." : "Ya, kirim formulir"}</button>
+            <button type="button" onClick={sendRegistration} disabled={pending}>{pending ? (progress === null ? "Menyiapkan..." : `Mengunggah... ${progress}%`) : "Ya, kirim formulir"}</button>
           </div>
         </section>
       </div>

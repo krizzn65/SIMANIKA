@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { api } from "@/services/api";
+import { compressUploadImages } from "@/lib/compressUploadImages";
 import { FileUploadInput } from "@/components/ui/FileUploadInput";
 
 export function EventRegistrationForm({ event, onSuccess, compact = false }) {
@@ -17,8 +18,8 @@ export function EventRegistrationForm({ event, onSuccess, compact = false }) {
     if (pending) return;
     const form = submission.currentTarget;
     if (!form.reportValidity()) return;
-    const body = new FormData(form);
-    for (const [key, value] of body.entries()) if (value instanceof File && value.size === 0) body.delete(key);
+    const body = await compressUploadImages(new FormData(form));
+    for (const [key, value] of [...body.entries()]) if (value instanceof File && value.size === 0) body.delete(key);
     let total = 0;
     const fileErrors = {};
     for (const [name, value] of body.entries()) {

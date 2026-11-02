@@ -7,6 +7,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { FileUploadInput } from "@/components/ui/FileUploadInput";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
+import { compressUploadImages } from "@/lib/compressUploadImages";
 import "../../events/events.css";
 import "../dashboard.css";
 import "./testimoni-form.css";
@@ -41,7 +42,7 @@ function TestimonialForm() {
     if (pending) return;
     const form = event.currentTarget;
     if (!form.reportValidity()) return;
-    const body = new FormData(form);
+    const body = await compressUploadImages(new FormData(form));
     const photo = body.get("photo");
     if (photo instanceof File && photo.size === 0) body.delete("photo");
     if (photo instanceof File && photo.size > 5 * 1024 * 1024) {

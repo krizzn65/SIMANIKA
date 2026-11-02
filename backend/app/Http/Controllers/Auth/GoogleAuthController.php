@@ -178,6 +178,27 @@ class GoogleAuthController extends Controller
 
             /** @var \Laravel\Socialite\Two\User $googleUser */
             $googleUser = $driver->user();
+        } catch (\Laravel\Socialite\Two\InvalidStateException $e) {
+            // The login was interrupted in the user's browser (in-app browser, Back button,
+            // double tap, expired session): not a server fault, so no laravel.log ERROR.
+            app(AuditTrail::class)->recordCustom(
+                request: $request,
+                module: 'auth',
+                action: 'auth.login',
+                kind: 'security',
+                result: 'failed',
+                summary: 'Masuk (Google) · Akun (terputus)',
+                httpStatus: 302,
+                context: [
+                    'auth_method' => 'google',
+                    'auth_label' => 'Google OAuth 2.0',
+                    'error_code' => 'google_state_mismatch',
+                    'error_description' => 'Sesi login Google tidak cocok atau kedaluwarsa di browser pengguna (biasanya browser di dalam aplikasi, tombol Back, atau login ganda). Pengguna perlu mencoba lagi.',
+                    'error_type' => 'InvalidStateException',
+                ]
+            );
+
+            return redirect($frontendUrl . '/login?error=google_interrupted');
         } catch (\Throwable $e) {
             Log::error('Gagal mengambil data pengguna dari Google: ' . $e->getMessage());
 

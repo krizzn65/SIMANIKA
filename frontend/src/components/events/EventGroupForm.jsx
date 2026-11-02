@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { api } from "@/services/api";
+import { compressUploadImages } from "@/lib/compressUploadImages";
 import { FileUploadInput } from "@/components/ui/FileUploadInput";
 
 export function EventGroupForm({ eventId, group, onSuccess }) {
@@ -16,8 +17,8 @@ export function EventGroupForm({ eventId, group, onSuccess }) {
     if (pending) return;
     const form = submission.currentTarget;
     if (!form.reportValidity()) return;
-    const body = new FormData(form);
-    for (const [key, value] of body.entries()) if (value instanceof File && !value.size) body.delete(key);
+    const body = await compressUploadImages(new FormData(form));
+    for (const [key, value] of [...body.entries()]) if (value instanceof File && !value.size) body.delete(key);
     const files = [...body.values()].filter((value) => value instanceof File);
     const invalid = files.find((file) => file.size > 5 * 1024 * 1024 || !/\.(pdf|jpe?g|png|webp)$/i.test(file.name));
     if (invalid || files.reduce((sum, file) => sum + file.size, 0) > 11 * 1024 * 1024) {

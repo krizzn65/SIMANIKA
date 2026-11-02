@@ -53,6 +53,8 @@ const SignInPageDemo = () => {
       showFeedback("error", "Login dengan akun Google dibatalkan.");
     } else if (error === "google_not_configured") {
       showFeedback("error", "Google OAuth belum dikonfigurasi di server (.env).");
+    } else if (error === "google_interrupted") {
+      showFeedback("error", "Login Google terputus. Coba lagi; jika membuka dari Instagram/WhatsApp, buka lewat Chrome atau Safari.");
     } else if (error === "google_failed" || error === "google_session_failed") {
       showFeedback("error", "Gagal memproses otentikasi Google. Silakan coba lagi.");
     } else if (error === "google_no_email") {
