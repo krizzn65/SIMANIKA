@@ -413,7 +413,7 @@ export default function AdminOprecPage() {
               <h2 id="oprec-overview-title">Pendaftaran Calon Anggota</h2>
               <p>Informasi pendaftaran dan tahapan seleksi calon anggota HIMANIKA.</p>
             </div>
-            {canManage && <div className="oprec-admin-overview__count">
+            {canView && <div className="oprec-admin-overview__count">
               <strong>{registrantTotal}</strong>
               <span>{search || divisionFilter !== "all" ? "Hasil filter" : "Berkas masuk"}</span>
             </div>}
