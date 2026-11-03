@@ -45,6 +45,7 @@ function RegistrationCard({ item, onComplete }) {
   const teamReady = showTeamProgress && memberCount >= minimum;
   const paymentLabel = item.paymentType === "paid" ? (item.paymentStatus === "paid" ? "Paid" : "Unpaid") : "Free";
   const paymentTone = paymentLabel.toLowerCase();
+  const oprecUnsent = item.kind === "oprec" && item.status === "incomplete";
   return (
     <article className="dashboard-entry">
       <div className="dashboard-entry__top">
@@ -67,8 +68,10 @@ function RegistrationCard({ item, onComplete }) {
         )}
       </div>
       <div className="dashboard-entry__bottom">
-        <span className={item.kind === "oprec" ? undefined : "dashboard-entry__payment dashboard-entry__payment--" + paymentTone}>{item.kind === "oprec" ? (date ? "Pengumuman · " + date : "Pendaftaran tercatat") : paymentLabel}</span>
-        <Link href={item.href?.startsWith("/dashboard/events/") ? `/dashboard/events/detail?id=${encodeURIComponent(item.href.split("/")[3])}` : item.href}>Lihat detail <span aria-hidden="true">↗</span></Link>
+        {/* The OPREC card also appears after "Daftar" but before the form is sent;
+            say so plainly, or applicants assume they are already registered. */}
+        <span className={item.kind === "oprec" ? (oprecUnsent ? "dashboard-entry__unsent" : undefined) : "dashboard-entry__payment dashboard-entry__payment--" + paymentTone}>{item.kind === "oprec" ? (oprecUnsent ? "Formulir belum dikirim" : date ? "Pengumuman · " + date : "Pendaftaran tercatat") : paymentLabel}</span>
+        <Link href={item.href?.startsWith("/dashboard/events/") ? `/dashboard/events/detail?id=${encodeURIComponent(item.href.split("/")[3])}` : item.href}>{oprecUnsent ? "Lengkapi formulir" : "Lihat detail"} <span aria-hidden="true">↗</span></Link>
       </div>
     </article>
   );

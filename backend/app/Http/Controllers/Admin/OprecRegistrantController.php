@@ -69,6 +69,25 @@ class OprecRegistrantController extends Controller
         return $submission->submit($request, $owner, true, $oprec);
     }
 
+    // Accounts that pressed "Daftar" (opened the workspace) but never sent the form,
+    // so the committee can remind them; they do not appear in the registrant list.
+    public function pendingEnrollments(Oprec $oprec)
+    {
+        $rows = DB::table('oprec_enrollments')
+            ->join('users', 'users.id', '=', 'oprec_enrollments.user_id')
+            ->leftJoin('oprec_registrations', function ($join) use ($oprec) {
+                $join->on('oprec_registrations.user_id', '=', 'oprec_enrollments.user_id')
+                    ->where('oprec_registrations.oprec_id', '=', $oprec->id);
+            })
+            ->where('oprec_enrollments.oprec_id', $oprec->id)
+            ->whereNull('oprec_registrations.id')
+            ->orderByDesc('oprec_enrollments.created_at')
+            ->limit(500)
+            ->get(['users.name', 'users.email', 'oprec_enrollments.created_at']);
+
+        return response()->json(['data' => $rows]);
+    }
+
     public function index(Request $request, Oprec $oprec)
     {
         $filters = $request->validate([

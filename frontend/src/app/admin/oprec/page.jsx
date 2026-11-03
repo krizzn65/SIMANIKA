@@ -10,6 +10,7 @@ import { getOprecTableFields, getRegistrantFieldValue, getRegistrantFormData } f
 import { getDefaultJabatan, normalizeOprecNim, oprecNimError, validBirthDate } from "@/lib/oprec";
 import { AdminErrorNotice } from "../AdminErrorNotice";
 import { Search, X, RefreshCw, Calendar, Pencil, Trash2, AlertTriangle, FileSpreadsheet, FileText, LoaderCircle, Download, UploadCloud } from "lucide-react";
+import { PendingEnrollments } from "./PendingEnrollments";
 import { toast } from "sonner";
 import { PreviewButton, useFilePreview } from "@/components/admin/FilePreview";
 import { downloadAuthenticatedFile, downloadErrorMessage } from "@/lib/downloadFile";
@@ -497,6 +498,7 @@ export default function AdminOprecPage() {
       <AdminErrorNotice message={registrantError} onRetry={() => fetchRegistrants(selectedOprec?.id)} />
 
       {/* Filter and Registrants Table (Minimalist Boxy Layout) */}
+      {canManage && selectedOprec && <PendingEnrollments oprecId={selectedOprec.id} />}
       {canView ? <div className="border border-slate-300 bg-white rounded-none">
         <div className="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
