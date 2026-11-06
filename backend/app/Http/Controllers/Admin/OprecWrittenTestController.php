@@ -137,7 +137,7 @@ class OprecWrittenTestController extends Controller
         return response()->json(['data' => $this->stageData($stage)], 200);
     }
 
-    public function destroy(Request $request, Oprec $oprec): JsonResponse
+    public function destroy(Request $request, Oprec $oprec)
     {
         abort_unless(in_array($request->user()->effectiveRole(), ['super_admin', 'admin'], true), 403);
 
