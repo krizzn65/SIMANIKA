@@ -196,7 +196,7 @@ class OprecWrittenTestTest extends TestCase
         $this->getJson($participantUrl)->assertOk()->assertJsonCount(0, 'data.questions');
         $this->postJson($participantUrl, ['answers' => ['q_motivasi' => 'Terlambat']])->assertStatus(409);
     }
-    public function test_schedule_and_questions_are_locked_after_test_starts(): void
+    public function test_schedule_and_questions_can_be_edited_after_saving_and_starting(): void
     {
         $oprec = $this->period();
         $url = $this->createTest($oprec, true);
@@ -213,13 +213,13 @@ class OprecWrittenTestTest extends TestCase
         $this->putJson($url, $reorderedKeys)->assertOk();
         $reorderedQuestions = $payload;
         $reorderedQuestions['questions'] = array_reverse($payload['questions']);
-        $this->putJson($url, $reorderedQuestions)->assertUnprocessable()->assertJsonValidationErrors('questions');
+        $this->putJson($url, $reorderedQuestions)->assertOk();
         $changedSchedule = $payload;
         $changedSchedule['tanggal_tutup'] = now()->addHours(2)->toIso8601String();
-        $this->putJson($url, $changedSchedule)->assertUnprocessable()->assertJsonValidationErrors('tanggal_buka');
+        $this->putJson($url, $changedSchedule)->assertOk();
         $changedQuestions = $payload;
         $changedQuestions['questions'][0]['label'] = 'Pertanyaan baru';
-        $this->putJson($url, $changedQuestions)->assertUnprocessable()->assertJsonValidationErrors('questions');
+        $this->putJson($url, $changedQuestions)->assertOk();
         $blankLabel = $payload;
         $blankLabel['questions'][0]['label'] = '   ';
         $this->putJson($url, $blankLabel)->assertUnprocessable()->assertJsonValidationErrors('questions.0.label');

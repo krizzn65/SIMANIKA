@@ -171,6 +171,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
             Route::get('/oprec/{oprec}/written-test', [OprecWrittenTestController::class, 'show']);
             Route::put('/oprec/{oprec}/written-test', [OprecWrittenTestController::class, 'save']);
             Route::post('/oprec/{oprec}/written-test', [OprecWrittenTestController::class, 'create']);
+            Route::delete('/oprec/{oprec}/written-test', [OprecWrittenTestController::class, 'destroy']);
             Route::get('/oprec/{oprec}/written-test/submissions', [OprecWrittenTestSubmissionController::class, 'index']);
             Route::get('/oprec/{oprec}/written-test/submissions/{submission}', [OprecWrittenTestSubmissionController::class, 'show']);
             Route::get('/oprec/{oprec}/written-test/submissions/{submission}/files/{field}', [OprecWrittenTestFileController::class, 'admin']);

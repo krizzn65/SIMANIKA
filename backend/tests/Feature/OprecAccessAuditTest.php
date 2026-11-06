@@ -80,6 +80,7 @@ class OprecAccessAuditTest extends TestCase
                 ['POST', '/api/admin/oprec/upload-poster'], ['POST', '/api/admin/oprec/upload-logo'],
                 ['POST', $base.'/registrants'],
                 ['POST', $base.'/written-test'], ['PUT', $base.'/written-test'],
+                ['DELETE', $base.'/written-test'],
                 ['DELETE', $base.'/written-test/submissions/'.$f['submission']->id],
                 ['PUT', $base.'/registrants/'.$f['registration']->id.'/form'],
                 ['DELETE', $base.'/registrants/'.$f['registration']->id], ['POST', $base.'/announcement']] as [$method, $url]) {

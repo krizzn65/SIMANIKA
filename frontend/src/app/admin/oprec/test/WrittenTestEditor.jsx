@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Plus, Save } from "lucide-react";
+import { ArrowLeft, Plus, Save, Trash2 } from "lucide-react";
 import { api } from "@/services/api";
 import { toWibInput } from "@/lib/oprecAnnouncement.mjs";
 import { AdminErrorNotice } from "../../AdminErrorNotice";
@@ -21,14 +22,34 @@ const formatWib = (value) => value ? new Intl.DateTimeFormat("id-ID", {
   hour: "2-digit", minute: "2-digit",
 }).format(new Date(value)) + " WIB" : "—";
 
+function useNativeDialog(open, onClose) {
+  const ref = useRef(null);
+  const trigger = useRef(null);
+  useEffect(() => {
+    const dialog = ref.current;
+    if (open && dialog && !dialog.open) {
+      trigger.current = document.activeElement;
+      dialog.showModal();
+    } else if (!open && dialog?.open) {
+      dialog.close();
+      trigger.current?.focus?.();
+    }
+  }, [open]);
+  return { ref, onClose };
+}
+
 export default function EditWrittenTestPage({ period }) {
+  const router = useRouter();
   const [test, setTest] = useState(null);
   const [oprec, setOprec] = useState(null);
   const [divisions, setDivisions] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [error, setError] = useState("");
+  const deleteDialog = useNativeDialog(deleteOpen, () => setDeleteOpen(false));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -59,12 +80,10 @@ export default function EditWrittenTestPage({ period }) {
     return next;
   });
 
-  const locked = Boolean(test && (test.submissions_count > 0 || (test.published && Date.now() >= Date.parse(test.tanggal_buka))));
   const changeSchedule = (field) => (event) => setTest((current) => ({ ...current, [field]: event.target.value ? `${event.target.value}:00+07:00` : "" }));
 
   async function save(event) {
     event.preventDefault();
-    if (locked) { setError("Jadwal dan soal terkunci setelah tes dimulai atau ada jawaban peserta."); return; }
     if (!test || !questions.length) { setError("Tambahkan minimal satu pertanyaan."); return; }
     const start = Date.parse(test.tanggal_buka), end = Date.parse(test.tanggal_tutup);
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
@@ -101,25 +120,77 @@ export default function EditWrittenTestPage({ period }) {
     }
   }
 
+  async function deleteTest() {
+    if (!test || !oprec) return;
+    setDeleting(true);
+    setError("");
+    try {
+      await api.delete(`/admin/oprec/${encodeURIComponent(period)}/written-test`);
+      setDeleteOpen(false);
+      toast.success("Tes Tulis berhasil dihapus.");
+      router.push("/admin/oprec/test");
+    } catch (cause) {
+      setError(errorText(cause));
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="oprec-test oprec-test--editor">
       <Link href="/admin/oprec/test" className="oprec-test__back"><ArrowLeft size={16} aria-hidden="true" /> Kembali ke Tes Tulis</Link>
-      <header className="oprec-test__header"><div><span className="oprec-test__eyebrow">OPREC · PERIODE {oprec?.periode || ""}</span><h1>Kelola Pertanyaan Tes Tulis</h1><p>Susun soal yang akan dijawab peserta sesuai pilihan divisinya.</p></div></header>
+      <header className="oprec-test__header">
+        <div>
+          <span className="oprec-test__eyebrow">OPREC · PERIODE {oprec?.periode || ""}</span>
+          <h1>Kelola Pertanyaan Tes Tulis</h1>
+          <p>Susun soal yang akan dijawab peserta sesuai pilihan divisinya.</p>
+        </div>
+        {test && (
+          <div className="oprec-test__header-actions">
+            <button type="button" className="oprec-test__danger" onClick={() => setDeleteOpen(true)} disabled={saving || deleting}>
+              <Trash2 size={16} aria-hidden="true" /> Hapus Tes Tulis
+            </button>
+          </div>
+        )}
+      </header>
       {error && <AdminErrorNotice message={error} />}
       {loading ? <p className="oprec-test__empty" role="status">Memuat pertanyaan…</p> : test ? (
         <div className="oprec-test__editor-layout"><form className="oprec-test__editor-panel" onSubmit={save}>
           <div className="oprec-test__schedule"><div><strong>Jadwal pelaksanaan</strong><p>{formatWib(test.tanggal_buka)} – {formatWib(test.tanggal_tutup)}</p></div><span className={`oprec-test__badge ${test.published ? "is-ready" : ""}`}>{test.published ? "Soal siap" : "Belum siap"}</span></div>
           <div className="oprec-test__fields">
-            <label>Mulai tes (WIB)<input type="datetime-local" required disabled={locked || saving} value={toWibInput(test.tanggal_buka)} onChange={changeSchedule("tanggal_buka")} /></label>
-            <label>Selesai tes (WIB)<input type="datetime-local" required disabled={locked || saving} min={toWibInput(test.tanggal_buka)} value={toWibInput(test.tanggal_tutup)} onChange={changeSchedule("tanggal_tutup")} /></label>
+            <label>Mulai tes (WIB)<input type="datetime-local" required disabled={saving} value={toWibInput(test.tanggal_buka)} onChange={changeSchedule("tanggal_buka")} /></label>
+            <label>Selesai tes (WIB)<input type="datetime-local" required disabled={saving} min={toWibInput(test.tanggal_buka)} value={toWibInput(test.tanggal_tutup)} onChange={changeSchedule("tanggal_tutup")} /></label>
           </div>
-          {locked && <p role="status">Jadwal dan soal terkunci setelah tes dimulai atau ada jawaban peserta.</p>}
+          {test.submissions_count > 0 && (
+            <p className="oprec-test__submissions-warning" role="status">
+              Perhatian: Terdapat {test.submissions_count} jawaban peserta yang sudah masuk. Mengubah atau menghapus pertanyaan dapat memengaruhi data jawaban yang telah dikirim.
+            </p>
+          )}
           <div className="oprec-test__questions-head"><div><h2>Pertanyaan</h2><p>Teks singkat, paragraf, atau satu pilihan jawaban.</p></div><span>{questions.length} / 40</span></div>
-          {questions.map((question, index) => <WrittenTestQuestionEditor key={question.id} question={question} disabled={locked || saving} index={index} count={questions.length} divisions={divisions} update={update} move={move} remove={(target) => setQuestions((current) => current.filter((_, i) => i !== target))} />)}
-          <button className="oprec-test__add" type="button" disabled={locked || saving || questions.length >= 40} onClick={() => setQuestions((current) => [...current, newQuestion()])}><Plus size={17} aria-hidden="true" /> Tambah pertanyaan</button>
-          <footer className="oprec-test__footer"><span>Soal yang tersimpan tersedia saat jadwal tes aktif. Soal terkunci setelah tes dimulai.</span><button type="submit" disabled={locked || saving}><Save size={16} aria-hidden="true" /> {saving ? "Menyimpan…" : "Simpan pertanyaan"}</button></footer>
+          {questions.map((question, index) => <WrittenTestQuestionEditor key={question.id} question={question} disabled={saving} index={index} count={questions.length} divisions={divisions} update={update} move={move} remove={(target) => setQuestions((current) => current.filter((_, i) => i !== target))} />)}
+          <button className="oprec-test__add" type="button" disabled={saving || questions.length >= 40} onClick={() => setQuestions((current) => [...current, newQuestion()])}><Plus size={17} aria-hidden="true" /> Tambah pertanyaan</button>
+          <footer className="oprec-test__footer"><span>Soal yang tersimpan akan otomatis tersedia bagi peserta saat jadwal tes aktif.</span><button type="submit" disabled={saving}><Save size={16} aria-hidden="true" /> {saving ? "Menyimpan…" : "Simpan pertanyaan"}</button></footer>
         </form><WrittenTestPreview questions={questions} divisions={divisions} /></div>
       ) : null}
+      <dialog ref={deleteDialog.ref} onClose={deleteDialog.onClose} className="oprec-test__dialog">
+        {deleteOpen && (
+          <>
+            <span className="oprec-test__eyebrow">KONFIRMASI TINDAKAN</span>
+            <h2>Hapus jadwal & soal Tes Tulis?</h2>
+            <p>Tes Tulis untuk periode {oprec?.periode} akan dihapus beserta seluruh pertanyaan.</p>
+            {test?.submissions_count > 0 && (
+              <p className="oprec-test__form-error" role="alert">Perhatian: Tes ini sudah memiliki {test.submissions_count} jawaban peserta. Hapus seluruh jawaban terlebih dahulu sebelum menghapus tes.</p>
+            )}
+            <div className="oprec-test__dialog-actions">
+              <button type="button" className="oprec-test__secondary" onClick={() => setDeleteOpen(false)} disabled={deleting}>
+                Batal
+              </button>
+              <button type="button" className="oprec-test__danger" onClick={deleteTest} disabled={deleting || test?.submissions_count > 0}>
+                {deleting ? "Menghapus…" : "Hapus Tes Tulis"}
+              </button>
+            </div>
+          </>
+        )}
+      </dialog>
     </div>
   );
 }

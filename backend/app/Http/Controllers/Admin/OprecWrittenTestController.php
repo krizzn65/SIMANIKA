@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -121,16 +122,6 @@ class OprecWrittenTestController extends Controller
             $stage = OprecStage::where('oprec_id', $oprec->id)
                 ->where('type', 'test_tulis')->lockForUpdate()->first();
             abort_unless($stage, 404, 'Tes tulis belum dibuat.');
-            $locked = ($stage->published && $stage->tanggal_buka->isPast()) || $stage->submissions()->exists();
-            if ($locked && !OprecSchema::same($stage->form_fields, $questions)) {
-                throw ValidationException::withMessages(['questions' => ['Soal tidak dapat diubah setelah tes dimulai atau ada jawaban peserta.']]);
-            }
-            if ($locked && (
-                !$stage->tanggal_buka->equalTo(Carbon::parse($data['tanggal_buka']))
-                || !$stage->tanggal_tutup->equalTo(Carbon::parse($data['tanggal_tutup']))
-            )) {
-                throw ValidationException::withMessages(['tanggal_buka' => ['Jadwal tidak dapat diubah setelah tes dimulai atau ada jawaban peserta.']]);
-            }
             $stage->fill([
                 'headline' => trim($data['headline']),
                 'deskripsi' => trim($data['deskripsi'] ?? ''),
@@ -144,6 +135,29 @@ class OprecWrittenTestController extends Controller
         });
 
         return response()->json(['data' => $this->stageData($stage)], 200);
+    }
+
+    public function destroy(Request $request, Oprec $oprec): JsonResponse
+    {
+        abort_unless(in_array($request->user()->effectiveRole(), ['super_admin', 'admin'], true), 403);
+
+        DB::transaction(function () use ($oprec) {
+            $current = Oprec::whereKey($oprec->id)->lockForUpdate()->firstOrFail();
+            $stage = $current->writtenTest()->lockForUpdate()->first();
+            abort_unless($stage, 404, 'Tes tulis belum dibuat untuk periode ini.');
+
+            if ($stage->submissions()->exists()) {
+                abort(409, 'Tes tulis tidak dapat dihapus karena sudah memiliki jawaban peserta. Hapus jawaban peserta terlebih dahulu.');
+            }
+
+            if ($stage->poster && Storage::disk('local')->exists($stage->poster)) {
+                Storage::disk('local')->delete($stage->poster);
+            }
+
+            $stage->delete();
+        });
+
+        return response()->noContent();
     }
 
     private function stageData(OprecStage $stage): array

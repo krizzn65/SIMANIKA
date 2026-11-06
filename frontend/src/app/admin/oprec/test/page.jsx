@@ -58,9 +58,12 @@ export default function AdminOprecWrittenTestPage() {
   const [preview, setPreview] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteTestTarget, setDeleteTestTarget] = useState(null);
+  const [deletingTest, setDeletingTest] = useState(false);
   const createDialog = useNativeDialog(createOpen, () => setCreateOpen(false));
   const previewDialog = useNativeDialog(Boolean(preview), () => setPreview(null));
   const deleteDialog = useNativeDialog(Boolean(deleteTarget), () => setDeleteTarget(null));
+  const deleteTestDialog = useNativeDialog(Boolean(deleteTestTarget), () => setDeleteTestTarget(null));
 
   const loadPeriods = useCallback(async () => {
     setLoading(true);
@@ -161,6 +164,21 @@ export default function AdminOprecWrittenTestPage() {
     }
   }
 
+  async function deleteTest() {
+    if (!deleteTestTarget) return;
+    setDeletingTest(true);
+    setError("");
+    try {
+      await api.delete(`/admin/oprec/${deleteTestTarget.id}/written-test`);
+      setDeleteTestTarget(null);
+      await loadPeriods();
+    } catch (cause) {
+      setError(errorText(cause, "Tes Tulis gagal dihapus."));
+    } finally {
+      setDeletingTest(false);
+    }
+  }
+
   return (
     <div className="oprec-test">
       <header className="oprec-test__header">
@@ -200,7 +218,10 @@ export default function AdminOprecWrittenTestPage() {
                 <p><CalendarDays size={16} aria-hidden="true" /> {formatWib(test.tanggal_buka)} – {formatWib(test.tanggal_tutup)}</p>
                 <span className={`oprec-test__badge ${test.published ? "is-ready" : ""}`}>{test.published ? "Soal siap" : "Soal belum disimpan"}</span>
               </div>
-              {canManage && <button className="oprec-test__primary" type="button" onClick={() => router.push(editHref(selected))}><Pencil size={16} aria-hidden="true" /> Kelola pertanyaan</button>}
+              {canManage && <div className="oprec-test__overview-actions">
+                <button className="oprec-test__primary" type="button" onClick={() => router.push(editHref(selected))}><Pencil size={16} aria-hidden="true" /> Kelola pertanyaan</button>
+                <button className="oprec-test__danger" type="button" onClick={() => setDeleteTestTarget(selected)}><Trash2 size={16} aria-hidden="true" /> Hapus Tes Tulis</button>
+              </div>}
             </div>
           </section>
           {canManage ? <section className="oprec-test__answers" aria-labelledby="answers-title">
@@ -244,6 +265,12 @@ export default function AdminOprecWrittenTestPage() {
       <dialog ref={deleteDialog.ref} onClose={deleteDialog.onClose} className="oprec-test__dialog">
         {deleteTarget && <><span className="oprec-test__eyebrow">KONFIRMASI TINDAKAN</span><h2>Hapus jawaban Tes Tulis?</h2><p>Jawaban {deleteTarget.name} akan dihapus. Peserta dapat mengirim ulang selama jadwal tes masih aktif.</p>
           <div className="oprec-test__dialog-actions"><button type="button" className="oprec-test__secondary" onClick={() => setDeleteTarget(null)} disabled={deleting}>Batal</button><button type="button" className="oprec-test__danger" onClick={deleteAnswer} disabled={deleting}>{deleting ? "Menghapus…" : "Hapus jawaban"}</button></div>
+        </>}
+      </dialog>
+      <dialog ref={deleteTestDialog.ref} onClose={deleteTestDialog.onClose} className="oprec-test__dialog">
+        {deleteTestTarget && <><span className="oprec-test__eyebrow">KONFIRMASI TINDAKAN</span><h2>Hapus jadwal & soal Tes Tulis?</h2><p>Tes Tulis untuk periode {deleteTestTarget.periode} akan dihapus. Anda dapat membuat jadwal baru kembali setelahnya.</p>
+          {deleteTestTarget.written_test?.submissions_count > 0 && <p className="oprec-test__form-error" role="alert">Perhatian: Tes ini sudah memiliki {deleteTestTarget.written_test.submissions_count} jawaban peserta. Hapus jawaban peserta terlebih dahulu jika ingin menghapus tes ini.</p>}
+          <div className="oprec-test__dialog-actions"><button type="button" className="oprec-test__secondary" onClick={() => setDeleteTestTarget(null)} disabled={deletingTest}>Batal</button><button type="button" className="oprec-test__danger" onClick={deleteTest} disabled={deletingTest || deleteTestTarget.written_test?.submissions_count > 0}>{deletingTest ? "Menghapus…" : "Hapus Tes Tulis"}</button></div>
         </>}
       </dialog>
     </div>
